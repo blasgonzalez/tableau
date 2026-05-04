@@ -10,7 +10,7 @@ const app  = express();
 const PORT = process.env.PORT || 3000;
 
 // ── Config ───────────────────────────────────────────────────────────────────
-const DATA_DIR       = path.join(__dirname, 'data');
+const DATA_DIR       = process.env.TABLEAU_DATA_DIR || path.join(__dirname, 'data');
 const MAX_UPLOAD_MB  = 80;    // límite de subida antes de resize
 const RESIZE_PX      = 1800;  // dimensión máxima de foto almacenada
 const THUMB_PX       = 260;   // dimensión máxima de miniatura
@@ -20,7 +20,8 @@ const IMAGE_EXT      = new Set(['.jpg', '.jpeg', '.png', '.webp', '.tiff', '.tif
 // ── File system helpers ──────────────────────────────────────────────────────
 const ensureDir = d => { if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true }); };
 
-['data', 'public'].forEach(d => ensureDir(path.join(__dirname, d)));
+ensureDir(DATA_DIR);
+ensureDir(path.join(__dirname, 'public'));
 
 const projsFile  = ()          => path.join(DATA_DIR, 'projects.json');
 const projDir    = pid         => path.join(DATA_DIR, pid);
@@ -87,8 +88,26 @@ const upload = multer({
   }
 });
 
+// ── Update check ─────────────────────────────────────────────────────────────
+const UPDATE_URL = process.env.TABLEAU_UPDATE_URL || '';
+let updateAvailable = null;
+
+async function checkForUpdates() {
+  if (!UPDATE_URL) return;
+  try {
+    const res = await fetch(UPDATE_URL);
+    if (!res.ok) return;
+    const { version, downloadUrl } = await res.json();
+    updateAvailable = version && version !== APP_VERSION ? { version, downloadUrl } : null;
+  } catch {}
+}
+
+checkForUpdates();
+setInterval(checkForUpdates, 24 * 60 * 60 * 1000);
+
 // ── Version ───────────────────────────────────────────────────────────────────
 app.get('/api/version', (_req, res) => res.json({ version: APP_VERSION }));
+app.get('/api/update',  (_req, res) => res.json({ current: APP_VERSION, update: updateAvailable }));
 
 // ── Projects ─────────────────────────────────────────────────────────────────
 app.get('/api/projects', (_req, res) => {
@@ -307,9 +326,8 @@ const server = app.listen(PORT, () => {
   ║           T A B L E A U              ║
   ╠══════════════════════════════════════╣
   ║  http://localhost:${PORT}               ║
-  ║                                      ║
-  ║  Datos  →  ./data/                   ║
   ╚══════════════════════════════════════╝
+  Datos → ${DATA_DIR}
 `);
 });
 

@@ -36,6 +36,9 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .btn.acc{border-color:var(--acc-dim);color:var(--acc)}
 .btn.acc:hover{background:var(--acc-faint)}
 .btn:disabled{opacity:.35;cursor:default}
+.update-banner{background:#1e2e0a;border-bottom:1px solid #3a5c14;padding:5px 14px;display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:.4px;color:#a8cc60;flex-shrink:0;z-index:300}
+.update-banner a{color:#c0e070;text-decoration:underline;cursor:pointer}
+.update-banner-close{margin-left:auto;background:transparent;border:none;color:#5a8030;cursor:pointer;font-size:18px;line-height:1;padding:0 4px;font-family:inherit}
 
 /* ── LAYOUT ── */
 .main-area{flex:1;display:flex;overflow:hidden}
@@ -497,6 +500,8 @@ function App() {
   const [theme,         setTheme]         = useState(() => localStorage.getItem('tb-theme') || 'dark-amber');
   const [themeOpen,     setThemeOpen]     = useState(false);
   const [appVersion,    setAppVersion]    = useState('');
+  const [updateInfo,    setUpdateInfo]    = useState(null);
+  const [updateDismissed, setUpdateDismissed] = useState(false);
 
   useLayoutEffect(() => {
     const th = THEMES[theme];
@@ -544,6 +549,7 @@ function App() {
   // ── init ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     api.get('/api/version').then(d => setAppVersion(d.version || '')).catch(() => {});
+    api.get('/api/update').then(d => { if (d.update) setUpdateInfo(d.update); }).catch(() => {});
     api.get('/api/projects').then(ps => {
       setProjects(ps);
       if (ps.length) setPid(ps[0].id);
@@ -1186,6 +1192,19 @@ ${rows}
 
   return (
     <div className="app" onClick={() => { selRef.current = []; setSel([]); renaming && setRenaming(null); setThemeOpen(false); }}>
+
+      {updateInfo && !updateDismissed && (
+        <div className="update-banner">
+          <span>&#9733;</span>
+          <span>
+            {lang === 'es'
+              ? `Nueva versión disponible: v${updateInfo.version}`
+              : `New version available: v${updateInfo.version}`}
+            {updateInfo.downloadUrl && (<> &mdash; <a href={updateInfo.downloadUrl} target="_blank" rel="noreferrer">{lang === 'es' ? 'Descargar' : 'Download'}</a></>)}
+          </span>
+          <button className="update-banner-close" onClick={() => setUpdateDismissed(true)}>&#215;</button>
+        </div>
+      )}
 
       {/* ── TOPBAR ── */}
       <div className="topbar" onClick={e => e.stopPropagation()}>
