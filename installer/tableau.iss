@@ -9,12 +9,9 @@
 ; ═══════════════════════════════════════════════════════════════════════════════
 
 #define MyAppName      "Tableau"
-#define MyAppVersion   "1.0.0-beta.3"
+#define MyAppVersion   "1.0.0"
 #define MyAppPublisher "Blas González"
 #define MyAppURL       "https://github.com/blasgonzalez/tableau"
-
-; ── Rutas relativas a la carpeta installer\ ───────────────────────────────────
-#define SrcRoot "{#SourcePath}\.."
 
 [Setup]
 ; !! No cambiar AppId después de la primera distribución !!
@@ -33,6 +30,7 @@ PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 
 AllowNoIcons=yes
+SourceDir={#SourcePath}\..
 OutputDir={#SourcePath}\..\dist
 OutputBaseFilename=tableau-installer-{#MyAppVersion}
 Compression=lzma2/ultra64
@@ -51,16 +49,16 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 ; Node.js portátil (descargado por build.bat)
-Source: "{#SourcePath}\node.exe";          DestDir: "{app}\runtime";      Flags: ignoreversion
+Source: "installer\node.exe";          DestDir: "{app}\runtime";      Flags: ignoreversion
 
 ; Aplicación principal
-Source: "{#SrcRoot}\server.js";            DestDir: "{app}";              Flags: ignoreversion
-Source: "{#SrcRoot}\package.json";         DestDir: "{app}";              Flags: ignoreversion
-Source: "{#SrcRoot}\public\*";             DestDir: "{app}\public";       Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#SrcRoot}\node_modules\*";       DestDir: "{app}\node_modules"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "server.js";                   DestDir: "{app}";              Flags: ignoreversion
+Source: "package.json";                DestDir: "{app}";              Flags: ignoreversion
+Source: "public\*";                    DestDir: "{app}\public";       Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "node_modules\*";              DestDir: "{app}\node_modules"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 ; Launcher
-Source: "{#SourcePath}\launch.bat";        DestDir: "{app}";              Flags: ignoreversion
+Source: "installer\launch.bat";        DestDir: "{app}";              Flags: ignoreversion
 
 [Icons]
 ; Acceso directo en el menú inicio

@@ -1,6 +1,6 @@
 {
-  "version": "1.0.0-beta.3",
+  "version": "1.0.0",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-05-04",
-  "notes": "Versión inicial del instalador"
+  "notes": "Primera versión estable"
 }
