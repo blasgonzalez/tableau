@@ -1,0 +1,19 @@
+[
+  {
+    "id": "bc104d6536",
+    "name": "Paisaje",
+    "created": 1777733132681
+  },
+  {
+    "id": "2f5987c096",
+    "name": "Retratos",
+    "created": 1777735744865
+  },
+  {
+    "id": "aa2bd75cf4",
+    "name": "Varios",
+    "created": 1777803714349,
+    "units": "cm",
+    "dpi": 300
+  }
+]

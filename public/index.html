@@ -1,0 +1,1743 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tableau</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0c0b;--surf:#161412;--panel:#1c1916;--deep:#111009;
+  --border:#2a231a;--border2:#3d3020;
+  --acc:#c4894a;--acc-dim:#8a5f2e;--acc-faint:rgba(196,137,74,0.1);
+  --text:#e0d4c0;--sub:#b0a090;--dim:#8a7c6e;--muted:#5a4e42;--danger:#c45050;
+  --sb-w:252px;
+}
+html,body,#root{height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
+.app{height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+/* ── TOPBAR ── */
+.topbar{height:46px;background:var(--surf);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:10px;flex-shrink:0;z-index:200}
+.logo{font-family:'Playfair Display',serif;font-size:17px;color:var(--acc);flex-shrink:0}
+.vsep{width:1px;height:22px;background:var(--border2);flex-shrink:0}
+.breadcrumb{display:flex;align-items:center;gap:7px;flex:1;min-width:0;overflow:hidden}
+.bc-seg{font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bc-arrow{color:var(--muted);font-size:11px;flex-shrink:0}
+.bc-none{color:var(--muted);font-size:11px;font-style:italic}
+.bc-dpi{font-size:9px;color:var(--muted);letter-spacing:.5px;flex-shrink:0}
+.btn{padding:5px 12px;font-size:10px;letter-spacing:.6px;text-transform:uppercase;cursor:pointer;border:1px solid var(--border2);color:var(--sub);background:transparent;font-family:'IBM Plex Mono',monospace;transition:all .15s;white-space:nowrap;flex-shrink:0;text-decoration:none;display:inline-flex;align-items:center}
+.btn:hover{color:var(--text);border-color:var(--acc-dim)}
+.btn.acc{border-color:var(--acc-dim);color:var(--acc)}
+.btn.acc:hover{background:var(--acc-faint)}
+.btn:disabled{opacity:.35;cursor:default}
+
+/* ── LAYOUT ── */
+.main-area{flex:1;display:flex;overflow:hidden}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sb-w);background:var(--surf);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;z-index:100}
+.sb-toggle-strip{height:100%;width:36px;display:flex;flex-direction:column;align-items:center;cursor:pointer}
+.sb-toggle-btn{width:24px;height:24px;margin:7px auto 0;border:1px solid var(--border2);background:transparent;color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;transition:all .15s}
+.sb-toggle-btn:hover{color:var(--text);border-color:var(--acc-dim)}
+.sb-collapsed-label{writing-mode:vertical-rl;font-size:7px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-top:12px;user-select:none}
+.sb-inner{display:flex;flex-direction:column;height:100%;overflow:hidden}
+
+/* sidebar sections */
+.sb-sec{display:flex;flex-direction:column;min-height:0}
+.sb-sec.nav{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+.sb-sec.info{flex-shrink:0;border-top:1px solid var(--border)}
+.sb-sec-hd{height:32px;display:flex;align-items:center;gap:5px;padding:0 8px 0 10px;border-bottom:1px solid var(--border);background:var(--deep);flex-shrink:0}
+.sb-sec-title{font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:var(--dim);flex:1}
+.sb-sec-btn{width:18px;height:18px;border:1px solid var(--border2);background:transparent;color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;transition:all .12s;line-height:1}
+.sb-sec-btn:hover{color:var(--acc);border-color:var(--acc-dim)}
+.sb-scroll{overflow-y:auto;overflow-x:hidden;flex:1}
+.sb-scroll::-webkit-scrollbar{width:3px}
+.sb-scroll::-webkit-scrollbar-thumb{background:var(--border2)}
+
+/* ── NAV TREE ── */
+.nav-empty{padding:14px 12px;font-size:9px;color:var(--muted);letter-spacing:.5px;line-height:2}
+.nproj{margin-bottom:1px}
+.nproj-row{display:flex;align-items:center;padding:6px 8px 6px 8px;cursor:pointer;transition:background .1s;border-left:2px solid transparent}
+.nproj-row:hover{background:var(--panel)}
+.nproj-row.active{border-left-color:var(--acc);background:var(--acc-faint)}
+.nproj-arrow{font-size:9px;color:var(--muted);margin-right:5px;flex-shrink:0;width:10px}
+.nproj-row.active .nproj-arrow{color:var(--acc-dim)}
+.nproj-name{font-size:11px;color:var(--sub);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.nproj-row.active .nproj-name{color:var(--text)}
+.nrow-acts{display:flex;gap:1px;opacity:0;transition:opacity .1s;flex-shrink:0}
+.nproj-row:hover .nrow-acts,.nboard-row:hover .nrow-acts{opacity:1}
+.nact{width:17px;height:17px;border:none;background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;transition:color .1s;flex-shrink:0}
+.nact.edit:hover{color:var(--sub)}
+.nact.del:hover{color:var(--danger)}
+.nboards{background:var(--deep)}
+.nboard-row{display:flex;align-items:center;padding:5px 8px 5px 22px;cursor:pointer;transition:background .1s;border-left:2px solid transparent}
+.nboard-row:hover{background:var(--panel)}
+.nboard-row.active{border-left-color:var(--acc);background:var(--acc-faint)}
+.nboard-dash{color:var(--muted);font-size:9px;margin-right:6px;flex-shrink:0}
+.nboard-name{font-size:10px;color:var(--dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.nboard-row.active .nboard-name{color:var(--acc)}
+.nboard-add{display:flex;align-items:center;padding:5px 8px 5px 22px;cursor:pointer;color:var(--muted);font-size:9px;letter-spacing:.5px;transition:color .12s}
+.nboard-add:hover{color:var(--acc-dim)}
+.n-rename{flex:1;background:var(--bg);border:1px solid var(--acc-dim);color:var(--acc);font-family:'IBM Plex Mono',monospace;font-size:10px;padding:1px 6px;outline:none;min-width:0}
+
+/* ── ALIGN TOOLBAR ── */
+.align-bar{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--border2);display:flex;align-items:center;gap:1px;padding:3px;z-index:300;box-shadow:0 3px 14px rgba(0,0,0,.5);pointer-events:all}
+.align-bar-sep{width:1px;height:18px;background:var(--border2);margin:0 3px;flex-shrink:0}
+.abt{width:26px;height:26px;border:1px solid transparent;background:transparent;color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .12s;flex-shrink:0}
+.abt:hover{color:var(--text);border-color:var(--border2);background:var(--surf)}
+.abt:active{background:var(--acc-faint);color:var(--acc)}
+.abt:disabled{opacity:.25;cursor:default}
+.abt-label{font-size:7px;letter-spacing:1.5px;color:var(--muted);padding:0 6px;text-transform:uppercase;user-select:none;white-space:nowrap}
+
+/* ── INFO PANEL ── */
+.info-panel{padding:9px 10px;display:flex;gap:9px;align-items:flex-start}
+.info-empty{flex:1;display:flex;align-items:center;justify-content:center;font-size:9px;letter-spacing:1px;color:var(--muted);text-align:center;min-height:72px;padding:8px;line-height:1.7}
+.info-thumb{width:60px;height:60px;flex-shrink:0;object-fit:cover;border:1px solid var(--border2);display:block;background:var(--deep)}
+.info-meta{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.info-name{font-size:10px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.info-row{font-size:9px;color:var(--dim);letter-spacing:.2px;line-height:1.5}
+.info-phys{font-size:9px;color:var(--acc-dim);letter-spacing:.2px}
+.info-boards{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px}
+.ibd-tag{font-size:7px;letter-spacing:.4px;padding:1px 5px;border:1px solid var(--border2);color:var(--sub)}
+.ibd-tag.cur{border-color:var(--acc-dim);color:var(--acc);background:var(--acc-faint)}
+.ibd-none{font-size:8px;color:var(--muted);margin-top:2px}
+
+/* ── WORKSPACE ── */
+.workspace{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.canvas-wrap{flex:1;overflow:auto;background:var(--bg)}
+.canvas{position:relative;min-width:3000px;min-height:2200px;z-index:1}
+.canvas-drop-hint{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(196,137,74,.06);border:3px dashed var(--acc-dim);font-size:14px;letter-spacing:3px;color:var(--acc);pointer-events:none;z-index:500}
+
+/* ── BOARD ITEMS ── */
+.bitem{position:absolute;cursor:grab;user-select:none}
+.bitem:active{cursor:grabbing}
+.bitem-img{display:block;pointer-events:none}
+.bitem-img-wrap{position:relative;overflow:hidden}
+.bitem.sel .bitem-img-wrap{outline:2px dashed var(--acc-dim);outline-offset:2px}
+.bitem.sel.anchor .bitem-img-wrap{outline:2px solid var(--acc);outline-offset:2px}
+.bitem-bar{position:absolute;top:-26px;right:0;display:flex;gap:3px;opacity:0;transition:opacity .12s}
+.bitem:hover .bitem-bar,.bitem.sel .bitem-bar{opacity:1}
+.ibc{width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;border:none;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-weight:500}
+.ibc.del{background:var(--danger);color:#fff}
+.ibc.fwd,.ibc.rot{background:var(--border2);color:var(--sub)}
+.ibc.fwd:hover,.ibc.rot:hover{color:var(--text)}
+.rh{position:absolute;bottom:-6px;right:-6px;width:14px;height:14px;background:var(--acc);cursor:se-resize;opacity:0;transition:opacity .12s}
+.bitem:hover .rh,.bitem.sel .rh{opacity:1}
+.lbl{width:100%;font-size:10px;font-family:'IBM Plex Mono',monospace;color:var(--dim);background:transparent;border:none;border-bottom:1px solid transparent;padding:5px 0 2px;outline:none;letter-spacing:.3px}
+.lbl:focus{border-bottom-color:var(--acc-dim);color:var(--text)}
+.lbl::placeholder{color:var(--muted)}
+/* dimension tag visible on hover/select */
+.dim-tag{position:absolute;bottom:22px;left:0;background:rgba(13,12,11,.88);color:var(--acc);font-size:8px;padding:2px 7px;letter-spacing:.4px;pointer-events:none;opacity:0;transition:opacity .12s;white-space:nowrap}
+.bitem:hover .dim-tag,.bitem.sel .dim-tag{opacity:1}
+
+/* ── LIBRARY ── */
+.library{height:128px;background:var(--surf);border-top:1px solid var(--border);display:flex;align-items:stretch;flex-shrink:0;z-index:100}
+.lib-side{width:96px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:8px;border-right:1px solid var(--border);flex-shrink:0}
+.lib-title{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--sub);text-align:center;line-height:1.7}
+.lib-count{font-size:22px;color:var(--dim);font-family:'Playfair Display',serif;line-height:1}
+.lib-scroll{flex:1;overflow-x:auto;display:flex;align-items:center;gap:8px;padding:8px 12px}
+.lib-scroll::-webkit-scrollbar{height:3px}
+.lib-scroll::-webkit-scrollbar-thumb{background:var(--border2)}
+.thumb{flex-shrink:0;width:84px;height:84px;cursor:grab;position:relative;overflow:hidden;border:2px solid var(--border2);transition:border-color .15s}
+.thumb:hover{border-color:var(--acc-dim)}
+.thumb:active{cursor:grabbing}
+.thumb img{width:100%;height:100%;object-fit:cover;pointer-events:none;display:block}
+.thumb.in-board{border-color:var(--acc)}
+.thumb.in-board::before{content:'● EN TABLEAU';position:absolute;top:0;left:0;right:0;background:var(--acc);color:var(--bg);font-size:6px;letter-spacing:.5px;text-align:center;padding:2px;pointer-events:none;z-index:1;font-weight:700}
+.thumb-x{position:absolute;top:2px;right:2px;width:18px;height:18px;background:rgba(196,74,74,.9);color:#fff;border:none;cursor:pointer;font-size:12px;border-radius:50%;display:none;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;line-height:1;z-index:2}
+.thumb:hover .thumb-x{display:flex}
+.lib-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--dim);font-size:10px;letter-spacing:1px;text-align:center;line-height:2}
+
+/* ── HINT ── */
+.hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:var(--muted);font-size:11px;letter-spacing:1.5px;line-height:2.4;pointer-events:none;user-select:none}
+.hint em{font-family:'Playfair Display',serif;font-style:italic;font-size:22px;color:var(--border2);display:block;margin-bottom:10px;letter-spacing:0}
+
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;z-index:1000}
+.modal{background:var(--panel);border:1px solid var(--border2);padding:28px;min-width:360px;display:flex;flex-direction:column;gap:18px}
+.modal-h{font-family:'Playfair Display',serif;font-size:21px;color:var(--text)}
+.modal-sub{font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:-10px}
+.inp{background:var(--surf);border:1px solid var(--border2);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:13px;padding:10px 12px;outline:none;width:100%;letter-spacing:.3px}
+.inp:focus{border-color:var(--acc-dim)}
+.inp::placeholder{color:var(--muted)}
+select.inp{cursor:pointer;appearance:none;padding-right:28px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238a7c6e'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.cfg-row{display:flex;gap:10px}
+.cfg-row > *{flex:1}
+.cfg-label{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-bottom:6px}
+.cfg-hint{font-size:9px;color:var(--muted);letter-spacing:.3px;padding:8px 12px;background:var(--deep);border:1px solid var(--border)}
+.modal-row{display:flex;gap:8px;justify-content:flex-end}
+
+/* ── THEME PICKER ── */
+.theme-picker{position:relative;flex-shrink:0}
+.theme-btn{padding:5px 9px !important}
+.theme-dot{display:inline-block;width:10px;height:10px;border-radius:50%;border:1.5px solid rgba(255,255,255,.25);vertical-align:middle;transition:transform .15s}
+.theme-btn:hover .theme-dot{transform:scale(1.25)}
+.theme-dropdown{position:absolute;top:calc(100% + 6px);right:0;background:var(--panel);border:1px solid var(--border2);z-index:400;min-width:188px;box-shadow:0 6px 24px rgba(0,0,0,.5)}
+.theme-opt{display:flex;align-items:center;gap:9px;padding:8px 12px;cursor:pointer;transition:background .1s}
+.theme-opt:hover{background:var(--surf)}
+.theme-opt.active{background:var(--acc-faint)}
+.theme-swatches{display:flex;gap:3px;flex-shrink:0}
+.theme-sw{width:12px;height:12px;border-radius:2px}
+.theme-opt-label{font-size:9px;letter-spacing:.5px;color:var(--sub);flex:1}
+.theme-opt.active .theme-opt-label{color:var(--acc)}
+.pref-sec-hd{font-size:7px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:7px 12px 3px;pointer-events:none}
+.pref-divider{height:1px;background:var(--border);margin:4px 0}
+.pref-about{padding:9px 12px 10px;display:flex;flex-direction:column;gap:3px}
+.pref-about-name{font-size:10px;color:var(--sub);letter-spacing:.3px}
+.pref-about-ver{font-size:8px;color:var(--muted);letter-spacing:.5px}
+.pref-about-link{font-size:8px;color:var(--acc-dim);letter-spacing:.2px;text-decoration:none;transition:color .12s}
+.pref-about-link:hover{color:var(--acc)}
+
+/* ── MEMORIA MODAL ── */
+.mem-modal{min-width:520px;max-width:680px;max-height:82vh;display:flex;flex-direction:column;gap:14px}
+.mem-scroll{overflow-y:auto;flex:1;max-height:58vh;padding-right:4px}
+.mem-scroll::-webkit-scrollbar{width:3px}
+.mem-scroll::-webkit-scrollbar-thumb{background:var(--border2)}
+.mem-board{margin-bottom:20px}
+.mem-board-hd{display:flex;align-items:baseline;gap:10px;border-bottom:1px solid var(--border2);padding-bottom:6px;margin-bottom:8px}
+.mem-board-name{font-size:12px;color:var(--text);letter-spacing:.5px}
+.mem-board-cfg{font-size:8px;color:var(--acc-dim);letter-spacing:.8px;text-transform:uppercase}
+.mem-board-empty{font-size:8px;color:var(--muted);letter-spacing:.5px;padding:3px 0}
+.mem-item{display:flex;gap:9px;padding:5px 0;border-bottom:1px solid var(--border)}
+.mem-idx{width:18px;font-size:8px;color:var(--muted);flex-shrink:0;padding-top:2px;text-align:right}
+.mem-info{flex:1;min-width:0}
+.mem-iname{font-size:10px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mem-dims{font-size:9px;color:var(--dim);margin-top:2px;letter-spacing:.2px}
+.mem-phys{color:var(--acc-dim);margin-left:7px}
+.mem-lbl{font-size:8px;color:var(--muted);font-style:italic;margin-top:2px;letter-spacing:.2px}
+
+/* ── START ── */
+.start{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px}
+.start-logo{font-family:'Playfair Display',serif;font-size:60px;color:var(--acc);opacity:.3;letter-spacing:-1px}
+.start-sub{font-size:10px;letter-spacing:3px;color:var(--dim);text-transform:uppercase;text-align:center;line-height:2.6}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:136px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--border2);padding:9px 20px;font-size:11px;letter-spacing:.5px;color:var(--sub);z-index:900;pointer-events:none}
+.toast.err{color:var(--danger);border-color:var(--danger)}
+.uploading-bar{position:fixed;bottom:128px;left:0;right:0;height:2px;background:var(--acc);z-index:500}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--surf)}
+::-webkit-scrollbar-thumb{background:var(--border2)}
+::-webkit-scrollbar-thumb:hover{background:var(--acc-dim)}
+/* ── GRID SELECT in topbar ── */
+select.btn{appearance:none;cursor:pointer;background-image:none}
+/* ── ZOOM CONTROL ── */
+.zoom-ctrl{position:fixed;bottom:148px;right:18px;display:flex;align-items:center;background:var(--panel);border:1px solid var(--border2);z-index:200;box-shadow:0 2px 10px rgba(0,0,0,.4)}
+.zc-btn{width:28px;height:26px;border:none;background:transparent;color:var(--dim);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:color .12s;flex-shrink:0;font-family:'IBM Plex Mono',monospace}
+.zc-btn:hover{color:var(--text);background:var(--surf)}
+.zc-pct{font-size:9px;letter-spacing:.5px;color:var(--sub);padding:0 8px;user-select:none;white-space:nowrap;min-width:38px;text-align:center;cursor:pointer}
+.zc-pct:hover{color:var(--acc)}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useLayoutEffect, useRef, useCallback } = React;
+
+const THEMES = {
+  'dark-amber': {
+    label: 'Oscuro · Ámbar',
+    bg: '#0d0c0b', acc: '#c4894a',
+    vars: {
+      '--bg':'#0d0c0b','--surf':'#161412','--panel':'#1c1916','--deep':'#111009',
+      '--border':'#2a231a','--border2':'#3d3020',
+      '--acc':'#c4894a','--acc-dim':'#8a5f2e','--acc-faint':'rgba(196,137,74,0.1)',
+      '--text':'#e0d4c0','--sub':'#b0a090','--dim':'#8a7c6e','--muted':'#5a4e42','--danger':'#c45050',
+    }
+  },
+  'light-natural': {
+    label: 'Claro · Natural',
+    bg: '#f4efe6', acc: '#8a5f2e',
+    vars: {
+      '--bg':'#f4efe6','--surf':'#ede7dc','--panel':'#e6dfd3','--deep':'#f8f3ec',
+      '--border':'#d0c8ba','--border2':'#b8ad9e',
+      '--acc':'#8a5f2e','--acc-dim':'#6a4520','--acc-faint':'rgba(138,95,46,0.1)',
+      '--text':'#271c10','--sub':'#4a3828','--dim':'#7a6550','--muted':'#a09080','--danger':'#c04040',
+    }
+  },
+  'dark-cool': {
+    label: 'Oscuro · Frío',
+    bg: '#0c0e12', acc: '#7a9fd4',
+    vars: {
+      '--bg':'#0c0e12','--surf':'#141820','--panel':'#1a1e2a','--deep':'#0e1018',
+      '--border':'#202840','--border2':'#2a3550',
+      '--acc':'#7a9fd4','--acc-dim':'#4d6fa8','--acc-faint':'rgba(122,159,212,0.1)',
+      '--text':'#ccd4e4','--sub':'#8898b8','--dim':'#6070a0','--muted':'#3a4870','--danger':'#d06070',
+    }
+  },
+  'high-contrast': {
+    label: 'Alto Contraste',
+    bg: '#000000', acc: '#ffcc33',
+    vars: {
+      '--bg':'#000000','--surf':'#0d0d0d','--panel':'#141414','--deep':'#080808',
+      '--border':'#2a2a2a','--border2':'#444444',
+      '--acc':'#ffcc33','--acc-dim':'#cc9900','--acc-faint':'rgba(255,204,51,0.12)',
+      '--text':'#ffffff','--sub':'#e0e0e0','--dim':'#b0b0b0','--muted':'#606060','--danger':'#ff5555',
+    }
+  },
+};
+
+const ZOOM_STEPS = [0.25, 0.33, 0.5, 0.67, 0.75, 1.0, 1.25, 1.5, 2.0];
+
+const BOARD_PAD = 40;
+
+const getBoardPx = board => {
+  if (!board?.fixed || !board.fixedW || !board.fixedH) return null;
+  const dpi = board.dpi || 300;
+  const u   = board.units || 'cm';
+  const toPx = v => u === 'px' ? v : u === 'cm' ? Math.round(v / 2.54 * dpi) : u === 'mm' ? Math.round(v / 25.4 * dpi) : Math.round(v * dpi);
+  return { w: Math.max(1, toPx(board.fixedW)), h: Math.max(1, toPx(board.fixedH)) };
+};
+
+const api = {
+  get:    url         => fetch(url).then(r => r.json()),
+  post:   (url, body) => fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)}).then(r => r.json()),
+  put:    (url, body) => fetch(url, {method:'PUT',  headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)}).then(r => r.json()),
+  patch:  (url, body) => fetch(url, {method:'PATCH',headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)}).then(r => r.json()),
+  del:    url         => fetch(url, {method:'DELETE'}).then(r => r.json()),
+  upload: (url, file) => { const fd = new FormData(); fd.append('photo', file); return fetch(url, {method:'POST', body:fd}).then(r => r.json()); },
+};
+
+const fmtSize = b => b > 1e6 ? (b/1e6).toFixed(1)+' MB' : Math.round(b/1024)+' KB';
+
+// Convert canvas px → physical units given DPI
+const pxToPhys = (px, dpi, units) => {
+  if (!dpi || !units || units === 'px') return null;
+  const inches = px / dpi;
+  if (units === 'cm') return (inches * 2.54).toFixed(1) + ' cm';
+  if (units === 'mm') return (inches * 25.4).toFixed(0) + ' mm';
+  if (units === 'in') return inches.toFixed(2) + '"';
+  return null;
+};
+
+const dimLabel = (w, h, dpi, units) => {
+  const px = `${w} × ${h} px`;
+  const pw = pxToPhys(w, dpi, units);
+  const ph = pxToPhys(h, dpi, units);
+  return pw ? `${px}  ·  ${pw} × ${ph}` : px;
+};
+
+const I18N = {
+  es: {
+    upload:'+ Subir foto', report:'≡ Memoria', config:'⚙ Config', exportJpeg:'⬇ Exportar JPEG',
+    showPanel:'▶ Panel', preferences:'Preferencias', themeLabel:'Tema', langLabel:'Idioma',
+    noProjHint:'Sin proyecto — crea uno en el panel izquierdo',
+    projBoards:'Proyectos y Tableros', newProject:'Nuevo proyecto', collapsePanel:'Colapsar panel',
+    noProjectsYet:'No hay proyectos aún.', clickToCreate:'Pulsa + para crear uno.',
+    newBoard:'Nuevo tablero', addBoard:'+ Nuevo tablero',
+    repository:'Repositorio', refreshRepo:'Refrescar repo',
+    repoHint1:'Coloca imágenes en', repoHint2:'y pulsa ↺',
+    openPanel:'Abrir panel', panelLabel:'Panel',
+    infoTitle:'Información', infoEmpty1:'Pasa el ratón sobre', infoEmpty2:'una foto para ver sus datos',
+    original:'Original:', inTableau:'En tableau:', notInAnyBoard:'No está en ningún tablero',
+    noBoard:'Sin tablero', createBoardHint:'Crea un tablero en el panel izquierdo',
+    emptyBoard:'Tablero vacío',
+    dragHint1:'Arrastra fotos desde la biblioteca (abajo)',
+    dragHint2:'o desde el repositorio (panel izquierdo)',
+    dragHint3:'o suelta imágenes desde el explorador de archivos',
+    dropHint:'Suelta para añadir al tablero',
+    labelPlaceholder:'etiqueta…', rotateBtn:'Rotar 90°', bringFwdBtn:'Al frente', deleteBtn:'Eliminar',
+    renameBtn:'Renombrar',
+    projectPhotosL1:'Fotos del', projectPhotosL2:'proyecto',
+    uploadHint:'Sube fotos con + Subir →', dragFilesHint:'o arrastra archivos al canvas',
+    alreadyInTableau:'ya en el tableau',
+    newProjectTitle:'Nuevo proyecto', projectNamePh:'Nombre del proyecto…',
+    cancel:'Cancelar', create:'Crear',
+    newBoardTitle:'Nuevo tablero', boardNamePh:'Nombre del tablero…',
+    boardConfig:'Configuración del tablero',
+    unitsLabel:'Unidades', unitPx:'Píxeles (px)', unitCm:'Centímetros (cm)',
+    unitMm:'Milímetros (mm)', unitIn:'Pulgadas (in)',
+    resolutionLabel:'Resolución (DPI)',
+    dpi72:'72 dpi — pantalla', dpi96:'96 dpi — web', dpi150:'150 dpi — borrador',
+    dpi300:'300 dpi — imprenta', dpi600:'600 dpi — alta calidad',
+    boardConfigNote:'Las dimensiones físicas aparecen sobre cada foto al pasar el ratón\ny en el panel de información lateral.',
+    save:'Guardar', close:'Cerrar',
+    reportTitle:'Memoria del proyecto', noBoardsInProject:'Sin tableros en este proyecto',
+    noPhysScale:'sin escala física', emptyBoardMem:'Tablero vacío',
+    reportConfigNote:'Configura DPI y unidades en cada tablero (⚙ Config) para ver las dimensiones físicas.',
+    printPdf:'⎙ Imprimir / Guardar PDF',
+    startSub:'Gestión visual de proyectos fotográficos',
+    startDesc:'Tableros libres · Repositorio de imágenes · Almacenamiento local',
+    createFirstProject:'Crear primer proyecto',
+    selectProjectFirst:'Selecciona un proyecto primero',
+    createBoardFirst:'Crea un tablero primero',
+    saveError:'Error al guardar',
+    photosAdded: n => `${n} foto${n>1?'s':''} añadida${n>1?'s':''}`,
+    uploadError: name => `Error subiendo ${name}`,
+    imported: name => `"${name}" importada`,
+    importError:'Error al importar', configSaved:'Configuración guardada',
+    allowPopups:'Permite ventanas emergentes para imprimir',
+    confirmDeleteProject:'¿Eliminar este proyecto y todas sus fotos?',
+    confirmDeleteBoard:'¿Eliminar este tablero?',
+    confirmDeletePhoto:'¿Eliminar esta foto del proyecto?',
+    inBoard:'EN TABLEAU', inProject:'en proyecto', importBtn:'+ Importar',
+    aboutLabel:'Acerca de', authorLabel:'Autor',
+    alLeft:'Alinear borde izquierdo', alRight:'Alinear borde derecho', alCH:'Centrar horizontalmente',
+    alTop:'Alinear borde superior', alBottom:'Alinear borde inferior', alCV:'Centrar verticalmente',
+    distH:'Distribuir horizontalmente', distV:'Distribuir verticalmente', eqWidth:'Igualar ancho al ancla', clearSel:'Deseleccionar',
+    noScaleHint: '1 px = 1 px (sin escala física)',
+    scaleHint: (mm, cm, dpi) => `1 px = ${mm} mm = ${cm} cm  ·  1 cm = ${dpi} px`,
+    boardMode: 'Modo del tablero', varMode: 'Variable', fixedMode: 'Fijo',
+    boardW: 'Ancho', boardH: 'Alto',
+    confirmOverflow: 'Algunas fotos quedarán fuera de las nuevas dimensiones. ¿Continuar?',
+    invalidDims: 'Las dimensiones deben ser mayores que cero',
+    pxPreview: (w, h) => `${w} × ${h} px`,
+    gridToggle: 'Guías', gridAuto: 'Auto', fitView: 'Ajustar',
+    reportHeading:'Tableau — Memoria del Proyecto',
+    noScaleConfigured:'sin escala configurada',
+    reportDate: d => `Memoria del proyecto · ${d}`,
+    colHdr: ['#','Foto','Píxeles','Tamaño físico','Etiqueta'],
+  },
+  en: {
+    upload:'+ Upload', report:'≡ Report', config:'⚙ Config', exportJpeg:'⬇ Export JPEG',
+    showPanel:'▶ Panel', preferences:'Preferences', themeLabel:'Theme', langLabel:'Language',
+    noProjHint:'No project — create one in the left panel',
+    projBoards:'Projects & Boards', newProject:'New project', collapsePanel:'Collapse panel',
+    noProjectsYet:'No projects yet.', clickToCreate:'Click + to create one.',
+    newBoard:'New board', addBoard:'+ New board',
+    repository:'Repository', refreshRepo:'Refresh repo',
+    repoHint1:'Place images in', repoHint2:'and click ↺',
+    openPanel:'Open panel', panelLabel:'Panel',
+    infoTitle:'Info', infoEmpty1:'Hover over a photo', infoEmpty2:'to see its details',
+    original:'Original:', inTableau:'In tableau:', notInAnyBoard:'Not in any board',
+    noBoard:'No board', createBoardHint:'Create a board in the left panel',
+    emptyBoard:'Empty board',
+    dragHint1:'Drag photos from the library (below)',
+    dragHint2:'or from the repository (left panel)',
+    dragHint3:'or drop images from the file explorer',
+    dropHint:'Drop to add to board',
+    labelPlaceholder:'label…', rotateBtn:'Rotate 90°', bringFwdBtn:'Bring forward', deleteBtn:'Delete',
+    renameBtn:'Rename',
+    projectPhotosL1:'Project', projectPhotosL2:'photos',
+    uploadHint:'Upload photos with + Upload →', dragFilesHint:'or drag files to canvas',
+    alreadyInTableau:'already in tableau',
+    newProjectTitle:'New project', projectNamePh:'Project name…',
+    cancel:'Cancel', create:'Create',
+    newBoardTitle:'New board', boardNamePh:'Board name…',
+    boardConfig:'Board settings',
+    unitsLabel:'Units', unitPx:'Pixels (px)', unitCm:'Centimeters (cm)',
+    unitMm:'Millimeters (mm)', unitIn:'Inches (in)',
+    resolutionLabel:'Resolution (DPI)',
+    dpi72:'72 dpi — screen', dpi96:'96 dpi — web', dpi150:'150 dpi — draft',
+    dpi300:'300 dpi — press', dpi600:'600 dpi — high quality',
+    boardConfigNote:'Physical dimensions appear on each photo on hover\nand in the side info panel.',
+    save:'Save', close:'Close',
+    reportTitle:'Project report', noBoardsInProject:'No boards in this project',
+    noPhysScale:'no physical scale', emptyBoardMem:'Empty board',
+    reportConfigNote:'Configure DPI and units in each board (⚙ Config) to see physical dimensions.',
+    printPdf:'⎙ Print / Save PDF',
+    startSub:'Visual management of photography projects',
+    startDesc:'Free boards · Image repository · Local storage',
+    createFirstProject:'Create first project',
+    selectProjectFirst:'Select a project first',
+    createBoardFirst:'Create a board first',
+    saveError:'Save error',
+    photosAdded: n => `${n} photo${n>1?'s':''} added`,
+    uploadError: name => `Error uploading ${name}`,
+    imported: name => `"${name}" imported`,
+    importError:'Import error', configSaved:'Settings saved',
+    allowPopups:'Allow pop-ups to print',
+    confirmDeleteProject:'Delete this project and all its photos?',
+    confirmDeleteBoard:'Delete this board?',
+    confirmDeletePhoto:'Delete this photo from the project?',
+    inBoard:'IN TABLEAU', inProject:'in project', importBtn:'+ Import',
+    aboutLabel:'About', authorLabel:'Author',
+    alLeft:'Align left edges', alRight:'Align right edges', alCH:'Center horizontally',
+    alTop:'Align top edges', alBottom:'Align bottom edges', alCV:'Center vertically',
+    distH:'Distribute horizontally', distV:'Distribute vertically', eqWidth:'Match width to anchor', clearSel:'Deselect',
+    noScaleHint: '1 px = 1 px (no physical scale)',
+    scaleHint: (mm, cm, dpi) => `1 px = ${mm} mm = ${cm} cm  ·  1 cm = ${dpi} px`,
+    boardMode: 'Board mode', varMode: 'Variable', fixedMode: 'Fixed',
+    boardW: 'Width', boardH: 'Height',
+    confirmOverflow: 'Some photos will be outside the new dimensions. Continue?',
+    invalidDims: 'Dimensions must be greater than zero',
+    pxPreview: (w, h) => `${w} × ${h} px`,
+    gridToggle: 'Grid', gridAuto: 'Auto', fitView: 'Fit',
+    reportHeading:'Tableau — Project Report',
+    noScaleConfigured:'no scale configured',
+    reportDate: d => `Project report · ${d}`,
+    colHdr: ['#','Photo','Pixels','Physical size','Label'],
+  },
+};
+
+function App() {
+  const [projects,      setProjects]      = useState([]);
+  const [pid,           setPid]           = useState(null);
+  const [boards,        setBoards]        = useState([]);
+  const [bid,           setBid]           = useState(null);
+  const [photos,        setPhotos]        = useState([]);
+  const [items,         setItems]         = useState([]);
+  const [allBoardItems, setAllBoardItems] = useState({}); // {boardId: items[]}
+  const [sel,           setSel]           = useState([]);
+  const [zoom,          setZoom]          = useState(1);
+  const [ready,         setReady]         = useState(false);
+  const [uploading,     setUploading]     = useState(false);
+  const [toast,         setToast]         = useState(null);
+  const [modal,         setModal]         = useState(null); // 'project'|'board'|'boardcfg'
+  const [nameVal,       setNameVal]       = useState('');
+  const [dragOver,      setDragOver]      = useState(false);
+  const [sbOpen,        setSbOpen]        = useState(true);
+  const [renaming,      setRenaming]      = useState(null);
+  const [hoverInfo,     setHoverInfo]     = useState(null);
+  // board config edit state (only live while modal is open)
+  const [cfgUnits,      setCfgUnits]      = useState('cm');
+  const [cfgDpi,        setCfgDpi]        = useState('300');
+  const [cfgFixed,      setCfgFixed]      = useState(false);
+  const [cfgBoardW,     setCfgBoardW]     = useState('');
+  const [cfgBoardH,     setCfgBoardH]     = useState('');
+  const [showGrid,      setShowGrid]      = useState(() => localStorage.getItem('tb-grid') !== 'off');
+  const [gridStep,      setGridStep]      = useState(() => parseInt(localStorage.getItem('tb-gridstep')) || 0); // 0 = auto
+
+  const [theme,         setTheme]         = useState(() => localStorage.getItem('tb-theme') || 'dark-amber');
+  const [themeOpen,     setThemeOpen]     = useState(false);
+  const [appVersion,    setAppVersion]    = useState('');
+
+  useLayoutEffect(() => {
+    const th = THEMES[theme];
+    if (!th) return;
+    Object.entries(th.vars).forEach(([k, v]) => document.documentElement.style.setProperty(k, v));
+  }, [theme]);
+
+  const applyTheme = id => {
+    localStorage.setItem('tb-theme', id);
+    setTheme(id);
+    setThemeOpen(false);
+  };
+
+  const [lang, setLang] = useState(() => localStorage.getItem('tb-lang') || 'es');
+  const t = (key, ...args) => {
+    const v = (I18N[lang] || I18N.es)[key];
+    if (v === undefined) return key;
+    return typeof v === 'function' ? v(...args) : v;
+  };
+  const applyLang = id => { localStorage.setItem('tb-lang', id); setLang(id); setThemeOpen(false); };
+
+  const itemsRef        = useRef([]);
+  const selRef          = useRef([]);
+  const zoomRef         = useRef(1);
+  const pidRef          = useRef(null);
+  const bidRef          = useRef(null);
+  const photosRef       = useRef([]);
+  const allBoardItemsRef= useRef({});
+  const boardsRef       = useRef([]);
+  const boardPxRef      = useRef(null);
+  const wrapRef         = useRef(null);
+
+  useEffect(() => { itemsRef.current         = items;         }, [items]);
+  useEffect(() => { pidRef.current           = pid;           }, [pid]);
+  useEffect(() => { bidRef.current           = bid;           }, [bid]);
+  useEffect(() => { photosRef.current        = photos;        }, [photos]);
+  useEffect(() => { allBoardItemsRef.current = allBoardItems; }, [allBoardItems]);
+  useEffect(() => { boardsRef.current        = boards;        }, [boards]);
+
+  // keep allBoardItems in sync with current board mutations
+  useEffect(() => {
+    if (bid) setAllBoardItems(prev => ({ ...prev, [bid]: items }));
+  }, [items, bid]);
+
+  // ── init ──────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    api.get('/api/version').then(d => setAppVersion(d.version || '')).catch(() => {});
+    api.get('/api/projects').then(ps => {
+      setProjects(ps);
+      if (ps.length) setPid(ps[0].id);
+      setReady(true);
+    }).catch(() => setReady(true));
+  }, []);
+
+  useEffect(() => {
+    if (!pid) { setBoards([]); setBid(null); setPhotos([]); setItems([]); setAllBoardItems({}); return; }
+    Promise.all([
+      api.get(`/api/projects/${pid}/boards`),
+      api.get(`/api/projects/${pid}/photos`),
+    ]).then(async ([bs, ps]) => {
+      setBoards(bs);
+      setBid(bs[0]?.id || null);
+      setPhotos(ps);
+      // Load all board items for cross-board presence
+      if (bs.length) {
+        const allIt = await Promise.all(bs.map(b => api.get(`/api/boards/${pid}/${b.id}/items`)));
+        const map = {};
+        bs.forEach((b, i) => { map[b.id] = allIt[i]; });
+        setAllBoardItems(map);
+      }
+    });
+  }, [pid]);
+
+  useEffect(() => {
+    if (!bid || !pid) { setItems([]); itemsRef.current = []; return; }
+    api.get(`/api/boards/${pid}/${bid}/items`).then(it => {
+      setItems(it); itemsRef.current = it;
+    });
+    selRef.current = []; setSel([]);
+  }, [bid, pid]);
+
+  const showToast = (msg, err = false) => {
+    setToast({ msg, err });
+    setTimeout(() => setToast(null), 3200);
+  };
+
+  const langRef = useRef('es');
+  useEffect(() => { langRef.current = lang; }, [lang]);
+  useEffect(() => { zoomRef.current = zoom; }, [zoom]);
+
+  const zoomStep = useCallback((dir) => {
+    // Find next ZOOM_STEP above/below current zoom, or clamp
+    setZoom(z => {
+      const above = ZOOM_STEPS.filter(s => dir > 0 ? s > z + 0.001 : s < z - 0.001);
+      if (dir > 0) return above.length ? above[0]              : ZOOM_STEPS[ZOOM_STEPS.length - 1];
+      else         return above.length ? above[above.length - 1] : ZOOM_STEPS[0];
+    });
+  }, []);
+
+  useEffect(() => {
+    const onWheel = e => {
+      if (!e.ctrlKey) return;
+      if (!wrapRef.current?.contains(e.target)) return;
+      e.preventDefault();
+      zoomStep(e.deltaY < 0 ? 1 : -1);
+    };
+    window.addEventListener('wheel', onWheel, { passive: false });
+    return () => window.removeEventListener('wheel', onWheel);
+  }, [zoomStep]);
+
+  useEffect(() => {
+    const onKey = e => {
+      if (!e.ctrlKey) return;
+      if (e.key === '+' || e.key === '=') { e.preventDefault(); zoomStep(1); }
+      if (e.key === '-') { e.preventDefault(); zoomStep(-1); }
+      if (e.key === '0') { e.preventDefault(); boardPxRef.current ? fitBoard() : setZoom(1); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [zoomStep, fitBoard]);
+
+  const saveItemsNow = useCallback((its) => {
+    const p = pidRef.current, b = bidRef.current;
+    if (!p || !b) return;
+    const msg = (I18N[langRef.current] || I18N.es).saveError;
+    api.put(`/api/boards/${p}/${b}/items`, its).catch(() => showToast(msg, true));
+  }, []);
+
+  // ── board config ──────────────────────────────────────────────────────────
+  const activeBoardMeta = boards.find(b => b.id === bid);
+  const boardDpi   = activeBoardMeta?.dpi   || null;
+  const boardUnits = activeBoardMeta?.units || 'px';
+  const boardPx    = activeBoardMeta ? getBoardPx(activeBoardMeta) : null;
+  boardPxRef.current = boardPx;
+
+  // ── grid ──────────────────────────────────────────────────────────────────
+  // Compute the actual grid cell size in canvas pixels.
+  // gridStep===0 means "auto": physical 1cm for DPI boards, 50px otherwise.
+  const gridCellPx = (() => {
+    if (gridStep > 0) return gridStep;
+    if (boardDpi && boardUnits !== 'px') return Math.round(boardDpi / 2.54); // 1 cm
+    return 50;
+  })();
+  // Possible grid step options for the current board
+  const gridOptions = (() => {
+    const opts = [];
+    opts.push({ v: 0, label: t('gridAuto') });
+    if (boardDpi && boardUnits !== 'px') {
+      const mm1 = Math.round(boardDpi / 25.4);
+      const mm5 = Math.round(5 * boardDpi / 25.4);
+      const cm1 = Math.round(boardDpi / 2.54);
+      const cm5 = Math.round(5 * boardDpi / 2.54);
+      opts.push({ v: mm1, label: '1 mm' });
+      opts.push({ v: mm5, label: '5 mm' });
+      opts.push({ v: cm1, label: '1 cm' });
+      opts.push({ v: cm5, label: '5 cm' });
+    } else {
+      [10, 25, 50, 100, 200].forEach(px => opts.push({ v: px, label: `${px} px` }));
+    }
+    return opts;
+  })();
+  const toggleGrid = () => { const n = !showGrid; setShowGrid(n); localStorage.setItem('tb-grid', n ? 'on' : 'off'); };
+  const changeGridStep = v => { setGridStep(v); localStorage.setItem('tb-gridstep', String(v)); };
+
+  const openBoardConfig = () => {
+    setCfgUnits(activeBoardMeta?.units || 'cm');
+    setCfgDpi(String(activeBoardMeta?.dpi || 300));
+    setCfgFixed(activeBoardMeta?.fixed || false);
+    setCfgBoardW(activeBoardMeta?.fixedW != null ? String(activeBoardMeta.fixedW) : '');
+    setCfgBoardH(activeBoardMeta?.fixedH != null ? String(activeBoardMeta.fixedH) : '');
+    setModal('boardcfg');
+  };
+
+  const saveBoardConfig = async () => {
+    const dpi = parseInt(cfgDpi) || 300;
+    let fixedW = null, fixedH = null;
+    if (cfgFixed) {
+      fixedW = parseFloat(cfgBoardW);
+      fixedH = parseFloat(cfgBoardH);
+      if (!fixedW || !fixedH || fixedW <= 0 || fixedH <= 0) return showToast(t('invalidDims'), true);
+      const newBp = getBoardPx({ fixed: true, fixedW, fixedH, units: cfgUnits, dpi });
+      const overflow = itemsRef.current.some(item => {
+        const h = (() => {
+          const p = photosRef.current.find(ph => ph.id === item.photoId);
+          if (!p) return item.w;
+          return (item.rot || 0) % 180 !== 0 ? Math.round(item.w * p.w / p.h) : Math.round(item.w * p.h / p.w);
+        })();
+        return item.x + item.w > newBp.w || item.y + h > newBp.h;
+      });
+      if (overflow && !confirm(t('confirmOverflow'))) return;
+    }
+    const patch = { units: cfgUnits, dpi, fixed: cfgFixed, fixedW: cfgFixed ? fixedW : null, fixedH: cfgFixed ? fixedH : null };
+    await api.patch(`/api/projects/${pid}/boards/${bid}`, patch);
+    setBoards(bs => bs.map(b => b.id === bid ? { ...b, ...patch } : b));
+    setModal(null);
+    showToast(t('configSaved'));
+  };
+
+  // ── print memoria ─────────────────────────────────────────────────────────
+  const printMemoria = () => {
+    const proj = projects.find(p => p.id === pid);
+    const locale = lang === 'en' ? 'en-GB' : 'es-ES';
+    const date = new Date().toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });
+    const hdr = t('colHdr');
+    let rows = '';
+    boardsRef.current.forEach(board => {
+      const boardIt = allBoardItemsRef.current[board.id] || [];
+      const dpi = board.dpi || null;
+      const units = board.units || 'px';
+      const hasPhys = dpi && units !== 'px';
+      rows += `<section><h2>${board.name}<span class="bcfg">${hasPhys ? ` · ${dpi} dpi · ${units}` : ` · ${t('noScaleConfigured')}`}</span></h2>`;
+      if (!boardIt.length) { rows += `<p class="empty">${t('emptyBoardMem')}</p></section>`; return; }
+      rows += `<table><thead><tr><th>${hdr[0]}</th><th>${hdr[1]}</th><th>${hdr[2]}</th>${hasPhys ? `<th>${hdr[3]}</th>` : ''}<th>${hdr[4]}</th></tr></thead><tbody>`;
+      boardIt.forEach((item, i) => {
+        const photo = photosRef.current.find(p => p.id === item.photoId);
+        const h = photo
+          ? ((item.rot || 0) % 180 !== 0
+            ? Math.round(item.w * photo.w / photo.h)
+            : Math.round(item.w * photo.h / photo.w))
+          : item.w;
+        const physW = hasPhys ? pxToPhys(item.w, dpi, units) : null;
+        const physH = hasPhys ? pxToPhys(h, dpi, units) : null;
+        rows += `<tr>
+          <td class="n">${i + 1}</td>
+          <td>${photo?.name || item.photoId}</td>
+          <td class="px">${item.w} × ${h}</td>
+          ${hasPhys ? `<td class="phys">${physW} × ${physH}</td>` : ''}
+          <td class="lbl">${item.label || ''}</td>
+        </tr>`;
+      });
+      rows += `</tbody></table></section>`;
+    });
+    const html = `<!DOCTYPE html><html lang="${lang}"><head><meta charset="UTF-8"><title>${t('reportTitle')} — ${proj?.name || ''}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Courier New',monospace;color:#111;background:#fff;max-width:720px;margin:0 auto;padding:44px 24px;font-size:12px}
+  header{border-bottom:2px solid #111;padding-bottom:14px;margin-bottom:8px}
+  header h1{font-size:22px;font-weight:400;letter-spacing:3px;text-transform:uppercase}
+  header p{font-size:9px;color:#888;margin-top:4px;letter-spacing:.5px}
+  section{margin-top:26px}
+  h2{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;background:#f5f5f5;padding:7px 10px;border-left:3px solid #111}
+  .bcfg{font-size:8px;color:#888;font-weight:400;text-transform:none;letter-spacing:.5px}
+  .empty{font-size:9px;color:#aaa;padding:8px 0 0 2px}
+  table{width:100%;border-collapse:collapse;margin-top:8px}
+  th{text-align:left;font-size:8px;text-transform:uppercase;letter-spacing:1px;color:#777;border-bottom:1px solid #ddd;padding:4px 6px}
+  td{padding:5px 6px;border-bottom:1px solid #f2f2f2;font-size:10px;vertical-align:top}
+  td.n{color:#bbb;width:24px;text-align:right}
+  td.px{color:#999;white-space:nowrap}
+  td.phys{font-weight:600;white-space:nowrap}
+  td.lbl{color:#777;font-style:italic}
+  @media print{body{padding:10mm 12mm} section{page-break-inside:avoid}}
+</style></head><body>
+<header><h1>${t('reportHeading')}</h1><p>${proj?.name || ''} · ${date}</p></header>
+${rows}
+</body></html>`;
+    const w = window.open('', '_blank', 'width=780,height=740');
+    if (!w) { showToast(t('allowPopups'), true); return; }
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    setTimeout(() => w.print(), 400);
+  };
+
+  // ── helpers ───────────────────────────────────────────────────────────────
+  const photoBoardNames = (photoId) =>
+    boardsRef.current
+      .filter(b => (allBoardItemsRef.current[b.id] || []).some(i => i.photoId === photoId))
+      .map(b => b.name);
+
+  // ── canvas coordinate normalizer (keeps all items ≥ 0) ───────────────────
+  const normalizeItems = (its) => {
+    if (!its.length) return { items: its, dx: 0, dy: 0 };
+    const minX = Math.min(...its.map(i => i.x));
+    const minY = Math.min(...its.map(i => i.y));
+    const dx = minX < 0 ? -minX : 0;
+    const dy = minY < 0 ? -minY : 0;
+    if (!dx && !dy) return { items: its, dx: 0, dy: 0 };
+    return { items: its.map(i => ({ ...i, x: i.x + dx, y: i.y + dy })), dx, dy };
+  };
+
+  const applyNormalized = (its) => {
+    if (boardPxRef.current) {
+      setItems(its); itemsRef.current = its;
+      return its;
+    }
+    const { items: norm, dx, dy } = normalizeItems(its);
+    setItems(norm); itemsRef.current = norm;
+    if ((dx || dy) && wrapRef.current) {
+      wrapRef.current.scrollLeft -= dx * zoomRef.current;
+      wrapRef.current.scrollTop  -= dy * zoomRef.current;
+    }
+    return norm;
+  };
+
+  // ── place photo ───────────────────────────────────────────────────────────
+  const placePhoto = (photo, cx, cy) => {
+    const w = 320;
+    const bp = boardPxRef.current;
+    const maxZ = itemsRef.current.length ? Math.max(...itemsRef.current.map(i => i.z || 0)) : 0;
+    const h = Math.round(w * photo.h / photo.w);
+    let x = Math.round(cx - w / 2);
+    let y = Math.round(cy - h / 2);
+    if (bp) {
+      x = Math.max(0, Math.min(x, bp.w - w));
+      y = Math.max(0, Math.min(y, bp.h - h));
+    }
+    const item = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
+      photoId: photo.id, x, y, w, z: maxZ + 1, label: '', rot: 0,
+    };
+    const nit = [...itemsRef.current, item];
+    const norm = applyNormalized(nit);
+    selRef.current = [item.id]; setSel([item.id]);
+    saveItemsNow(norm);
+  };
+
+  const fitBoard = useCallback(() => {
+    const bp = boardPxRef.current;
+    const wrap = wrapRef.current;
+    if (!bp || !wrap) return;
+    const avW = wrap.clientWidth  - BOARD_PAD * 2 - 8;
+    const avH = wrap.clientHeight - BOARD_PAD * 2 - 8;
+    const z = Math.max(0.05, Math.min(4, Math.min(avW / bp.w, avH / bp.h)));
+    setZoom(z);
+    // after zoom DOM update, scroll to center board
+    requestAnimationFrame(() => {
+      const bpNow = boardPxRef.current;
+      if (!wrap || !bpNow) return;
+      const zNow = z;
+      const totalW = bpNow.w * zNow + BOARD_PAD * 2;
+      const totalH = bpNow.h * zNow + BOARD_PAD * 2;
+      wrap.scrollLeft = Math.max(0, (totalW - wrap.clientWidth)  / 2);
+      wrap.scrollTop  = Math.max(0, (totalH - wrap.clientHeight) / 2);
+    });
+  }, []);
+
+  // auto-fit when switching to a fixed board
+  useEffect(() => {
+    if (!bid) return;
+    const bp = boardPxRef.current;
+    if (bp) requestAnimationFrame(() => fitBoard());
+    else setZoom(1);
+  }, [bid, fitBoard]);
+
+  const addToCenter = photoId => {
+    const photo = photosRef.current.find(p => p.id === photoId);
+    if (!photo) return;
+    const wrap = wrapRef.current;
+    const z = zoomRef.current;
+    const bp = boardPxRef.current;
+    const pad = bp ? BOARD_PAD : 0;
+    placePhoto(photo,
+      (wrap.scrollLeft + wrap.clientWidth  / 2 - pad) / z,
+      (wrap.scrollTop  + wrap.clientHeight / 2 - pad) / z,
+    );
+  };
+
+  // ── CRUD ──────────────────────────────────────────────────────────────────
+  const createProject = async () => {
+    if (!nameVal.trim()) return;
+    const p = await api.post('/api/projects', { name: nameVal.trim() });
+    setProjects(ps => [...ps, p]);
+    setPid(p.id);
+    setNameVal(''); setModal(null);
+  };
+
+  const createBoard = async () => {
+    if (!nameVal.trim() || !pidRef.current) return;
+    const b = await api.post(`/api/projects/${pidRef.current}/boards`, { name: nameVal.trim() });
+    setBoards(bs => [...bs, b]);
+    setBid(b.id);
+    setAllBoardItems(prev => ({ ...prev, [b.id]: [] }));
+    setNameVal(''); setModal(null);
+  };
+
+  const startRename = (type, id, name, e) => {
+    e?.stopPropagation();
+    setRenaming({ type, id, value: name });
+  };
+
+  const submitRename = async () => {
+    if (!renaming) return;
+    const { type, id, value } = renaming;
+    const name = value.trim();
+    setRenaming(null);
+    if (!name) return;
+    if (type === 'project') {
+      await api.patch(`/api/projects/${id}`, { name });
+      setProjects(ps => ps.map(p => p.id === id ? { ...p, name } : p));
+    } else {
+      await api.patch(`/api/projects/${pidRef.current}/boards/${id}`, { name });
+      setBoards(bs => bs.map(b => b.id === id ? { ...b, name } : b));
+    }
+  };
+
+  const deleteProject = async (id, e) => {
+    e?.stopPropagation();
+    if (!confirm(t('confirmDeleteProject'))) return;
+    await api.del(`/api/projects/${id}`);
+    const nps = projects.filter(p => p.id !== id);
+    setProjects(nps);
+    if (pidRef.current === id) setPid(nps[0]?.id || null);
+  };
+
+  const deleteBoard = async (id, e) => {
+    e?.stopPropagation();
+    if (!confirm(t('confirmDeleteBoard'))) return;
+    await api.del(`/api/projects/${pidRef.current}/boards/${id}`);
+    const nbs = boards.filter(b => b.id !== id);
+    setBoards(nbs);
+    setAllBoardItems(prev => { const n = {...prev}; delete n[id]; return n; });
+    if (bidRef.current === id) setBid(nbs[0]?.id || null);
+  };
+
+  // ── upload ────────────────────────────────────────────────────────────────
+  const uploadFiles = async (files, dropPos = null) => {
+    const p = pidRef.current;
+    if (!p) return showToast(t('selectProjectFirst'), true);
+    setUploading(true);
+    let ok = 0;
+    for (const file of Array.from(files)) {
+      if (!file.type.startsWith('image/')) continue;
+      try {
+        const photo = await api.upload(`/api/projects/${p}/photos`, file);
+        if (photo.error) { showToast(photo.error, true); continue; }
+        setPhotos(ps => [...ps, photo]);
+        if (dropPos && bidRef.current) placePhoto(photo, dropPos.x, dropPos.y);
+        ok++;
+      } catch { showToast(t('uploadError', file.name), true); }
+    }
+    setUploading(false);
+    if (ok) showToast(t('photosAdded', ok));
+  };
+
+  const deletePhoto = async id => {
+    if (!confirm(t('confirmDeletePhoto'))) return;
+    await api.del(`/api/projects/${pidRef.current}/photos/${id}`);
+    setPhotos(ps => ps.filter(p => p.id !== id));
+    const nit = itemsRef.current.filter(i => i.photoId !== id);
+    setItems(nit); saveItemsNow(nit);
+  };
+
+  // ── import from repo ──────────────────────────────────────────────────────
+  // ── hover info ────────────────────────────────────────────────────────────
+  const showPhotoInfo = (photo, status, thumbSrc, itemW = null, itemH = null) =>
+    setHoverInfo({ photo, status, thumbSrc, itemW, itemH });
+  const clearHoverInfo = () => setHoverInfo(null);
+
+  // ── drag ──────────────────────────────────────────────────────────────────
+  const onLibDS = (e, id) => { e.dataTransfer.setData('tb-photo', id); e.dataTransfer.effectAllowed = 'copy'; };
+
+  const onCanvasDrop = async e => {
+    e.preventDefault(); setDragOver(false);
+    const wrap = wrapRef.current;
+    const r = wrap.getBoundingClientRect();
+    const z = zoomRef.current;
+    const pad = boardPxRef.current ? BOARD_PAD : 0;
+    const pos = { x: (e.clientX - r.left + wrap.scrollLeft - pad) / z, y: (e.clientY - r.top + wrap.scrollTop - pad) / z };
+    if (e.dataTransfer.files?.length) {
+      if (!bidRef.current) return showToast(t('createBoardFirst'), true);
+      await uploadFiles(e.dataTransfer.files, pos);
+      return;
+    }
+    const photoId = e.dataTransfer.getData('tb-photo');
+    if (photoId) {
+      const photo = photosRef.current.find(p => p.id === photoId);
+      if (photo) placePhoto(photo, pos.x, pos.y);
+    }
+  };
+
+  // ── item interactions ─────────────────────────────────────────────────────
+  const onItemPD = (e, itemId) => {
+    if (e.button !== 0) return;
+    if (e.target.closest('.lbl,.ibc,.rh')) return;
+    e.stopPropagation(); e.preventDefault();
+
+    // Update selection
+    if (e.shiftKey) {
+      const ns = selRef.current.includes(itemId)
+        ? selRef.current.filter(id => id !== itemId)
+        : [...selRef.current, itemId];
+      selRef.current = ns; setSel(ns);
+    } else {
+      if (!selRef.current.includes(itemId)) {
+        selRef.current = [itemId]; setSel([itemId]);
+      }
+    }
+
+    const dragIds = [...selRef.current];
+    // Bring to front
+    let z = Math.max(0, ...itemsRef.current.map(i => i.z || 0));
+    const fwd = itemsRef.current.map(i => dragIds.includes(i.id) ? { ...i, z: ++z } : i);
+    setItems(fwd); itemsRef.current = fwd;
+
+    // Record start positions
+    const starts = {};
+    dragIds.forEach(id => { const it = fwd.find(i => i.id === id); if (it) starts[id] = { x: it.x, y: it.y }; });
+    const sx = e.clientX, sy = e.clientY;
+    let ldx = 0, ldy = 0;
+
+    const clampItem = (i, x, y) => {
+      const bp = boardPxRef.current;
+      if (!bp) return { x, y };
+      const h = getItemH(i);
+      return { x: Math.max(0, Math.min(x, bp.w - i.w)), y: Math.max(0, Math.min(y, bp.h - h)) };
+    };
+    const onMM = e => {
+      ldx = e.clientX - sx; ldy = e.clientY - sy;
+      const z = zoomRef.current;
+      setItems(its => its.map(i => {
+        if (!dragIds.includes(i.id)) return i;
+        const { x, y } = clampItem(i, starts[i.id].x + ldx/z, starts[i.id].y + ldy/z);
+        return { ...i, x, y };
+      }));
+    };
+    const onMU = () => {
+      window.removeEventListener('pointermove', onMM);
+      window.removeEventListener('pointerup',   onMU);
+      const z = zoomRef.current;
+      const nit = itemsRef.current.map(i => {
+        if (!dragIds.includes(i.id)) return i;
+        const { x, y } = clampItem(i, Math.round(starts[i.id].x + ldx/z), Math.round(starts[i.id].y + ldy/z));
+        return { ...i, x, y };
+      });
+      const norm = applyNormalized(nit);
+      saveItemsNow(norm);
+    };
+    window.addEventListener('pointermove', onMM);
+    window.addEventListener('pointerup',   onMU);
+  };
+
+  const onResizePD = (e, itemId) => {
+    e.stopPropagation(); e.preventDefault();
+    const it = itemsRef.current.find(i => i.id === itemId);
+    const sx = e.clientX, ow = it.w;
+    let cw = ow;
+    const onMM = e => {
+      const bp = boardPxRef.current;
+      const maxW = bp ? bp.w - it.x : Infinity;
+      cw = Math.max(80, Math.min(ow + (e.clientX - sx) / zoomRef.current, maxW));
+      setItems(its => its.map(i => i.id === itemId ? { ...i, w: cw } : i));
+    };
+    const onMU = () => {
+      window.removeEventListener('pointermove', onMM);
+      window.removeEventListener('pointerup',   onMU);
+      const nit = itemsRef.current.map(i => i.id === itemId ? { ...i, w: Math.round(cw) } : i);
+      setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
+    };
+    window.addEventListener('pointermove', onMM);
+    window.addEventListener('pointerup',   onMU);
+  };
+
+  const rotateItem = id => {
+    const nit = itemsRef.current.map(i => i.id === id ? { ...i, rot: ((i.rot || 0) + 90) % 360 } : i);
+    setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
+  };
+  const deleteItem = id => {
+    const nit = itemsRef.current.filter(i => i.id !== id);
+    setItems(nit); itemsRef.current = nit;
+    selRef.current = []; setSel([]);
+    saveItemsNow(nit);
+  };
+  const bringFwd = id => {
+    const maxZ = Math.max(0, ...itemsRef.current.map(i => i.z || 0));
+    const nit = itemsRef.current.map(i => i.id === id ? { ...i, z: maxZ + 1 } : i);
+    setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
+  };
+  const updateLabel = (id, v) => setItems(its => its.map(i => i.id === id ? { ...i, label: v } : i));
+  const saveLabel   = ()     => saveItemsNow(itemsRef.current);
+
+  // ── alignment ────────────────────────────────────────────────���────────────
+  const getItemH = item => {
+    const p = photosRef.current.find(ph => ph.id === item.photoId);
+    if (!p) return item.w;
+    return (item.rot || 0) % 180 !== 0
+      ? Math.round(item.w * p.w / p.h)   // swapped at 90°/270°
+      : Math.round(item.w * p.h / p.w);
+  };
+  const alignItems = type => {
+    const ids = selRef.current;  // ordered array — ids[0] is the anchor
+    const selIt = itemsRef.current.filter(i => ids.includes(i.id));
+    if (selIt.length < 2) return;
+    const anchor = itemsRef.current.find(i => i.id === ids[0]);
+    if (!anchor) return;
+    const anchorH = getItemH(anchor);
+    const others  = selIt.filter(i => i.id !== ids[0]);
+    let nit = [...itemsRef.current];
+    const upd = (id, patch) => { nit = nit.map(i => i.id === id ? { ...i, ...patch } : i); };
+    switch (type) {
+      case 'left':   others.forEach(i => upd(i.id, {x: anchor.x})); break;
+      case 'right':  others.forEach(i => upd(i.id, {x: anchor.x + anchor.w - i.w})); break;
+      case 'ch':     others.forEach(i => upd(i.id, {x: Math.round(anchor.x + anchor.w/2 - i.w/2)})); break;
+      case 'top':    others.forEach(i => upd(i.id, {y: anchor.y})); break;
+      case 'bottom': others.forEach(i => upd(i.id, {y: anchor.y + anchorH - getItemH(i)})); break;
+      case 'cv':     others.forEach(i => upd(i.id, {y: Math.round(anchor.y + anchorH/2 - getItemH(i)/2)})); break;
+      case 'eqw':    others.forEach(i => upd(i.id, {w: anchor.w})); break;
+      case 'dh': {
+        if (selIt.length < 3) return;
+        const sorted = [...selIt].sort((a,b)=>a.x-b.x);
+        const span = sorted[sorted.length-1].x + sorted[sorted.length-1].w - sorted[0].x;
+        const gap  = (span - sorted.reduce((s,i)=>s+i.w,0)) / (sorted.length-1);
+        let cx = sorted[0].x + sorted[0].w + gap;
+        sorted.slice(1,-1).forEach(i => { upd(i.id,{x:Math.round(cx)}); cx += i.w + gap; });
+        break;
+      }
+      case 'dv': {
+        if (selIt.length < 3) return;
+        const sorted = [...selIt].sort((a,b)=>a.y-b.y);
+        const span = sorted[sorted.length-1].y + getItemH(sorted[sorted.length-1]) - sorted[0].y;
+        const gap  = (span - sorted.reduce((s,i)=>s+getItemH(i),0)) / (sorted.length-1);
+        let cy = sorted[0].y + getItemH(sorted[0]) + gap;
+        sorted.slice(1,-1).forEach(i => { upd(i.id,{y:Math.round(cy)}); cy += getItemH(i) + gap; });
+        break;
+      }
+    }
+    const norm = applyNormalized(nit);
+    saveItemsNow(norm);
+  };
+
+  if (!ready) return (
+    <div style={{height:'100vh',background:'var(--bg)',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'IBM Plex Mono',fontSize:11,letterSpacing:3,color:'var(--acc)'}}>
+      CARGANDO
+    </div>
+  );
+
+  const activeProject = projects.find(p => p.id === pid);
+  const activeBoard   = boards.find(b => b.id === bid);
+
+  // ── INFO PANEL render helper ──────────────────────────────────────────────
+  const InfoPanel = () => {
+    if (!hoverInfo) return (
+      <div className="info-empty">
+        {t('infoEmpty1')}<br/>{t('infoEmpty2')}
+      </div>
+    );
+    const { photo, status, thumbSrc, itemW, itemH } = hoverInfo;
+    const boardNames = photo?.id ? photoBoardNames(photo.id) : [];
+    return (
+      <div className="info-panel">
+        <img className="info-thumb"
+          src={thumbSrc || (pid && photo?.id ? `/photos/${pid}/${photo.id}/thumb` : '')}
+          alt=""
+          onError={e => e.target.style.opacity = '.2'}
+        />
+        <div className="info-meta">
+          <div className="info-name" title={photo?.name}>{photo?.name || '—'}</div>
+          {photo?.w > 0 && (
+            <div className="info-row">{t('original')} {photo.w} × {photo.h} px</div>
+          )}
+          {photo?.size > 0 && (
+            <div className="info-row">{fmtSize(photo.size)}</div>
+          )}
+          {itemW && (
+            <>
+              <div className="info-row" style={{marginTop:2}}>
+                {t('inTableau')} {itemW} × {itemH} px
+              </div>
+              {boardDpi && boardUnits !== 'px' && (
+                <div className="info-phys">
+                  ≈ {pxToPhys(itemW, boardDpi, boardUnits)} × {pxToPhys(itemH, boardDpi, boardUnits)}
+                  <span style={{color:'var(--muted)',marginLeft:4}}>@ {boardDpi} dpi</span>
+                </div>
+              )}
+            </>
+          )}
+          <div className="info-boards">
+            {boardNames.length === 0
+              ? <div className="ibd-none">{t('notInAnyBoard')}</div>
+              : boardNames.map(n => (
+                  <span key={n} className={`ibd-tag${n === activeBoard?.name ? ' cur' : ''}`}>{n}</span>
+                ))
+            }
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ── CONFIG hint ───────────────────────────────────────────────────────────
+  const cfgHint = () => {
+    const dpi = parseInt(cfgDpi) || 300;
+    if (cfgUnits === 'px') return t('noScaleHint');
+    const mm = (25.4 / dpi).toFixed(3);
+    const cm = (2.54 / dpi).toFixed(4);
+    return t('scaleHint', mm, cm, (dpi/2.54).toFixed(0));
+  };
+
+  return (
+    <div className="app" onClick={() => { selRef.current = []; setSel([]); renaming && setRenaming(null); setThemeOpen(false); }}>
+
+      {/* ── TOPBAR ── */}
+      <div className="topbar" onClick={e => e.stopPropagation()}>
+        <div className="logo">Tableau</div>
+        <div className="vsep"/>
+        <div className="breadcrumb">
+          {activeProject
+            ? <>
+                <span className="bc-seg">{activeProject.name}</span>
+                {activeBoard && <>
+                  <span className="bc-arrow">›</span>
+                  <span className="bc-seg">{activeBoard.name}</span>
+                  {boardDpi && boardUnits !== 'px' && (
+                    <span className="bc-dpi">{boardPx ? '⊡ ' : ''}{boardDpi} dpi · {boardUnits}</span>
+                  )}
+                </>}
+              </>
+            : <span className="bc-none">{t('noProjHint')}</span>
+          }
+        </div>
+        <div style={{flex:1}}/>
+        {pid && <>
+          <input type="file" accept="image/*" multiple style={{display:'none'}} id="tb-upload"
+            onChange={e => { uploadFiles(e.target.files); e.target.value = ''; }}
+          />
+          <label htmlFor="tb-upload" className="btn acc" style={{cursor:'pointer',fontSize:9}}>
+            {t('upload')}
+          </label>
+        </>}
+        {pid && boards.length > 0 && (
+          <button className="btn" style={{fontSize:10}} onClick={() => setModal('memoria')} title={t('reportTitle')}>
+            {t('report')}
+          </button>
+        )}
+        {bid && <>
+          <button className={`btn${showGrid?' acc':''}`} style={{fontSize:10,letterSpacing:.3}} onClick={toggleGrid} title={t('gridToggle')}>
+            ▦
+          </button>
+          {showGrid && (
+            <select className="btn" style={{fontSize:9,padding:'5px 8px',cursor:'pointer'}}
+              value={gridStep}
+              onChange={e => changeGridStep(Number(e.target.value))}>
+              {gridOptions.map(o => <option key={o.v} value={o.v}>{o.label}</option>)}
+            </select>
+          )}
+          <button className="btn" style={{fontSize:10}} onClick={openBoardConfig} title={t('boardConfig')}>
+            {t('config')}
+          </button>
+          <a className="btn" style={{fontSize:10}}
+            href={`/api/boards/${pid}/${bid}/export`}
+            download
+            title={t('exportJpeg')}
+          >
+            {t('exportJpeg')}
+          </a>
+        </>}
+        {!sbOpen && (
+          <button className="btn" style={{fontSize:10}} onClick={() => setSbOpen(true)}>{t('showPanel')}</button>
+        )}
+        <div className="theme-picker" onClick={e => e.stopPropagation()}>
+          <button className="btn theme-btn" onClick={() => setThemeOpen(o => !o)} title={t('preferences')}>
+            <span className="theme-dot" style={{background: THEMES[theme]?.acc}}/>
+          </button>
+          {themeOpen && (
+            <div className="theme-dropdown">
+              <div className="pref-sec-hd">{t('themeLabel')}</div>
+              {Object.entries(THEMES).map(([id, th]) => (
+                <div key={id} className={`theme-opt${theme === id ? ' active' : ''}`}
+                  onClick={() => applyTheme(id)}>
+                  <div className="theme-swatches">
+                    <div className="theme-sw" style={{background: th.bg, border:'1px solid #8884'}}/>
+                    <div className="theme-sw" style={{background: th.acc}}/>
+                  </div>
+                  <span className="theme-opt-label">{th.label}</span>
+                  {theme === id && <span style={{color:'var(--acc)',fontSize:11}}>✓</span>}
+                </div>
+              ))}
+              <div className="pref-divider"/>
+              <div className="pref-sec-hd">{t('langLabel')}</div>
+              {[['es','Español'],['en','English']].map(([id, label]) => (
+                <div key={id} className={`theme-opt${lang === id ? ' active' : ''}`}
+                  onClick={() => applyLang(id)}>
+                  <span style={{fontSize:13,lineHeight:1}}>{id==='es'?'ES':'EN'}</span>
+                  <span className="theme-opt-label">{label}</span>
+                  {lang === id && <span style={{color:'var(--acc)',fontSize:11}}>✓</span>}
+                </div>
+              ))}
+              <div className="pref-divider"/>
+              <div className="pref-sec-hd">{t('aboutLabel')}</div>
+              <div className="pref-about" onClick={e => e.stopPropagation()}>
+                <span className="pref-about-name">Tableau{appVersion ? ` · v${appVersion}` : ''}</span>
+                <span className="pref-about-ver">{t('authorLabel')}: Blas González</span>
+                <a className="pref-about-link"
+                  href="https://blasgonzalezfotografia.com"
+                  target="_blank"
+                  rel="noopener noreferrer">
+                  blasgonzalezfotografia.com
+                </a>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── MAIN ── */}
+      {!pid && !projects.length ? (
+        <div className="start">
+          <div className="start-logo">Tableau</div>
+          <div className="start-sub">
+            {t('startSub')}<br/>
+            {t('startDesc')}
+          </div>
+          <button className="btn acc" style={{padding:'11px 30px',fontSize:12}}
+            onClick={() => { setNameVal(''); setModal('project'); }}>
+            {t('createFirstProject')}
+          </button>
+        </div>
+      ) : (
+        <div className="main-area">
+
+          {/* ── SIDEBAR ── */}
+          {!sbOpen ? (
+            <div className="sidebar" style={{width:36,flexShrink:0}} onClick={e => e.stopPropagation()}>
+              <div className="sb-toggle-strip" onClick={() => setSbOpen(true)} title={t('openPanel')}>
+                <button className="sb-toggle-btn">▶</button>
+                <div className="sb-collapsed-label">{t('panelLabel')}</div>
+              </div>
+            </div>
+          ) : (
+            <div className="sidebar" onClick={e => e.stopPropagation()}>
+              <div className="sb-inner">
+
+                {/* NAV: Projects & Boards */}
+                <div className="sb-sec nav">
+                  <div className="sb-sec-hd">
+                    <span className="sb-sec-title">{t('projBoards')}</span>
+                    <button className="sb-sec-btn" title={t('newProject')}
+                      onClick={() => { setNameVal(''); setModal('project'); }}>+</button>
+                    <button className="sb-sec-btn" title={t('collapsePanel')} style={{marginLeft:2}}
+                      onClick={() => setSbOpen(false)}>◀</button>
+                  </div>
+                  <div className="sb-scroll">
+                    {projects.length === 0 ? (
+                      <div className="nav-empty">
+                        {t('noProjectsYet')}<br/>
+                        {t('clickToCreate')}
+                      </div>
+                    ) : projects.map(p => {
+                      const isActive = p.id === pid;
+                      return (
+                        <div key={p.id} className="nproj">
+                          <div className={`nproj-row${isActive ? ' active' : ''}`} onClick={() => setPid(p.id)}>
+                            <span className="nproj-arrow">{isActive ? '▾' : '›'}</span>
+                            {renaming?.type === 'project' && renaming.id === p.id ? (
+                              <input className="n-rename" autoFocus value={renaming.value}
+                                onChange={e => setRenaming(r => ({ ...r, value: e.target.value }))}
+                                onKeyDown={e => { if (e.key==='Enter') submitRename(); if (e.key==='Escape') setRenaming(null); }}
+                                onBlur={submitRename} onClick={e => e.stopPropagation()}
+                              />
+                            ) : (
+                              <span className="nproj-name" title={p.name}>{p.name}</span>
+                            )}
+                            <div className="nrow-acts">
+                              <button className="nact edit" title={t('renameBtn')} onClick={e => startRename('project', p.id, p.name, e)}>✎</button>
+                              <button className="nact del"  title={t('deleteBtn')}  onClick={e => deleteProject(p.id, e)}>×</button>
+                            </div>
+                          </div>
+                          {isActive && (
+                            <div className="nboards">
+                              {boards.map(b => (
+                                <div key={b.id} className={`nboard-row${b.id === bid ? ' active' : ''}`} onClick={() => setBid(b.id)}>
+                                  <span className="nboard-dash">└</span>
+                                  {renaming?.type === 'board' && renaming.id === b.id ? (
+                                    <input className="n-rename" autoFocus value={renaming.value}
+                                      onChange={e => setRenaming(r => ({ ...r, value: e.target.value }))}
+                                      onKeyDown={e => { if (e.key==='Enter') submitRename(); if (e.key==='Escape') setRenaming(null); }}
+                                      onBlur={submitRename} onClick={e => e.stopPropagation()}
+                                    />
+                                  ) : (
+                                    <span className="nboard-name" title={b.name}>{b.name}</span>
+                                  )}
+                                  <div className="nrow-acts">
+                                    <button className="nact edit" title={t('renameBtn')} onClick={e => startRename('board', b.id, b.name, e)}>✎</button>
+                                    <button className="nact del"  title={t('deleteBtn')}  onClick={e => deleteBoard(b.id, e)}>×</button>
+                                  </div>
+                                </div>
+                              ))}
+                              <div className="nboard-add" onClick={() => { setNameVal(''); setModal('board'); }}>
+                                {t('addBoard')}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* INFO */}
+                <div className="sb-sec info">
+                  <div className="sb-sec-hd">
+                    <span className="sb-sec-title">{t('infoTitle')}</span>
+                  </div>
+                  <InfoPanel/>
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          {/* ── WORKSPACE ── */}
+          <div className="workspace">
+
+            {/* CANVAS */}
+            <div ref={wrapRef} className="canvas-wrap"
+              style={boardPx ? { background: '#1e1e1e', padding: BOARD_PAD } : {}}
+              onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget)) setDragOver(false); }}
+              onDrop={onCanvasDrop}
+            >
+              {dragOver && <div className="canvas-drop-hint">{t('dropHint')}</div>}
+              {sel.length >= 2 && (
+                <div className="align-bar" onClick={e => e.stopPropagation()}>
+                  <span className="abt-label">{sel.length}</span>
+                  <div className="align-bar-sep"/>
+                  <button className="abt" title={t('alLeft')}   onClick={() => alignItems('left')}>⊢</button>
+                  <button className="abt" title={t('alCH')}     onClick={() => alignItems('ch')}>⋮</button>
+                  <button className="abt" title={t('alRight')}  onClick={() => alignItems('right')}>⊣</button>
+                  <div className="align-bar-sep"/>
+                  <button className="abt" title={t('alTop')}    onClick={() => alignItems('top')}>⊤</button>
+                  <button className="abt" title={t('alCV')}     onClick={() => alignItems('cv')}>⋯</button>
+                  <button className="abt" title={t('alBottom')} onClick={() => alignItems('bottom')}>⊥</button>
+                  {sel.length >= 3 && <>
+                    <div className="align-bar-sep"/>
+                    <button className="abt" title={t('distH')}  onClick={() => alignItems('dh')}>↔</button>
+                    <button className="abt" title={t('distV')}  onClick={() => alignItems('dv')}>↕</button>
+                  </>}
+                  <div className="align-bar-sep"/>
+                  <button className="abt" title={t('eqWidth')}  onClick={() => alignItems('eqw')}>⊟</button>
+                  <div className="align-bar-sep"/>
+                  <button className="abt" style={{fontSize:10,color:'var(--muted)'}} title={t('clearSel')}
+                    onClick={() => { selRef.current = []; setSel([]); }}>✕</button>
+                </div>
+              )}
+              <div className="canvas" style={{
+                zoom,
+                backgroundImage: showGrid
+                  ? `linear-gradient(${boardPx ? 'rgba(0,0,0,0.09)' : 'var(--border)'} 1px,transparent 1px),linear-gradient(90deg,${boardPx ? 'rgba(0,0,0,0.09)' : 'var(--border)'} 1px,transparent 1px)`
+                  : 'none',
+                backgroundSize: `${gridCellPx}px ${gridCellPx}px`,
+                ...(boardPx ? {
+                  width: boardPx.w, height: boardPx.h,
+                  minWidth: boardPx.w, minHeight: boardPx.h,
+                  backgroundColor: '#fff',
+                  boxShadow: '0 8px 48px rgba(0,0,0,.7)',
+                  overflow: 'hidden',
+                } : {})
+              }} onClick={() => { selRef.current = []; setSel([]); }}>
+                {!bid && (
+                  <div className="hint">
+                    <em>{t('noBoard')}</em>
+                    {t('createBoardHint')}
+                  </div>
+                )}
+                {bid && items.length === 0 && (
+                  <div className="hint">
+                    <em>{t('emptyBoard')}</em>
+                    {t('dragHint1')}<br/>
+                    {t('dragHint2')}<br/>
+                    {t('dragHint3')}
+                  </div>
+                )}
+
+                {[...items].sort((a, b) => (a.z||0)-(b.z||0)).map(item => {
+                  const photo = photos.find(p => p.id === item.photoId);
+                  const rot = item.rot || 0;
+                  const isSwapped = rot % 180 !== 0;
+                  // naturalW/H: pre-rotation image dimensions at item.w scale
+                  const naturalW = isSwapped
+                    ? (photo ? Math.round(item.w * photo.w / photo.h) : item.w)
+                    : item.w;
+                  const naturalH = isSwapped
+                    ? item.w
+                    : (photo ? Math.round(item.w * photo.h / photo.w) : item.w);
+                  // displayH: actual height the item occupies on canvas
+                  const displayH = isSwapped ? naturalW : naturalH;
+                  // offsets to center the (possibly larger) pre-rotation img in the display box
+                  const offX = (item.w  - naturalW) / 2;
+                  const offY = (displayH - naturalH) / 2;
+                  return (
+                    <div key={item.id} className={`bitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}`}
+                      style={{ left: item.x, top: item.y, width: item.w, zIndex: item.z||1 }}
+                      onPointerDown={e => onItemPD(e, item.id)}
+                      onClick={e => { e.stopPropagation(); if (!e.shiftKey) { selRef.current = [item.id]; setSel([item.id]); } }}
+                      onMouseEnter={() => photo && showPhotoInfo(photo, 'board', `/photos/${pid}/${photo.id}/thumb`, item.w, displayH)}
+                      onMouseLeave={clearHoverInfo}
+                    >
+                      <div className="bitem-bar">
+                        <button className="ibc rot" title={t('rotateBtn')}  onClick={e => { e.stopPropagation(); rotateItem(item.id); }}>↻</button>
+                        <button className="ibc fwd" title={t('bringFwdBtn')} onClick={e => { e.stopPropagation(); bringFwd(item.id); }}>↑</button>
+                        <button className="ibc del" title={t('deleteBtn')}   onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
+                      </div>
+                      <div className="bitem-img-wrap" style={{ width: item.w, height: displayH }}>
+                        <img
+                          src={`/photos/${pid}/${item.photoId}`}
+                          alt={photo?.name || ''}
+                          className="bitem-img"
+                          width={naturalW}
+                          height={naturalH}
+                          style={{
+                            position: 'absolute',
+                            left: offX,
+                            top: offY,
+                            transform: rot ? `rotate(${rot}deg)` : undefined,
+                            transformOrigin: 'center',
+                          }}
+                          draggable={false}
+                          onError={e => e.target.style.opacity = '.3'}
+                        />
+                      </div>
+                      <div className="dim-tag">{dimLabel(item.w, displayH, boardDpi, boardUnits)}</div>
+                      <input className="lbl" value={item.label||''} placeholder={t('labelPlaceholder')}
+                        onChange={e => updateLabel(item.id, e.target.value)}
+                        onBlur={saveLabel}
+                        onPointerDown={e => e.stopPropagation()}
+                        onClick={e => e.stopPropagation()}
+                      />
+                      <div className="rh" onPointerDown={e => onResizePD(e, item.id)}/>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* LIBRARY */}
+            <div className="library" onClick={e => e.stopPropagation()}>
+              <div className="lib-side">
+                <div className="lib-title">{t('projectPhotosL1')}<br/>{t('projectPhotosL2')}</div>
+                <div className="lib-count">{photos.length}</div>
+              </div>
+              <div className="lib-scroll">
+                {photos.length === 0 ? (
+                  <div className="lib-empty">
+                    <label htmlFor="tb-upload" style={{cursor:'pointer',color:'var(--acc-dim)'}}>
+                      {t('uploadHint')}
+                    </label>
+                    <span style={{fontSize:9,color:'var(--muted)'}}>{t('dragFilesHint')}</span>
+                  </div>
+                ) : (
+                  photos.map(p => {
+                    const inBoard = items.some(i => i.photoId === p.id);
+                    return (
+                      <div key={p.id} className={`thumb${inBoard?' in-board':''}`}
+                        draggable onDragStart={e => onLibDS(e, p.id)}
+                        onMouseEnter={() => showPhotoInfo(p, inBoard?'board':'proj', `/photos/${pid}/${p.id}/thumb`)}
+                        onMouseLeave={clearHoverInfo}
+                        onClick={() => { if (!bid) return showToast(t('createBoardFirst'), true); addToCenter(p.id); }}
+                        title={`${p.name}${inBoard?' · '+t('alreadyInTableau'):''}`}
+                      >
+                        <img src={`/photos/${pid}/${p.id}/thumb`} alt={p.name}/>
+                        <button className="thumb-x" onClick={e => { e.stopPropagation(); deletePhoto(p.id); }}>×</button>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {bid && (
+        <div className="zoom-ctrl">
+          <button className="zc-btn" title="Zoom − (Ctrl+−)" onClick={() => zoomStep(-1)}>−</button>
+          <span className="zc-pct"
+            title={boardPx ? t('fitView') : 'Restablecer zoom (Ctrl+0)'}
+            onClick={() => boardPx ? fitBoard() : setZoom(1)}>
+            {boardPx ? t('fitView') : `${Math.round(zoom*100)}%`}
+          </span>
+          <button className="zc-btn" title="Zoom + (Ctrl++)" onClick={() => zoomStep(1)}>+</button>
+        </div>
+      )}
+      {uploading && <div className="uploading-bar"/>}
+      {toast && <div className={`toast${toast.err?' err':''}`}>{toast.msg}</div>}
+
+      {/* ── MODALS ── */}
+      {modal === 'project' && (
+        <div className="overlay" onClick={() => setModal(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-h">{t('newProjectTitle')}</div>
+            <input className="inp" value={nameVal} autoFocus
+              onChange={e => setNameVal(e.target.value)}
+              onKeyDown={e => e.key==='Enter' && createProject()}
+              placeholder={t('projectNamePh')}
+            />
+            <div className="modal-row">
+              <button className="btn" onClick={() => setModal(null)}>{t('cancel')}</button>
+              <button className="btn acc" onClick={createProject}>{t('create')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {modal === 'board' && (
+        <div className="overlay" onClick={() => setModal(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-h">{t('newBoardTitle')}</div>
+            <input className="inp" value={nameVal} autoFocus
+              onChange={e => setNameVal(e.target.value)}
+              onKeyDown={e => e.key==='Enter' && createBoard()}
+              placeholder={t('boardNamePh')}
+            />
+            <div className="modal-row">
+              <button className="btn" onClick={() => setModal(null)}>{t('cancel')}</button>
+              <button className="btn acc" onClick={createBoard}>{t('create')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {modal === 'boardcfg' && (
+        <div className="overlay" onClick={() => setModal(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-h">{t('boardConfig')}</div>
+            <div className="modal-sub">{activeBoard?.name}</div>
+            {/* mode toggle */}
+            <div>
+              <div className="cfg-label">{t('boardMode')}</div>
+              <div style={{display:'flex',gap:6}}>
+                <button className={`btn${!cfgFixed?' acc':''}`} style={{flex:1,padding:'7px 0'}} onClick={() => setCfgFixed(false)}>{t('varMode')}</button>
+                <button className={`btn${cfgFixed?' acc':''}`}  style={{flex:1,padding:'7px 0'}} onClick={() => setCfgFixed(true)}>{t('fixedMode')}</button>
+              </div>
+            </div>
+            {/* fixed: dimensions */}
+            {cfgFixed && (
+              <div className="cfg-row">
+                <div>
+                  <div className="cfg-label">{t('boardW')} ({cfgUnits})</div>
+                  <input type="number" className="inp" value={cfgBoardW} min="1" step="0.1"
+                    onChange={e => setCfgBoardW(e.target.value)} placeholder="20"/>
+                </div>
+                <div>
+                  <div className="cfg-label">{t('boardH')} ({cfgUnits})</div>
+                  <input type="number" className="inp" value={cfgBoardH} min="1" step="0.1"
+                    onChange={e => setCfgBoardH(e.target.value)} placeholder="30"/>
+                </div>
+              </div>
+            )}
+            {/* units + dpi */}
+            <div className="cfg-row">
+              <div>
+                <div className="cfg-label">{t('unitsLabel')}</div>
+                <select className="inp" value={cfgUnits} onChange={e => setCfgUnits(e.target.value)}>
+                  <option value="px">{t('unitPx')}</option>
+                  <option value="cm">{t('unitCm')}</option>
+                  <option value="mm">{t('unitMm')}</option>
+                  <option value="in">{t('unitIn')}</option>
+                </select>
+              </div>
+              <div>
+                <div className="cfg-label">{t('resolutionLabel')}</div>
+                <select className="inp" value={cfgDpi} onChange={e => setCfgDpi(e.target.value)}>
+                  <option value="72">{t('dpi72')}</option>
+                  <option value="96">{t('dpi96')}</option>
+                  <option value="150">{t('dpi150')}</option>
+                  <option value="300">{t('dpi300')}</option>
+                  <option value="600">{t('dpi600')}</option>
+                </select>
+              </div>
+            </div>
+            {cfgUnits !== 'px' && (
+              <div className="cfg-hint">{cfgHint()}</div>
+            )}
+            {cfgFixed && cfgBoardW && cfgBoardH && (() => {
+              const px = getBoardPx({ fixed: true, fixedW: parseFloat(cfgBoardW), fixedH: parseFloat(cfgBoardH), units: cfgUnits, dpi: parseInt(cfgDpi)||300 });
+              return px ? <div className="cfg-hint" style={{color:'var(--acc)'}}>{t('pxPreview', px.w, px.h)}</div> : null;
+            })()}
+            <div style={{fontSize:9,color:'var(--muted)',lineHeight:1.8}}>
+              {t('boardConfigNote').split('\n').map((s,i,a) => <React.Fragment key={i}>{s}{i<a.length-1&&<br/>}</React.Fragment>)}
+            </div>
+            <div className="modal-row">
+              <button className="btn" onClick={() => setModal(null)}>{t('cancel')}</button>
+              <button className="btn acc" onClick={saveBoardConfig}>{t('save')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {modal === 'memoria' && (
+        <div className="overlay" onClick={() => setModal(null)}>
+          <div className="modal mem-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-h">{t('reportTitle')}</div>
+            <div className="modal-sub">{activeProject?.name}</div>
+            <div className="mem-scroll">
+              {boards.length === 0 ? (
+                <div style={{color:'var(--muted)',fontSize:10,padding:'8px 0'}}>{t('noBoardsInProject')}</div>
+              ) : boards.map(board => {
+                const boardIt = allBoardItems[board.id] || [];
+                const dpi = board.dpi || null;
+                const units = board.units || 'px';
+                const hasPhys = dpi && units !== 'px';
+                return (
+                  <div key={board.id} className="mem-board">
+                    <div className="mem-board-hd">
+                      <span className="mem-board-name">{board.name}</span>
+                      <span className="mem-board-cfg" style={hasPhys ? {} : {color:'var(--muted)'}}>
+                        {hasPhys ? `${dpi} dpi · ${units}` : t('noPhysScale')}
+                      </span>
+                    </div>
+                    {boardIt.length === 0 ? (
+                      <div className="mem-board-empty">{t('emptyBoardMem')}</div>
+                    ) : boardIt.map((item, idx) => {
+                      const photo = photos.find(p => p.id === item.photoId);
+                      const h = photo
+                        ? ((item.rot || 0) % 180 !== 0
+                          ? Math.round(item.w * photo.w / photo.h)
+                          : Math.round(item.w * photo.h / photo.w))
+                        : item.w;
+                      const physW = hasPhys ? pxToPhys(item.w, dpi, units) : null;
+                      const physH = hasPhys ? pxToPhys(h, dpi, units) : null;
+                      return (
+                        <div key={item.id} className="mem-item">
+                          <div className="mem-idx">{idx + 1}.</div>
+                          <div className="mem-info">
+                            <div className="mem-iname">{photo?.name || '(sin nombre)'}</div>
+                            <div className="mem-dims">
+                              {item.w} × {h} px
+                              {physW && <span className="mem-phys">→ {physW} × {physH}</span>}
+                            </div>
+                            {item.label && <div className="mem-lbl">"{item.label}"</div>}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{fontSize:9,color:'var(--muted)',lineHeight:1.8}}>
+              {t('reportConfigNote')}
+            </div>
+            <div className="modal-row">
+              <button className="btn" onClick={() => setModal(null)}>{t('close')}</button>
+              <button className="btn acc" onClick={printMemoria}>{t('printPdf')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

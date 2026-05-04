@@ -1,0 +1,312 @@
+================================================================================
+  TABLEAU  —  Gestor Visual de Fotografías
+  Aplicación web local para la gestión de proyectos fotográficos
+================================================================================
+
+REQUISITOS
+----------
+  · Node.js 18 o posterior
+    Descarga en: https://nodejs.org
+
+  · Un navegador web moderno (Chrome, Edge, Firefox, Safari)
+
+  · Windows 10 o posterior (para el lanzador .bat)
+    En macOS/Linux: arranque manual (ver "Inicio manual" más abajo)
+
+
+INSTALACIÓN Y PRIMER ARRANQUE  (Windows)
+----------------------------------------
+  1. Coloca la carpeta completa "tableau" en cualquier lugar de tu equipo.
+
+  2. Haz doble clic en  tableau.bat
+
+  3. En el primer arranque, el lanzador instala automáticamente
+     todas las dependencias (necesita conexión a internet).
+     Esto tarda entre 1 y 3 minutos.
+
+  4. Tu navegador se abrirá automáticamente en  http://localhost:3000
+
+  Desde el segundo arranque el inicio es inmediato.
+
+
+INICIO MANUAL  (macOS / Linux / avanzado)
+------------------------------------------
+  Abre un terminal en la carpeta tableau y ejecuta:
+
+      npm install        (solo la primera vez)
+      node server.js
+
+  Luego abre  http://localhost:3000  en tu navegador.
+
+
+DETENER LA APLICACIÓN
+---------------------
+  Cierra la ventana de terminal / símbolo del sistema,
+  o pulsa Ctrl+C dentro de ella.
+
+
+--------------------------------------------------------------------------------
+  RESUMEN DE LA INTERFAZ
+--------------------------------------------------------------------------------
+
+La aplicación tiene tres áreas principales:
+
+  PANEL IZQUIERDO    Navegación de proyectos y tableros + panel de información de foto
+  CANVAS             Área principal de edición donde se organizan las fotos
+  BARRA DE BIBLIOTECA  Tira de miniaturas en la parte inferior con todas las fotos del proyecto
+
+
+--------------------------------------------------------------------------------
+  PROYECTOS Y TABLEROS
+--------------------------------------------------------------------------------
+
+CREAR UN PROYECTO
+  · Haz clic en el botón  +  en la sección "Proyectos y Tableros" del panel,
+    o usa el botón "Crear primer proyecto" de la pantalla de bienvenida.
+  · Escribe un nombre y pulsa Enter o haz clic en "Crear".
+
+CAMBIAR DE PROYECTO
+  · Haz clic en cualquier nombre de proyecto del panel. La flecha (▾/›) indica
+    cuál está activo y despliega su lista de tableros.
+
+CREAR UN TABLERO
+  · Con un proyecto seleccionado, haz clic en "+ Nuevo tablero" en el panel,
+    o en el  +  junto a la cabecera del proyecto.
+
+CAMBIAR DE TABLERO
+  · Haz clic en cualquier tablero dentro del proyecto activo del panel.
+
+RENOMBRAR  (proyectos y tableros)
+  · Pasa el ratón sobre el nombre en el panel y haz clic en el icono  ✎.
+  · Escribe el nuevo nombre y pulsa Enter (o haz clic fuera para confirmar).
+
+ELIMINAR  (proyectos y tableros)
+  · Pasa el ratón y haz clic en el icono  ×.
+  · Eliminar un proyecto borra permanentemente todas sus fotos y tableros.
+
+
+--------------------------------------------------------------------------------
+  FOTOS
+--------------------------------------------------------------------------------
+
+AÑADIR FOTOS A UN PROYECTO
+  Tres métodos:
+
+  1. Haz clic en  "+ Subir foto"  en la barra superior y elige archivos.
+
+  2. Arrastra archivos de imagen desde el Explorador de Windows al canvas.
+
+  3. Arrastra archivos de imagen desde el Explorador de Windows al canvas —
+     se añaden automáticamente a la biblioteca del proyecto y se colocan
+     en el tablero.
+
+FORMATOS ADMITIDOS
+  JPG, JPEG, PNG, WEBP, TIFF, TIF, AVIF
+  Tamaño máximo de subida: 80 MB por archivo.
+  Las fotos se redimensionan automáticamente a un máximo de 1800 px en el lado
+  más largo y se almacenan como JPEG para un uso eficiente.
+
+COLOCAR FOTOS EN EL CANVAS
+  · Arrastra una foto desde la barra de biblioteca inferior al canvas.
+  · O haz clic en una miniatura de la biblioteca — se coloca en el centro
+    de la vista actual.
+
+  Las fotos ya colocadas en el tablero actual muestran el indicador "EN TABLEAU"
+  sobre su miniatura en la biblioteca.
+
+ELIMINAR FOTOS DEL PROYECTO
+  · Pasa el ratón sobre una miniatura de la biblioteca y haz clic en  ×.
+  · Esto elimina la foto del proyecto y de todos los tableros.
+
+
+--------------------------------------------------------------------------------
+  EDICIÓN EN EL CANVAS
+--------------------------------------------------------------------------------
+
+MOVER FOTOS
+  · Haz clic y arrastra cualquier foto del canvas.
+  · El canvas se expande automáticamente en todas las direcciones mientras trabajas.
+    Siempre puedes hacer scroll para llegar a cualquier zona.
+
+REDIMENSIONAR
+  · Un pequeño manejador naranja aparece en la esquina inferior derecha al pasar el ratón.
+  · Arrástralo para cambiar el tamaño. La proporción se mantiene automáticamente.
+
+ROTAR
+  · Pasa el ratón sobre una foto y haz clic en el botón  ↻  de la barra de control superior.
+  · Cada clic gira 90° en sentido horario.
+
+TRAER AL FRENTE
+  · Haz clic en el botón  ↑  para traer una foto delante de las que se superponen.
+
+ELIMINAR DEL CANVAS
+  · Haz clic en el botón  ×  de la barra de control de la foto.
+  · Esto solo la quita del tablero; la foto permanece en la biblioteca del proyecto.
+
+AÑADIR ETIQUETA
+  · Cada foto del canvas tiene un campo de texto debajo. Haz clic para escribir
+    un pie de foto o referencia. Pulsa Tab o haz clic fuera para guardar.
+
+
+SELECCIÓN MÚLTIPLE Y ALINEACIÓN
+  · Mantén pulsada  Mayús  y haz clic en fotos para añadirlas a la selección.
+  · Cuando hay 2 o más fotos seleccionadas, aparece una barra de alineación
+    flotante en la parte superior del canvas.
+
+  La PRIMERA foto seleccionada actúa como ANCLA — las demás se alinean
+  o igualan respecto a ella:
+
+    ⊢  Alinear bordes izquierdos
+    ⋮  Centrar horizontalmente
+    ⊣  Alinear bordes derechos
+    ⊤  Alinear bordes superiores
+    ⋯  Centrar verticalmente
+    ⊥  Alinear bordes inferiores
+    ↔  Distribuir uniformemente – horizontal  (3+ fotos)
+    ↕  Distribuir uniformemente – vertical   (3+ fotos)
+    ⊟  Igualar ancho al ancla
+    ✕  Deseleccionar
+
+  · Puedes arrastrar cualquier foto seleccionada y todas las seleccionadas se mueven juntas.
+  · Haz clic en el fondo del canvas para deseleccionar todo.
+
+
+ZOOM DEL CANVAS
+  · Usa el control flotante en la esquina inferior derecha: [ − ] [ 75% ] [ + ]
+  · Haz clic en el porcentaje para restablecer a 100%.
+  · Atajo de teclado: Ctrl+rueda del ratón, Ctrl++ / Ctrl+−, Ctrl+0 para restablecer.
+
+
+--------------------------------------------------------------------------------
+  CONFIGURACIÓN DEL TABLERO  (dimensiones físicas)
+--------------------------------------------------------------------------------
+
+Cada tablero tiene su propia configuración. Accede con  ⚙ Config  en la barra superior.
+
+MODO DEL TABLERO
+  · Variable  — canvas infinito; crece automáticamente al mover o añadir fotos.
+                Ideal para exploraciones libres sin restricciones de tamaño.
+  · Fijo      — canvas de dimensiones exactas. Las fotos no pueden salir del área
+                definida. Ideal para diseño de impresión, paredes o formatos concretos.
+
+  Para un tablero fijo:
+    1. Selecciona  "Fijo"  en el campo "Modo del tablero".
+    2. Introduce el  Ancho  y  Alto  en las unidades elegidas.
+    3. El campo "px" muestra la resolución resultante en píxeles.
+    4. Guarda. El canvas mostrará un fondo blanco delimitado sobre un escritorio oscuro.
+    5. Las fotos quedan constreñidas dentro del área; no puedes arrastrarlas fuera.
+
+  Si ya tienes fotos colocadas y cambias a un tamaño más pequeño que las cubre,
+  la aplicación te avisará antes de guardar.
+
+UNIDADES Y RESOLUCIÓN
+  · Elige las unidades preferidas: px, cm, mm o pulgadas.
+  · Elige la resolución de salida (DPI):
+       72 dpi  — pantalla
+       96 dpi  — web / digital
+      150 dpi  — borrador de impresión
+      300 dpi  — impresión profesional (estándar)
+      600 dpi  — impresión de alta calidad / arte
+
+Una vez configurado:
+  · Al pasar el ratón sobre cualquier foto del canvas se muestra su tamaño físico
+    en una etiqueta pequeña (p. ej. "320 × 213 px  ·  2,7 cm × 1,8 cm").
+  · El panel de información del panel izquierdo muestra las dimensiones físicas
+    de la foto sobre la que está el ratón.
+  · El menú de navegación superior muestra el DPI activo, la unidad configurada
+    y el indicador  ⊡  cuando el tablero es de tamaño fijo.
+
+
+--------------------------------------------------------------------------------
+  PANEL DE INFORMACIÓN DE FOTO
+--------------------------------------------------------------------------------
+
+Pasa el ratón sobre cualquier foto — en el canvas o en la barra de biblioteca —
+para mostrar sus detalles en la sección inferior del panel izquierdo:
+
+  · Nombre del archivo
+  · Dimensiones originales y tamaño de archivo
+  · Tamaño actual en el canvas (px y físico si hay DPI configurado)
+  · Lista de todos los tableros en que aparece la foto
+    (el tablero actual se resalta en ámbar)
+
+
+--------------------------------------------------------------------------------
+  EXPORTAR E INFORME
+--------------------------------------------------------------------------------
+
+EXPORTAR TABLERO COMO JPEG
+  · Haz clic en  ⬇ Exportar JPEG  en la barra superior.
+  · El tablero completo se renderiza como imagen JPEG plana y se descarga.
+  · Las fotos se componen con sus tamaños, posiciones y rotaciones actuales.
+  · El canvas se reduce automáticamente si supera los 7000 px.
+
+MEMORIA DEL PROYECTO  (referencia de dimensiones de impresión)
+  · Haz clic en  ≡ Memoria  en la barra superior.
+  · Un diálogo lista todos los tableros del proyecto con las fotos colocadas,
+    sus tamaños en píxeles y sus tamaños físicos (si hay DPI configurado).
+  · Haz clic en  ⎙ Imprimir / Guardar PDF  para abrir una página lista para imprimir
+    en una ventana nueva. Usa  Ctrl+P  →  "Guardar como PDF"  en tu navegador
+    para exportar un documento PDF.
+
+
+--------------------------------------------------------------------------------
+  PREFERENCIAS
+--------------------------------------------------------------------------------
+
+Haz clic en el pequeño punto de color (●) en el extremo derecho de la barra
+superior para abrir el panel de preferencias.
+
+TEMAS  (4 opciones)
+  · Oscuro · Ámbar      — predeterminado, fondo oscuro cálido
+  · Claro · Natural     — fondo crema cálido, para entornos luminosos
+  · Oscuro · Frío       — oscuro con acento azul
+  · Alto Contraste      — fondo negro puro, máxima accesibilidad
+
+IDIOMA
+  · Español  /  English
+
+Ambas preferencias se guardan en tu navegador y se restauran en el próximo arranque.
+
+
+--------------------------------------------------------------------------------
+  DATOS Y COPIA DE SEGURIDAD
+--------------------------------------------------------------------------------
+
+Todos los datos se almacenan localmente en tu equipo en la carpeta  data/
+dentro del directorio tableau.
+
+  data/
+    projects.json          — lista de todos los proyectos
+    <id-proyecto>/
+      photos.json          — metadatos de fotos de este proyecto
+      boards.json          — lista de tableros y configuración
+      photos/              — archivos de foto procesados y miniaturas
+      boards/              — archivos de disposición del tablero (un JSON por tablero)
+
+Para hacer una copia de seguridad de todos tus proyectos, copia la carpeta  data/  completa.
+Para mover la aplicación a otro equipo, copia la carpeta tableau completa.
+Los datos de proyectos existentes se conservan entre actualizaciones.
+
+
+--------------------------------------------------------------------------------
+  NOTAS TÉCNICAS
+--------------------------------------------------------------------------------
+
+  · La aplicación se ejecuta completamente en tu máquina local. No se envía
+    ningún dato a ningún servidor externo.
+
+  · El servidor usa el puerto 3000 por defecto. Para usar otro puerto,
+    establece la variable de entorno PORT antes de arrancar:
+        set PORT=8080  &&  node server.js
+
+  · Las fotos subidas se procesan con sharp (lado servidor):
+    se redimensionan a máx. 1800 px, se rotan automáticamente según EXIF
+    y se guardan como JPEG.
+
+  · Paquetes Node.js utilizados: express, multer, sharp, uuid.
+
+
+================================================================================
+  Versión: 1.0.0-beta.2  —  https://nodejs.org  para descargas de Node.js
+================================================================================
