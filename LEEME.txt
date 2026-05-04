@@ -13,7 +13,7 @@ REQUISITOS
   · Windows 10 o posterior (para el lanzador .bat)
     En macOS/Linux: arranque manual (ver "Inicio manual" más abajo)
 
-
+----------------------------------------
 INSTALACIÓN Y PRIMER ARRANQUE  (Windows)
 ----------------------------------------
   1. Coloca la carpeta completa "tableau" en cualquier lugar de tu equipo.
