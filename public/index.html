@@ -228,8 +228,9 @@ select.inp{cursor:pointer;appearance:none;padding-right:28px;background-image:ur
 ::-webkit-scrollbar-track{background:var(--surf)}
 ::-webkit-scrollbar-thumb{background:var(--border2)}
 ::-webkit-scrollbar-thumb:hover{background:var(--acc-dim)}
-/* ── GRID SELECT in topbar ── */
-select.btn{appearance:none;cursor:pointer;background-image:none}
+/* ── SELECT elements ── */
+select.btn{appearance:none;cursor:pointer;background-image:none;background:var(--panel);color:var(--sub)}
+select.btn option,select.inp option{background:var(--panel);color:var(--text)}
 /* ── ZOOM CONTROL ── */
 .zoom-ctrl{position:fixed;bottom:148px;right:18px;display:flex;align-items:center;background:var(--panel);border:1px solid var(--border2);z-index:200;box-shadow:0 2px 10px rgba(0,0,0,.4)}
 .zc-btn{width:28px;height:26px;border:none;background:transparent;color:var(--dim);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:color .12s;flex-shrink:0;font-family:'IBM Plex Mono',monospace}
@@ -391,7 +392,7 @@ const I18N = {
     confirmOverflow: 'Algunas fotos quedarán fuera de las nuevas dimensiones. ¿Continuar?',
     invalidDims: 'Las dimensiones deben ser mayores que cero',
     pxPreview: (w, h) => `${w} × ${h} px`,
-    gridToggle: 'Guías', gridAuto: 'Auto', fitView: 'Ajustar',
+    gridToggle: 'Guías', gridAuto: 'Auto', fitView: 'Ajustar', snapGrid: 'Imán',
     reportHeading:'Tableau — Memoria del Proyecto',
     noScaleConfigured:'sin escala configurada',
     reportDate: d => `Memoria del proyecto · ${d}`,
@@ -461,7 +462,7 @@ const I18N = {
     confirmOverflow: 'Some photos will be outside the new dimensions. Continue?',
     invalidDims: 'Dimensions must be greater than zero',
     pxPreview: (w, h) => `${w} × ${h} px`,
-    gridToggle: 'Grid', gridAuto: 'Auto', fitView: 'Fit',
+    gridToggle: 'Grid', gridAuto: 'Auto', fitView: 'Fit', snapGrid: 'Snap',
     reportHeading:'Tableau — Project Report',
     noScaleConfigured:'no scale configured',
     reportDate: d => `Project report · ${d}`,
@@ -496,6 +497,7 @@ function App() {
   const [cfgBoardH,     setCfgBoardH]     = useState('');
   const [showGrid,      setShowGrid]      = useState(() => localStorage.getItem('tb-grid') !== 'off');
   const [gridStep,      setGridStep]      = useState(() => parseInt(localStorage.getItem('tb-gridstep')) || 0); // 0 = auto
+  const [snapGrid,      setSnapGrid]      = useState(() => localStorage.getItem('tb-snap') === 'on');
 
   const [theme,         setTheme]         = useState(() => localStorage.getItem('tb-theme') || 'dark-amber');
   const [themeOpen,     setThemeOpen]     = useState(false);
@@ -646,6 +648,7 @@ function App() {
     if (boardDpi && boardUnits !== 'px') return Math.round(boardDpi / 2.54); // 1 cm
     return 50;
   })();
+  const snapVal = (v, cell) => { const s = Math.round(v / cell) * cell; return Math.abs(v - s) <= Math.min(12, cell / 3) ? s : v; };
   // Possible grid step options for the current board
   const gridOptions = (() => {
     const opts = [];
@@ -1014,7 +1017,9 @@ ${rows}
       const z = zoomRef.current;
       setItems(its => its.map(i => {
         if (!dragIds.includes(i.id)) return i;
-        const { x, y } = clampItem(i, starts[i.id].x + ldx/z, starts[i.id].y + ldy/z);
+        let rx = starts[i.id].x + ldx/z, ry = starts[i.id].y + ldy/z;
+        if (snapGrid && showGrid) { rx = snapVal(rx, gridCellPx); ry = snapVal(ry, gridCellPx); }
+        const { x, y } = clampItem(i, rx, ry);
         return { ...i, x, y };
       }));
     };
@@ -1024,7 +1029,10 @@ ${rows}
       const z = zoomRef.current;
       const nit = itemsRef.current.map(i => {
         if (!dragIds.includes(i.id)) return i;
-        const { x, y } = clampItem(i, Math.round(starts[i.id].x + ldx/z), Math.round(starts[i.id].y + ldy/z));
+        let rx = starts[i.id].x + ldx/z, ry = starts[i.id].y + ldy/z;
+        if (snapGrid && showGrid) { rx = snapVal(rx, gridCellPx); ry = snapVal(ry, gridCellPx); }
+        else { rx = Math.round(rx); ry = Math.round(ry); }
+        const { x, y } = clampItem(i, rx, ry);
         return { ...i, x, y };
       });
       const norm = applyNormalized(nit);
@@ -1243,13 +1251,17 @@ ${rows}
           <button className={`btn${showGrid?' acc':''}`} style={{fontSize:10,letterSpacing:.3}} onClick={toggleGrid} title={t('gridToggle')}>
             ▦
           </button>
-          {showGrid && (
+          {showGrid && (<>
             <select className="btn" style={{fontSize:9,padding:'5px 8px',cursor:'pointer'}}
               value={gridStep}
               onChange={e => changeGridStep(Number(e.target.value))}>
               {gridOptions.map(o => <option key={o.v} value={o.v}>{o.label}</option>)}
             </select>
-          )}
+            <button className={`btn${snapGrid?' acc':''}`} style={{fontSize:11}} title={t('snapGrid')}
+              onClick={() => { const n=!snapGrid; setSnapGrid(n); localStorage.setItem('tb-snap',n?'on':'off'); }}>
+              ⊕
+            </button>
+          </>)}
           <button className="btn" style={{fontSize:10}} onClick={openBoardConfig} title={t('boardConfig')}>
             {t('config')}
           </button>
