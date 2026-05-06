@@ -138,6 +138,30 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 /* dimension tag visible on hover/select */
 .dim-tag{position:absolute;bottom:22px;left:0;background:rgba(13,12,11,.88);color:var(--acc);font-size:8px;padding:2px 7px;letter-spacing:.4px;pointer-events:none;opacity:0;transition:opacity .12s;white-space:nowrap}
 .bitem:hover .dim-tag,.bitem.sel .dim-tag{opacity:1}
+/* ── NOTE ITEMS ── */
+.nitem{position:absolute;cursor:grab;user-select:none}
+.nitem-body{width:100%;height:100%;background:var(--panel);border:1px solid var(--border2);border-left:3px solid var(--acc-dim);display:flex;flex-direction:column;box-sizing:border-box}
+.nitem.sel .nitem-body{outline:2px dashed var(--acc-dim);outline-offset:2px}
+.nitem.anchor .nitem-body{outline:2px solid var(--acc);outline-offset:2px}
+.nitem:hover .bitem-bar,.nitem.sel .bitem-bar{opacity:1}
+.nitem-txt{flex:1;background:transparent;border:none;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.6;padding:8px 10px;resize:none;outline:none;width:100%;box-sizing:border-box}
+.nitem-txt::placeholder{color:var(--muted);font-style:italic}
+.nitem-rc{position:absolute;bottom:0;right:0;width:14px;height:14px;cursor:nwse-resize;opacity:0;transition:opacity .12s;background:linear-gradient(135deg,transparent 50%,var(--border2) 50%)}
+.nitem:hover .nitem-rc,.nitem.sel .nitem-rc{opacity:1;background:linear-gradient(135deg,transparent 50%,var(--acc-dim) 50%)}
+.nitem-link{display:flex;align-items:center;gap:7px;padding:5px 8px;border-top:1px solid var(--border);background:var(--deep);text-decoration:none;cursor:pointer;transition:background .12s;flex-shrink:0}
+.nitem-link:hover{background:var(--panel)}
+.nitem-link-info{flex:1;min-width:0}
+.nitem-link-title{font-size:10px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nitem-link-domain{font-size:9px;color:var(--muted);margin-top:1px}
+.nitem-link-rm{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:0 2px;line-height:1;flex-shrink:0}
+.nitem-link-rm:hover{color:var(--danger)}
+.nitem-link-row{border-top:1px solid var(--border);padding:4px 8px;display:flex;align-items:center;gap:5px;flex-shrink:0;opacity:0;transition:opacity .12s}
+.nitem:hover .nitem-link-row,.nitem.sel .nitem-link-row{opacity:1}
+.nitem-link-inp{flex:1;background:transparent;border:none;color:var(--sub);font-family:'IBM Plex Mono',monospace;font-size:10px;outline:none;min-width:0}
+.nitem-link-inp::placeholder{color:var(--muted)}
+.nitem-link-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:9px;letter-spacing:.5px;text-transform:uppercase;padding:0;font-family:'IBM Plex Mono',monospace}
+.nitem-link-btn:hover{color:var(--acc)}
+.nitem-link-loading{font-size:9px;color:var(--muted);padding:5px 8px;border-top:1px solid var(--border);letter-spacing:.5px;flex-shrink:0}
 
 /* ── LIBRARY ── */
 .library{height:128px;background:var(--surf);border-top:1px solid var(--border);display:flex;align-items:stretch;flex-shrink:0;z-index:100}
@@ -392,7 +416,7 @@ const I18N = {
     confirmOverflow: 'Algunas fotos quedarán fuera de las nuevas dimensiones. ¿Continuar?',
     invalidDims: 'Las dimensiones deben ser mayores que cero',
     pxPreview: (w, h) => `${w} × ${h} px`,
-    gridToggle: 'Guías', gridAuto: 'Auto', fitView: 'Ajustar', snapGrid: 'Imán',
+    gridToggle: 'Guías', gridAuto: 'Auto', fitView: 'Ajustar', snapGrid: 'Imán', addNote: '+ Nota',
     reportHeading:'Tableau — Memoria del Proyecto',
     noScaleConfigured:'sin escala configurada',
     reportDate: d => `Memoria del proyecto · ${d}`,
@@ -462,7 +486,7 @@ const I18N = {
     confirmOverflow: 'Some photos will be outside the new dimensions. Continue?',
     invalidDims: 'Dimensions must be greater than zero',
     pxPreview: (w, h) => `${w} × ${h} px`,
-    gridToggle: 'Grid', gridAuto: 'Auto', fitView: 'Fit', snapGrid: 'Snap',
+    gridToggle: 'Grid', gridAuto: 'Auto', fitView: 'Fit', snapGrid: 'Snap', addNote: '+ Note',
     reportHeading:'Tableau — Project Report',
     noScaleConfigured:'no scale configured',
     reportDate: d => `Project report · ${d}`,
@@ -498,6 +522,8 @@ function App() {
   const [showGrid,      setShowGrid]      = useState(() => localStorage.getItem('tb-grid') !== 'off');
   const [gridStep,      setGridStep]      = useState(() => parseInt(localStorage.getItem('tb-gridstep')) || 0); // 0 = auto
   const [snapGrid,      setSnapGrid]      = useState(() => localStorage.getItem('tb-snap') === 'on');
+  const [linkInputId,   setLinkInputId]   = useState(null);
+  const [linkFetching,  setLinkFetching]  = useState(null);
 
   const [theme,         setTheme]         = useState(() => localStorage.getItem('tb-theme') || 'dark-amber');
   const [themeOpen,     setThemeOpen]     = useState(false);
@@ -688,7 +714,7 @@ function App() {
       if (!fixedW || !fixedH || fixedW <= 0 || fixedH <= 0) return showToast(t('invalidDims'), true);
       const newBp = getBoardPx({ fixed: true, fixedW, fixedH, units: cfgUnits, dpi });
       const overflow = itemsRef.current.some(item => {
-        const h = (() => {
+        const h = item.type === 'note' ? (item.h || item.w) : (() => {
           const p = photosRef.current.find(ph => ph.id === item.photoId);
           if (!p) return item.w;
           return (item.rot || 0) % 180 !== 0 ? Math.round(item.w * p.w / p.h) : Math.round(item.w * p.h / p.w);
@@ -720,6 +746,7 @@ function App() {
       if (!boardIt.length) { rows += `<p class="empty">${t('emptyBoardMem')}</p></section>`; return; }
       rows += `<table><thead><tr><th>${hdr[0]}</th><th>${hdr[1]}</th><th>${hdr[2]}</th>${hasPhys ? `<th>${hdr[3]}</th>` : ''}<th>${hdr[4]}</th></tr></thead><tbody>`;
       boardIt.forEach((item, i) => {
+        if (item.type === 'note') return;
         const photo = photosRef.current.find(p => p.id === item.photoId);
         const h = photo
           ? ((item.rot || 0) % 180 !== 0
@@ -1078,15 +1105,74 @@ ${rows}
     const nit = itemsRef.current.map(i => i.id === id ? { ...i, z: maxZ + 1 } : i);
     setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
   };
-  const updateLabel = (id, v) => setItems(its => its.map(i => i.id === id ? { ...i, label: v } : i));
-  const saveLabel   = ()     => saveItemsNow(itemsRef.current);
+  const updateLabel    = (id, v) => setItems(its => its.map(i => i.id === id ? { ...i, label: v } : i));
+  const updateNoteText = (id, v) => setItems(its => its.map(i => i.id === id ? { ...i, text:  v } : i));
+  const saveLabel      = ()      => saveItemsNow(itemsRef.current);
+
+  const fetchLinkPreview = async (noteId, rawUrl) => {
+    const url = rawUrl.trim();
+    if (!url) return;
+    setLinkFetching(noteId);
+    try {
+      const data = await api.get(`/api/linkpreview?url=${encodeURIComponent(url)}`);
+      if (data.url) {
+        const nit = itemsRef.current.map(i => i.id === noteId ? { ...i, link: data } : i);
+        setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
+      }
+    } catch {}
+    setLinkFetching(null);
+  };
+
+  const removeLinkFromNote = noteId => {
+    const nit = itemsRef.current.map(i => i.id === noteId ? { ...i, link: null } : i);
+    setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
+  };
+
+  const addNote = () => {
+    if (!bid) return;
+    const maxZ = itemsRef.current.length ? Math.max(...itemsRef.current.map(i => i.z || 0)) : 0;
+    const z = zoomRef.current;
+    const wrapEl = wrapRef.current;
+    const cx = wrapEl ? Math.round(wrapEl.scrollLeft / z + wrapEl.clientWidth  / z / 2) : 200;
+    const cy = wrapEl ? Math.round(wrapEl.scrollTop  / z + wrapEl.clientHeight / z / 2) : 200;
+    const w = 220, h = 150;
+    const bp = boardPxRef.current;
+    let x = Math.round(cx - w / 2), y = Math.round(cy - h / 2);
+    if (bp) { x = Math.max(0, Math.min(x, bp.w - w)); y = Math.max(0, Math.min(y, bp.h - h)); }
+    const item = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), type: 'note', text: '', x, y, w, h, z: maxZ + 1 };
+    const nit = [...itemsRef.current, item];
+    selRef.current = [item.id]; setSel([item.id]);
+    saveItemsNow(applyNormalized(nit));
+  };
+
+  const onResizeNotePD = (e, itemId) => {
+    e.stopPropagation(); e.preventDefault();
+    const it = itemsRef.current.find(i => i.id === itemId);
+    const sx = e.clientX, sy = e.clientY, ow = it.w, oh = it.h || 150;
+    let cw = ow, ch = oh;
+    const onMM = e => {
+      const bp = boardPxRef.current; const z = zoomRef.current;
+      cw = Math.max(120, Math.min(ow + (e.clientX - sx) / z, bp ? bp.w - it.x : Infinity));
+      ch = Math.max(60,  Math.min(oh + (e.clientY - sy) / z, bp ? bp.h - it.y : Infinity));
+      setItems(its => its.map(i => i.id === itemId ? { ...i, w: cw, h: ch } : i));
+    };
+    const onMU = () => {
+      window.removeEventListener('pointermove', onMM);
+      window.removeEventListener('pointerup',   onMU);
+      const nit = itemsRef.current.map(i => i.id === itemId ? { ...i, w: Math.round(cw), h: Math.round(ch) } : i);
+      setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
+    };
+    window.addEventListener('pointermove', onMM);
+    window.addEventListener('pointerup',   onMU);
+  };
 
   // ── alignment ────────────────────────────────────────────────���────────────
   const getItemH = item => {
+    if (item.type === 'note') return item.h || item.w;
     const p = photosRef.current.find(ph => ph.id === item.photoId);
     if (!p) return item.w;
     return (item.rot || 0) % 180 !== 0
-      ? Math.round(item.w * p.w / p.h)   // swapped at 90°/270°
+      ? Math.round(item.w * p.w / p.h)
       : Math.round(item.w * p.h / p.w);
   };
   const alignItems = type => {
@@ -1241,6 +1327,7 @@ ${rows}
           <label htmlFor="tb-upload" className="btn acc" style={{cursor:'pointer',fontSize:9}}>
             {t('upload')}
           </label>
+          {bid && <button className="btn" style={{fontSize:9}} onClick={addNote} title={t('addNote')}>{t('addNote')}</button>}
         </>}
         {pid && boards.length > 0 && (
           <button className="btn" style={{fontSize:10}} onClick={() => setModal('memoria')} title={t('reportTitle')}>
@@ -1491,6 +1578,60 @@ ${rows}
                 )}
 
                 {[...items].sort((a, b) => (a.z||0)-(b.z||0)).map(item => {
+                  if (item.type === 'note') return (
+                    <div key={item.id} className={`nitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}`}
+                      style={{ left: item.x, top: item.y, width: item.w, height: item.h || 150, zIndex: item.z||1 }}
+                      onPointerDown={e => onItemPD(e, item.id)}
+                      onClick={e => { e.stopPropagation(); if (!e.shiftKey) { selRef.current = [item.id]; setSel([item.id]); } }}
+                    >
+                      <div className="bitem-bar">
+                        <button className="ibc fwd" title={t('bringFwdBtn')} onClick={e => { e.stopPropagation(); bringFwd(item.id); }}>↑</button>
+                        <button className="ibc del" title={t('deleteBtn')}   onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
+                      </div>
+                      <div className="nitem-body">
+                        <textarea className="nitem-txt" value={item.text||''} placeholder={lang==='es'?'nota…':'note…'}
+                          onChange={e => updateNoteText(item.id, e.target.value)}
+                          onBlur={saveLabel}
+                          onPointerDown={e => e.stopPropagation()}
+                          onClick={e => e.stopPropagation()}
+                        />
+                        {item.link ? (
+                          <a className="nitem-link" href={item.link.url} target="_blank" rel="noreferrer"
+                            onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()}>
+                            <img src={`https://www.google.com/s2/favicons?domain=${item.link.domain}&sz=16`}
+                              width={14} height={14} alt="" style={{flexShrink:0}}
+                              onError={e => { e.target.style.display='none'; }}/>
+                            <div className="nitem-link-info">
+                              <div className="nitem-link-title">{item.link.title}</div>
+                              <div className="nitem-link-domain">{item.link.domain}</div>
+                            </div>
+                            <button className="nitem-link-rm"
+                              onClick={e => { e.preventDefault(); e.stopPropagation(); removeLinkFromNote(item.id); }}>×</button>
+                          </a>
+                        ) : linkFetching === item.id ? (
+                          <div className="nitem-link-loading">...</div>
+                        ) : linkInputId === item.id ? (
+                          <div className="nitem-link-row" style={{opacity:1}}>
+                            <input className="nitem-link-inp" autoFocus placeholder="https://..."
+                              onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}
+                              onKeyDown={e => {
+                                if (e.key === 'Enter')  { fetchLinkPreview(item.id, e.target.value); setLinkInputId(null); }
+                                if (e.key === 'Escape') { setLinkInputId(null); }
+                              }}
+                              onBlur={e => { if (e.target.value.trim()) fetchLinkPreview(item.id, e.target.value); setLinkInputId(null); }}
+                            />
+                          </div>
+                        ) : (
+                          <div className="nitem-link-row">
+                            <button className="nitem-link-btn"
+                              onPointerDown={e => e.stopPropagation()}
+                              onClick={e => { e.stopPropagation(); setLinkInputId(item.id); }}>+ url</button>
+                          </div>
+                        )}
+                      </div>
+                      <div className="nitem-rc" onPointerDown={e => onResizeNotePD(e, item.id)}/>
+                    </div>
+                  );
                   const photo = photos.find(p => p.id === item.photoId);
                   const rot = item.rot || 0;
                   const isSwapped = rot % 180 !== 0;

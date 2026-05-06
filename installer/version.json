@@ -1,6 +1,6 @@
 {
-  "version": "1.1.0",
+  "version": "1.2.0",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-05-05",
-  "notes": "Snap a cuadrícula, mejora de desplegables en modo oscuro"
+  "releaseDate": "2026-05-06",
+  "notes": "Notas flotantes en el canvas con soporte de enlaces (previsualizaciones estilo Padlet)"
 }

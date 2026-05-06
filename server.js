@@ -105,6 +105,33 @@ async function checkForUpdates() {
 checkForUpdates();
 setInterval(checkForUpdates, 24 * 60 * 60 * 1000);
 
+// ── Link preview ─────────────────────────────────────────────────────────────
+app.get('/api/linkpreview', async (req, res) => {
+  const raw = req.query.url || '';
+  const url = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+  if (!/^https?:\/\/.+/i.test(url)) return res.status(400).json({ error: 'URL inválida' });
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 6000);
+    const r = await fetch(url, { signal: ctrl.signal, headers: { 'User-Agent': 'Mozilla/5.0' } });
+    clearTimeout(timer);
+    const html = (await r.text()).slice(0, 60000);
+    const og   = p => (html.match(new RegExp(`<meta[^>]+property=["']${p}["'][^>]+content=["']([^"'<]+)["']`, 'i')) ||
+                       html.match(new RegExp(`<meta[^>]+content=["']([^"'<]+)["'][^>]+property=["']${p}["']`, 'i')) || [])[1]?.trim();
+    const mt   = n => (html.match(new RegExp(`<meta[^>]+name=["']${n}["'][^>]+content=["']([^"'<]+)["']`, 'i')) ||
+                       html.match(new RegExp(`<meta[^>]+content=["']([^"'<]+)["'][^>]+name=["']${n}["']`, 'i')) || [])[1]?.trim();
+    const titleTag = (html.match(/<title[^>]*>([^<]{1,200})<\/title>/i) || [])[1]?.trim();
+    const domain = new URL(url).hostname.replace(/^www\./, '');
+    res.json({ url, domain,
+      title: og('og:title') || mt('twitter:title') || titleTag || domain,
+      image: og('og:image') || null,
+    });
+  } catch {
+    try { const domain = new URL(url).hostname.replace(/^www\./, ''); res.json({ url, domain, title: domain, image: null }); }
+    catch { res.status(400).json({ error: 'URL inválida' }); }
+  }
+});
+
 // ── Version ───────────────────────────────────────────────────────────────────
 app.get('/api/version', (_req, res) => res.json({ version: APP_VERSION }));
 app.get('/api/update',  (_req, res) => res.json({ current: APP_VERSION, update: updateAvailable }));
@@ -253,6 +280,7 @@ app.get('/api/boards/:pid/:bid/export', async (req, res) => {
 
   // Process each item: resize + rotate → get final pixel buffer + canvas position
   const layers = (await Promise.all(sorted.map(async item => {
+    if (item.type === 'note') return null;
     const photo = photosData.find(p => p.id === item.photoId);
     if (!photo) return null;
     const pFile = path.join(photoDir(pid), `${item.photoId}.jpg`);
