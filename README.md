@@ -4,115 +4,130 @@ Gestión visual de proyectos fotográficos. Tableros libres, biblioteca por proy
 
 ---
 
-## Requisitos
+## Descarga e instalación
 
-- [Node.js](https://nodejs.org) versión 18 o superior
-- npm (viene incluido con Node.js)
+### Windows
+
+1. Descarga **`tableau-installer-1.2.0.exe`** desde [Releases](https://github.com/blasgonzalez/tableau/releases/latest)
+2. Ejecuta el instalador y sigue el asistente (no requiere permisos de administrador)
+3. Al finalizar, elige **Iniciar Tableau** o usa el acceso directo del Escritorio
+
+Los datos se guardan en `%LOCALAPPDATA%\Tableau\data` y no se eliminan al desinstalar.
 
 ---
 
-## Instalación
+### Mac
+
+**Requisito previo:** Node.js 18 o superior.
+Si no lo tienes, descárgalo desde [nodejs.org](https://nodejs.org) o instálalo con Homebrew:
+```
+brew install node
+```
+
+**Instalación:**
+
+1. Descarga **`tableau-mac-1.2.0.zip`** desde [Releases](https://github.com/blasgonzalez/tableau/releases/latest)
+2. Descomprime el ZIP en la carpeta donde quieras tener la aplicación (p. ej. `~/Aplicaciones/Tableau`)
+3. Abre Terminal, arrastra el archivo `install.sh` a la ventana y pulsa Enter
+4. Cuando termine, aparecerá **`Tableau.command`** en el Escritorio
+
+A partir de ese momento, haz doble clic en `Tableau.command` para abrir la aplicación.
+
+Los datos se guardan en `~/Library/Application Support/Tableau/data`.
+
+> **Primera vez en Mac:** si macOS bloquea el archivo, ve a Ajustes del Sistema → Privacidad y Seguridad → pulsa "Abrir de todas formas".
+
+---
+
+## Uso
+
+### Subir fotos al proyecto
+Usa el botón **+ Subir** en la biblioteca (panel inferior izquierdo). Las fotos se redimensionan automáticamente (máx. 1800 px, JPEG 87 %) y se almacenan en la carpeta de datos.
+
+### Repositorio local
+1. Copia tus fotos a la carpeta `repo/` dentro del directorio de la aplicación
+2. En la biblioteca, cambia a la pestaña **Repo**
+3. Pulsa **+** sobre una miniatura para importarla al proyecto activo
+
+### Tableros
+- Arrastra miniaturas desde la biblioteca al canvas
+- Reposiciona arrastrando · Redimensiona desde la esquina inferior derecha
+- Rota 90° con ↻ · Trae al frente con ↑
+- Añade **notas flotantes** con el botón **+ Nota** (texto libre, soporte de enlaces)
+- Activa el **snap a cuadrícula** con el botón ⊕ para alinear elementos
+- Exporta el tablero como JPEG con el botón de descarga
+
+### Proyectos y tableros
+- Clic derecho sobre un proyecto o tablero para eliminarlo
+- Cada proyecto tiene su propia biblioteca de fotos independiente
+
+---
+
+## Actualizaciones
+
+La aplicación avisa automáticamente cuando hay una versión nueva disponible. Descarga el instalador desde el enlace que aparece en el aviso y vuelve a ejecutarlo (en Windows reemplaza la instalación anterior; en Mac repite el proceso de instalación).
+
+---
+
+## Instalación para desarrolladores
 
 ```bash
-# 1. Entra en la carpeta del proyecto
+git clone https://github.com/blasgonzalez/tableau
 cd tableau
-
-# 2. Instala las dependencias (solo la primera vez)
 npm install
-
-# 3. Arranca el servidor
 npm start
 ```
 
 Abre el navegador en **http://localhost:3000**
 
-> Para desarrollo con recarga automática: `npm run dev` (requiere nodemon, ya incluido como devDependency)
+Para desarrollo con recarga automática: `npm run dev`
 
----
+### Generar instaladores
 
-## Estructura de carpetas
+```
+installer\build.bat
+```
+
+Genera en `dist/`:
+- `tableau-installer-x.x.x.exe` — instalador Windows
+- `tableau-mac-x.x.x.zip` — paquete Mac
+
+Requiere [Inno Setup 6](https://jrsoftware.org/isdl.php) en el PATH.
+
+### Estructura de carpetas
 
 ```
 tableau/
-├── server.js          ← servidor Express
+├── server.js
 ├── package.json
 ├── public/
-│   └── index.html     ← aplicación web (todo en un fichero)
-├── repo/              ← ★ coloca aquí tus fotos para importarlas
-└── data/              ← proyectos, tableros y fotos procesadas (generado automáticamente)
-    ├── projects.json
-    └── {id-proyecto}/
-        ├── boards.json
-        ├── photos.json
-        ├── photos/
-        │   ├── {id}.jpg        ← foto redimensionada
-        │   └── {id}_thumb.jpg  ← miniatura
-        └── boards/
-            └── {id}.json       ← posiciones y etiquetas del tablero
+│   └── index.html
+├── installer/
+│   ├── tableau.iss       ← script Inno Setup
+│   ├── build.bat         ← genera ambos instaladores
+│   ├── launch.bat        ← lanzador Windows (empaquetado)
+│   ├── launch.command    ← lanzador Mac (empaquetado)
+│   ├── install.sh        ← instalador Mac
+│   └── version.json      ← versión actual (leída por la app)
+└── data/                 ← generado automáticamente
 ```
 
----
-
-## Flujo de trabajo
-
-### Subir fotos al proyecto
-Usa el botón **+ Subir** en la biblioteca (panel inferior izquierdo). Las fotos se redimensionan automáticamente en el servidor (máx. 1800px, JPEG 87%) y se almacenan en `data/`.
-
-### Usar el repositorio
-1. Copia o mueve tus fotos a la carpeta `repo/`
-2. En la biblioteca, cambia a la pestaña **Repo**
-3. Pulsa el **+** sobre cualquier miniatura para importarla al proyecto activo
-4. Una vez importada aparece marcada como "✓ en proyecto"
-
-### Organizar en tableros
-- Arrastra miniaturas desde la biblioteca al canvas
-- O haz clic en una miniatura para colocarla en el centro
-- Reposiciona arrastrando · Redimensiona desde la esquina inferior derecha
-- Rota 90° con el botón ↻ · Trae al frente con ↑
-- Añade etiquetas de texto bajo cada foto
-
-### Proyectos y tableros
-- Clic derecho sobre un proyecto o tablero para eliminarlo
-- Cada proyecto tiene su propia biblioteca de fotos
-- Los tableros son independientes entre sí
-
----
-
-## Configuración
+### Configuración del servidor
 
 Edita las constantes al inicio de `server.js`:
 
 ```js
-const PORT           = 3000;   // puerto del servidor
-const MAX_UPLOAD_MB  = 80;     // límite de tamaño de subida
-const RESIZE_PX      = 1800;   // dimensión máxima almacenada
-const THUMB_PX       = 260;    // dimensión máxima de miniatura
-const JPEG_QUALITY   = 87;     // calidad JPEG (0-100)
+const PORT          = 3000;  // puerto
+const MAX_UPLOAD_MB = 80;    // límite de subida
+const RESIZE_PX     = 1800;  // dimensión máxima almacenada
+const THUMB_PX      = 260;   // dimensión de miniaturas
+const JPEG_QUALITY  = 87;    // calidad JPEG (0-100)
 ```
 
----
+### Acceso en red local
 
-## Acceso en red local
-
-Para acceder desde otro ordenador de la misma red, edita `server.js` y cambia:
-
+Cambia en `server.js`:
 ```js
-app.listen(PORT, () => { ... })
-// por:
 app.listen(PORT, '0.0.0.0', () => { ... })
 ```
-
-Luego accede desde otro equipo con `http://[IP-del-servidor]:3000`
-
----
-
-## Nota sobre Sharp en Windows
-
-Sharp usa bindings nativos. Si la instalación falla en Windows, prueba:
-
-```bash
-npm install --ignore-scripts
-npm rebuild sharp
-```
-
-O instala las Visual C++ Build Tools si se solicita.
+y accede desde otro equipo con `http://[IP-del-servidor]:3000`.
