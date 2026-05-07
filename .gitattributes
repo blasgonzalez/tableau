@@ -1,0 +1,4 @@
+* text=auto
+
+installer/install.sh      text eol=lf
+installer/launch.command  text eol=lf

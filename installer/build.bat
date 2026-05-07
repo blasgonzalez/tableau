@@ -100,9 +100,37 @@ if errorlevel 1 (
     exit /b 1
 )
 
+:: 8. Crear ZIP para Mac
+echo.
+echo  Creando ZIP para Mac...
+for /f "delims=" %%v in ('powershell -NoProfile -Command "(Get-Content package.json | ConvertFrom-Json).version"') do set APP_VERSION=%%v
+
+set MAC_TMP=dist\_mac_tmp
+if exist "%MAC_TMP%" rmdir /s /q "%MAC_TMP%"
+mkdir "%MAC_TMP%"
+copy server.js "%MAC_TMP%\" >nul
+copy package.json "%MAC_TMP%\" >nul
+xcopy public "%MAC_TMP%\public\" /E /I /Q >nul
+copy installer\install.sh "%MAC_TMP%\" >nul
+copy installer\launch.command "%MAC_TMP%\" >nul
+
+set MAC_ZIP=%CD%\dist\tableau-mac-%APP_VERSION%.zip
+if exist "%MAC_ZIP%" del "%MAC_ZIP%"
+powershell -NoProfile -Command "Add-Type -Assembly System.IO.Compression.FileSystem; [IO.Compression.ZipFile]::CreateFromDirectory((Resolve-Path '%MAC_TMP%').Path, '%MAC_ZIP%')"
+if errorlevel 1 (
+    echo  [ERROR] Error creando ZIP para Mac.
+    if exist "%MAC_TMP%" rmdir /s /q "%MAC_TMP%"
+    pause
+    exit /b 1
+)
+if exist "%MAC_TMP%" rmdir /s /q "%MAC_TMP%"
+echo  [OK] ZIP para Mac: dist\tableau-mac-%APP_VERSION%.zip
+
 echo.
 echo  ====================================================
-echo   Instalador generado en: dist\
+echo   Generado en: dist\
+echo     - tableau-installer-%APP_VERSION%.exe  (Windows)
+echo     - tableau-mac-%APP_VERSION%.zip        (Mac)
 echo  ====================================================
 echo.
 pause
