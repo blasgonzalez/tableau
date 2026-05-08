@@ -1,6 +1,6 @@
 {
-  "version": "1.2.0",
+  "version": "1.2.1",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-05-06",
-  "notes": "Notas flotantes en el canvas con soporte de enlaces (previsualizaciones estilo Padlet)"
+  "releaseDate": "2026-05-08",
+  "notes": "Historial de cambios con Ctrl+Z / Ctrl+Y en el canvas"
 }

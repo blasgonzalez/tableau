@@ -561,6 +561,8 @@ function App() {
   const boardsRef       = useRef([]);
   const boardPxRef      = useRef(null);
   const wrapRef         = useRef(null);
+  const undoStack       = useRef([]);
+  const redoStack       = useRef([]);
 
   useEffect(() => { itemsRef.current         = items;         }, [items]);
   useEffect(() => { pidRef.current           = pid;           }, [pid]);
@@ -610,6 +612,7 @@ function App() {
       setItems(it); itemsRef.current = it;
     });
     selRef.current = []; setSel([]);
+    undoStack.current = []; redoStack.current = [];
   }, [bid, pid]);
 
   const showToast = (msg, err = false) => {
@@ -643,14 +646,18 @@ function App() {
 
   useEffect(() => {
     const onKey = e => {
-      if (!e.ctrlKey) return;
+      if (!e.ctrlKey && !e.metaKey) return;
       if (e.key === '+' || e.key === '=') { e.preventDefault(); zoomStep(1); }
       if (e.key === '-') { e.preventDefault(); zoomStep(-1); }
       if (e.key === '0') { e.preventDefault(); boardPxRef.current ? fitBoard() : setZoom(1); }
+      const tag = document.activeElement?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      if (e.key === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); }
+      if (e.key === 'y') { e.preventDefault(); redo(); }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [zoomStep, fitBoard]);
+  }, [zoomStep, fitBoard, undo, redo]);
 
   const saveItemsNow = useCallback((its) => {
     const p = pidRef.current, b = bidRef.current;
@@ -658,6 +665,27 @@ function App() {
     const msg = (I18N[langRef.current] || I18N.es).saveError;
     api.put(`/api/boards/${p}/${b}/items`, its).catch(() => showToast(msg, true));
   }, []);
+
+  const pushUndo = useCallback(() => {
+    undoStack.current = [...undoStack.current.slice(-49), itemsRef.current.map(i => ({ ...i }))];
+    redoStack.current = [];
+  }, []);
+  const undo = useCallback(() => {
+    if (!undoStack.current.length) return;
+    redoStack.current = [...redoStack.current, itemsRef.current.map(i => ({ ...i }))];
+    const snap = undoStack.current[undoStack.current.length - 1];
+    undoStack.current = undoStack.current.slice(0, -1);
+    setItems(snap); itemsRef.current = snap;
+    saveItemsNow(snap);
+  }, [saveItemsNow]);
+  const redo = useCallback(() => {
+    if (!redoStack.current.length) return;
+    undoStack.current = [...undoStack.current, itemsRef.current.map(i => ({ ...i }))];
+    const snap = redoStack.current[redoStack.current.length - 1];
+    redoStack.current = redoStack.current.slice(0, -1);
+    setItems(snap); itemsRef.current = snap;
+    saveItemsNow(snap);
+  }, [saveItemsNow]);
 
   // ── board config ──────────────────────────────────────────────────────────
   const activeBoardMeta = boards.find(b => b.id === bid);
@@ -829,6 +857,7 @@ ${rows}
 
   // ── place photo ───────────────────────────────────────────────────────────
   const placePhoto = (photo, cx, cy) => {
+    pushUndo();
     const w = 320;
     const bp = boardPxRef.current;
     const maxZ = itemsRef.current.length ? Math.max(...itemsRef.current.map(i => i.z || 0)) : 0;
@@ -1009,6 +1038,7 @@ ${rows}
     if (e.target.closest('.lbl,.ibc,.rh')) return;
     e.stopPropagation(); e.preventDefault();
 
+    const beforeDrag = itemsRef.current.map(i => ({ ...i }));
     // Update selection
     if (e.shiftKey) {
       const ns = selRef.current.includes(itemId)
@@ -1062,6 +1092,10 @@ ${rows}
         const { x, y } = clampItem(i, rx, ry);
         return { ...i, x, y };
       });
+      if (ldx !== 0 || ldy !== 0) {
+        undoStack.current = [...undoStack.current.slice(-49), beforeDrag];
+        redoStack.current = [];
+      }
       const norm = applyNormalized(nit);
       saveItemsNow(norm);
     };
@@ -1071,6 +1105,7 @@ ${rows}
 
   const onResizePD = (e, itemId) => {
     e.stopPropagation(); e.preventDefault();
+    const beforeResize = itemsRef.current.map(i => ({ ...i }));
     const it = itemsRef.current.find(i => i.id === itemId);
     const sx = e.clientX, ow = it.w;
     let cw = ow;
@@ -1084,6 +1119,10 @@ ${rows}
       window.removeEventListener('pointermove', onMM);
       window.removeEventListener('pointerup',   onMU);
       const nit = itemsRef.current.map(i => i.id === itemId ? { ...i, w: Math.round(cw) } : i);
+      if (Math.round(cw) !== ow) {
+        undoStack.current = [...undoStack.current.slice(-49), beforeResize];
+        redoStack.current = [];
+      }
       setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
     };
     window.addEventListener('pointermove', onMM);
@@ -1091,16 +1130,19 @@ ${rows}
   };
 
   const rotateItem = id => {
+    pushUndo();
     const nit = itemsRef.current.map(i => i.id === id ? { ...i, rot: ((i.rot || 0) + 90) % 360 } : i);
     setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
   };
   const deleteItem = id => {
+    pushUndo();
     const nit = itemsRef.current.filter(i => i.id !== id);
     setItems(nit); itemsRef.current = nit;
     selRef.current = []; setSel([]);
     saveItemsNow(nit);
   };
   const bringFwd = id => {
+    pushUndo();
     const maxZ = Math.max(0, ...itemsRef.current.map(i => i.z || 0));
     const nit = itemsRef.current.map(i => i.id === id ? { ...i, z: maxZ + 1 } : i);
     setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
@@ -1112,6 +1154,7 @@ ${rows}
   const fetchLinkPreview = async (noteId, rawUrl) => {
     const url = rawUrl.trim();
     if (!url) return;
+    pushUndo();
     setLinkFetching(noteId);
     try {
       const data = await api.get(`/api/linkpreview?url=${encodeURIComponent(url)}`);
@@ -1124,12 +1167,14 @@ ${rows}
   };
 
   const removeLinkFromNote = noteId => {
+    pushUndo();
     const nit = itemsRef.current.map(i => i.id === noteId ? { ...i, link: null } : i);
     setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
   };
 
   const addNote = () => {
     if (!bid) return;
+    pushUndo();
     const maxZ = itemsRef.current.length ? Math.max(...itemsRef.current.map(i => i.z || 0)) : 0;
     const z = zoomRef.current;
     const wrapEl = wrapRef.current;
@@ -1147,6 +1192,7 @@ ${rows}
 
   const onResizeNotePD = (e, itemId) => {
     e.stopPropagation(); e.preventDefault();
+    const beforeResizeNote = itemsRef.current.map(i => ({ ...i }));
     const it = itemsRef.current.find(i => i.id === itemId);
     const sx = e.clientX, sy = e.clientY, ow = it.w, oh = it.h || 150;
     let cw = ow, ch = oh;
@@ -1160,6 +1206,10 @@ ${rows}
       window.removeEventListener('pointermove', onMM);
       window.removeEventListener('pointerup',   onMU);
       const nit = itemsRef.current.map(i => i.id === itemId ? { ...i, w: Math.round(cw), h: Math.round(ch) } : i);
+      if (Math.round(cw) !== ow || Math.round(ch) !== oh) {
+        undoStack.current = [...undoStack.current.slice(-49), beforeResizeNote];
+        redoStack.current = [];
+      }
       setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
     };
     window.addEventListener('pointermove', onMM);
@@ -1176,6 +1226,7 @@ ${rows}
       : Math.round(item.w * p.h / p.w);
   };
   const alignItems = type => {
+    pushUndo();
     const ids = selRef.current;  // ordered array — ids[0] is the anchor
     const selIt = itemsRef.current.filter(i => ids.includes(i.id));
     if (selIt.length < 2) return;
@@ -1591,6 +1642,7 @@ ${rows}
                       <div className="nitem-body">
                         <textarea className="nitem-txt" value={item.text||''} placeholder={lang==='es'?'nota…':'note…'}
                           onChange={e => updateNoteText(item.id, e.target.value)}
+                          onFocus={pushUndo}
                           onBlur={saveLabel}
                           onPointerDown={e => e.stopPropagation()}
                           onClick={e => e.stopPropagation()}
@@ -1681,6 +1733,7 @@ ${rows}
                       <div className="dim-tag">{dimLabel(item.w, displayH, boardDpi, boardUnits)}</div>
                       <input className="lbl" value={item.label||''} placeholder={t('labelPlaceholder')}
                         onChange={e => updateLabel(item.id, e.target.value)}
+                        onFocus={pushUndo}
                         onBlur={saveLabel}
                         onPointerDown={e => e.stopPropagation()}
                         onClick={e => e.stopPropagation()}
