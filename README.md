@@ -28,14 +28,51 @@ brew install node
 
 1. Descarga **`tableau-mac-1.2.0.zip`** desde [Releases](https://github.com/blasgonzalez/tableau/releases/latest)
 2. Descomprime el ZIP en la carpeta donde quieras tener la aplicación (p. ej. `~/Aplicaciones/Tableau`)
-3. Abre Terminal, arrastra el archivo `install.sh` a la ventana y pulsa Enter
-4. Cuando termine, aparecerá **`Tableau.command`** en el Escritorio
+3. Abre **Terminal** y escribe `chmod +x ` (con un espacio al final), arrastra el archivo `install.sh` a la ventana y pulsa Enter:
+   ```
+   chmod +x /ruta/a/tu/carpeta/install.sh
+   ```
+4. Arrastra de nuevo `install.sh` a la Terminal y pulsa Enter para iniciar la instalación
+5. Cuando termine, aparecerá **`Tableau.command`** en el Escritorio
 
 A partir de ese momento, haz doble clic en `Tableau.command` para abrir la aplicación.
 
 Los datos se guardan en `~/Library/Application Support/Tableau/data`.
 
-> **Primera vez en Mac:** si macOS bloquea el archivo, ve a Ajustes del Sistema → Privacidad y Seguridad → pulsa "Abrir de todas formas".
+> **Si macOS bloquea el archivo:** ve a Ajustes del Sistema → Privacidad y Seguridad → pulsa "Abrir de todas formas".
+
+---
+
+### Linux
+
+**Requisito previo:** Node.js 18 o superior y npm.
+```
+# Ubuntu / Linux Mint
+sudo apt install nodejs npm
+```
+
+**Instalación:**
+
+1. Descarga **`tableau-linux-1.2.0.zip`** desde [Releases](https://github.com/blasgonzalez/tableau/releases/latest)
+2. Descomprime el ZIP desde la Terminal (el gestor de archivos gráfico puede no descomprimir correctamente):
+   ```
+   unzip tableau-linux-1.2.0.zip -d ~/Aplicaciones/Tableau
+   ```
+3. Da permisos de ejecución al script de instalación:
+   ```
+   chmod +x ~/Aplicaciones/Tableau/install.sh
+   ```
+4. Ejecuta la instalación:
+   ```
+   bash ~/Aplicaciones/Tableau/install.sh
+   ```
+5. Cuando termine, aparecerá un acceso directo **Tableau** en el Escritorio
+
+A partir de ese momento, haz doble clic en el icono **Tableau** del Escritorio para abrir la aplicación.
+
+Los datos se guardan en `~/.local/share/Tableau/data`.
+
+> **Si el icono del Escritorio no responde:** haz clic derecho sobre él y elige "Permitir ejecutar" o "Allow Launching".
 
 ---
 
@@ -91,6 +128,7 @@ installer\build.bat
 Genera en `dist/`:
 - `tableau-installer-x.x.x.exe` — instalador Windows
 - `tableau-mac-x.x.x.zip` — paquete Mac
+- `tableau-linux-x.x.x.zip` — paquete Linux
 
 Requiere [Inno Setup 6](https://jrsoftware.org/isdl.php) en el PATH.
 

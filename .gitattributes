@@ -1,4 +1,6 @@
 * text=auto
 
-installer/install.sh      text eol=lf
-installer/launch.command  text eol=lf
+installer/install.sh        text eol=lf
+installer/launch.command    text eol=lf
+installer/install-linux.sh  text eol=lf
+installer/launch-linux.sh   text eol=lf

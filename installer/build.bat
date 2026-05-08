@@ -126,11 +126,36 @@ if errorlevel 1 (
 if exist "%MAC_TMP%" rmdir /s /q "%MAC_TMP%"
 echo  [OK] ZIP para Mac: dist\tableau-mac-%APP_VERSION%.zip
 
+:: 9. Crear ZIP para Linux
+echo.
+echo  Creando ZIP para Linux...
+set LINUX_TMP=dist\_linux_tmp
+if exist "%LINUX_TMP%" rmdir /s /q "%LINUX_TMP%"
+mkdir "%LINUX_TMP%"
+copy server.js "%LINUX_TMP%\" >nul
+copy package.json "%LINUX_TMP%\" >nul
+xcopy public "%LINUX_TMP%\public\" /E /I /Q >nul
+copy installer\install-linux.sh "%LINUX_TMP%\install.sh" >nul
+copy installer\launch-linux.sh "%LINUX_TMP%\launch.sh" >nul
+
+set LINUX_ZIP=%CD%\dist\tableau-linux-%APP_VERSION%.zip
+if exist "%LINUX_ZIP%" del "%LINUX_ZIP%"
+powershell -NoProfile -Command "Add-Type -Assembly System.IO.Compression.FileSystem; [IO.Compression.ZipFile]::CreateFromDirectory((Resolve-Path '%LINUX_TMP%').Path, '%LINUX_ZIP%')"
+if errorlevel 1 (
+    echo  [ERROR] Error creando ZIP para Linux.
+    if exist "%LINUX_TMP%" rmdir /s /q "%LINUX_TMP%"
+    pause
+    exit /b 1
+)
+if exist "%LINUX_TMP%" rmdir /s /q "%LINUX_TMP%"
+echo  [OK] ZIP para Linux: dist\tableau-linux-%APP_VERSION%.zip
+
 echo.
 echo  ====================================================
 echo   Generado en: dist\
 echo     - tableau-installer-%APP_VERSION%.exe  (Windows)
 echo     - tableau-mac-%APP_VERSION%.zip        (Mac)
+echo     - tableau-linux-%APP_VERSION%.zip      (Linux)
 echo  ====================================================
 echo.
 pause
