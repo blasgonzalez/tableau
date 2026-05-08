@@ -136,6 +136,16 @@ app.get('/api/linkpreview', async (req, res) => {
 app.get('/api/version', (_req, res) => res.json({ version: APP_VERSION }));
 app.get('/api/update',  (_req, res) => res.json({ current: APP_VERSION, update: updateAvailable }));
 
+// ── Heartbeat ─────────────────────────────────────────────────────────────────
+const HEARTBEAT_TIMEOUT = 90_000; // ms sin heartbeat antes de cerrar
+let heartbeatTimer = null;
+const resetHeartbeat = () => {
+  clearTimeout(heartbeatTimer);
+  heartbeatTimer = setTimeout(() => process.exit(0), HEARTBEAT_TIMEOUT);
+};
+resetHeartbeat();
+app.post('/api/heartbeat', (_req, res) => { resetHeartbeat(); res.sendStatus(204); });
+
 // ── Projects ─────────────────────────────────────────────────────────────────
 app.get('/api/projects', (_req, res) => {
   res.json(readJSON(projsFile()));

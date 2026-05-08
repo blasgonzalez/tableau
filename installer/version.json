@@ -1,6 +1,6 @@
 {
-  "version": "1.2.1",
+  "version": "1.2.2",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-05-08",
-  "notes": "Historial de cambios con Ctrl+Z / Ctrl+Y en el canvas"
+  "notes": "Ctrl+Z/Ctrl+Y en el canvas · El servidor se cierra al cerrar la app · Icono propio en accesos directos"
 }

@@ -137,6 +137,7 @@ copy package.json "%LINUX_TMP%\" >nul
 xcopy public "%LINUX_TMP%\public\" /E /I /Q >nul
 copy installer\install-linux.sh "%LINUX_TMP%\install.sh" >nul
 copy installer\launch-linux.sh "%LINUX_TMP%\launch.sh" >nul
+xcopy installer\icons "%LINUX_TMP%\icons\" /E /I /Q >nul
 
 set LINUX_ZIP=%CD%\dist\tableau-linux-%APP_VERSION%.zip
 if exist "%LINUX_ZIP%" del "%LINUX_ZIP%"

@@ -51,6 +51,14 @@ echo ""
 # Dar permisos al lanzador
 chmod +x "$APP_DIR/launch.sh"
 
+# Instalar icono en el directorio del sistema
+ICON_SRC="$APP_DIR/icons/tableau.png"
+ICON_DST="$HOME/.local/share/icons/tableau.png"
+if [ -f "$ICON_SRC" ]; then
+    mkdir -p "$HOME/.local/share/icons"
+    cp "$ICON_SRC" "$ICON_DST"
+fi
+
 # Crear acceso directo en el Escritorio (.desktop)
 DESKTOP_FILE="$HOME/Desktop/Tableau.desktop"
 {
@@ -60,6 +68,7 @@ DESKTOP_FILE="$HOME/Desktop/Tableau.desktop"
     echo "Name=Tableau"
     echo "Comment=Gestion visual de proyectos fotograficos"
     printf 'Exec=bash "%s/launch.sh"\n' "$APP_DIR"
+    [ -f "$ICON_DST" ] && echo "Icon=$ICON_DST" || true
     echo "Terminal=true"
     echo "Categories=Graphics;"
 } > "$DESKTOP_FILE"

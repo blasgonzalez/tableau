@@ -578,6 +578,9 @@ function App() {
 
   // ── init ──────────────────────────────────────────────────────────────────
   useEffect(() => {
+    const hb = () => fetch('/api/heartbeat', { method: 'POST' }).catch(() => {});
+    hb();
+    const hbInterval = setInterval(hb, 30_000);
     api.get('/api/version').then(d => setAppVersion(d.version || '')).catch(() => {});
     api.get('/api/update').then(d => { if (d.update) setUpdateInfo(d.update); }).catch(() => {});
     api.get('/api/projects').then(ps => {
@@ -585,6 +588,7 @@ function App() {
       if (ps.length) setPid(ps[0].id);
       setReady(true);
     }).catch(() => setReady(true));
+    return () => clearInterval(hbInterval);
   }, []);
 
   useEffect(() => {

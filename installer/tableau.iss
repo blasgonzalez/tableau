@@ -9,7 +9,7 @@
 ; ═══════════════════════════════════════════════════════════════════════════════
 
 #define MyAppName      "Tableau"
-#define MyAppVersion   "1.2.1"
+#define MyAppVersion   "1.2.2"
 #define MyAppPublisher "Blas González"
 #define MyAppURL       "https://github.com/blasgonzalez/tableau"
 
@@ -36,6 +36,7 @@ OutputBaseFilename=tableau-installer-{#MyAppVersion}
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
+SetupIconFile=installer\icons\tableau.ico
 
 ; Idioma por defecto según el sistema
 ShowLanguageDialog=auto
@@ -49,24 +50,27 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 ; Node.js portátil (descargado por build.bat)
-Source: "installer\node.exe";          DestDir: "{app}\runtime";      Flags: ignoreversion
+Source: "installer\node.exe";           DestDir: "{app}\runtime";      Flags: ignoreversion
 
 ; Aplicación principal
-Source: "server.js";                   DestDir: "{app}";              Flags: ignoreversion
-Source: "package.json";                DestDir: "{app}";              Flags: ignoreversion
-Source: "public\*";                    DestDir: "{app}\public";       Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "server.js";                    DestDir: "{app}";              Flags: ignoreversion
+Source: "package.json";                 DestDir: "{app}";              Flags: ignoreversion
+Source: "public\*";                     DestDir: "{app}\public";       Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "node_modules\*";              DestDir: "{app}\node_modules"; Flags: ignoreversion recursesubdirs createallsubdirs
 
+; Icono
+Source: "installer\icons\tableau.ico";  DestDir: "{app}";              Flags: ignoreversion
+
 ; Launcher
-Source: "installer\launch.bat";        DestDir: "{app}";              Flags: ignoreversion
+Source: "installer\launch.bat";         DestDir: "{app}";              Flags: ignoreversion
 
 [Icons]
 ; Acceso directo en el menú inicio
-Name: "{group}\{#MyAppName}";                          Filename: "{app}\launch.bat"; WorkingDir: "{app}"
-Name: "{group}\{cm:UninstallProgram,{#MyAppName}}";    Filename: "{uninstallexe}"
+Name: "{group}\{#MyAppName}";                        Filename: "{app}\launch.bat"; WorkingDir: "{app}"; IconFilename: "{app}\tableau.ico"
+Name: "{group}\{cm:UninstallProgram,{#MyAppName}}";  Filename: "{uninstallexe}"
 
 ; Acceso directo en el escritorio (opcional)
-Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\launch.bat"; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\launch.bat"; WorkingDir: "{app}"; IconFilename: "{app}\tableau.ico"; Tasks: desktopicon
 
 [Run]
 ; Ofrecer abrir la app al terminar la instalación
