@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.2.3] — 2026-05-09
+### Añadido
+- Duplicar tableros: botón ⧉ en el panel lateral crea una copia exacta del tablero con todos sus elementos
+
+---
+
 ## [1.2.2] — 2026-05-08
 ### Añadido
 - El servidor se cierra automáticamente al cerrar la aplicación en el navegador

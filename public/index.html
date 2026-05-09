@@ -403,6 +403,7 @@ const I18N = {
     allowPopups:'Permite ventanas emergentes para imprimir',
     confirmDeleteProject:'¿Eliminar este proyecto y todas sus fotos?',
     confirmDeleteBoard:'¿Eliminar este tablero?',
+    duplicateBoard:'Duplicar tablero',
     confirmDeletePhoto:'¿Eliminar esta foto del proyecto?',
     inBoard:'EN TABLEAU', inProject:'en proyecto', importBtn:'+ Importar',
     aboutLabel:'Acerca de', authorLabel:'Autor',
@@ -473,6 +474,7 @@ const I18N = {
     allowPopups:'Allow pop-ups to print',
     confirmDeleteProject:'Delete this project and all its photos?',
     confirmDeleteBoard:'Delete this board?',
+    duplicateBoard:'Duplicate board',
     confirmDeletePhoto:'Delete this photo from the project?',
     inBoard:'IN TABLEAU', inProject:'in project', importBtn:'+ Import',
     aboutLabel:'About', authorLabel:'Author',
@@ -978,6 +980,20 @@ ${rows}
     setBoards(nbs);
     setAllBoardItems(prev => { const n = {...prev}; delete n[id]; return n; });
     if (bidRef.current === id) setBid(nbs[0]?.id || null);
+  };
+
+  const duplicateBoard = async (id, e) => {
+    e?.stopPropagation();
+    const copy = await api.post(`/api/projects/${pidRef.current}/boards/${id}/duplicate`, {});
+    setBoards(bs => {
+      const idx = bs.findIndex(b => b.id === id);
+      const next = [...bs];
+      next.splice(idx + 1, 0, copy);
+      return next;
+    });
+    const items = await api.get(`/api/boards/${pidRef.current}/${copy.id}/items`);
+    setAllBoardItems(prev => ({ ...prev, [copy.id]: items }));
+    setBid(copy.id);
   };
 
   // ── upload ────────────────────────────────────────────────────────────────
@@ -1541,8 +1557,9 @@ ${rows}
                                     <span className="nboard-name" title={b.name}>{b.name}</span>
                                   )}
                                   <div className="nrow-acts">
-                                    <button className="nact edit" title={t('renameBtn')} onClick={e => startRename('board', b.id, b.name, e)}>✎</button>
-                                    <button className="nact del"  title={t('deleteBtn')}  onClick={e => deleteBoard(b.id, e)}>×</button>
+                                    <button className="nact edit" title={t('renameBtn')}      onClick={e => startRename('board', b.id, b.name, e)}>✎</button>
+                                    <button className="nact edit" title={t('duplicateBoard')} onClick={e => duplicateBoard(b.id, e)}>⧉</button>
+                                    <button className="nact del"  title={t('deleteBtn')}      onClick={e => deleteBoard(b.id, e)}>×</button>
                                   </div>
                                 </div>
                               ))}

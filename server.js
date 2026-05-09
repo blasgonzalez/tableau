@@ -221,6 +221,20 @@ app.delete('/api/projects/:pid/boards/:bid', (req, res) => {
   res.json({ ok: true });
 });
 
+app.post('/api/projects/:pid/boards/:bid/duplicate', (req, res) => {
+  const { pid, bid } = req.params;
+  const boards = readJSON(boardsMeta(pid));
+  const original = boards.find(b => b.id === bid);
+  if (!original) return res.status(404).json({ error: 'Tablero no encontrado' });
+  const copy = { ...original, id: newId(), name: original.name + ' (copia)', created: Date.now() };
+  const items = readJSON(boardFile(pid, bid), []);
+  const idx = boards.findIndex(b => b.id === bid);
+  boards.splice(idx + 1, 0, copy);
+  writeJSON(boardsMeta(pid), boards);
+  writeJSON(boardFile(pid, copy.id), items);
+  res.json(copy);
+});
+
 // ── Photos – upload ──────────────────────────────────────────────────────────
 app.get('/api/projects/:pid/photos', (req, res) => {
   res.json(readJSON(photosMeta(req.params.pid)));

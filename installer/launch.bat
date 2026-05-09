@@ -35,10 +35,8 @@ echo  ┌───────────────────────�
 echo  │  http://localhost:3000                  │
 echo  └─────────────────────────────────────────┘
 echo.
-echo  IMPORTANTE: mantén esta ventana abierta mientras usas Tableau.
-echo  Si la cierras, la aplicacion se detendra.
-echo.
-echo  Para salir: cierra esta ventana o pulsa Ctrl+C
+echo  Esta ventana se cerrara sola al cerrar la aplicacion
+echo  en el navegador.
 echo  ─────────────────────────────────────────────
 echo.
 
@@ -47,8 +45,3 @@ start http://localhost:3000
 
 "%NODE_EXE%" "%~dp0server.js"
 
-echo.
-echo  Tableau detenido. / Tableau stopped.
-echo  Puedes cerrar esta ventana. / You can close this window.
-echo.
-pause
