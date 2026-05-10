@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.2.5] — 2026-05-10
+### Añadido
+- Miniaturas de imagen en el informe de memoria: aparecen junto a cada foto tanto en el panel en pantalla como en el informe imprimible
+
+---
+
 ## [1.2.4] — 2026-05-10
 ### Añadido
 - Dimensiones físicas al redimensionar: tooltip flotante muestra el tamaño en la unidad configurada (cm, mm, in…) mientras se arrastra el borde; si no hay escala configurada muestra píxeles
