@@ -2,7 +2,9 @@
   {
     "id": "bc104d6536",
     "name": "Paisaje",
-    "created": 1777733132681
+    "created": 1777733132681,
+    "units": "cm",
+    "dpi": 72
   },
   {
     "id": "5178e59553",
