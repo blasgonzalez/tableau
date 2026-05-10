@@ -1,6 +1,6 @@
 {
-  "version": "1.2.6",
+  "version": "1.2.7",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-05-10",
-  "notes": "Exportar e importar proyectos como ZIP"
+  "notes": "Marco por foto · Zoom persistente por tablero · Ajuste automático al ancho"
 }

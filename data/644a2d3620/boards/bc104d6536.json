@@ -14,10 +14,11 @@
     "photoId": "5d43c345bf0b",
     "x": 550,
     "y": 100,
-    "w": 383,
+    "w": 390,
     "z": 225,
     "label": "",
-    "rot": 0
+    "rot": 0,
+    "frame": 0.5
   },
   {
     "id": "mooh8sbvgrb",

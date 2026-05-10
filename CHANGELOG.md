@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.2.7] — 2026-05-10
+### Añadido
+- Marco por foto: botón ▣ en los controles de cada imagen abre un panel donde se define el grosor del marco en la unidad configurada del tablero
+- Marco por defecto configurable en ⚙ Config del tablero (se aplica a las fotos nuevas al colocarlas)
+- Las dimensiones muestran el tamaño total (foto + marco) con nota aclaratoria en el informe de memoria
+- Zoom persistente por tablero: el nivel de zoom se guarda en localStorage y se restaura al reiniciar la aplicación
+- Ajuste automático al ancho para tableros variables: al abrir un tablero por primera vez encuadra el contenido en el ancho de la ventana
+- Botón ⇔ en los controles de zoom para ajustar al ancho en cualquier momento (también Ctrl+0)
+
+### Corregido
+- La importación de proyectos ZIP mostraba pantalla negra al abrir el diálogo de confirmación
+- Los mensajes de error en la importación ahora muestran la causa exacta del problema
+
+---
+
 ## [1.2.6] — 2026-05-10
 ### Añadido
 - Exportar proyecto como ZIP: botón ↓ en cada proyecto del panel lateral descarga un archivo con todas las fotos y tableros

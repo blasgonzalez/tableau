@@ -411,29 +411,46 @@ app.get('/api/projects/:pid/export', (req, res) => {
 
 const pendingImports = new Map();
 
-app.post('/api/projects/import', uploadZip.single('zip'), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No se recibió ningún fichero' });
-  let zip, exportMeta;
-  try {
-    zip = new AdmZip(req.file.buffer);
+app.post('/api/projects/import', (req, res, next) => {
+  uploadZip.single('zip')(req, res, err => {
+    if (err) return res.status(400).json({ error: `Error al recibir el archivo: ${err.message}` });
+
+    if (!req.file) return res.status(400).json({ error: 'No se recibió ningún fichero' });
+
+    let zip, exportMeta;
+    try {
+      zip = new AdmZip(req.file.buffer);
+    } catch (e) {
+      console.error('[import] Error leyendo ZIP:', e.message);
+      return res.status(400).json({ error: `No se pudo leer el archivo ZIP: ${e.message}` });
+    }
+
     const entry = zip.getEntry('tableau-export.json');
-    if (!entry) return res.status(400).json({ error: 'El archivo no es un proyecto Tableau válido' });
-    exportMeta = JSON.parse(entry.getData().toString('utf8'));
-  } catch {
-    return res.status(400).json({ error: 'No se pudo leer el archivo ZIP' });
-  }
+    if (!entry) return res.status(400).json({ error: 'El archivo no contiene tableau-export.json — ¿es un proyecto Tableau exportado?' });
 
-  const projects = readJSON(projsFile());
-  const existing = projects.find(p => p.id === exportMeta.originId);
+    try {
+      exportMeta = JSON.parse(entry.getData().toString('utf8'));
+    } catch (e) {
+      console.error('[import] Error parseando tableau-export.json:', e.message);
+      return res.status(400).json({ error: `tableau-export.json no es válido: ${e.message}` });
+    }
 
-  const now = Date.now();
-  for (const [k, v] of pendingImports) {
-    if (now - v.createdAt > 10 * 60 * 1000) pendingImports.delete(k);
-  }
-  const tempId = newId();
-  pendingImports.set(tempId, { buffer: req.file.buffer, exportMeta, createdAt: now });
+    if (!exportMeta.originId || !exportMeta.projectName) {
+      return res.status(400).json({ error: 'tableau-export.json incompleto (faltan campos originId o projectName)' });
+    }
 
-  res.json({ tempId, projectName: exportMeta.projectName, conflict: !!existing, existingProject: existing || null });
+    const projects = readJSON(projsFile());
+    const existing = projects.find(p => p.id === exportMeta.originId);
+
+    const now = Date.now();
+    for (const [k, v] of pendingImports) {
+      if (now - v.createdAt > 10 * 60 * 1000) pendingImports.delete(k);
+    }
+    const tempId = newId();
+    pendingImports.set(tempId, { buffer: req.file.buffer, exportMeta, createdAt: now });
+
+    res.json({ tempId, projectName: exportMeta.projectName, conflict: !!existing, existingProject: existing || null });
+  });
 });
 
 app.post('/api/projects/import/:tempId/confirm', (req, res) => {
@@ -445,65 +462,74 @@ app.post('/api/projects/import/:tempId/confirm', (req, res) => {
   pendingImports.delete(tempId);
 
   const { buffer, exportMeta } = pending;
+
   let zip;
-  try { zip = new AdmZip(buffer); } catch { return res.status(400).json({ error: 'Error leyendo ZIP' }); }
-
-  const oldPhotos = JSON.parse(zip.getEntry('photos.json')?.getData().toString('utf8') || '[]');
-  const oldBoards = JSON.parse(zip.getEntry('boards.json')?.getData().toString('utf8') || '[]');
-
-  let newPid;
-  if (mode === 'replace' && targetPid) {
-    newPid = targetPid;
-    const pDir = photoDir(newPid);
-    const bDir = boardDir(newPid);
-    if (fs.existsSync(pDir)) fs.readdirSync(pDir).forEach(f => { try { fs.unlinkSync(path.join(pDir, f)); } catch {} });
-    if (fs.existsSync(bDir)) fs.readdirSync(bDir).forEach(f => { try { fs.unlinkSync(path.join(bDir, f)); } catch {} });
-    const projects = readJSON(projsFile()).map(p => p.id === newPid ? { ...p, name: exportMeta.projectName } : p);
-    writeJSON(projsFile(), projects);
-  } else {
-    newPid = newId();
-    const projects = readJSON(projsFile());
-    projects.push({ id: newPid, name: exportMeta.projectName, created: Date.now() });
-    writeJSON(projsFile(), projects);
-    initProject(newPid);
+  try { zip = new AdmZip(buffer); } catch (e) {
+    console.error('[import/confirm] Error leyendo ZIP:', e.message);
+    return res.status(400).json({ error: `Error leyendo ZIP: ${e.message}` });
   }
 
-  const photoIdMap = {};
-  oldPhotos.forEach(p => { photoIdMap[p.id] = newId(12); });
-  const boardIdMap = {};
-  oldBoards.forEach(b => { boardIdMap[b.id] = newId(); });
+  try {
+    const oldPhotos = JSON.parse(zip.getEntry('photos.json')?.getData().toString('utf8') || '[]');
+    const oldBoards = JSON.parse(zip.getEntry('boards.json')?.getData().toString('utf8') || '[]');
 
-  writeJSON(photosMeta(newPid), oldPhotos.map(p => ({ ...p, id: photoIdMap[p.id] })));
+    let newPid;
+    if (mode === 'replace' && targetPid) {
+      newPid = targetPid;
+      const pDir = photoDir(newPid);
+      const bDir = boardDir(newPid);
+      if (fs.existsSync(pDir)) fs.readdirSync(pDir).forEach(f => { try { fs.unlinkSync(path.join(pDir, f)); } catch {} });
+      if (fs.existsSync(bDir)) fs.readdirSync(bDir).forEach(f => { try { fs.unlinkSync(path.join(bDir, f)); } catch {} });
+      const projects = readJSON(projsFile()).map(p => p.id === newPid ? { ...p, name: exportMeta.projectName } : p);
+      writeJSON(projsFile(), projects);
+    } else {
+      newPid = newId();
+      const projects = readJSON(projsFile());
+      projects.push({ id: newPid, name: exportMeta.projectName, created: Date.now() });
+      writeJSON(projsFile(), projects);
+      initProject(newPid);
+    }
 
-  zip.getEntries().forEach(entry => {
-    if (!entry.entryName.startsWith('photos/') || entry.isDirectory) return;
-    const fname = path.basename(entry.entryName);
-    let oldId, newFname;
-    if (fname.endsWith('_thumb.jpg')) {
-      oldId = fname.slice(0, -'_thumb.jpg'.length);
-      const nid = photoIdMap[oldId]; if (!nid) return;
-      newFname = `${nid}_thumb.jpg`;
-    } else if (fname.endsWith('.jpg')) {
-      oldId = fname.slice(0, -'.jpg'.length);
-      const nid = photoIdMap[oldId]; if (!nid) return;
-      newFname = `${nid}.jpg`;
-    } else return;
-    fs.writeFileSync(path.join(photoDir(newPid), newFname), entry.getData());
-  });
+    const photoIdMap = {};
+    oldPhotos.forEach(p => { photoIdMap[p.id] = newId(12); });
+    const boardIdMap = {};
+    oldBoards.forEach(b => { boardIdMap[b.id] = newId(); });
 
-  writeJSON(boardsMeta(newPid), oldBoards.map(b => ({ ...b, id: boardIdMap[b.id] })));
+    writeJSON(photosMeta(newPid), oldPhotos.map(p => ({ ...p, id: photoIdMap[p.id] })));
 
-  oldBoards.forEach(b => {
-    const entry = zip.getEntry(`boards/${b.id}.json`);
-    const items = entry ? JSON.parse(entry.getData().toString('utf8')) : [];
-    writeJSON(boardFile(newPid, boardIdMap[b.id]), items.map(item => ({
-      ...item,
-      id: newId(),
-      ...(item.photoId ? { photoId: photoIdMap[item.photoId] || item.photoId } : {}),
-    })));
-  });
+    zip.getEntries().forEach(entry => {
+      if (!entry.entryName.startsWith('photos/') || entry.isDirectory) return;
+      const fname = path.basename(entry.entryName);
+      let oldId, newFname;
+      if (fname.endsWith('_thumb.jpg')) {
+        oldId = fname.slice(0, fname.length - '_thumb.jpg'.length);
+        const nid = photoIdMap[oldId]; if (!nid) return;
+        newFname = `${nid}_thumb.jpg`;
+      } else if (fname.endsWith('.jpg')) {
+        oldId = fname.slice(0, fname.length - '.jpg'.length);
+        const nid = photoIdMap[oldId]; if (!nid) return;
+        newFname = `${nid}.jpg`;
+      } else return;
+      fs.writeFileSync(path.join(photoDir(newPid), newFname), entry.getData());
+    });
 
-  res.json(readJSON(projsFile()).find(p => p.id === newPid) || { id: newPid, name: exportMeta.projectName });
+    writeJSON(boardsMeta(newPid), oldBoards.map(b => ({ ...b, id: boardIdMap[b.id] })));
+
+    oldBoards.forEach(b => {
+      const entry = zip.getEntry(`boards/${b.id}.json`);
+      const items = entry ? JSON.parse(entry.getData().toString('utf8')) : [];
+      writeJSON(boardFile(newPid, boardIdMap[b.id]), items.map(item => ({
+        ...item,
+        id: newId(),
+        ...(item.photoId ? { photoId: photoIdMap[item.photoId] || item.photoId } : {}),
+      })));
+    });
+
+    res.json(readJSON(projsFile()).find(p => p.id === newPid) || { id: newPid, name: exportMeta.projectName });
+  } catch (e) {
+    console.error('[import/confirm] Error durante la importación:', e);
+    res.status(500).json({ error: `Error durante la importación: ${e.message}` });
+  }
 });
 
 // ── Start ─────────────────────────────────────────────────────────────────────

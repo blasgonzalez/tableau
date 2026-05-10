@@ -125,6 +125,10 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .bitem.sel .bitem-img-wrap{outline:2px dashed var(--acc-dim);outline-offset:2px}
 .bitem.sel.anchor .bitem-img-wrap{outline:2px solid var(--acc);outline-offset:2px}
 .bitem-bar{position:absolute;top:-26px;right:0;display:flex;gap:3px;opacity:0;transition:opacity .12s}
+.props-panel{position:absolute;top:-30px;left:0;background:var(--panel2);border:1px solid var(--border2);border-radius:3px;padding:8px 10px;z-index:200;min-width:160px;box-shadow:0 4px 14px rgba(0,0,0,.45);display:flex;flex-direction:column;gap:6px}
+.props-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.props-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+.props-inp{width:64px;font-size:10px;background:var(--panel);border:1px solid var(--border2);color:var(--text);border-radius:2px;padding:3px 5px;text-align:right}
 .bitem:hover .bitem-bar,.bitem.sel .bitem-bar{opacity:1}
 .ibc{width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;border:none;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-weight:500}
 .ibc.del{background:var(--danger);color:#fff}
@@ -346,10 +350,23 @@ const pxToPhys = (px, dpi, units) => {
   return null;
 };
 
-const dimLabel = (w, h, dpi, units) => {
-  const pw = pxToPhys(w, dpi, units);
-  const ph = pxToPhys(h, dpi, units);
-  return pw ? `${pw} × ${ph}` : `${w} × ${h} px`;
+const physToPx = (phys, dpi, units) => {
+  if (!phys || !dpi || !units || units === 'px') return Math.round(phys || 0);
+  const factor = units === 'cm' ? 2.54 : units === 'mm' ? 25.4 : 1;
+  return Math.round((phys / factor) * dpi);
+};
+
+const dimLabel = (w, h, dpi, units, frame = 0) => {
+  const f = parseFloat(frame) || 0;
+  if (dpi && units && units !== 'px') {
+    const factor = units === 'cm' ? 2.54 : units === 'mm' ? 25.4 : 1;
+    const dec    = units === 'mm' ? 0 : units === 'in' ? 2 : 1;
+    const suf    = units === 'in' ? '"' : ` ${units}`;
+    const tw = (w / dpi * factor + 2 * f).toFixed(dec);
+    const th = (h / dpi * factor + 2 * f).toFixed(dec);
+    return `${tw}${suf} × ${th}${suf}`;
+  }
+  return `${w + 2 * Math.round(f)} × ${h + 2 * Math.round(f)} px`;
 };
 
 const I18N = {
@@ -418,11 +435,13 @@ const I18N = {
     confirmOverflow: 'Algunas fotos quedarán fuera de las nuevas dimensiones. ¿Continuar?',
     invalidDims: 'Las dimensiones deben ser mayores que cero',
     pxPreview: (w, h) => `${w} × ${h} px`,
-    gridToggle: 'Guías', gridAuto: 'Auto', fitView: 'Ajustar', snapGrid: 'Imán', addNote: '+ Nota',
+    gridToggle: 'Guías', gridAuto: 'Auto', fitView: 'Ajustar', fitWidth: 'Ajustar al ancho (Ctrl+0)', snapGrid: 'Imán', addNote: '+ Nota',
     reportHeading:'Tableau — Memoria del Proyecto',
     noScaleConfigured:'sin escala configurada',
     reportDate: d => `Memoria del proyecto · ${d}`,
     colHdr: ['#','Foto','Dimensiones','Tamaño físico','Etiqueta'],
+    frameLabel:'Marco', frameDefault:'Marco por defecto',
+    frameNote: (f, u) => `incl. ${f} ${u} de marco`,
     exportProjectBtn:'Exportar proyecto (ZIP)', importProjectBtn:'⬆ Importar',
     importTitle:'Importar proyecto',
     importNew:'Importar como copia nueva', importReplace:'Reemplazar existente',
@@ -498,11 +517,13 @@ const I18N = {
     confirmOverflow: 'Some photos will be outside the new dimensions. Continue?',
     invalidDims: 'Dimensions must be greater than zero',
     pxPreview: (w, h) => `${w} × ${h} px`,
-    gridToggle: 'Grid', gridAuto: 'Auto', fitView: 'Fit', snapGrid: 'Snap', addNote: '+ Note',
+    gridToggle: 'Grid', gridAuto: 'Auto', fitView: 'Fit', fitWidth: 'Fit to width (Ctrl+0)', snapGrid: 'Snap', addNote: '+ Note',
     reportHeading:'Tableau — Project Report',
     noScaleConfigured:'no scale configured',
     reportDate: d => `Project report · ${d}`,
     colHdr: ['#','Photo','Dimensions','Physical size','Label'],
+    frameLabel:'Frame', frameDefault:'Default frame',
+    frameNote: (f, u) => `incl. ${f} ${u} frame`,
     exportProjectBtn:'Export project (ZIP)', importProjectBtn:'⬆ Import',
     importTitle:'Import project',
     importNew:'Import as new copy', importReplace:'Replace existing',
@@ -547,6 +568,8 @@ function App() {
   const [linkFetching,  setLinkFetching]  = useState(null);
   const [resizeDim,     setResizeDim]     = useState(null);
   const [importState,   setImportState]   = useState(null); // {tempId,projectName,conflict,existingProject,busy}
+  const [cfgDefaultFrame, setCfgDefaultFrame] = useState('0');
+  const [propsPanelId,  setPropsPanelId]  = useState(null);
 
   const [theme,         setTheme]         = useState(() => localStorage.getItem('tb-theme') || 'dark-amber');
   const [themeOpen,     setThemeOpen]     = useState(false);
@@ -653,7 +676,11 @@ function App() {
   useEffect(() => { langRef.current = lang; }, [lang]);
   useEffect(() => {
     zoomRef.current = zoom;
-    if (bidRef.current) boardZoom.current[bidRef.current] = zoom;
+    const b = bidRef.current;
+    if (b) {
+      boardZoom.current[b] = zoom;
+      localStorage.setItem(`tb-zoom-${b}`, String(zoom));
+    }
   }, [zoom]);
 
   const zoomStep = useCallback((dir) => {
@@ -681,7 +708,7 @@ function App() {
       if (!e.ctrlKey && !e.metaKey) return;
       if (e.key === '+' || e.key === '=') { e.preventDefault(); zoomStep(1); }
       if (e.key === '-') { e.preventDefault(); zoomStep(-1); }
-      if (e.key === '0') { e.preventDefault(); boardPxRef.current ? fitBoard() : setZoom(1); }
+      if (e.key === '0') { e.preventDefault(); boardPxRef.current ? fitBoard() : fitWidth(); }
       const tag = document.activeElement?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
       if (e.key === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); }
@@ -762,6 +789,7 @@ function App() {
     setCfgFixed(activeBoardMeta?.fixed || false);
     setCfgBoardW(activeBoardMeta?.fixedW != null ? String(activeBoardMeta.fixedW) : '');
     setCfgBoardH(activeBoardMeta?.fixedH != null ? String(activeBoardMeta.fixedH) : '');
+    setCfgDefaultFrame(String(activeBoardMeta?.defaultFrame || 0));
     setModal('boardcfg');
   };
 
@@ -783,7 +811,7 @@ function App() {
       });
       if (overflow && !confirm(t('confirmOverflow'))) return;
     }
-    const patch = { units: cfgUnits, dpi, fixed: cfgFixed, fixedW: cfgFixed ? fixedW : null, fixedH: cfgFixed ? fixedH : null };
+    const patch = { units: cfgUnits, dpi, fixed: cfgFixed, fixedW: cfgFixed ? fixedW : null, fixedH: cfgFixed ? fixedH : null, defaultFrame: parseFloat(cfgDefaultFrame) || 0 };
     await api.patch(`/api/projects/${pid}/boards/${bid}`, patch);
     setBoards(bs => bs.map(b => b.id === bid ? { ...b, ...patch } : b));
     setModal(null);
@@ -819,7 +847,7 @@ function App() {
           <td class="n">${i + 1}</td>
           <td class="thumb"><img src="/photos/${pid}/${item.photoId}/thumb" alt="" /></td>
           <td>${photo?.name || item.photoId}</td>
-          <td class="dim">${hasPhys ? `${physW} × ${physH}` : `${item.w} × ${h} px`}</td>
+          <td class="dim">${dimLabel(item.w, h, dpi, units, item.frame)}${item.frame > 0 ? `<small>(incl. ${item.frame} ${hasPhys ? units : 'px'} ${lang === 'en' ? 'frame' : 'de marco'})</small>` : ''}</td>
           <td class="lbl">${item.label || ''}</td>
         </tr>`;
       });
@@ -843,6 +871,7 @@ function App() {
   td.thumb{width:52px;padding:3px 6px}
   td.thumb img{width:46px;height:46px;object-fit:cover;border-radius:2px;display:block}
   td.dim{white-space:nowrap;font-weight:600}
+  td.dim small{display:block;font-size:8px;font-weight:400;color:#999;margin-top:1px}
   td.lbl{color:#777;font-style:italic}
   @media print{body{padding:10mm 12mm} section{page-break-inside:avoid}}
 </style></head><body>
@@ -904,6 +933,7 @@ ${rows}
     const item = {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
       photoId: photo.id, x, y, w, z: maxZ + 1, label: '', rot: 0,
+      frame: boardsRef.current.find(b => b.id === bidRef.current)?.defaultFrame || 0,
     };
     const nit = [...itemsRef.current, item];
     const norm = applyNormalized(nit);
@@ -919,30 +949,38 @@ ${rows}
     const avH = wrap.clientHeight - BOARD_PAD * 2 - 8;
     const z = Math.max(0.05, Math.min(4, Math.min(avW / bp.w, avH / bp.h)));
     setZoom(z);
-    // after zoom DOM update, scroll to center board
     requestAnimationFrame(() => {
       const bpNow = boardPxRef.current;
       if (!wrap || !bpNow) return;
-      const zNow = z;
-      const totalW = bpNow.w * zNow + BOARD_PAD * 2;
-      const totalH = bpNow.h * zNow + BOARD_PAD * 2;
+      const totalW = bpNow.w * z + BOARD_PAD * 2;
+      const totalH = bpNow.h * z + BOARD_PAD * 2;
       wrap.scrollLeft = Math.max(0, (totalW - wrap.clientWidth)  / 2);
       wrap.scrollTop  = Math.max(0, (totalH - wrap.clientHeight) / 2);
     });
   }, []);
 
-  // auto-fit when switching to a fixed board; restore saved zoom if available
+  const fitWidth = useCallback(() => {
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    const its = itemsRef.current;
+    if (!its.length) { setZoom(1); return; }
+    const maxX = Math.max(...its.map(i => i.x + (i.w || 0)));
+    const z = Math.max(0.05, Math.min(4, (wrap.clientWidth - 80) / maxX));
+    setZoom(z);
+  }, []);
+
+  // restore saved zoom or auto-fit when switching boards
   useEffect(() => {
     if (!bid) return;
-    const savedZoom = boardZoom.current[bid];
-    if (savedZoom) {
-      setZoom(savedZoom);
+    const saved = boardZoom.current[bid] ?? parseFloat(localStorage.getItem(`tb-zoom-${bid}`));
+    if (saved && isFinite(saved)) {
+      setZoom(saved);
     } else {
       const bp = boardPxRef.current;
       if (bp) requestAnimationFrame(() => fitBoard());
-      else setZoom(1);
+      else requestAnimationFrame(() => fitWidth());
     }
-  }, [bid, fitBoard]);
+  }, [bid, fitBoard, fitWidth]);
 
   const addToCenter = photoId => {
     const photo = photosRef.current.find(p => p.id === photoId);
@@ -1040,7 +1078,7 @@ ${rows}
       setProjects(projs);
       setPid(data.id);
       setImportState(null);
-      showToast(t('importOk')(data.name));
+      showToast(t('importOk', data.name));
     } catch {
       showToast(t('importErrGeneric'), true);
       setImportState(null);
@@ -1209,6 +1247,7 @@ ${rows}
     const activeMeta = boardsRef.current.find(b => b.id === bidRef.current);
     const rdpi = activeMeta?.dpi || null;
     const runits = activeMeta?.units || 'px';
+    const rframe = it.frame || 0;
     const onMM = e => {
       const bp = boardPxRef.current;
       const maxW = bp ? bp.w - it.x : Infinity;
@@ -1216,7 +1255,7 @@ ${rows}
       setItems(its => its.map(i => i.id === itemId ? { ...i, w: cw } : i));
       const rw = Math.round(cw);
       const rh = photo ? (isSwapped ? Math.round(cw * photo.w / photo.h) : Math.round(cw * photo.h / photo.w)) : rw;
-      setResizeDim({ x: e.clientX + 16, y: e.clientY - 44, label: dimLabel(rw, rh, rdpi, runits) });
+      setResizeDim({ x: e.clientX + 16, y: e.clientY - 44, label: dimLabel(rw, rh, rdpi, runits, rframe) });
     };
     const onMU = () => {
       window.removeEventListener('pointermove', onMM);
@@ -1251,7 +1290,8 @@ ${rows}
     const nit = itemsRef.current.map(i => i.id === id ? { ...i, z: maxZ + 1 } : i);
     setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
   };
-  const updateLabel    = (id, v) => setItems(its => its.map(i => i.id === id ? { ...i, label: v } : i));
+  const updateLabel      = (id, v) => setItems(its => its.map(i => i.id === id ? { ...i, label: v } : i));
+  const updateItemFrame  = (id, v) => setItems(its => its.map(i => i.id === id ? { ...i, frame: v } : i));
   const updateNoteText = (id, v) => setItems(its => its.map(i => i.id === id ? { ...i, text:  v } : i));
   const saveLabel      = ()      => saveItemsNow(itemsRef.current);
 
@@ -1445,7 +1485,7 @@ ${rows}
   };
 
   return (
-    <div className="app" onClick={() => { selRef.current = []; setSel([]); renaming && setRenaming(null); setThemeOpen(false); }}>
+    <div className="app" onClick={() => { selRef.current = []; setSel([]); renaming && setRenaming(null); setThemeOpen(false); setPropsPanelId(null); }}>
 
       {updateInfo && !updateDismissed && (
         <div className="update-banner">
@@ -1826,8 +1866,30 @@ ${rows}
                         <button className="ibc rot" title={t('rotateBtn')}  onClick={e => { e.stopPropagation(); rotateItem(item.id); }}>↻</button>
                         <button className="ibc fwd" title={t('bringFwdBtn')} onClick={e => { e.stopPropagation(); bringFwd(item.id); }}>↑</button>
                         <button className="ibc del" title={t('deleteBtn')}   onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
+                        <button className="ibc" title={t('frameLabel')} onClick={e => { e.stopPropagation(); setPropsPanelId(id => id === item.id ? null : item.id); }}>▣</button>
                       </div>
-                      <div className="bitem-img-wrap" style={{ width: item.w, height: displayH }}>
+                      {propsPanelId === item.id && (() => {
+                        const frameUnit = boardUnits !== 'px' ? boardUnits : 'px';
+                        return (
+                          <div className="props-panel" onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
+                            <div className="props-row">
+                              <span className="props-lbl">{t('frameLabel')} ({frameUnit})</span>
+                              <input type="number" className="props-inp" value={item.frame || 0} min="0"
+                                step={boardUnits === 'mm' ? 1 : 0.1}
+                                onFocus={pushUndo}
+                                onChange={e => updateItemFrame(item.id, parseFloat(e.target.value) || 0)}
+                                onBlur={saveLabel}
+                                onPointerDown={e => e.stopPropagation()}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })()}
+                      {(() => {
+                        const frameInPx = item.frame ? physToPx(item.frame, boardDpi, boardUnits) : 0;
+                        return (
+                      <div className="bitem-img-wrap" style={{ width: item.w, height: displayH,
+                        ...(frameInPx > 0 ? { boxShadow: `0 0 0 ${frameInPx}px #fff, 0 0 0 ${frameInPx + 1}px rgba(0,0,0,.15)` } : {}) }}>
                         <img
                           src={`/photos/${pid}/${item.photoId}`}
                           alt={photo?.name || ''}
@@ -1845,7 +1907,9 @@ ${rows}
                           onError={e => e.target.style.opacity = '.3'}
                         />
                       </div>
-                      <div className="dim-tag">{dimLabel(item.w, displayH, boardDpi, boardUnits)}</div>
+                        );
+                      })()}
+                      <div className="dim-tag">{dimLabel(item.w, displayH, boardDpi, boardUnits, item.frame)}</div>
                       <input className="lbl" value={item.label||''} placeholder={t('labelPlaceholder')}
                         onChange={e => updateLabel(item.id, e.target.value)}
                         onFocus={pushUndo}
@@ -1900,11 +1964,12 @@ ${rows}
       {bid && (
         <div className="zoom-ctrl">
           <button className="zc-btn" title="Zoom − (Ctrl+−)" onClick={() => zoomStep(-1)}>−</button>
-          <span className="zc-pct"
-            title={boardPx ? t('fitView') : 'Restablecer zoom (Ctrl+0)'}
-            onClick={() => boardPx ? fitBoard() : setZoom(1)}>
-            {boardPx ? t('fitView') : `${Math.round(zoom*100)}%`}
+          <span className="zc-pct" style={{cursor: boardPx ? 'pointer' : 'default'}}>
+            {boardPx
+              ? <span title={t('fitView')} onClick={fitBoard}>{t('fitView')}</span>
+              : `${Math.round(zoom*100)}%`}
           </span>
+          {!boardPx && <button className="zc-btn" title={t('fitWidth')} onClick={fitWidth} style={{fontSize:13}}>⇔</button>}
           <button className="zc-btn" title="Zoom + (Ctrl++)" onClick={() => zoomStep(1)}>+</button>
         </div>
       )}
@@ -1997,6 +2062,14 @@ ${rows}
                 </select>
               </div>
             </div>
+            <div className="cfg-row">
+              <div>
+                <div className="cfg-label">{t('frameDefault')} {cfgUnits !== 'px' ? `(${cfgUnits})` : '(px)'}</div>
+                <input type="number" className="inp" value={cfgDefaultFrame} min="0"
+                  step={cfgUnits === 'mm' ? 1 : 0.1}
+                  onChange={e => setCfgDefaultFrame(e.target.value)} placeholder="0"/>
+              </div>
+            </div>
             {cfgUnits !== 'px' && (
               <div className="cfg-hint">{cfgHint()}</div>
             )}
@@ -2046,6 +2119,7 @@ ${rows}
                         : item.w;
                       const physW = hasPhys ? pxToPhys(item.w, dpi, units) : null;
                       const physH = hasPhys ? pxToPhys(h, dpi, units) : null;
+                      const dimStr = dimLabel(item.w, h, dpi, units, item.frame);
                       return (
                         <div key={item.id} className="mem-item">
                           <div className="mem-idx">{idx + 1}.</div>
@@ -2053,7 +2127,8 @@ ${rows}
                           <div className="mem-info">
                             <div className="mem-iname">{photo?.name || '(sin nombre)'}</div>
                             <div className="mem-dims">
-                              {physW ? `${physW} × ${physH}` : `${item.w} × ${h} px`}
+                              {dimStr}
+                              {(item.frame > 0) && <span style={{color:'var(--muted)',marginLeft:6,fontSize:8}}>({t('frameNote')(item.frame, hasPhys ? units : 'px')})</span>}
                             </div>
                             {item.label && <div className="mem-lbl">"{item.label}"</div>}
                           </div>
@@ -2081,8 +2156,8 @@ ${rows}
             <div className="modal-h">{t('importTitle')}</div>
             <div className="modal-sub" style={{maxWidth:320,lineHeight:1.5}}>
               {importState.conflict
-                ? t('importConflict')(importState.projectName)
-                : t('importConfirmMsg')(importState.projectName)}
+                ? t('importConflict', importState.projectName)
+                : t('importConfirmMsg', importState.projectName)}
             </div>
             <div className="modal-row" style={{marginTop:14,flexWrap:'wrap',gap:6}}>
               <button className="btn" onClick={() => setImportState(null)} disabled={importState.busy}>{t('cancel')}</button>
