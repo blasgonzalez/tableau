@@ -1,6 +1,6 @@
 {
-  "version": "1.2.3",
+  "version": "1.2.4",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-05-08",
-  "notes": "Duplicar tableros · El servidor se cierra al cerrar la app · Icono propio en accesos directos"
+  "releaseDate": "2026-05-10",
+  "notes": "Dimensiones físicas al redimensionar · Zoom recordado por tablero"
 }

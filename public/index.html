@@ -261,6 +261,7 @@ select.btn option,select.inp option{background:var(--panel);color:var(--text)}
 .zc-btn:hover{color:var(--text);background:var(--surf)}
 .zc-pct{font-size:9px;letter-spacing:.5px;color:var(--sub);padding:0 8px;user-select:none;white-space:nowrap;min-width:38px;text-align:center;cursor:pointer}
 .zc-pct:hover{color:var(--acc)}
+.resize-tip{position:fixed;background:rgba(13,12,11,.96);border:1px solid var(--border2);color:var(--acc);font-size:11px;padding:5px 11px;letter-spacing:.3px;pointer-events:none;z-index:9999;white-space:nowrap;box-shadow:0 2px 10px rgba(0,0,0,.5)}
 </style>
 </head>
 <body>
@@ -345,10 +346,9 @@ const pxToPhys = (px, dpi, units) => {
 };
 
 const dimLabel = (w, h, dpi, units) => {
-  const px = `${w} × ${h} px`;
   const pw = pxToPhys(w, dpi, units);
   const ph = pxToPhys(h, dpi, units);
-  return pw ? `${px}  ·  ${pw} × ${ph}` : px;
+  return pw ? `${pw} × ${ph}` : `${w} × ${h} px`;
 };
 
 const I18N = {
@@ -421,7 +421,7 @@ const I18N = {
     reportHeading:'Tableau — Memoria del Proyecto',
     noScaleConfigured:'sin escala configurada',
     reportDate: d => `Memoria del proyecto · ${d}`,
-    colHdr: ['#','Foto','Píxeles','Tamaño físico','Etiqueta'],
+    colHdr: ['#','Foto','Dimensiones','Tamaño físico','Etiqueta'],
   },
   en: {
     upload:'+ Upload', report:'≡ Report', config:'⚙ Config', exportJpeg:'⬇ Export JPEG',
@@ -492,7 +492,7 @@ const I18N = {
     reportHeading:'Tableau — Project Report',
     noScaleConfigured:'no scale configured',
     reportDate: d => `Project report · ${d}`,
-    colHdr: ['#','Photo','Pixels','Physical size','Label'],
+    colHdr: ['#','Photo','Dimensions','Physical size','Label'],
   },
 };
 
@@ -526,6 +526,7 @@ function App() {
   const [snapGrid,      setSnapGrid]      = useState(() => localStorage.getItem('tb-snap') === 'on');
   const [linkInputId,   setLinkInputId]   = useState(null);
   const [linkFetching,  setLinkFetching]  = useState(null);
+  const [resizeDim,     setResizeDim]     = useState(null);
 
   const [theme,         setTheme]         = useState(() => localStorage.getItem('tb-theme') || 'dark-amber');
   const [themeOpen,     setThemeOpen]     = useState(false);
@@ -565,6 +566,7 @@ function App() {
   const wrapRef         = useRef(null);
   const undoStack       = useRef([]);
   const redoStack       = useRef([]);
+  const boardZoom       = useRef({});
 
   useEffect(() => { itemsRef.current         = items;         }, [items]);
   useEffect(() => { pidRef.current           = pid;           }, [pid]);
@@ -628,7 +630,10 @@ function App() {
 
   const langRef = useRef('es');
   useEffect(() => { langRef.current = lang; }, [lang]);
-  useEffect(() => { zoomRef.current = zoom; }, [zoom]);
+  useEffect(() => {
+    zoomRef.current = zoom;
+    if (bidRef.current) boardZoom.current[bidRef.current] = zoom;
+  }, [zoom]);
 
   const zoomStep = useCallback((dir) => {
     // Find next ZOOM_STEP above/below current zoom, or clamp
@@ -778,7 +783,7 @@ function App() {
       const hasPhys = dpi && units !== 'px';
       rows += `<section><h2>${board.name}<span class="bcfg">${hasPhys ? ` · ${dpi} dpi · ${units}` : ` · ${t('noScaleConfigured')}`}</span></h2>`;
       if (!boardIt.length) { rows += `<p class="empty">${t('emptyBoardMem')}</p></section>`; return; }
-      rows += `<table><thead><tr><th>${hdr[0]}</th><th>${hdr[1]}</th><th>${hdr[2]}</th>${hasPhys ? `<th>${hdr[3]}</th>` : ''}<th>${hdr[4]}</th></tr></thead><tbody>`;
+      rows += `<table><thead><tr><th>${hdr[0]}</th><th>${hdr[1]}</th><th>${hdr[2]}</th><th>${hdr[4]}</th></tr></thead><tbody>`;
       boardIt.forEach((item, i) => {
         if (item.type === 'note') return;
         const photo = photosRef.current.find(p => p.id === item.photoId);
@@ -792,8 +797,7 @@ function App() {
         rows += `<tr>
           <td class="n">${i + 1}</td>
           <td>${photo?.name || item.photoId}</td>
-          <td class="px">${item.w} × ${h}</td>
-          ${hasPhys ? `<td class="phys">${physW} × ${physH}</td>` : ''}
+          <td class="dim">${hasPhys ? `${physW} × ${physH}` : `${item.w} × ${h} px`}</td>
           <td class="lbl">${item.label || ''}</td>
         </tr>`;
       });
@@ -814,8 +818,8 @@ function App() {
   th{text-align:left;font-size:8px;text-transform:uppercase;letter-spacing:1px;color:#777;border-bottom:1px solid #ddd;padding:4px 6px}
   td{padding:5px 6px;border-bottom:1px solid #f2f2f2;font-size:10px;vertical-align:top}
   td.n{color:#bbb;width:24px;text-align:right}
-  td.px{color:#999;white-space:nowrap}
-  td.phys{font-weight:600;white-space:nowrap}
+  td.dim{white-space:nowrap;font-weight:600}
+  td.dim small{display:block;color:#999;font-size:9px;font-weight:400;margin-top:1px}
   td.lbl{color:#777;font-style:italic}
   @media print{body{padding:10mm 12mm} section{page-break-inside:avoid}}
 </style></head><body>
@@ -904,12 +908,17 @@ ${rows}
     });
   }, []);
 
-  // auto-fit when switching to a fixed board
+  // auto-fit when switching to a fixed board; restore saved zoom if available
   useEffect(() => {
     if (!bid) return;
-    const bp = boardPxRef.current;
-    if (bp) requestAnimationFrame(() => fitBoard());
-    else setZoom(1);
+    const savedZoom = boardZoom.current[bid];
+    if (savedZoom) {
+      setZoom(savedZoom);
+    } else {
+      const bp = boardPxRef.current;
+      if (bp) requestAnimationFrame(() => fitBoard());
+      else setZoom(1);
+    }
   }, [bid, fitBoard]);
 
   const addToCenter = photoId => {
@@ -1129,15 +1138,24 @@ ${rows}
     const it = itemsRef.current.find(i => i.id === itemId);
     const sx = e.clientX, ow = it.w;
     let cw = ow;
+    const photo = photosRef.current.find(p => p.id === it.photoId);
+    const isSwapped = (it.rot || 0) % 180 !== 0;
+    const activeMeta = boardsRef.current.find(b => b.id === bidRef.current);
+    const rdpi = activeMeta?.dpi || null;
+    const runits = activeMeta?.units || 'px';
     const onMM = e => {
       const bp = boardPxRef.current;
       const maxW = bp ? bp.w - it.x : Infinity;
       cw = Math.max(80, Math.min(ow + (e.clientX - sx) / zoomRef.current, maxW));
       setItems(its => its.map(i => i.id === itemId ? { ...i, w: cw } : i));
+      const rw = Math.round(cw);
+      const rh = photo ? (isSwapped ? Math.round(cw * photo.w / photo.h) : Math.round(cw * photo.h / photo.w)) : rw;
+      setResizeDim({ x: e.clientX + 16, y: e.clientY - 44, label: dimLabel(rw, rh, rdpi, runits) });
     };
     const onMU = () => {
       window.removeEventListener('pointermove', onMM);
       window.removeEventListener('pointerup',   onMU);
+      setResizeDim(null);
       const nit = itemsRef.current.map(i => i.id === itemId ? { ...i, w: Math.round(cw) } : i);
       if (Math.round(cw) !== ow) {
         undoStack.current = [...undoStack.current.slice(-49), beforeResize];
@@ -1216,15 +1234,20 @@ ${rows}
     const it = itemsRef.current.find(i => i.id === itemId);
     const sx = e.clientX, sy = e.clientY, ow = it.w, oh = it.h || 150;
     let cw = ow, ch = oh;
+    const activeMeta = boardsRef.current.find(b => b.id === bidRef.current);
+    const rdpi = activeMeta?.dpi || null;
+    const runits = activeMeta?.units || 'px';
     const onMM = e => {
       const bp = boardPxRef.current; const z = zoomRef.current;
       cw = Math.max(120, Math.min(ow + (e.clientX - sx) / z, bp ? bp.w - it.x : Infinity));
       ch = Math.max(60,  Math.min(oh + (e.clientY - sy) / z, bp ? bp.h - it.y : Infinity));
       setItems(its => its.map(i => i.id === itemId ? { ...i, w: cw, h: ch } : i));
+      setResizeDim({ x: e.clientX + 16, y: e.clientY - 44, label: dimLabel(Math.round(cw), Math.round(ch), rdpi, runits) });
     };
     const onMU = () => {
       window.removeEventListener('pointermove', onMM);
       window.removeEventListener('pointerup',   onMU);
+      setResizeDim(null);
       const nit = itemsRef.current.map(i => i.id === itemId ? { ...i, w: Math.round(cw), h: Math.round(ch) } : i);
       if (Math.round(cw) !== ow || Math.round(ch) !== oh) {
         undoStack.current = [...undoStack.current.slice(-49), beforeResizeNote];
@@ -1814,6 +1837,7 @@ ${rows}
           <button className="zc-btn" title="Zoom + (Ctrl++)" onClick={() => zoomStep(1)}>+</button>
         </div>
       )}
+      {resizeDim && <div className="resize-tip" style={{left:resizeDim.x, top:resizeDim.y}}>{resizeDim.label}</div>}
       {uploading && <div className="uploading-bar"/>}
       {toast && <div className={`toast${toast.err?' err':''}`}>{toast.msg}</div>}
 
@@ -1957,8 +1981,7 @@ ${rows}
                           <div className="mem-info">
                             <div className="mem-iname">{photo?.name || '(sin nombre)'}</div>
                             <div className="mem-dims">
-                              {item.w} × {h} px
-                              {physW && <span className="mem-phys">→ {physW} × {physH}</span>}
+                              {physW ? `${physW} × ${physH}` : `${item.w} × ${h} px`}
                             </div>
                             {item.label && <div className="mem-lbl">"{item.label}"</div>}
                           </div>

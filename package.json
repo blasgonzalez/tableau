@@ -1,6 +1,6 @@
 {
   "name": "tableau",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "Gestión visual de proyectos fotográficos",
   "main": "server.js",
   "scripts": {

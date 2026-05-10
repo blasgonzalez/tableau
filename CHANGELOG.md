@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.2.4] — 2026-05-10
+### Añadido
+- Dimensiones físicas al redimensionar: tooltip flotante muestra el tamaño en la unidad configurada (cm, mm, in…) mientras se arrastra el borde; si no hay escala configurada muestra píxeles
+- El informe de memoria muestra las dimensiones en la unidad configurada en lugar de píxeles
+
+### Mejorado
+- El nivel de zoom se recuerda por tablero: al volver a un tablero se restaura el zoom que tenía en lugar de aplicar el auto-encuadre
+
+---
+
 ## [1.2.3] — 2026-05-09
 ### Añadido
 - Duplicar tableros: botón ⧉ en el panel lateral crea una copia exacta del tablero con todos sus elementos
