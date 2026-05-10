@@ -1,6 +1,6 @@
 {
   "name": "tableau",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "description": "Gestión visual de proyectos fotográficos",
   "main": "server.js",
   "scripts": {
@@ -8,6 +8,7 @@
     "dev": "nodemon server.js"
   },
   "dependencies": {
+    "adm-zip": "^0.5.17",
     "express": "^4.18.2",
     "multer": "^1.4.5-lts.1",
     "sharp": "^0.33.0",

@@ -423,6 +423,15 @@ const I18N = {
     noScaleConfigured:'sin escala configurada',
     reportDate: d => `Memoria del proyecto · ${d}`,
     colHdr: ['#','Foto','Dimensiones','Tamaño físico','Etiqueta'],
+    exportProjectBtn:'Exportar proyecto (ZIP)', importProjectBtn:'⬆ Importar',
+    importTitle:'Importar proyecto',
+    importNew:'Importar como copia nueva', importReplace:'Reemplazar existente',
+    importConflict: name => `El proyecto "${name}" ya existe en esta instalación.`,
+    importConfirmMsg: name => `¿Importar proyecto "${name}"?`,
+    importOk: name => `Proyecto "${name}" importado`,
+    importErrInvalid:'El archivo no es un proyecto Tableau válido',
+    importErrExpired:'Importación expirada, vuelve a subir el archivo',
+    importErrGeneric:'Error al importar',
   },
   en: {
     upload:'+ Upload', report:'≡ Report', config:'⚙ Config', exportJpeg:'⬇ Export JPEG',
@@ -494,6 +503,15 @@ const I18N = {
     noScaleConfigured:'no scale configured',
     reportDate: d => `Project report · ${d}`,
     colHdr: ['#','Photo','Dimensions','Physical size','Label'],
+    exportProjectBtn:'Export project (ZIP)', importProjectBtn:'⬆ Import',
+    importTitle:'Import project',
+    importNew:'Import as new copy', importReplace:'Replace existing',
+    importConflict: name => `Project "${name}" already exists in this installation.`,
+    importConfirmMsg: name => `Import project "${name}"?`,
+    importOk: name => `Project "${name}" imported`,
+    importErrInvalid:'File is not a valid Tableau project',
+    importErrExpired:'Import expired, please re-upload the file',
+    importErrGeneric:'Import error',
   },
 };
 
@@ -528,6 +546,7 @@ function App() {
   const [linkInputId,   setLinkInputId]   = useState(null);
   const [linkFetching,  setLinkFetching]  = useState(null);
   const [resizeDim,     setResizeDim]     = useState(null);
+  const [importState,   setImportState]   = useState(null); // {tempId,projectName,conflict,existingProject,busy}
 
   const [theme,         setTheme]         = useState(() => localStorage.getItem('tb-theme') || 'dark-amber');
   const [themeOpen,     setThemeOpen]     = useState(false);
@@ -568,6 +587,7 @@ function App() {
   const undoStack       = useRef([]);
   const redoStack       = useRef([]);
   const boardZoom       = useRef({});
+  const importInputRef  = useRef(null);
 
   useEffect(() => { itemsRef.current         = items;         }, [items]);
   useEffect(() => { pidRef.current           = pid;           }, [pid]);
@@ -982,6 +1002,49 @@ ${rows}
     const nps = projects.filter(p => p.id !== id);
     setProjects(nps);
     if (pidRef.current === id) setPid(nps[0]?.id || null);
+  };
+
+  const exportProject = (projId, e) => {
+    e.stopPropagation();
+    window.location.href = `/api/projects/${projId}/export`;
+  };
+
+  const handleImportFile = async file => {
+    if (!file) return;
+    const fd = new FormData();
+    fd.append('zip', file);
+    try {
+      const r = await fetch('/api/projects/import', { method: 'POST', body: fd });
+      const data = await r.json();
+      if (!r.ok) { showToast(data.error || t('importErrGeneric'), true); return; }
+      setImportState(data);
+    } catch {
+      showToast(t('importErrGeneric'), true);
+    }
+  };
+
+  const confirmImport = async mode => {
+    if (!importState) return;
+    const { tempId, existingProject } = importState;
+    const targetPid = mode === 'replace' ? existingProject?.id : undefined;
+    setImportState(s => ({ ...s, busy: true }));
+    try {
+      const r = await fetch(`/api/projects/import/${tempId}/confirm`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode, targetPid }),
+      });
+      const data = await r.json();
+      if (!r.ok) { showToast(data.error || t('importErrGeneric'), true); setImportState(null); return; }
+      const projs = await fetch('/api/projects').then(res => res.json());
+      setProjects(projs);
+      setPid(data.id);
+      setImportState(null);
+      showToast(t('importOk')(data.name));
+    } catch {
+      showToast(t('importErrGeneric'), true);
+      setImportState(null);
+    }
   };
 
   const deleteBoard = async (id, e) => {
@@ -1539,6 +1602,10 @@ ${rows}
                     <span className="sb-sec-title">{t('projBoards')}</span>
                     <button className="sb-sec-btn" title={t('newProject')}
                       onClick={() => { setNameVal(''); setModal('project'); }}>+</button>
+                    <button className="sb-sec-btn" title={t('importProjectBtn')}
+                      onClick={() => importInputRef.current?.click()}>⬆</button>
+                    <input ref={importInputRef} type="file" accept=".zip" style={{display:'none'}}
+                      onChange={e => { handleImportFile(e.target.files[0]); e.target.value = ''; }} />
                     <button className="sb-sec-btn" title={t('collapsePanel')} style={{marginLeft:2}}
                       onClick={() => setSbOpen(false)}>◀</button>
                   </div>
@@ -1564,6 +1631,7 @@ ${rows}
                               <span className="nproj-name" title={p.name}>{p.name}</span>
                             )}
                             <div className="nrow-acts">
+                              <button className="nact edit" title={t('exportProjectBtn')} onClick={e => exportProject(p.id, e)}>↓</button>
                               <button className="nact edit" title={t('renameBtn')} onClick={e => startRename('project', p.id, p.name, e)}>✎</button>
                               <button className="nact del"  title={t('deleteBtn')}  onClick={e => deleteProject(p.id, e)}>×</button>
                             </div>
@@ -2002,6 +2070,26 @@ ${rows}
             <div className="modal-row">
               <button className="btn" onClick={() => setModal(null)}>{t('close')}</button>
               <button className="btn acc" onClick={printMemoria}>{t('printPdf')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {importState && (
+        <div className="overlay" onClick={() => !importState.busy && setImportState(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-h">{t('importTitle')}</div>
+            <div className="modal-sub" style={{maxWidth:320,lineHeight:1.5}}>
+              {importState.conflict
+                ? t('importConflict')(importState.projectName)
+                : t('importConfirmMsg')(importState.projectName)}
+            </div>
+            <div className="modal-row" style={{marginTop:14,flexWrap:'wrap',gap:6}}>
+              <button className="btn" onClick={() => setImportState(null)} disabled={importState.busy}>{t('cancel')}</button>
+              <button className={`btn${importState.conflict ? '' : ' acc'}`} onClick={() => confirmImport('new')} disabled={importState.busy}>{t('importNew')}</button>
+              {importState.conflict && (
+                <button className="btn acc" onClick={() => confirmImport('replace')} disabled={importState.busy}>{t('importReplace')}</button>
+              )}
             </div>
           </div>
         </div>

@@ -1,6 +1,6 @@
 {
-  "version": "1.2.5",
+  "version": "1.2.6",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-05-10",
-  "notes": "Miniaturas de imagen en el informe de memoria"
+  "notes": "Exportar e importar proyectos como ZIP"
 }

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.6] — 2026-05-10
+### Añadido
+- Exportar proyecto como ZIP: botón ↓ en cada proyecto del panel lateral descarga un archivo con todas las fotos y tableros
+- Importar proyecto desde ZIP: botón ⬆ en el panel lateral; si el proyecto ya existe en esta instalación ofrece importar como copia nueva o reemplazar el existente
+
+---
+
 ## [1.2.5] — 2026-05-10
 ### Añadido
 - Miniaturas de imagen en el informe de memoria: aparecen junto a cada foto tanto en el panel en pantalla como en el informe imprimible
