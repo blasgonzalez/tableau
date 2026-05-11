@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.10] — 2026-05-11
+### Improved
+- The frame settings panel is now counter-scaled and remains readable at any zoom level
+- Photo control buttons (elevated z-index) always render above the frame and the properties panel, no longer hidden behind them
+
+---
+
 ## [1.2.9] — 2026-05-11
 ### Added
 - Board preview in the project memory report: scaled thumbnail showing photos in their actual positions, both in the on-screen panel and in the printable report

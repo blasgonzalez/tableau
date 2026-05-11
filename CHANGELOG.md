@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.10] — 2026-05-11
+### Mejorado
+- El panel de configuración de marco se counter-escala y se mantiene legible a cualquier nivel de zoom
+- Los botones de control de cada foto (z-index elevado) siempre se muestran por encima del marco y del panel de propiedades, sin quedar ocultos
+
+---
+
 ## [1.2.9] — 2026-05-11
 ### Añadido
 - Previsualización del tablero en la memoria del proyecto: miniatura a escala con las fotos en su posición, tanto en el panel en pantalla como en el informe imprimible
