@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tableau</title>
+<link rel="icon" type="image/png" href="/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -124,7 +125,7 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .bitem-img-wrap{position:relative;overflow:hidden}
 .bitem.sel .bitem-img-wrap{outline:2px dashed var(--acc-dim);outline-offset:2px}
 .bitem.sel.anchor .bitem-img-wrap{outline:2px solid var(--acc);outline-offset:2px}
-.bitem-bar{position:absolute;top:-26px;right:0;display:flex;gap:3px;opacity:0;transition:opacity .12s}
+.bitem-bar{position:absolute;top:calc(-26px / var(--canvas-zoom,1));right:0;display:flex;gap:3px;opacity:0;transition:opacity .12s;zoom:calc(1 / var(--canvas-zoom,1))}
 .props-panel{position:absolute;top:-30px;left:0;background:var(--panel2);border:1px solid var(--border2);border-radius:3px;padding:8px 10px;z-index:200;min-width:160px;box-shadow:0 4px 14px rgba(0,0,0,.45);display:flex;flex-direction:column;gap:6px}
 .props-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .props-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
@@ -134,13 +135,13 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .ibc.del{background:var(--danger);color:#fff}
 .ibc.fwd,.ibc.rot{background:var(--border2);color:var(--sub)}
 .ibc.fwd:hover,.ibc.rot:hover{color:var(--text)}
-.rh{position:absolute;bottom:-6px;right:-6px;width:14px;height:14px;background:var(--acc);cursor:se-resize;opacity:0;transition:opacity .12s}
+.rh{position:absolute;bottom:calc(-6px / var(--canvas-zoom,1));right:calc(-6px / var(--canvas-zoom,1));width:14px;height:14px;background:var(--acc);cursor:se-resize;opacity:0;transition:opacity .12s;zoom:calc(1 / var(--canvas-zoom,1))}
 .bitem:hover .rh,.bitem.sel .rh{opacity:1}
 .lbl{width:100%;font-size:10px;font-family:'IBM Plex Mono',monospace;color:var(--dim);background:transparent;border:none;border-bottom:1px solid transparent;padding:5px 0 2px;outline:none;letter-spacing:.3px}
 .lbl:focus{border-bottom-color:var(--acc-dim);color:var(--text)}
 .lbl::placeholder{color:var(--muted)}
 /* dimension tag visible on hover/select */
-.dim-tag{position:absolute;bottom:22px;left:0;background:rgba(13,12,11,.88);color:var(--acc);font-size:8px;padding:2px 7px;letter-spacing:.4px;pointer-events:none;opacity:0;transition:opacity .12s;white-space:nowrap}
+.dim-tag{position:absolute;bottom:calc(22px / var(--canvas-zoom,1));left:0;background:rgba(13,12,11,.88);color:var(--acc);font-size:8px;padding:2px 7px;letter-spacing:.4px;pointer-events:none;opacity:0;transition:opacity .12s;white-space:nowrap;zoom:calc(1 / var(--canvas-zoom,1))}
 .bitem:hover .dim-tag,.bitem.sel .dim-tag{opacity:1}
 /* ── NOTE ITEMS ── */
 .nitem{position:absolute;cursor:grab;user-select:none}
@@ -1756,6 +1757,7 @@ ${rows}
               )}
               <div className="canvas" style={{
                 zoom,
+                '--canvas-zoom': zoom,
                 backgroundImage: showGrid
                   ? `linear-gradient(${boardPx ? 'rgba(0,0,0,0.09)' : 'var(--border)'} 1px,transparent 1px),linear-gradient(90deg,${boardPx ? 'rgba(0,0,0,0.09)' : 'var(--border)'} 1px,transparent 1px)`
                   : 'none',

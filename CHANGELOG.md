@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.2.8] — 2026-05-11
+### Mejorado
+- Los controles de cada foto (botones, etiqueta de dimensiones, manejador de redimensión) mantienen su tamaño legible a cualquier nivel de zoom, en lugar de encogerse con el canvas
+- Favicon en la pestaña del navegador usando el mismo icono de la aplicación
+
+### Corregido
+- Al arrancar en Windows, el navegador ya no abre la página antes de que el servidor esté listo; ahora espera a que el servidor responda antes de abrir
+
+---
+
 ## [1.2.7] — 2026-05-10
 ### Añadido
 - Marco por foto: botón ▣ en los controles de cada imagen abre un panel donde se define el grosor del marco en la unidad configurada del tablero

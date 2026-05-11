@@ -6,7 +6,7 @@
     "y": 100,
     "w": 321,
     "z": 224,
-    "label": "",
+    "label": "Las etiquetas también se redimensionan?",
     "rot": 0
   },
   {
@@ -14,7 +14,7 @@
     "photoId": "5d43c345bf0b",
     "x": 550,
     "y": 100,
-    "w": 390,
+    "w": 439,
     "z": 225,
     "label": "",
     "rot": 0,

@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.2.8] — 2026-05-11
+### Improved
+- Photo controls (buttons, dimension label, resize handle) now keep their readable size at any zoom level instead of shrinking with the canvas
+- Favicon in the browser tab using the same application icon
+
+### Fixed
+- On Windows startup, the browser no longer opens the page before the server is ready; it now waits for the server to respond before opening
+
+---
+
 ## [1.2.7] — 2026-05-10
 ### Added
 - Per-photo frame: the ▣ button in each image's controls opens a panel to set the frame thickness in the board's configured unit

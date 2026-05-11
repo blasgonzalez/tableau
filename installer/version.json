@@ -1,6 +1,6 @@
 {
-  "version": "1.2.7",
+  "version": "1.2.8",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-05-10",
-  "notes": "Marco por foto · Zoom persistente por tablero · Ajuste automático al ancho"
+  "releaseDate": "2026-05-11",
+  "notes": "Controles legibles a cualquier zoom · Favicon · Arranque sin pantalla en blanco"
 }

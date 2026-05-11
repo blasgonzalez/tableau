@@ -40,8 +40,9 @@ echo  en el navegador.
 echo  ─────────────────────────────────────────────
 echo.
 
-timeout /t 2 /nobreak >nul
-start http://localhost:3000
+:: Abre el navegador en cuanto el servidor responda (hasta 30 intentos × 1 s)
+start "" /B powershell -WindowStyle Hidden -NoProfile -Command ^
+  "for($i=0;$i-lt30;$i++){try{(Invoke-WebRequest 'http://localhost:3000' -TimeoutSec 1 -UseBasicParsing -ErrorAction Stop)|Out-Null;break}catch{Start-Sleep 1}};Start-Process 'http://localhost:3000'"
 
 "%NODE_EXE%" "%~dp0server.js"
 
