@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.2.9] — 2026-05-11
+### Added
+- Board preview in the project memory report: scaled thumbnail showing photos in their actual positions, both in the on-screen panel and in the printable report
+- Board dimensions shown below the preview in the configured unit (cm, mm, in, px); for variable boards the effective content area is calculated
+
+### Fixed
+- Black screen when opening the memory report if any photo had a frame defined
+- Dev launcher script (tableau.bat) showed garbled characters and failed to start due to a Windows bug with chcp 65001
+
+---
+
 ## [1.2.8] — 2026-05-11
 ### Improved
 - Photo controls (buttons, dimension label, resize handle) now keep their readable size at any zoom level instead of shrinking with the canvas

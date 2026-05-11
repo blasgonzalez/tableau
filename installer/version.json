@@ -1,6 +1,6 @@
 {
-  "version": "1.2.8",
+  "version": "1.2.9",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-05-11",
-  "notes": "Controles legibles a cualquier zoom · Favicon · Arranque sin pantalla en blanco"
+  "notes": "Previsualización del tablero en la memoria · Correcciones de arranque"
 }

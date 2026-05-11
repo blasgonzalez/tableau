@@ -72,7 +72,7 @@ echo      http://localhost:3000
 echo.
 echo  ------------------------------------------------------------
 echo.
-echo  IMPORTANTE: mantén esta ventana abierta mientras usas
+echo  IMPORTANTE: manten esta ventana abierta mientras usas
 echo  Tableau. Si la cierras, la aplicacion se detendra.
 echo.
 echo  IMPORTANT: keep this window open while using Tableau.
@@ -83,8 +83,8 @@ echo  To quit: close this window or press Ctrl+C
 echo  ------------------------------------------------------------
 echo.
 
-timeout /t 2 /nobreak >nul
-start http://localhost:3000
+start "" /B powershell -WindowStyle Hidden -NoProfile -Command ^
+  "for($i=0;$i-lt30;$i++){try{(Invoke-WebRequest 'http://localhost:3000' -TimeoutSec 1 -UseBasicParsing -ErrorAction Stop)|Out-Null;break}catch{Start-Sleep 1}};Start-Process 'http://localhost:3000'"
 
 node server.js
 

@@ -244,6 +244,9 @@ select.inp{cursor:pointer;appearance:none;padding-right:28px;background-image:ur
 .mem-dims{font-size:9px;color:var(--dim);margin-top:2px;letter-spacing:.2px}
 .mem-phys{color:var(--acc-dim);margin-left:7px}
 .mem-lbl{font-size:8px;color:var(--muted);font-style:italic;margin-top:2px;letter-spacing:.2px}
+.mem-preview-wrap{margin-bottom:12px}
+.mem-preview{position:relative;overflow:hidden;flex-shrink:0}
+.mem-preview-dim{font-size:8px;color:var(--acc-dim);letter-spacing:.8px;text-transform:uppercase;margin-top:5px}
 
 /* ── START ── */
 .start{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px}
@@ -831,8 +834,34 @@ function App() {
       const dpi = board.dpi || null;
       const units = board.units || 'px';
       const hasPhys = dpi && units !== 'px';
+      const bPx = getBoardPx(board);
+      const photoItemsPr = boardIt.filter(i => i.type !== 'note').map(item => {
+        const photo = photosRef.current.find(p => p.id === item.photoId);
+        const rot = item.rot || 0;
+        const isSwapped = rot % 180 !== 0;
+        const naturalH = isSwapped
+          ? (photo ? Math.round(item.w * photo.w / photo.h) : item.w)
+          : (photo ? Math.round(item.w * photo.h / photo.w) : item.w);
+        return { ...item, displayH: isSwapped ? item.w : naturalH };
+      });
+      const minXpr = bPx ? 0 : (photoItemsPr.length ? Math.min(...photoItemsPr.map(i => i.x)) : 0);
+      const minYpr = bPx ? 0 : (photoItemsPr.length ? Math.min(...photoItemsPr.map(i => i.y)) : 0);
+      const bW = bPx?.w ?? (photoItemsPr.length ? Math.max(...photoItemsPr.map(i => i.x + i.w)) - minXpr : 0);
+      const bH = bPx?.h ?? (photoItemsPr.length ? Math.max(...photoItemsPr.map(i => i.y + i.displayH)) - minYpr : 0);
+      let previewHtml = '';
+      if (bW > 0 && bH > 0) {
+        const sc = Math.min(580 / bW, 200 / bH, 1);
+        const pW = Math.round(bW * sc); const pH = Math.round(bH * sc);
+        const bg = bPx ? '#fff' : '#111';
+        const border = bPx ? '1px solid #ddd' : '1px dashed #aaa';
+        const imgs = photoItemsPr.map(item =>
+          `<img src="/photos/${pid}/${item.photoId}/thumb" style="position:absolute;left:${Math.round((item.x-minXpr)*sc)}px;top:${Math.round((item.y-minYpr)*sc)}px;width:${Math.round(item.w*sc)}px;height:${Math.round(item.displayH*sc)}px;object-fit:cover" alt="" />`
+        ).join('');
+        previewHtml = `<div class="preview-wrap"><div class="preview-box" style="width:${pW}px;height:${pH}px;background:${bg};border:${border}">${imgs}</div><div class="preview-dim">${dimLabel(bW, bH, dpi, units)}</div></div>`;
+      }
       rows += `<section><h2>${board.name}<span class="bcfg">${hasPhys ? ` · ${dpi} dpi · ${units}` : ` · ${t('noScaleConfigured')}`}</span></h2>`;
       if (!boardIt.length) { rows += `<p class="empty">${t('emptyBoardMem')}</p></section>`; return; }
+      rows += previewHtml;
       rows += `<table><thead><tr><th>${hdr[0]}</th><th></th><th>${hdr[1]}</th><th>${hdr[2]}</th><th>${hdr[4]}</th></tr></thead><tbody>`;
       boardIt.forEach((item, i) => {
         if (item.type === 'note') return;
@@ -874,6 +903,10 @@ function App() {
   td.dim{white-space:nowrap;font-weight:600}
   td.dim small{display:block;font-size:8px;font-weight:400;color:#999;margin-top:1px}
   td.lbl{color:#777;font-style:italic}
+  .preview-wrap{margin:10px 0 16px}
+  .preview-box{position:relative;overflow:hidden}
+  .preview-box img{position:absolute;object-fit:cover}
+  .preview-dim{font-size:8px;color:#888;letter-spacing:.8px;text-transform:uppercase;margin-top:4px}
   @media print{body{padding:10mm 12mm} section{page-break-inside:avoid}}
 </style></head><body>
 <header><h1>${t('reportHeading')}</h1><p>${proj?.name || ''} · ${date}</p></header>
@@ -2112,31 +2145,77 @@ ${rows}
                     </div>
                     {boardIt.length === 0 ? (
                       <div className="mem-board-empty">{t('emptyBoardMem')}</div>
-                    ) : boardIt.map((item, idx) => {
-                      const photo = photos.find(p => p.id === item.photoId);
-                      const h = photo
-                        ? ((item.rot || 0) % 180 !== 0
-                          ? Math.round(item.w * photo.w / photo.h)
-                          : Math.round(item.w * photo.h / photo.w))
-                        : item.w;
-                      const physW = hasPhys ? pxToPhys(item.w, dpi, units) : null;
-                      const physH = hasPhys ? pxToPhys(h, dpi, units) : null;
-                      const dimStr = dimLabel(item.w, h, dpi, units, item.frame);
+                    ) : (() => {
+                      const bPx = getBoardPx(board);
+                      const photoItems = boardIt.filter(i => i.type !== 'note').map(item => {
+                        const photo = photos.find(p => p.id === item.photoId);
+                        const rot = item.rot || 0;
+                        const isSwapped = rot % 180 !== 0;
+                        const naturalH = isSwapped
+                          ? (photo ? Math.round(item.w * photo.w / photo.h) : item.w)
+                          : (photo ? Math.round(item.w * photo.h / photo.w) : item.w);
+                        return { ...item, displayH: isSwapped ? item.w : naturalH };
+                      });
+                      const minX = bPx ? 0 : (photoItems.length ? Math.min(...photoItems.map(i => i.x)) : 0);
+                      const minY = bPx ? 0 : (photoItems.length ? Math.min(...photoItems.map(i => i.y)) : 0);
+                      const bW = bPx?.w ?? (photoItems.length ? Math.max(...photoItems.map(i => i.x + i.w)) - minX : 0);
+                      const bH = bPx?.h ?? (photoItems.length ? Math.max(...photoItems.map(i => i.y + i.displayH)) - minY : 0);
+                      const sc = bW && bH ? Math.min(560 / bW, 200 / bH, 1) : 1;
+                      const pW = Math.round(bW * sc);
+                      const pH = Math.round(bH * sc);
                       return (
-                        <div key={item.id} className="mem-item">
-                          <div className="mem-idx">{idx + 1}.</div>
-                          {item.type !== 'note' && <img className="mem-thumb" src={`/photos/${pid}/${item.photoId}/thumb`} alt="" />}
-                          <div className="mem-info">
-                            <div className="mem-iname">{photo?.name || '(sin nombre)'}</div>
-                            <div className="mem-dims">
-                              {dimStr}
-                              {(item.frame > 0) && <span style={{color:'var(--muted)',marginLeft:6,fontSize:8}}>({t('frameNote')(item.frame, hasPhys ? units : 'px')})</span>}
+                        <React.Fragment>
+                          {bW > 0 && bH > 0 && (
+                            <div className="mem-preview-wrap">
+                              <div className="mem-preview" style={{
+                                width: pW, height: pH,
+                                background: bPx ? '#fff' : 'var(--deep)',
+                                border: bPx ? '1px solid var(--border2)' : '1px dashed var(--border2)',
+                              }}>
+                                {photoItems.map(item => (
+                                  <img key={item.id}
+                                    src={`/photos/${pid}/${item.photoId}/thumb`}
+                                    alt=""
+                                    style={{
+                                      position: 'absolute',
+                                      left: Math.round((item.x - minX) * sc),
+                                      top: Math.round((item.y - minY) * sc),
+                                      width: Math.round(item.w * sc),
+                                      height: Math.round(item.displayH * sc),
+                                      objectFit: 'cover',
+                                    }}
+                                  />
+                                ))}
+                              </div>
+                              <div className="mem-preview-dim">{dimLabel(bW, bH, dpi, units)}</div>
                             </div>
-                            {item.label && <div className="mem-lbl">"{item.label}"</div>}
-                          </div>
-                        </div>
+                          )}
+                          {boardIt.map((item, idx) => {
+                            const photo = photos.find(p => p.id === item.photoId);
+                            const h = photo
+                              ? ((item.rot || 0) % 180 !== 0
+                                ? Math.round(item.w * photo.w / photo.h)
+                                : Math.round(item.w * photo.h / photo.w))
+                              : item.w;
+                            const dimStr = dimLabel(item.w, h, dpi, units, item.frame);
+                            return (
+                              <div key={item.id} className="mem-item">
+                                <div className="mem-idx">{idx + 1}.</div>
+                                {item.type !== 'note' && <img className="mem-thumb" src={`/photos/${pid}/${item.photoId}/thumb`} alt="" />}
+                                <div className="mem-info">
+                                  <div className="mem-iname">{photo?.name || '(sin nombre)'}</div>
+                                  <div className="mem-dims">
+                                    {dimStr}
+                                    {(item.frame > 0) && <span style={{color:'var(--muted)',marginLeft:6,fontSize:8}}>({t('frameNote', item.frame, hasPhys ? units : 'px')})</span>}
+                                  </div>
+                                  {item.label && <div className="mem-lbl">"{item.label}"</div>}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </React.Fragment>
                       );
-                    })}
+                    })()}
                   </div>
                 );
               })}

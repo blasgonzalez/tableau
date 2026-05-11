@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.2.9] — 2026-05-11
+### Añadido
+- Previsualización del tablero en la memoria del proyecto: miniatura a escala con las fotos en su posición, tanto en el panel en pantalla como en el informe imprimible
+- Las dimensiones del tablero aparecen bajo la previsualización en la unidad configurada (cm, mm, in, px); para tableros libres se calcula el área efectiva del contenido
+
+### Corregido
+- Pantalla negra al abrir la memoria cuando alguna foto tenía marco definido
+- El script de arranque dev (tableau.bat) mostraba caracteres incorrectos y fallaba al arrancar por un bug de Windows con chcp 65001
+
+---
+
 ## [1.2.8] — 2026-05-11
 ### Mejorado
 - Los controles de cada foto (botones, etiqueta de dimensiones, manejador de redimensión) mantienen su tamaño legible a cualquier nivel de zoom, en lugar de encogerse con el canvas
