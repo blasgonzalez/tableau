@@ -137,8 +137,8 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .ibc.fwd:hover,.ibc.rot:hover{color:var(--text)}
 .rh{position:absolute;bottom:calc(-6px / var(--canvas-zoom,1));right:calc(-6px / var(--canvas-zoom,1));width:14px;height:14px;background:var(--acc);cursor:se-resize;opacity:0;transition:opacity .12s;zoom:calc(1 / var(--canvas-zoom,1))}
 .bitem:hover .rh,.bitem.sel .rh{opacity:1}
-.lbl{position:relative;z-index:2;width:100%;font-size:10px;font-family:'IBM Plex Mono',monospace;color:var(--dim);background:transparent;border:none;border-bottom:1px solid transparent;padding:5px 0 2px;outline:none;letter-spacing:.3px}
-.lbl:focus{border-bottom-color:var(--acc-dim);color:var(--text)}
+.lbl{position:absolute;left:0;right:0;box-sizing:border-box;font-size:calc(10px / var(--canvas-zoom,1));font-family:'IBM Plex Mono',monospace;color:var(--text);background:var(--panel2);border:none;border-top:1px solid var(--border2);padding:calc(3px / var(--canvas-zoom,1)) calc(6px / var(--canvas-zoom,1));outline:none;letter-spacing:.3px;z-index:10}
+.lbl:focus{border-top-color:var(--acc-dim)}
 .lbl::placeholder{color:var(--muted)}
 /* dimension tag visible on hover/select */
 .dim-tag{position:absolute;bottom:calc(22px / var(--canvas-zoom,1));left:0;background:rgba(13,12,11,.88);color:var(--acc);font-size:8px;padding:2px 7px;letter-spacing:.4px;pointer-events:none;opacity:0;transition:opacity .12s;white-space:nowrap;zoom:calc(1 / var(--canvas-zoom,1))}
@@ -1947,7 +1947,9 @@ ${rows}
                         );
                       })()}
                       <div className="dim-tag">{dimLabel(item.w, displayH, boardDpi, boardUnits, item.frame)}</div>
-                      <input className="lbl" value={item.label||''} placeholder={t('labelPlaceholder')}
+                      <input className="lbl"
+                        style={{ top: displayH + (item.frame ? physToPx(item.frame, boardDpi, boardUnits) : 0) }}
+                        value={item.label||''} placeholder={t('labelPlaceholder')}
                         onChange={e => updateLabel(item.id, e.target.value)}
                         onFocus={pushUndo}
                         onBlur={saveLabel}

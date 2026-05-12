@@ -1,6 +1,6 @@
 {
-  "version": "1.2.11",
+  "version": "1.2.12",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-05-12",
-  "notes": "Etiqueta accesible con marco · Marco visible en previsualización de memoria"
+  "notes": "Etiqueta de foto fuera del marco · Texto legible a cualquier nivel de zoom"
 }

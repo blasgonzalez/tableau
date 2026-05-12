@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.12] — 2026-05-12
+### Mejorado
+- La etiqueta de texto de cada foto se muestra ahora debajo del marco (posición absoluta), fuera de la foto y del marco, con fondo sólido y texto siempre legible
+- El tamaño del texto de la etiqueta se compensa con el zoom del canvas: siempre aparece con el mismo tamaño en pantalla independientemente del nivel de zoom
+
+---
+
 ## [1.2.11] — 2026-05-12
 ### Corregido
 - Con marco activado, la etiqueta de texto de la foto ya es accesible: la barra de controles tiene z-index superior al panel de propiedades del marco

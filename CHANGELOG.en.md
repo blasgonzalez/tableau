@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.12] — 2026-05-12
+### Improved
+- The text label for each photo is now displayed below the frame (absolute positioning), outside the photo and its frame, with a solid background and always-readable text
+- Label text size compensates for canvas zoom: it always appears at the same screen size regardless of the zoom level
+
+---
+
 ## [1.2.11] — 2026-05-12
 ### Fixed
 - With a frame set, the photo text label is now accessible: the control bar has a higher z-index than the frame properties panel
