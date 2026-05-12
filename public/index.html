@@ -172,11 +172,20 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .nitem-link-loading{font-size:9px;color:var(--muted);padding:5px 8px;border-top:1px solid var(--border);letter-spacing:.5px;flex-shrink:0}
 
 /* ── LIBRARY ── */
-.library{height:128px;background:var(--surf);border-top:1px solid var(--border);display:flex;align-items:stretch;flex-shrink:0;z-index:100}
-.lib-side{width:96px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:8px;border-right:1px solid var(--border);flex-shrink:0}
-.lib-title{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--sub);text-align:center;line-height:1.7}
-.lib-count{font-size:22px;color:var(--dim);font-family:'Playfair Display',serif;line-height:1}
-.lib-scroll{flex:1;overflow-x:auto;display:flex;align-items:center;gap:8px;padding:8px 12px}
+.library{background:var(--surf);border-top:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;z-index:100;overflow:hidden;transition:height .18s ease}
+.lib-header{height:30px;display:flex;align-items:center;gap:7px;padding:0 10px 0 8px;flex-shrink:0;cursor:pointer;border-bottom:1px solid var(--border);user-select:none}
+.lib-header:hover{background:var(--panel)}
+.lib-toggle-btn{width:22px;height:22px;border:1px solid var(--border2);background:transparent;color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0;transition:all .15s;font-family:'IBM Plex Mono',monospace}
+.lib-toggle-btn:hover{color:var(--text);border-color:var(--acc-dim)}
+.lib-sort-icon{font-size:11px;color:var(--muted);flex-shrink:0}
+.lib-title{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--sub);white-space:nowrap}
+.lib-count{font-size:11px;color:var(--dim);font-family:'Playfair Display',serif}
+.lib-spacer{flex:1}
+.lib-sort{font-size:9px;background:var(--surf);border:1px solid var(--border2);color:var(--dim);padding:2px 5px;cursor:pointer;font-family:'IBM Plex Mono',monospace;letter-spacing:.3px;outline:none}
+.lib-sort:focus{border-color:var(--acc-dim)}
+.lib-sort option{background:var(--panel)}
+.lib-body{flex:1;overflow:hidden;display:flex}
+.lib-scroll{flex:1;overflow-x:auto;display:flex;align-items:center;gap:8px;padding:7px 12px}
 .lib-scroll::-webkit-scrollbar{height:3px}
 .lib-scroll::-webkit-scrollbar-thumb{background:var(--border2)}
 .thumb{flex-shrink:0;width:84px;height:84px;cursor:grab;position:relative;overflow:hidden;border:2px solid var(--border2);transition:border-color .15s}
@@ -268,7 +277,7 @@ select.inp{cursor:pointer;appearance:none;padding-right:28px;background-image:ur
 select.btn{appearance:none;cursor:pointer;background-image:none;background:var(--panel);color:var(--sub)}
 select.btn option,select.inp option{background:var(--panel);color:var(--text)}
 /* ── ZOOM CONTROL ── */
-.zoom-ctrl{position:fixed;bottom:148px;right:18px;display:flex;align-items:center;background:var(--panel);border:1px solid var(--border2);z-index:200;box-shadow:0 2px 10px rgba(0,0,0,.4)}
+.zoom-ctrl{position:fixed;bottom:148px;right:18px;display:flex;align-items:center;background:var(--panel);border:1px solid var(--border2);z-index:200;box-shadow:0 2px 10px rgba(0,0,0,.4);transition:bottom .18s ease}
 .zc-btn{width:28px;height:26px;border:none;background:transparent;color:var(--dim);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:color .12s;flex-shrink:0;font-family:'IBM Plex Mono',monospace}
 .zc-btn:hover{color:var(--text);background:var(--surf)}
 .zc-pct{font-size:9px;letter-spacing:.5px;color:var(--sub);padding:0 8px;user-select:none;white-space:nowrap;min-width:38px;text-align:center;cursor:pointer}
@@ -398,6 +407,7 @@ const I18N = {
     labelPlaceholder:'etiqueta…', rotateBtn:'Rotar 90°', bringFwdBtn:'Al frente', deleteBtn:'Eliminar', lockBtn:'Bloquear', unlockBtn:'Desbloquear',
     renameBtn:'Renombrar',
     projectPhotosL1:'Fotos del', projectPhotosL2:'proyecto',
+    libTitle:'Biblioteca', sortImported:'Importación', sortName:'Nombre A→Z',
     uploadHint:'Sube fotos con + Subir →', dragFilesHint:'o arrastra archivos al canvas',
     alreadyInTableau:'ya en el tableau',
     newProjectTitle:'Nuevo proyecto', projectNamePh:'Nombre del proyecto…',
@@ -480,6 +490,7 @@ const I18N = {
     labelPlaceholder:'label…', rotateBtn:'Rotate 90°', bringFwdBtn:'Bring forward', deleteBtn:'Delete', lockBtn:'Lock', unlockBtn:'Unlock',
     renameBtn:'Rename',
     projectPhotosL1:'Project', projectPhotosL2:'photos',
+    libTitle:'Library', sortImported:'Import date', sortName:'Name A→Z',
     uploadHint:'Upload photos with + Upload →', dragFilesHint:'or drag files to canvas',
     alreadyInTableau:'already in tableau',
     newProjectTitle:'New project', projectNamePh:'Project name…',
@@ -573,6 +584,8 @@ function App() {
   const [nameVal,       setNameVal]       = useState('');
   const [dragOver,      setDragOver]      = useState(false);
   const [sbOpen,        setSbOpen]        = useState(true);
+  const [libOpen,       setLibOpen]       = useState(() => localStorage.getItem('libOpen') !== 'false');
+  const [photoSort,     setPhotoSort]     = useState(() => localStorage.getItem('photoSort') || 'imported');
   const [renaming,      setRenaming]      = useState(null);
   const [hoverInfo,     setHoverInfo]     = useState(null);
   // board config edit state (only live while modal is open)
@@ -1984,44 +1997,68 @@ ${rows}
             </div>
 
             {/* LIBRARY */}
-            <div className="library" onClick={e => e.stopPropagation()}>
-              <div className="lib-side">
-                <div className="lib-title">{t('projectPhotosL1')}<br/>{t('projectPhotosL2')}</div>
-                <div className="lib-count">{photos.length}</div>
-              </div>
-              <div className="lib-scroll">
-                {photos.length === 0 ? (
-                  <div className="lib-empty">
-                    <label htmlFor="tb-upload" style={{cursor:'pointer',color:'var(--acc-dim)'}}>
-                      {t('uploadHint')}
-                    </label>
-                    <span style={{fontSize:9,color:'var(--muted)'}}>{t('dragFilesHint')}</span>
+            {(() => {
+              const libH = libOpen ? 128 : 30;
+              const sortedPhotos = photoSort === 'name'
+                ? [...photos].sort((a, b) => a.name.localeCompare(b.name))
+                : photos;
+              const toggleLib = () => { const v = !libOpen; setLibOpen(v); localStorage.setItem('libOpen', v); };
+              return (
+              <div className="library" style={{height: libH}} onClick={e => e.stopPropagation()}>
+                <div className="lib-header" onClick={toggleLib}>
+                  <button className="lib-toggle-btn" onClick={e => { e.stopPropagation(); toggleLib(); }} title={libOpen ? t('collapsePanel') : t('openPanel')}>{libOpen ? '▼' : '▲'}</button>
+                  <span className="lib-title">{t('libTitle')}</span>
+                  <span className="lib-count">{photos.length}</span>
+                  <span className="lib-spacer"/>
+                  {pid && <>
+                    <span className="lib-sort-icon">⇅</span>
+                    <select className="lib-sort" value={photoSort}
+                      onClick={e => e.stopPropagation()}
+                      onChange={e => { const v = e.target.value; setPhotoSort(v); localStorage.setItem('photoSort', v); }}>
+                      <option value="imported">{t('sortImported')}</option>
+                      <option value="name">{t('sortName')}</option>
+                    </select>
+                  </>}
+                </div>
+                {libOpen && (
+                  <div className="lib-body">
+                    <div className="lib-scroll">
+                      {photos.length === 0 ? (
+                        <div className="lib-empty">
+                          <label htmlFor="tb-upload" style={{cursor:'pointer',color:'var(--acc-dim)'}}>
+                            {t('uploadHint')}
+                          </label>
+                          <span style={{fontSize:9,color:'var(--muted)'}}>{t('dragFilesHint')}</span>
+                        </div>
+                      ) : (
+                        sortedPhotos.map(p => {
+                          const inBoard = items.some(i => i.photoId === p.id);
+                          return (
+                            <div key={p.id} className={`thumb${inBoard?' in-board':''}`}
+                              draggable onDragStart={e => onLibDS(e, p.id)}
+                              onMouseEnter={() => showPhotoInfo(p, inBoard?'board':'proj', `/photos/${pid}/${p.id}/thumb`)}
+                              onMouseLeave={clearHoverInfo}
+                              onClick={() => { if (!bid) return showToast(t('createBoardFirst'), true); addToCenter(p.id); }}
+                              title={`${p.name}${inBoard?' · '+t('alreadyInTableau'):''}`}
+                            >
+                              <img src={`/photos/${pid}/${p.id}/thumb`} alt={p.name}/>
+                              <button className="thumb-x" onClick={e => { e.stopPropagation(); deletePhoto(p.id); }}>×</button>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
                   </div>
-                ) : (
-                  photos.map(p => {
-                    const inBoard = items.some(i => i.photoId === p.id);
-                    return (
-                      <div key={p.id} className={`thumb${inBoard?' in-board':''}`}
-                        draggable onDragStart={e => onLibDS(e, p.id)}
-                        onMouseEnter={() => showPhotoInfo(p, inBoard?'board':'proj', `/photos/${pid}/${p.id}/thumb`)}
-                        onMouseLeave={clearHoverInfo}
-                        onClick={() => { if (!bid) return showToast(t('createBoardFirst'), true); addToCenter(p.id); }}
-                        title={`${p.name}${inBoard?' · '+t('alreadyInTableau'):''}`}
-                      >
-                        <img src={`/photos/${pid}/${p.id}/thumb`} alt={p.name}/>
-                        <button className="thumb-x" onClick={e => { e.stopPropagation(); deletePhoto(p.id); }}>×</button>
-                      </div>
-                    );
-                  })
                 )}
               </div>
-            </div>
+              );
+            })()}
           </div>
         </div>
       )}
 
       {bid && (
-        <div className="zoom-ctrl">
+        <div className="zoom-ctrl" style={{bottom: (libOpen ? 128 : 30) + 20}}>
           <button className="zc-btn" title="Zoom − (Ctrl+−)" onClick={() => zoomStep(-1)}>−</button>
           <span className="zc-pct" style={{cursor: boardPx ? 'pointer' : 'default'}}>
             {boardPx
@@ -2033,8 +2070,8 @@ ${rows}
         </div>
       )}
       {resizeDim && <div className="resize-tip" style={{left:resizeDim.x, top:resizeDim.y}}>{resizeDim.label}</div>}
-      {uploading && <div className="uploading-bar"/>}
-      {toast && <div className={`toast${toast.err?' err':''}`}>{toast.msg}</div>}
+      {uploading && <div className="uploading-bar" style={{bottom: libOpen ? 128 : 30}}/>}
+      {toast && <div className={`toast${toast.err?' err':''}`} style={{bottom: (libOpen ? 128 : 30) + 8}}>{toast.msg}</div>}
 
       {/* ── MODALS ── */}
       {modal === 'project' && (

@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.3.0] — 2026-05-12
+### Añadido
+- Bloqueo de elementos: botón 🔒 en cada foto y nota para impedir que se muevan o redimensionen accidentalmente; el elemento bloqueado muestra un candado en la esquina y permite seguir editando etiqueta, marco y texto
+- Biblioteca colapsable: cabecera permanente con botón ▼/▲, título y contador; colapsar libera el canvas a pantalla completa; estado persistente entre sesiones
+- Ordenación de fotos en la biblioteca: por fecha de importación (orden por defecto) o por nombre A→Z; selector con icono ⇅ en la cabecera de la biblioteca
+
+### Mejorado
+- La etiqueta de texto de cada foto se muestra debajo del marco con fondo sólido y texto siempre legible a cualquier zoom
+- Los controles de zoom se desplazan con la biblioteca al colapsar/expandir
+
+### Corregido
+- Con marco activado, la etiqueta y los controles de foto son siempre accesibles (z-index y posición corregidos)
+- El valor del marco se guarda correctamente al editar el campo numérico
+- Los marcos se ven en la previsualización de la memoria del proyecto
+
+---
+
 ## [1.2.12] — 2026-05-12
 ### Mejorado
 - La etiqueta de texto de cada foto se muestra ahora debajo del marco (posición absoluta), fuera de la foto y del marco, con fondo sólido y texto siempre legible

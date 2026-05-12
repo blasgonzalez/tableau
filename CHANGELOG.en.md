@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.3.0] — 2026-05-12
+### Added
+- Element locking: 🔒 button on each photo and note prevents accidental moves or resizes; locked elements show a padlock badge and still allow editing label, frame and text
+- Collapsible library: persistent header with ▼/▲ toggle, title and photo count; collapsing gives the canvas full vertical space; state persists across sessions
+- Photo sorting in the library: by import date (default) or name A→Z; selector with ⇅ icon in the library header
+
+### Improved
+- Photo text label now appears below the frame with a solid background, readable at any zoom level
+- Zoom controls move with the library when collapsing or expanding
+
+### Fixed
+- With a frame set, the photo label and controls are always accessible (z-index and position corrected)
+- Frame value now saves correctly when editing the numeric field
+- Frames are visible in the project memory report preview
+
+---
+
 ## [1.2.12] — 2026-05-12
 ### Improved
 - The text label for each photo is now displayed below the frame (absolute positioning), outside the photo and its frame, with a solid background and always-readable text
