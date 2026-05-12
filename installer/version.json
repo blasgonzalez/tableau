@@ -1,6 +1,6 @@
 {
-  "version": "1.2.10",
+  "version": "1.2.11",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-05-11",
-  "notes": "Panel de marco legible a cualquier zoom · Botones de control siempre visibles con marco"
+  "releaseDate": "2026-05-12",
+  "notes": "Etiqueta accesible con marco · Marco visible en previsualización de memoria"
 }

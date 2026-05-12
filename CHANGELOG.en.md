@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.11] — 2026-05-12
+### Fixed
+- With a frame set, the photo text label is now accessible: the control bar has a higher z-index than the frame properties panel
+- Frame value now persists correctly when typed in the numeric field (value was updating state but not the ref, so it was lost on save)
+- Frames are visible in the board preview inside the project memory report: light background and grey outline per photo
+
+---
+
 ## [1.2.10] — 2026-05-11
 ### Improved
 - The frame settings panel is now counter-scaled and remains readable at any zoom level

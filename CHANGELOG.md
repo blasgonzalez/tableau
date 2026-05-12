@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.11] — 2026-05-12
+### Corregido
+- Con marco activado, la etiqueta de texto de la foto ya es accesible: la barra de controles tiene z-index superior al panel de propiedades del marco
+- El marco se actualiza correctamente al escribir en el campo numérico (el valor se propagaba al estado pero no al ref, perdiéndose al guardar)
+- Los marcos se ven en la previsualización de tablero de la memoria del proyecto: fondo claro y contorno gris por foto
+
+---
+
 ## [1.2.10] — 2026-05-11
 ### Mejorado
 - El panel de configuración de marco se counter-escala y se mantiene legible a cualquier nivel de zoom
