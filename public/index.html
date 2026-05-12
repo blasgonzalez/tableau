@@ -121,6 +121,9 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 /* ── BOARD ITEMS ── */
 .bitem{position:absolute;cursor:grab;user-select:none}
 .bitem:active{cursor:grabbing}
+.bitem.locked{cursor:default}
+.lock-badge{position:absolute;top:calc(5px / var(--canvas-zoom,1));left:calc(5px / var(--canvas-zoom,1));width:calc(13px / var(--canvas-zoom,1));height:calc(15px / var(--canvas-zoom,1));display:flex;align-items:center;justify-content:center;opacity:.8;pointer-events:none;z-index:15;color:var(--text)}
+.lock-badge svg{width:100%;height:100%}
 .bitem-img{display:block;pointer-events:none}
 .bitem-img-wrap{position:relative;overflow:hidden}
 .bitem.sel .bitem-img-wrap{outline:2px dashed var(--acc-dim);outline-offset:2px}
@@ -392,7 +395,7 @@ const I18N = {
     dragHint2:'o desde el repositorio (panel izquierdo)',
     dragHint3:'o suelta imágenes desde el explorador de archivos',
     dropHint:'Suelta para añadir al tablero',
-    labelPlaceholder:'etiqueta…', rotateBtn:'Rotar 90°', bringFwdBtn:'Al frente', deleteBtn:'Eliminar',
+    labelPlaceholder:'etiqueta…', rotateBtn:'Rotar 90°', bringFwdBtn:'Al frente', deleteBtn:'Eliminar', lockBtn:'Bloquear', unlockBtn:'Desbloquear',
     renameBtn:'Renombrar',
     projectPhotosL1:'Fotos del', projectPhotosL2:'proyecto',
     uploadHint:'Sube fotos con + Subir →', dragFilesHint:'o arrastra archivos al canvas',
@@ -474,7 +477,7 @@ const I18N = {
     dragHint2:'or from the repository (left panel)',
     dragHint3:'or drop images from the file explorer',
     dropHint:'Drop to add to board',
-    labelPlaceholder:'label…', rotateBtn:'Rotate 90°', bringFwdBtn:'Bring forward', deleteBtn:'Delete',
+    labelPlaceholder:'label…', rotateBtn:'Rotate 90°', bringFwdBtn:'Bring forward', deleteBtn:'Delete', lockBtn:'Lock', unlockBtn:'Unlock',
     renameBtn:'Rename',
     projectPhotosL1:'Project', projectPhotosL2:'photos',
     uploadHint:'Upload photos with + Upload →', dragFilesHint:'or drag files to canvas',
@@ -539,6 +542,19 @@ const I18N = {
     importErrGeneric:'Import error',
   },
 };
+
+const SvgLock = () => (
+  <svg width="11" height="13" viewBox="0 0 11 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="1.5" y="5.5" width="8" height="7" rx="1.5" fill="currentColor"/>
+    <path d="M3.5 5.5V3.5a2 2 0 0 1 4 0V5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
+);
+const SvgUnlock = () => (
+  <svg width="11" height="13" viewBox="0 0 11 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="1.5" y="5.5" width="8" height="7" rx="1.5" fill="currentColor"/>
+    <path d="M3.5 5.5V3.5a2 2 0 0 1 4 0V1.2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
+);
 
 function App() {
   const [projects,      setProjects]      = useState([]);
@@ -1220,8 +1236,8 @@ ${rows}
       }
     }
 
-    const dragIds = [...selRef.current];
-    // Bring to front
+    const dragIds = [...selRef.current].filter(id => !itemsRef.current.find(i => i.id === id)?.locked);
+    // Bring to front (only unlocked items)
     let z = Math.max(0, ...itemsRef.current.map(i => i.z || 0));
     const fwd = itemsRef.current.map(i => dragIds.includes(i.id) ? { ...i, z: ++z } : i);
     setItems(fwd); itemsRef.current = fwd;
@@ -1274,8 +1290,9 @@ ${rows}
 
   const onResizePD = (e, itemId) => {
     e.stopPropagation(); e.preventDefault();
-    const beforeResize = itemsRef.current.map(i => ({ ...i }));
     const it = itemsRef.current.find(i => i.id === itemId);
+    if (it?.locked) return;
+    const beforeResize = itemsRef.current.map(i => ({ ...i }));
     const sx = e.clientX, ow = it.w;
     let cw = ow;
     const photo = photosRef.current.find(p => p.id === it.photoId);
@@ -1327,7 +1344,8 @@ ${rows}
     setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
   };
   const updateLabel     = (id, v) => { const u = itemsRef.current.map(i => i.id === id ? { ...i, label: v } : i); itemsRef.current = u; setItems(u); };
-  const updateItemFrame = (id, v) => { const u = itemsRef.current.map(i => i.id === id ? { ...i, frame: v } : i); itemsRef.current = u; setItems(u); };
+  const updateItemFrame  = (id, v) => { const u = itemsRef.current.map(i => i.id === id ? { ...i, frame:  v } : i); itemsRef.current = u; setItems(u); };
+  const updateItemLocked = (id, v) => { const u = itemsRef.current.map(i => i.id === id ? { ...i, locked: v } : i); itemsRef.current = u; setItems(u); saveItemsNow(u); };
   const updateNoteText  = (id, v) => { const u = itemsRef.current.map(i => i.id === id ? { ...i, text:  v } : i); itemsRef.current = u; setItems(u); };
   const saveLabel      = ()      => saveItemsNow(itemsRef.current);
 
@@ -1892,7 +1910,7 @@ ${rows}
                   const offX = (item.w  - naturalW) / 2;
                   const offY = (displayH - naturalH) / 2;
                   return (
-                    <div key={item.id} className={`bitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}`}
+                    <div key={item.id} className={`bitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}${item.locked?' locked':''}`}
                       style={{ left: item.x, top: item.y, width: item.w, zIndex: item.z||1 }}
                       onPointerDown={e => onItemPD(e, item.id)}
                       onClick={e => { e.stopPropagation(); if (!e.shiftKey) { selRef.current = [item.id]; setSel([item.id]); } }}
@@ -1904,6 +1922,7 @@ ${rows}
                         <button className="ibc fwd" title={t('bringFwdBtn')} onClick={e => { e.stopPropagation(); bringFwd(item.id); }}>↑</button>
                         <button className="ibc del" title={t('deleteBtn')}   onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
                         <button className="ibc" title={t('frameLabel')} onClick={e => { e.stopPropagation(); setPropsPanelId(id => id === item.id ? null : item.id); }}>▣</button>
+                        <button className="ibc" title={t(item.locked ? 'unlockBtn' : 'lockBtn')} onClick={e => { e.stopPropagation(); updateItemLocked(item.id, !item.locked); }}>{item.locked ? <SvgUnlock/> : <SvgLock/>}</button>
                       </div>
                       {propsPanelId === item.id && (() => {
                         const frameUnit = boardUnits !== 'px' ? boardUnits : 'px';
@@ -1946,6 +1965,7 @@ ${rows}
                       </div>
                         );
                       })()}
+                      {item.locked && <div className="lock-badge"><SvgLock/></div>}
                       <div className="dim-tag">{dimLabel(item.w, displayH, boardDpi, boardUnits, item.frame)}</div>
                       <input className="lbl"
                         style={{ top: displayH + (item.frame ? physToPx(item.frame, boardDpi, boardUnits) : 0) }}
@@ -1956,7 +1976,7 @@ ${rows}
                         onPointerDown={e => e.stopPropagation()}
                         onClick={e => e.stopPropagation()}
                       />
-                      <div className="rh" onPointerDown={e => onResizePD(e, item.id)}/>
+                      {!item.locked && <div className="rh" onPointerDown={e => onResizePD(e, item.id)}/>}
                     </div>
                   );
                 })}

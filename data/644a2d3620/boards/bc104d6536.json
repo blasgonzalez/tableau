@@ -7,7 +7,8 @@
     "w": 321,
     "z": 224,
     "label": "Las etiquetas también se redimensionan?",
-    "rot": 0
+    "rot": 0,
+    "locked": false
   },
   {
     "id": "mooh5sexjm8",
@@ -18,7 +19,8 @@
     "z": 229,
     "label": "ddddd",
     "rot": 0,
-    "frame": 0.4
+    "frame": 0.4,
+    "locked": true
   },
   {
     "id": "mooh8sbvgrb",
@@ -38,17 +40,19 @@
     "w": 194,
     "z": 199,
     "label": "",
-    "rot": 0
+    "rot": 0,
+    "locked": true
   },
   {
     "id": "mopn58v2imh",
     "photoId": "9b76c48154ec",
-    "x": 50,
-    "y": 150,
+    "x": 39,
+    "y": 140.5,
     "w": 236,
-    "z": 200,
+    "z": 230,
     "label": "Brobdingnag: KM0",
-    "rot": 0
+    "rot": 0,
+    "locked": false
   },
   {
     "id": "mou35og1zyj",
