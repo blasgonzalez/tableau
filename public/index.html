@@ -140,9 +140,19 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .ibc.fwd:hover,.ibc.rot:hover{color:var(--text)}
 .rh{position:absolute;bottom:calc(-6px / var(--canvas-zoom,1));right:calc(-6px / var(--canvas-zoom,1));width:14px;height:14px;background:var(--acc);cursor:se-resize;opacity:0;transition:opacity .12s;zoom:calc(1 / var(--canvas-zoom,1))}
 .bitem:hover .rh,.bitem.sel .rh{opacity:1}
-.lbl{position:absolute;left:0;right:0;box-sizing:border-box;font-size:calc(10px / var(--canvas-zoom,1));font-family:'IBM Plex Mono',monospace;color:var(--text);background:var(--panel2);border:none;border-top:1px solid var(--border2);padding:calc(3px / var(--canvas-zoom,1)) calc(6px / var(--canvas-zoom,1));outline:none;letter-spacing:.3px;z-index:10}
-.lbl:focus{border-top-color:var(--acc-dim)}
-.lbl::placeholder{color:var(--muted)}
+.lbl{position:absolute;left:0;right:0;box-sizing:border-box;font-size:calc(10px / var(--canvas-zoom,1));font-family:'IBM Plex Mono',monospace;color:var(--text);background:var(--panel2);border:none;border-top:1px solid var(--border2);padding:0 calc(6px / var(--canvas-zoom,1));letter-spacing:.3px;z-index:10;cursor:pointer;height:calc(26px / var(--canvas-zoom,1));display:flex;align-items:center;overflow:hidden;white-space:nowrap;user-select:none}
+.lbl:hover{border-top-color:var(--acc-dim)}
+.lbl-ph{color:var(--muted);font-style:italic}
+.lbl-more{color:var(--muted);margin-left:4px;font-style:italic}
+/* ── LABEL POPUP ── */
+.lbl-popup-ov{position:fixed;inset:0;z-index:800;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55)}
+.lbl-popup{background:var(--panel);border:1px solid var(--border2);padding:16px;display:flex;flex-direction:column;gap:10px;width:300px;min-width:220px;min-height:180px;box-shadow:0 4px 24px rgba(0,0,0,.5);resize:both;overflow:hidden}
+.lbl-popup-hd{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0}
+.lbl-popup-name{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.lbl-popup-close{background:none;border:none;color:var(--dim);cursor:pointer;font-size:14px;line-height:1;padding:0 2px;flex-shrink:0}
+.lbl-popup-close:hover{color:var(--text)}
+.lbl-popup-ta{background:var(--surf);border:1px solid var(--border2);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12px;padding:8px 10px;outline:none;resize:none;flex:1;min-height:0;overflow-y:auto;line-height:1.6;letter-spacing:.3px;width:100%;box-sizing:border-box}
+.lbl-popup-ta:focus{border-color:var(--acc-dim)}
 /* dimension tag visible on hover/select */
 .dim-tag{position:absolute;bottom:calc(22px / var(--canvas-zoom,1));left:0;background:rgba(13,12,11,.88);color:var(--acc);font-size:8px;padding:2px 7px;letter-spacing:.4px;pointer-events:none;opacity:0;transition:opacity .12s;white-space:nowrap;zoom:calc(1 / var(--canvas-zoom,1))}
 .bitem:hover .dim-tag,.bitem.sel .dim-tag{opacity:1}
@@ -170,6 +180,18 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .nitem-link-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:9px;letter-spacing:.5px;text-transform:uppercase;padding:0;font-family:'IBM Plex Mono',monospace}
 .nitem-link-btn:hover{color:var(--acc)}
 .nitem-link-loading{font-size:9px;color:var(--muted);padding:5px 8px;border-top:1px solid var(--border);letter-spacing:.5px;flex-shrink:0}
+.nitem-title{width:100%;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--sub);font-family:'IBM Plex Mono',monospace;font-size:10px;padding:5px 10px 4px;outline:none;flex-shrink:0;letter-spacing:.3px;box-sizing:border-box}
+.nitem-title:focus{color:var(--text);border-bottom-color:var(--acc-dim)}
+.nitem-title::placeholder{color:var(--muted);font-style:italic}
+.nitem.inmem .nitem-body{border-left-color:var(--acc)}
+/* ── MEM NOTES SECTION ── */
+.mem-notes-hd{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);padding:6px 0 4px;border-top:1px solid var(--border2);margin-top:6px}
+.mem-note-item{padding:5px 0 5px 8px;border-bottom:1px solid var(--border);border-left:2px solid var(--acc-dim)}
+.mem-note-title{font-size:10px;color:var(--sub);font-weight:600;margin-bottom:2px}
+.mem-note-text{font-size:9px;color:var(--dim);white-space:pre-wrap;line-height:1.6}
+.mem-note-link{display:inline-block;margin-top:5px;font-size:9px;color:var(--acc);text-decoration:underline;word-break:break-all}
+.mem-note-link-domain{color:var(--muted);font-size:8px;margin-left:4px}
+.mem-lbl{font-size:8px;color:var(--muted);font-style:italic;margin-top:2px;letter-spacing:.2px;white-space:pre-wrap}
 
 /* ── LIBRARY ── */
 .library{background:var(--surf);border-top:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;z-index:100;overflow:hidden;transition:height .18s ease}
@@ -405,6 +427,7 @@ const I18N = {
     dragHint3:'o suelta imágenes desde el explorador de archivos',
     dropHint:'Suelta para añadir al tablero',
     labelPlaceholder:'etiqueta…', rotateBtn:'Rotar 90°', bringFwdBtn:'Al frente', deleteBtn:'Eliminar', lockBtn:'Bloquear', unlockBtn:'Desbloquear',
+    noteTitlePh:'título…', noteInMemoryBtn:'Incluir en memoria', noteExcludeMemBtn:'Excluir de memoria', notesSectionTitle:'Notas',
     renameBtn:'Renombrar',
     projectPhotosL1:'Fotos del', projectPhotosL2:'proyecto',
     libTitle:'Biblioteca', sortImported:'Importación', sortName:'Nombre A→Z',
@@ -488,6 +511,7 @@ const I18N = {
     dragHint3:'or drop images from the file explorer',
     dropHint:'Drop to add to board',
     labelPlaceholder:'label…', rotateBtn:'Rotate 90°', bringFwdBtn:'Bring forward', deleteBtn:'Delete', lockBtn:'Lock', unlockBtn:'Unlock',
+    noteTitlePh:'title…', noteInMemoryBtn:'Include in report', noteExcludeMemBtn:'Exclude from report', notesSectionTitle:'Notes',
     renameBtn:'Rename',
     projectPhotosL1:'Project', projectPhotosL2:'photos',
     libTitle:'Library', sortImported:'Import date', sortName:'Name A→Z',
@@ -554,6 +578,22 @@ const I18N = {
   },
 };
 
+const SvgMemOff = () => (
+  <svg width="10" height="12" viewBox="0 0 10 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0.75" y="0.75" width="8.5" height="10.5" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
+    <line x1="2.5" y1="4"   x2="7.5" y2="4"   stroke="currentColor" strokeWidth="0.9" strokeLinecap="round"/>
+    <line x1="2.5" y1="6"   x2="7.5" y2="6"   stroke="currentColor" strokeWidth="0.9" strokeLinecap="round"/>
+    <line x1="2.5" y1="8"   x2="5.5" y2="8"   stroke="currentColor" strokeWidth="0.9" strokeLinecap="round"/>
+  </svg>
+);
+const SvgMemOn = () => (
+  <svg width="10" height="12" viewBox="0 0 10 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0.75" y="0.75" width="8.5" height="10.5" rx="1.5" fill="currentColor"/>
+    <line x1="2.5" y1="4"   x2="7.5" y2="4"   stroke="var(--bg)" strokeWidth="0.9" strokeLinecap="round"/>
+    <line x1="2.5" y1="6"   x2="7.5" y2="6"   stroke="var(--bg)" strokeWidth="0.9" strokeLinecap="round"/>
+    <line x1="2.5" y1="8"   x2="5.5" y2="8"   stroke="var(--bg)" strokeWidth="0.9" strokeLinecap="round"/>
+  </svg>
+);
 const SvgLock = () => (
   <svg width="11" height="13" viewBox="0 0 11 13" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect x="1.5" y="5.5" width="8" height="7" rx="1.5" fill="currentColor"/>
@@ -586,6 +626,8 @@ function App() {
   const [sbOpen,        setSbOpen]        = useState(true);
   const [libOpen,       setLibOpen]       = useState(() => localStorage.getItem('libOpen') !== 'false');
   const [photoSort,     setPhotoSort]     = useState(() => localStorage.getItem('photoSort') || 'imported');
+  const [labelEditId,   setLabelEditId]   = useState(null);
+  const labelEditOrigRef = useRef(null);
   const [renaming,      setRenaming]      = useState(null);
   const [hoverInfo,     setHoverInfo]     = useState(null);
   // board config edit state (only live while modal is open)
@@ -662,6 +704,8 @@ function App() {
     const hb = () => fetch('/api/heartbeat', { method: 'POST' }).catch(() => {});
     hb();
     const hbInterval = setInterval(hb, 30_000);
+    const onVisible = () => { if (document.visibilityState === 'visible') hb(); };
+    document.addEventListener('visibilitychange', onVisible);
     api.get('/api/version').then(d => setAppVersion(d.version || '')).catch(() => {});
     api.get('/api/update').then(d => { if (d.update) setUpdateInfo(d.update); }).catch(() => {});
     api.get('/api/projects').then(ps => {
@@ -669,7 +713,7 @@ function App() {
       if (ps.length) setPid(ps[0].id);
       setReady(true);
     }).catch(() => setReady(true));
-    return () => clearInterval(hbInterval);
+    return () => { clearInterval(hbInterval); document.removeEventListener('visibilitychange', onVisible); };
   }, []);
 
   useEffect(() => {
@@ -912,9 +956,19 @@ function App() {
           <td class="lbl">${item.label || ''}</td>
         </tr>`;
       });
-      rows += `</tbody></table></section>`;
+      rows += `</tbody></table>`;
+      const memNotes = boardIt.filter(i => i.type === 'note' && i.inMemory);
+      if (memNotes.length) {
+        rows += `<div class="notes-section"><div class="notes-hd">${t('notesSectionTitle')}</div>`;
+        memNotes.forEach(n => {
+          const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
+          rows += `<div class="note-item">${n.title ? `<div class="note-title">${esc(n.title)}</div>` : ''}<div class="note-text">${esc(n.text).replace(/\n/g,'<br>')}</div>${n.link ? `<div class="note-link-row"><a class="note-link" href="${n.link.url}">${esc(n.link.title||n.link.domain)}</a>${n.link.title ? ` <span class="note-link-domain">${esc(n.link.domain)}</span>` : ''}</div>` : ''}</div>`;
+        });
+        rows += `</div>`;
+      }
+      rows += `</section>`;
     });
-    const html = `<!DOCTYPE html><html lang="${lang}"><head><meta charset="UTF-8"><title>${t('reportTitle')} — ${proj?.name || ''}</title>
+    const html = `<!DOCTYPE html><html lang="${lang}"><head><meta charset="UTF-8"><title>${proj?.name || ''} — ${t('reportTitle')} — ${date}</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'Courier New',monospace;color:#111;background:#fff;max-width:720px;margin:0 auto;padding:44px 24px;font-size:12px}
@@ -938,9 +992,17 @@ function App() {
   .preview-box{position:relative;overflow:hidden}
   .preview-box img{position:absolute;object-fit:cover}
   .preview-dim{font-size:8px;color:#888;letter-spacing:.8px;text-transform:uppercase;margin-top:4px}
+  .notes-section{margin-top:12px}
+  .notes-hd{font-size:8px;text-transform:uppercase;letter-spacing:1px;color:#888;border-top:1px solid #ddd;padding-top:6px;margin-bottom:6px}
+  .note-item{padding:6px 0 6px 10px;border-left:2px solid #ccc;margin-bottom:6px}
+  .note-title{font-size:10px;font-weight:700;margin-bottom:3px}
+  .note-text{font-size:10px;color:#444;line-height:1.6}
+  .note-link-row{margin-top:5px}
+  .note-link{font-size:10px;color:#1a6fbf;text-decoration:underline;word-break:break-all}
+  .note-link-domain{color:#888;font-size:9px;margin-left:4px}
   @media print{body{padding:10mm 12mm} section{page-break-inside:avoid}}
 </style></head><body>
-<header><h1>${t('reportHeading')}</h1><p>${proj?.name || ''} · ${date}</p></header>
+<header><h1>${proj?.name || ''}</h1><p>${t('reportHeading')} · ${date}</p></header>
 ${rows}
 </body></html>`;
     const w = window.open('', '_blank', 'width=780,height=740');
@@ -1359,7 +1421,9 @@ ${rows}
   const updateLabel     = (id, v) => { const u = itemsRef.current.map(i => i.id === id ? { ...i, label: v } : i); itemsRef.current = u; setItems(u); };
   const updateItemFrame  = (id, v) => { const u = itemsRef.current.map(i => i.id === id ? { ...i, frame:  v } : i); itemsRef.current = u; setItems(u); };
   const updateItemLocked = (id, v) => { const u = itemsRef.current.map(i => i.id === id ? { ...i, locked: v } : i); itemsRef.current = u; setItems(u); saveItemsNow(u); };
-  const updateNoteText  = (id, v) => { const u = itemsRef.current.map(i => i.id === id ? { ...i, text:  v } : i); itemsRef.current = u; setItems(u); };
+  const updateNoteText    = (id, v) => { const u = itemsRef.current.map(i => i.id === id ? { ...i, text:    v } : i); itemsRef.current = u; setItems(u); };
+  const updateNoteTitle   = (id, v) => { const u = itemsRef.current.map(i => i.id === id ? { ...i, title:   v } : i); itemsRef.current = u; setItems(u); };
+  const updateNoteInMemory= (id, v) => { const u = itemsRef.current.map(i => i.id === id ? { ...i, inMemory:v } : i); itemsRef.current = u; setItems(u); saveItemsNow(u); };
   const saveLabel      = ()      => saveItemsNow(itemsRef.current);
 
   const fetchLinkPreview = async (noteId, rawUrl) => {
@@ -1415,7 +1479,6 @@ ${rows}
       cw = Math.max(120, Math.min(ow + (e.clientX - sx) / z, bp ? bp.w - it.x : Infinity));
       ch = Math.max(60,  Math.min(oh + (e.clientY - sy) / z, bp ? bp.h - it.y : Infinity));
       setItems(its => its.map(i => i.id === itemId ? { ...i, w: cw, h: ch } : i));
-      setResizeDim({ x: e.clientX + 16, y: e.clientY - 44, label: dimLabel(Math.round(cw), Math.round(ch), rdpi, runits) });
     };
     const onMU = () => {
       window.removeEventListener('pointermove', onMM);
@@ -1853,7 +1916,7 @@ ${rows}
 
                 {[...items].sort((a, b) => (a.z||0)-(b.z||0)).map(item => {
                   if (item.type === 'note') return (
-                    <div key={item.id} className={`nitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}`}
+                    <div key={item.id} className={`nitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}${item.inMemory?' inmem':''}`}
                       style={{ left: item.x, top: item.y, width: item.w, height: item.h || 150, zIndex: item.z||1 }}
                       onPointerDown={e => onItemPD(e, item.id)}
                       onClick={e => { e.stopPropagation(); if (!e.shiftKey) { selRef.current = [item.id]; setSel([item.id]); } }}
@@ -1861,8 +1924,20 @@ ${rows}
                       <div className="bitem-bar">
                         <button className="ibc fwd" title={t('bringFwdBtn')} onClick={e => { e.stopPropagation(); bringFwd(item.id); }}>↑</button>
                         <button className="ibc del" title={t('deleteBtn')}   onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
+                        <button className="ibc" title={t(item.inMemory ? 'noteExcludeMemBtn' : 'noteInMemoryBtn')}
+                          style={{color: item.inMemory ? 'var(--acc)' : undefined}}
+                          onClick={e => { e.stopPropagation(); updateNoteInMemory(item.id, !item.inMemory); }}>
+                          {item.inMemory ? <SvgMemOn/> : <SvgMemOff/>}
+                        </button>
                       </div>
                       <div className="nitem-body">
+                        <input className="nitem-title" value={item.title||''} placeholder={t('noteTitlePh')}
+                          onChange={e => updateNoteTitle(item.id, e.target.value)}
+                          onFocus={pushUndo}
+                          onBlur={saveLabel}
+                          onPointerDown={e => e.stopPropagation()}
+                          onClick={e => e.stopPropagation()}
+                        />
                         <textarea className="nitem-txt" value={item.text||''} placeholder={lang==='es'?'nota…':'note…'}
                           onChange={e => updateNoteText(item.id, e.target.value)}
                           onFocus={pushUndo}
@@ -1980,15 +2055,16 @@ ${rows}
                       })()}
                       {item.locked && <div className="lock-badge"><SvgLock/></div>}
                       <div className="dim-tag">{dimLabel(item.w, displayH, boardDpi, boardUnits, item.frame)}</div>
-                      <input className="lbl"
+                      <div className="lbl"
                         style={{ top: displayH + (item.frame ? physToPx(item.frame, boardDpi, boardUnits) : 0) }}
-                        value={item.label||''} placeholder={t('labelPlaceholder')}
-                        onChange={e => updateLabel(item.id, e.target.value)}
-                        onFocus={pushUndo}
-                        onBlur={saveLabel}
                         onPointerDown={e => e.stopPropagation()}
-                        onClick={e => e.stopPropagation()}
-                      />
+                        onClick={e => { e.stopPropagation(); pushUndo(); labelEditOrigRef.current = item.label || ''; setLabelEditId(item.id); }}
+                      >
+                        {item.label
+                          ? <>{item.label.split('\n')[0]}{item.label.includes('\n') && <span className="lbl-more">…</span>}</>
+                          : <span className="lbl-ph">{t('labelPlaceholder')}</span>
+                        }
+                      </div>
                       {!item.locked && <div className="rh" onPointerDown={e => onResizePD(e, item.id)}/>}
                     </div>
                   );
@@ -2255,7 +2331,7 @@ ${rows}
                               <div className="mem-preview-dim">{dimLabel(bW, bH, dpi, units)}</div>
                             </div>
                           )}
-                          {boardIt.map((item, idx) => {
+                          {boardIt.filter(i => i.type !== 'note').map((item, idx) => {
                             const photo = photos.find(p => p.id === item.photoId);
                             const h = photo
                               ? ((item.rot || 0) % 180 !== 0
@@ -2266,9 +2342,9 @@ ${rows}
                             return (
                               <div key={item.id} className="mem-item">
                                 <div className="mem-idx">{idx + 1}.</div>
-                                {item.type !== 'note' && <img className="mem-thumb" src={`/photos/${pid}/${item.photoId}/thumb`} alt="" />}
+                                <img className="mem-thumb" src={`/photos/${pid}/${item.photoId}/thumb`} alt="" />
                                 <div className="mem-info">
-                                  <div className="mem-iname">{photo?.name || '(sin nombre)'}</div>
+                                  <div className="mem-iname">{photo?.name || item.photoId}</div>
                                   <div className="mem-dims">
                                     {dimStr}
                                     {(item.frame > 0) && <span style={{color:'var(--muted)',marginLeft:6,fontSize:8}}>({t('frameNote', item.frame, hasPhys ? units : 'px')})</span>}
@@ -2278,6 +2354,26 @@ ${rows}
                               </div>
                             );
                           })}
+                          {boardIt.filter(i => i.type === 'note' && i.inMemory).length > 0 && (
+                            <>
+                              <div className="mem-notes-hd">{t('notesSectionTitle')}</div>
+                              {boardIt.filter(i => i.type === 'note' && i.inMemory).map(item => (
+                                <div key={item.id} className="mem-note-item">
+                                  {item.title && <div className="mem-note-title">{item.title}</div>}
+                                  <div className="mem-note-text">{item.text || ''}</div>
+                                  {item.link && (
+                                    <div style={{marginTop:5}}>
+                                      <a className="mem-note-link" href={item.link.url} target="_blank" rel="noreferrer"
+                                        onClick={e => e.stopPropagation()}>
+                                        {item.link.title || item.link.domain}
+                                      </a>
+                                      {item.link.title && <span className="mem-note-link-domain">{item.link.domain}</span>}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </>
+                          )}
                         </React.Fragment>
                       );
                     })()}
@@ -2295,6 +2391,42 @@ ${rows}
           </div>
         </div>
       )}
+
+      {labelEditId && (() => {
+        const editItem = items.find(i => i.id === labelEditId);
+        if (!editItem) return null;
+        const editPhoto = photos.find(p => p.id === editItem.photoId);
+        const sizeKey = `lbl-popup-size-${labelEditId}`;
+        const savedSize = JSON.parse(localStorage.getItem(sizeKey) || 'null');
+        let popupEl = null;
+        const saveSize = () => { if (popupEl) localStorage.setItem(sizeKey, JSON.stringify({w: popupEl.offsetWidth, h: popupEl.offsetHeight})); };
+        const closeLabelEdit = () => { saveSize(); saveLabel(); setLabelEditId(null); };
+        const discardLabelEdit = () => {
+          saveSize();
+          const u = itemsRef.current.map(i => i.id === labelEditId ? {...i, label: labelEditOrigRef.current} : i);
+          itemsRef.current = u; setItems(u); saveItemsNow(u);
+          setLabelEditId(null);
+        };
+        return (
+          <div className="lbl-popup-ov">
+            <div className="lbl-popup" ref={el => { popupEl = el; }}
+              style={savedSize ? {width: savedSize.w, height: savedSize.h} : undefined}>
+              <div className="lbl-popup-hd">
+                <span className="lbl-popup-name">{editPhoto?.name || t('labelPlaceholder')}</span>
+                <button className="lbl-popup-close" onClick={discardLabelEdit}>×</button>
+              </div>
+              <textarea className="lbl-popup-ta" autoFocus
+                value={editItem.label || ''}
+                placeholder={t('labelPlaceholder')}
+                onChange={e => updateLabel(labelEditId, e.target.value)}
+              />
+              <div style={{display:'flex',justifyContent:'flex-start',flexShrink:0,paddingTop:2}}>
+                <button className="btn acc" onClick={closeLabelEdit}>{t('save')}</button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {importState && (
         <div className="overlay" onClick={() => !importState.busy && setImportState(null)}>

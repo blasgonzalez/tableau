@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.3.1] — 2026-05-12
+### Añadido
+- Etiquetas de foto multilinea: clic en la etiqueta abre una ventana emergente con área de texto; × descarta los cambios, Guardar los confirma; la ventana recuerda su tamaño por foto
+- Notas en la memoria del proyecto: título y texto de las notas marcadas con 📄 aparecen en el informe de pantalla y en el PDF imprimible
+- Enlaces de notas en la memoria: si una nota tiene enlace asignado, aparece como hipervínculo clicable en el informe (y en el PDF)
+- Título del informe de memoria muestra el nombre del proyecto y la fecha
+
+### Mejorado
+- Las notas no muestran la etiqueta de dimensiones al redimensionar
+- El informe de memoria abre el PDF con el nombre del proyecto como título de la ventana/pestaña
+
+### Corregido
+- El servidor ya no se apaga solo cuando la pestaña lleva tiempo en segundo plano: el timeout sube a 5 minutos y se envía un heartbeat inmediato al volver a la pestaña
+
+---
+
 ## [1.3.0] — 2026-05-12
 ### Añadido
 - Bloqueo de elementos: botón 🔒 en cada foto y nota para impedir que se muevan o redimensionen accidentalmente; el elemento bloqueado muestra un candado en la esquina y permite seguir editando etiqueta, marco y texto

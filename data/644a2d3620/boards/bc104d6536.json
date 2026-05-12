@@ -6,7 +6,7 @@
     "y": 100,
     "w": 321,
     "z": 224,
-    "label": "Las etiquetas también se redimensionan?",
+    "label": "Estas son notas relativas a esta fotografia. Aqui puedes indicar cuestiones relacionadas con la producción",
     "rot": 0,
     "locked": false
   },
@@ -17,7 +17,7 @@
     "y": 100,
     "w": 439,
     "z": 229,
-    "label": "ddddd",
+    "label": "Morbi consequat dolor iaculis mi pretium, quis laoreet lectus egestas. Praesent lacinia facilisis arcu, sed laoreet dolor vehicula ac. Mauris convallis est lacus. Etiam ornare justo et libero hendrerit, a accumsan justo posuere. Vivamus aliquet lacus id pretium ultrices. Phasellus ut finibus sem. Nullam et varius orci, ac vulputate metus. Integer ornare vitae lectus at volutpat. Morbi maximus faucibus nisi, in vestibulum tortor aliquam sed. Sed vulputate, massa ut lobortis lacinia, libero urna dictum nunc, non iaculis arcu purus nec nulla. In nisi erat, eleifend at tellus a, mattis volutpat dui. Nam facilisis, libero sed feugiat tempor, felis nibh commodo ipsum, id rhoncus nunc nunc eget augue.",
     "rot": 0,
     "frame": 0.4,
     "locked": true
@@ -57,18 +57,20 @@
   {
     "id": "mou35og1zyj",
     "type": "note",
-    "text": "Ahora se pueden añadir notas en el tablero.\nEn estas notas se puede añadir un enlace web:\n",
-    "x": 309.5,
-    "y": 436,
-    "w": 216,
-    "h": 149,
-    "z": 214,
+    "text": "Ahora se pueden añadir notas en el tablero.\nEn estas notas se puede añadir también un enlace web:\n",
+    "x": 50,
+    "y": 641.3333333333334,
+    "w": 324,
+    "h": 298,
+    "z": 234,
     "link": {
       "url": "https://blasgonzalezfotografia.com/",
       "domain": "blasgonzalezfotografia.com",
       "title": "Unha Viaxe a Brobdingnag - Blas González",
       "image": null
-    }
+    },
+    "title": "NOTA PRIDUCCIÓN 1",
+    "inMemory": true
   },
   {
     "id": "mp2jk2jhe05",
@@ -77,7 +79,7 @@
     "y": 584.1383093999698,
     "w": 176,
     "z": 233,
-    "label": "xxx",
+    "label": "xxx\nesta es una forma \nridicula de introducir\n",
     "rot": 0,
     "frame": 0
   }

@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.3.1] — 2026-05-12
+### Added
+- Multiline photo labels: clicking the label opens a popup editor; × discards changes, Save confirms; window size is remembered per photo
+- Notes in the project report: title and text of notes marked with 📄 appear in the on-screen panel and in the printable PDF
+- Note links in the report: if a note has a link assigned, it appears as a clickable hyperlink in the report (and in the PDF)
+- Memory report title now shows the project name and date
+
+### Improved
+- Notes no longer show a dimension tooltip when resizing
+- The memory report PDF opens with the project name as the window/tab title
+
+### Fixed
+- Server no longer shuts down when the browser tab stays in the background for a long time: timeout raised to 5 minutes and an immediate heartbeat is sent when returning to the tab
+
+---
+
 ## [1.3.0] — 2026-05-12
 ### Added
 - Element locking: 🔒 button on each photo and note prevents accidental moves or resizes; locked elements show a padlock badge and still allow editing label, frame and text

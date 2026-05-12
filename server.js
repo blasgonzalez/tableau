@@ -143,7 +143,7 @@ app.get('/api/version', (_req, res) => res.json({ version: APP_VERSION }));
 app.get('/api/update',  (_req, res) => res.json({ current: APP_VERSION, update: updateAvailable }));
 
 // ── Heartbeat ─────────────────────────────────────────────────────────────────
-const HEARTBEAT_TIMEOUT = 90_000; // ms sin heartbeat antes de cerrar
+const HEARTBEAT_TIMEOUT = 300_000; // ms sin heartbeat antes de cerrar (5 min)
 let heartbeatTimer = null;
 const resetHeartbeat = () => {
   clearTimeout(heartbeatTimer);
