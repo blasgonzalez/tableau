@@ -297,6 +297,19 @@ select.inp{cursor:pointer;appearance:none;padding-right:28px;background-image:ur
 /* ── TOAST ── */
 .toast{position:fixed;bottom:136px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--border2);padding:9px 20px;font-size:11px;letter-spacing:.5px;color:var(--sub);z-index:900;pointer-events:none}
 .toast.err{color:var(--danger);border-color:var(--danger)}
+/* ── FREE ROTATION HANDLE ── */
+.rot-handle{position:absolute;top:calc(-22px / var(--canvas-zoom,1));left:calc(50% - 7px / var(--canvas-zoom,1));width:14px;height:14px;border-radius:50%;background:var(--acc-dim);border:1.5px solid var(--acc);cursor:crosshair;opacity:0;transition:opacity .12s;zoom:calc(1 / var(--canvas-zoom,1));z-index:260}
+.bitem:hover .rot-handle,.bitem.sel .rot-handle,.nitem:hover .rot-handle,.nitem.sel .rot-handle{opacity:1}
+/* ── NOTE COLORS ── */
+.cp-menu{position:fixed;background:var(--panel);border:1px solid var(--border2);z-index:600;min-width:160px;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+.cp-menu-hd{padding:5px 12px;font-size:7px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border)}
+.cp-menu-item{padding:7px 12px;font-size:10px;color:var(--sub);cursor:pointer;letter-spacing:.3px;transition:background .1s}
+.cp-menu-item:hover{background:var(--surf);color:var(--text)}
+.cp-menu-empty{padding:7px 12px;font-size:9px;color:var(--muted);letter-spacing:.3px}
+/* ── THUMB COPY BUTTON ── */
+.thumb-cp{position:absolute;bottom:2px;right:22px;width:18px;height:18px;background:rgba(13,12,11,.75);color:var(--sub);border:none;cursor:pointer;font-size:10px;border-radius:2px;display:none;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;line-height:1;z-index:2}
+.thumb:hover .thumb-cp{display:flex}
+.thumb-cp:hover{color:var(--acc)}
 .uploading-bar{position:fixed;bottom:128px;left:0;right:0;height:2px;background:var(--acc);z-index:500}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:var(--surf)}
@@ -363,6 +376,16 @@ const THEMES = {
 };
 
 const ZOOM_STEPS = [0.25, 0.33, 0.5, 0.67, 0.75, 1.0, 1.25, 1.5, 2.0];
+
+const NOTE_COLORS = ['yellow','green','blue','pink','purple','orange'];
+const NOTE_COLOR_VALS = {
+  yellow: ['#c8a832','rgba(200,168,50,.15)'],
+  green:  ['#3c8c50','rgba(60,140,80,.15)'],
+  blue:   ['#3c64b4','rgba(60,100,180,.15)'],
+  pink:   ['#b43c64','rgba(180,60,100,.15)'],
+  purple: ['#6446a0','rgba(100,70,160,.15)'],
+  orange: ['#c86e28','rgba(200,110,40,.15)'],
+};
 
 const BOARD_PAD = 40;
 
@@ -498,6 +521,13 @@ const I18N = {
     importErrInvalid:'El archivo no es un proyecto Tableau válido',
     importErrExpired:'Importación expirada, vuelve a subir el archivo',
     importErrGeneric:'Error al importar',
+    copied: n => `${n} elemento${n>1?'s':''} copiado${n>1?'s':''}`,
+    pasted: n => `${n} elemento${n>1?'s':''} pegado${n>1?'s':''}`,
+    duplicated: n => `${n} elemento${n>1?'s':''} duplicado${n>1?'s':''}`,
+    noteColor:'Color',
+    copyToProject:'Copiar a proyecto',
+    photoCopied:'Foto copiada al proyecto',
+    noOtherProjects:'Sin otros proyectos',
   },
   en: {
     upload:'+ Upload', report:'≡ Report', config:'⚙ Config', exportJpeg:'⬇ Export JPEG',
@@ -582,6 +612,13 @@ const I18N = {
     importErrInvalid:'File is not a valid Tableau project',
     importErrExpired:'Import expired, please re-upload the file',
     importErrGeneric:'Import error',
+    copied: n => `${n} item${n>1?'s':''} copied`,
+    pasted: n => `${n} item${n>1?'s':''} pasted`,
+    duplicated: n => `${n} item${n>1?'s':''} duplicated`,
+    noteColor:'Color',
+    copyToProject:'Copy to project',
+    photoCopied:'Photo copied to project',
+    noOtherProjects:'No other projects',
   },
 };
 
@@ -655,6 +692,8 @@ function App() {
   const [importState,   setImportState]   = useState(null); // {tempId,projectName,conflict,existingProject,busy}
   const [cfgDefaultFrame, setCfgDefaultFrame] = useState('0');
   const [propsPanelId,  setPropsPanelId]  = useState(null);
+  const [noteColorPanelId, setNoteColorPanelId] = useState(null);
+  const [copyToMenu,    setCopyToMenu]    = useState(null); // {photoId, x, y}
 
   const [theme,         setTheme]         = useState(() => localStorage.getItem('tb-theme') || 'dark-amber');
   const [themeOpen,     setThemeOpen]     = useState(false);
@@ -697,6 +736,7 @@ function App() {
   const wasDragged      = useRef(false);
   const boardZoom       = useRef({});
   const importInputRef  = useRef(null);
+  const clipboardRef    = useRef([]);
 
   useEffect(() => { itemsRef.current         = items;         }, [items]);
   useEffect(() => { pidRef.current           = pid;           }, [pid]);
@@ -806,6 +846,47 @@ function App() {
         if (e.key === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); }
         if (e.key === 'y') { e.preventDefault(); redo(); }
         if (e.key === 'a') { e.preventDefault(); const ids = itemsRef.current.map(i => i.id); selRef.current = ids; setSel(ids); }
+        if (e.key === 'c') {
+          e.preventDefault();
+          const sel = selRef.current.map(id => itemsRef.current.find(i => i.id === id)).filter(Boolean);
+          if (sel.length) { clipboardRef.current = sel.map(i => ({...i})); showToast(t('copied', sel.length)); }
+        }
+        if (e.key === 'v') {
+          e.preventDefault();
+          if (!clipboardRef.current.length || !bidRef.current) return;
+          pushUndo();
+          const maxZ = itemsRef.current.length ? Math.max(...itemsRef.current.map(i => i.z || 0)) : 0;
+          let z = maxZ;
+          const pfx = Date.now().toString(36);
+          const copies = clipboardRef.current.map((it, idx) => ({
+            ...it,
+            id: pfx + idx.toString(36) + Math.random().toString(36).slice(2, 4),
+            x: it.x + 20, y: it.y + 20, z: ++z,
+          })).filter(it => it.type === 'note' || photosRef.current.some(p => p.id === it.photoId));
+          if (!copies.length) return;
+          const nit = [...itemsRef.current, ...copies];
+          selRef.current = copies.map(c => c.id); setSel(copies.map(c => c.id));
+          setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
+          showToast(t('pasted', copies.length));
+        }
+        if (e.key === 'd') {
+          e.preventDefault();
+          if (!selRef.current.length) return;
+          pushUndo();
+          const maxZ = itemsRef.current.length ? Math.max(...itemsRef.current.map(i => i.z || 0)) : 0;
+          let z = maxZ;
+          const pfx = Date.now().toString(36);
+          const copies = selRef.current.map((id, idx) => {
+            const it = itemsRef.current.find(i => i.id === id);
+            if (!it) return null;
+            return { ...it, id: pfx + idx.toString(36) + Math.random().toString(36).slice(2, 4), x: it.x + 20, y: it.y + 20, z: ++z };
+          }).filter(Boolean);
+          if (!copies.length) return;
+          const nit = [...itemsRef.current, ...copies];
+          selRef.current = copies.map(c => c.id); setSel(copies.map(c => c.id));
+          setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
+          showToast(t('duplicated', copies.length));
+        }
       }
       if ((e.key === 'Delete' || e.key === 'Backspace') && selRef.current.length) {
         e.preventDefault();
@@ -1445,6 +1526,46 @@ ${rows}
     const nit = itemsRef.current.map(i => i.id === id ? { ...i, rot: ((i.rot || 0) + 90) % 360 } : i);
     setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
   };
+
+  const onFreeRotatePD = (e, itemId) => {
+    e.stopPropagation(); e.preventDefault();
+    const it = itemsRef.current.find(i => i.id === itemId);
+    if (it?.locked) return;
+    const beforeRot = itemsRef.current.map(i => ({...i}));
+    const el = e.currentTarget.closest('.bitem,.nitem');
+    const rect = el.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const startAngle = Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI;
+    const startFreeRot = it.freeRot || 0;
+    let finalRot = startFreeRot;
+    const onMM = e => {
+      const cur = Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI;
+      const delta = cur - startAngle;
+      finalRot = e.shiftKey
+        ? Math.round((startFreeRot + delta) / 15) * 15
+        : Math.round(startFreeRot + delta);
+      setItems(its => its.map(i => i.id === itemId ? {...i, freeRot: finalRot} : i));
+      setResizeDim({ x: e.clientX + 14, y: e.clientY - 36, label: `${((finalRot % 360) + 360) % 360}°` });
+    };
+    const onMU = () => {
+      window.removeEventListener('pointermove', onMM);
+      window.removeEventListener('pointerup', onMU);
+      setResizeDim(null);
+      const nit = itemsRef.current.map(i => i.id === itemId ? {...i, freeRot: finalRot} : i);
+      undoStack.current = [...undoStack.current.slice(-49), beforeRot];
+      redoStack.current = [];
+      setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
+    };
+    window.addEventListener('pointermove', onMM);
+    window.addEventListener('pointerup', onMU);
+  };
+
+  const updateNoteColor = (id, color) => {
+    const u = itemsRef.current.map(i => i.id === id ? {...i, noteColor: color} : i);
+    itemsRef.current = u; setItems(u); saveItemsNow(u);
+    setNoteColorPanelId(null);
+  };
   const deleteItem = id => {
     pushUndo();
     const nit = itemsRef.current.filter(i => i.id !== id);
@@ -1465,6 +1586,14 @@ ${rows}
   const updateNoteTitle   = (id, v) => { const u = itemsRef.current.map(i => i.id === id ? { ...i, title:   v } : i); itemsRef.current = u; setItems(u); };
   const updateNoteInMemory= (id, v) => { const u = itemsRef.current.map(i => i.id === id ? { ...i, inMemory:v } : i); itemsRef.current = u; setItems(u); saveItemsNow(u); };
   const saveLabel      = ()      => saveItemsNow(itemsRef.current);
+
+  const copyPhotoToProject = async (photoId, targetPid) => {
+    setCopyToMenu(null);
+    try {
+      await api.post(`/api/projects/${pidRef.current}/photos/${photoId}/copy-to/${targetPid}`, {});
+      showToast(t('photoCopied'));
+    } catch { showToast('Error', true); }
+  };
 
   const fetchLinkPreview = async (noteId, rawUrl) => {
     const url = rawUrl.trim();
@@ -1949,20 +2078,37 @@ ${rows}
                 {[...items].sort((a, b) => (a.z||0)-(b.z||0)).map(item => {
                   if (item.type === 'note') return (
                     <div key={item.id} className={`nitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}${item.inMemory?' inmem':''}`}
-                      style={{ left: item.x, top: item.y, width: item.w, height: item.h || 150, zIndex: item.z||1 }}
+                      style={{ left: item.x, top: item.y, width: item.w, height: item.h || 150, zIndex: item.z||1, ...(item.freeRot ? {transform:`rotate(${item.freeRot}deg)`,transformOrigin:'center center'} : {}) }}
                       onPointerDown={e => onItemPD(e, item.id)}
                       onClick={e => { e.stopPropagation(); if (wasDragged.current) { wasDragged.current = false; return; } if (!e.shiftKey) { selRef.current = [item.id]; setSel([item.id]); } }}
                     >
+                      <div className="rot-handle" onPointerDown={e => onFreeRotatePD(e, item.id)}/>
                       <div className="bitem-bar">
                         <button className="ibc fwd" title={t('bringFwdBtn')} onClick={e => { e.stopPropagation(); bringFwd(item.id); }}>↑</button>
                         <button className="ibc del" title={t('deleteBtn')}   onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
+                        <button className="ibc" title={t('noteColor')}
+                          onClick={e => { e.stopPropagation(); setNoteColorPanelId(id => id === item.id ? null : item.id); }}
+                          style={{background: item.noteColor ? NOTE_COLOR_VALS[item.noteColor]?.[0] : undefined, color: item.noteColor ? 'rgba(255,255,255,.85)' : undefined}}>■</button>
                         <button className="ibc" title={t(item.inMemory ? 'noteExcludeMemBtn' : 'noteInMemoryBtn')}
                           style={{color: item.inMemory ? 'var(--acc)' : undefined}}
                           onClick={e => { e.stopPropagation(); updateNoteInMemory(item.id, !item.inMemory); }}>
                           {item.inMemory ? <SvgMemOn/> : <SvgMemOff/>}
                         </button>
                       </div>
-                      <div className="nitem-body">
+                      {noteColorPanelId === item.id && (
+                        <div className="props-panel" style={{top: 'calc(100% + 2px)'}} onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
+                          <div className="props-lbl" style={{marginBottom:6}}>{t('noteColor')}</div>
+                          <div style={{display:'flex',gap:5,alignItems:'center'}}>
+                            <div title="Default" onClick={() => updateNoteColor(item.id, null)}
+                              style={{width:14,height:14,borderRadius:'50%',cursor:'pointer',background:'var(--acc-dim)',border:`2px solid ${!item.noteColor?'var(--acc)':'var(--border2)'}`}}/>
+                            {NOTE_COLORS.map(c => (
+                              <div key={c} title={c} onClick={() => updateNoteColor(item.id, c)}
+                                style={{width:14,height:14,borderRadius:'50%',cursor:'pointer',background:NOTE_COLOR_VALS[c][0],border:`2px solid ${item.noteColor===c?'var(--acc)':'transparent'}`}}/>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      <div className="nitem-body" style={item.noteColor && NOTE_COLOR_VALS[item.noteColor] ? {background:NOTE_COLOR_VALS[item.noteColor][1],borderLeftColor:NOTE_COLOR_VALS[item.noteColor][0]} : undefined}>
                         <input className="nitem-title" value={item.title||''} placeholder={t('noteTitlePh')}
                           onChange={e => updateNoteTitle(item.id, e.target.value)}
                           onFocus={pushUndo}
@@ -2031,12 +2177,13 @@ ${rows}
                   const offY = (displayH - naturalH) / 2;
                   return (
                     <div key={item.id} className={`bitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}${item.locked?' locked':''}`}
-                      style={{ left: item.x, top: item.y, width: item.w, zIndex: item.z||1 }}
+                      style={{ left: item.x, top: item.y, width: item.w, zIndex: item.z||1, ...(item.freeRot ? {transform:`rotate(${item.freeRot}deg)`,transformOrigin:'center center'} : {}) }}
                       onPointerDown={e => onItemPD(e, item.id)}
                       onClick={e => { e.stopPropagation(); if (wasDragged.current) { wasDragged.current = false; return; } if (!e.shiftKey) { selRef.current = [item.id]; setSel([item.id]); } }}
                       onMouseEnter={() => photo && showPhotoInfo(photo, 'board', `/photos/${pid}/${photo.id}/thumb`, item.w, displayH)}
                       onMouseLeave={clearHoverInfo}
                     >
+                      {!item.locked && <div className="rot-handle" onPointerDown={e => onFreeRotatePD(e, item.id)}/>}
                       <div className="bitem-bar">
                         <button className="ibc rot" title={t('rotateBtn')}  onClick={e => { e.stopPropagation(); rotateItem(item.id); }}>↻</button>
                         <button className="ibc fwd" title={t('bringFwdBtn')} onClick={e => { e.stopPropagation(); bringFwd(item.id); }}>↑</button>
@@ -2172,6 +2319,8 @@ ${rows}
                             >
                               <img src={`/photos/${pid}/${p.id}/thumb`} alt={p.name}/>
                               <button className="thumb-x" onClick={e => { e.stopPropagation(); deletePhoto(p.id); }}>×</button>
+                              <button className="thumb-cp" title={t('copyToProject')}
+                                onClick={e => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setCopyToMenu({ photoId: p.id, x: r.left, y: r.top }); }}>→</button>
                             </div>
                           );
                         })
@@ -2201,6 +2350,21 @@ ${rows}
       {resizeDim && <div className="resize-tip" style={{left:resizeDim.x, top:resizeDim.y}}>{resizeDim.label}</div>}
       {uploading && <div className="uploading-bar" style={{bottom: libOpen ? 128 : 30}}/>}
       {toast && <div className={`toast${toast.err?' err':''}`} style={{bottom: (libOpen ? 128 : 30) + 8}}>{toast.msg}</div>}
+
+      {copyToMenu && (
+        <>
+          <div style={{position:'fixed',inset:0,zIndex:599}} onClick={() => setCopyToMenu(null)}/>
+          <div className="cp-menu" style={{left:copyToMenu.x, top:copyToMenu.y - 4, transform:'translateY(-100%)'}}>
+            <div className="cp-menu-hd">{t('copyToProject')}</div>
+            {projects.filter(p => p.id !== pid).length === 0
+              ? <div className="cp-menu-empty">{t('noOtherProjects')}</div>
+              : projects.filter(p => p.id !== pid).map(proj => (
+                <div key={proj.id} className="cp-menu-item" onClick={() => copyPhotoToProject(copyToMenu.photoId, proj.id)}>{proj.name}</div>
+              ))
+            }
+          </div>
+        </>
+      )}
 
       {/* ── MODALS ── */}
       {modal === 'project' && (

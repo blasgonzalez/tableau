@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.3.4] — 2026-05-13
+### Added
+- Copy/paste elements: Ctrl+C copies the selection, Ctrl+V pastes with a 20 px offset; works across boards within the same project
+- Duplicate elements: Ctrl+D duplicates the current selection in place (+20 px)
+- Free rotation: drag the circular handle that appears above each photo or note to rotate it to any angle; Shift snaps to 15° increments; the ↻ button still rotates in exact 90° steps
+- Note background color: the ■ button on each note opens a picker with 6 colors (yellow, green, blue, pink, purple, orange)
+- Copy photo to another project: the → button on each library thumbnail opens a menu to duplicate the photo into another project without moving the original
+
+---
+
 ## [1.3.3] — 2026-05-13
 ### Added
 - Keyboard shortcuts: Del/Backspace deletes selected elements, Ctrl+A selects all on the board, arrow keys nudge selection 1 px (Shift+arrows 10 px)

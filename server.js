@@ -271,6 +271,25 @@ app.delete('/api/projects/:pid/photos/:id', (req, res) => {
   res.json({ ok: true });
 });
 
+app.post('/api/projects/:pid/photos/:photoId/copy-to/:targetPid', (req, res) => {
+  const { pid, photoId, targetPid } = req.params;
+  const srcPhotos = readJSON(photosMeta(pid));
+  const photo = srcPhotos.find(p => p.id === photoId);
+  if (!photo) return res.status(404).json({ error: 'Foto no encontrada' });
+  const projects = readJSON(projsFile());
+  if (!projects.find(p => p.id === targetPid)) return res.status(404).json({ error: 'Proyecto destino no encontrado' });
+  const nid = newId(12);
+  try {
+    fs.copyFileSync(path.join(photoDir(pid), `${photoId}.jpg`),       path.join(photoDir(targetPid), `${nid}.jpg`));
+    fs.copyFileSync(path.join(photoDir(pid), `${photoId}_thumb.jpg`), path.join(photoDir(targetPid), `${nid}_thumb.jpg`));
+  } catch (e) { return res.status(500).json({ error: e.message }); }
+  const dstPhotos = readJSON(photosMeta(targetPid));
+  const newPhoto = { ...photo, id: nid };
+  dstPhotos.push(newPhoto);
+  writeJSON(photosMeta(targetPid), dstPhotos);
+  res.json(newPhoto);
+});
+
 // ── Serve photos ──────────────────────────────────────────────────────────────
 app.get('/photos/:pid/:id', (req, res) => {
   const file = path.join(photoDir(req.params.pid), `${req.params.id}.jpg`);
@@ -317,17 +336,18 @@ app.get('/api/boards/:pid/:bid/export', async (req, res) => {
     if (!fs.existsSync(pFile)) return null;
 
     const rot       = item.rot || 0;
+    const freeRot   = item.freeRot || 0;
     const isSwapped = rot % 180 !== 0;
     // pre-rotation dimensions that produce the correct post-rotation canvas size
     const resizeW   = isSwapped ? Math.round(item.w * photo.w / photo.h) : item.w;
     const resizeH   = isSwapped ? item.w : Math.round(item.w * photo.h / photo.w);
     const displayH  = isSwapped ? resizeW : resizeH;  // actual canvas height
 
-    const imgBuf = await sharp(pFile)
+    let sharpChain = sharp(pFile)
       .resize(resizeW, resizeH, { fit: 'fill' })
-      .rotate(rot, { background: { r: 255, g: 255, b: 255 } })
-      .jpeg({ quality: 92 })
-      .toBuffer();
+      .rotate(rot, { background: { r: 255, g: 255, b: 255 } });
+    if (freeRot) sharpChain = sharpChain.rotate(freeRot, { background: { r: 255, g: 255, b: 255 } });
+    const imgBuf = await sharpChain.jpeg({ quality: 92 }).toBuffer();
 
     const { width: rw, height: rh } = await sharp(imgBuf).metadata();
     const cx = item.x + item.w   / 2;
