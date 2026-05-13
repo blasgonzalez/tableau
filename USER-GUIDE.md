@@ -70,6 +70,7 @@ Click **+ Upload** in the library header or drag image files directly onto the c
 |---|---|
 | **⇅** | Sort by import date (default) or name A→Z |
 | **Unplaced** filter | Show only photos not placed on any board |
+| **→** (on hover) | Copy the photo to another project without removing it from the current one |
 
 ### Info panel
 
@@ -101,7 +102,8 @@ Hover over a photo on the canvas to reveal its controls:
 |---|---|
 | Drag the photo | Move |
 | Orange handle (bottom-right corner) | Resize |
-| **↻** | Rotate 90° |
+| **↻** (click) | Rotate 90° |
+| **↻** (drag) | Free rotation to any angle · Shift snaps to 15° increments |
 | **↑** | Bring forward (raise z-order) |
 | **▣** | Set frame thickness |
 | **🔒** | Lock / unlock (prevents accidental moves) |
@@ -140,6 +142,7 @@ Click and drag on empty canvas space to select multiple photos. An alignment too
 Click **+ Note** in the top bar to add a free-text note to the canvas. Notes behave like photos — they can be moved, resized, and locked.
 
 - **Title and body** — type directly in the note
+- **Color** — the **■** button opens a picker with 6 background colors (yellow, green, blue, pink, purple, orange) plus the default
 - **Link** — assign a URL to show a link preview (title, domain, favicon)
 - **Include in report** — toggle the 📄 button to include or exclude the note from the project report
 
@@ -227,6 +230,13 @@ Close the browser tab. The server detects this and shuts down automatically with
 |---|---|
 | **Ctrl + Z** | Undo |
 | **Ctrl + Shift + Z** / **Ctrl + Y** | Redo |
+| **Ctrl + C** | Copy selected elements |
+| **Ctrl + V** | Paste (offset by 20 px) |
+| **Ctrl + D** | Duplicate selected elements |
+| **Ctrl + A** | Select all elements on the board |
 | **Ctrl + scroll** | Zoom in / out |
 | **Ctrl + +** / **Ctrl + −** | Zoom in / out |
 | **Ctrl + 0** | Fit to width (variable board) / fit board (fixed board) |
+| **Del** / **Backspace** | Delete selected elements |
+| **Arrow keys** | Nudge selection 1 px |
+| **Shift + Arrow keys** | Nudge selection 10 px |

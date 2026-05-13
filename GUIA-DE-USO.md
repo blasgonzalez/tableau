@@ -70,6 +70,7 @@ Haz clic en **+ Subir** en la cabecera de la librería o arrastra archivos de im
 |---|---|
 | **⇅** | Ordenar por fecha de importación (predeterminado) o nombre A→Z |
 | Filtro **Sin colocar** | Mostrar solo las fotos que no están en ningún tablero |
+| **→** (al pasar el ratón) | Copiar la foto a otro proyecto sin moverla del proyecto actual |
 
 ### Panel de información
 
@@ -101,7 +102,8 @@ Pasa el ratón sobre una foto en el canvas para ver sus controles:
 |---|---|
 | Arrastrar la foto | Mover |
 | Asa naranja (esquina inferior derecha) | Redimensionar |
-| **↻** | Rotar 90° |
+| **↻** (clic) | Rotar 90° |
+| **↻** (arrastrar) | Rotación libre a cualquier ángulo · Shift encaja en múltiplos de 15° |
 | **↑** | Traer al frente (subir orden Z) |
 | **▣** | Ajustar grosor del marco |
 | **🔒** | Bloquear / desbloquear (evita movimientos accidentales) |
@@ -140,6 +142,7 @@ Haz clic y arrastra sobre el canvas para seleccionar varias fotos. Aparece una b
 Haz clic en **+ Nota** en la barra superior para añadir una nota de texto libre al canvas. Las notas se comportan como fotos — se pueden mover, redimensionar y bloquear.
 
 - **Título y cuerpo** — escribe directamente en la nota
+- **Color** — el botón **■** abre un selector con 6 colores de fondo (amarillo, verde, azul, rosa, morado, naranja) más el predeterminado
 - **Enlace** — asigna una URL para mostrar una vista previa del enlace (título, dominio, favicon)
 - **Incluir en informe** — activa o desactiva el botón 📄 para incluir o excluir la nota del informe del proyecto
 
@@ -227,6 +230,13 @@ Cierra la pestaña del navegador. El servidor detecta el cierre y se apaga autom
 |---|---|
 | **Ctrl + Z** | Deshacer |
 | **Ctrl + Mayús + Z** / **Ctrl + Y** | Rehacer |
+| **Ctrl + C** | Copiar elementos seleccionados |
+| **Ctrl + V** | Pegar (desplazado 20 px) |
+| **Ctrl + D** | Duplicar elementos seleccionados |
+| **Ctrl + A** | Seleccionar todos los elementos del tablero |
 | **Ctrl + rueda** | Ampliar / reducir zoom |
 | **Ctrl + +** / **Ctrl + −** | Ampliar / reducir zoom |
 | **Ctrl + 0** | Ajustar al ancho (tablero variable) / ajustar tablero (tablero fijo) |
+| **Supr** / **Retroceso** | Eliminar elementos seleccionados |
+| **Flechas** | Mover selección 1 px |
+| **Mayús + Flechas** | Mover selección 10 px |
