@@ -297,9 +297,8 @@ select.inp{cursor:pointer;appearance:none;padding-right:28px;background-image:ur
 /* ── TOAST ── */
 .toast{position:fixed;bottom:136px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--border2);padding:9px 20px;font-size:11px;letter-spacing:.5px;color:var(--sub);z-index:900;pointer-events:none}
 .toast.err{color:var(--danger);border-color:var(--danger)}
-/* ── FREE ROTATION HANDLE ── */
-.rot-handle{position:absolute;top:calc(-22px / var(--canvas-zoom,1));left:calc(50% - 7px / var(--canvas-zoom,1));width:14px;height:14px;border-radius:50%;background:var(--acc-dim);border:1.5px solid var(--acc);cursor:crosshair;opacity:0;transition:opacity .12s;zoom:calc(1 / var(--canvas-zoom,1));z-index:260}
-.bitem:hover .rot-handle,.bitem.sel .rot-handle,.nitem:hover .rot-handle,.nitem.sel .rot-handle{opacity:1}
+/* ── FREE ROTATION: cursor hint on the rotate button while dragging ── */
+.ibc.rot{cursor:crosshair}
 /* ── NOTE COLORS ── */
 .cp-menu{position:fixed;background:var(--panel);border:1px solid var(--border2);z-index:600;min-width:160px;box-shadow:0 4px 20px rgba(0,0,0,.5)}
 .cp-menu-hd{padding:5px 12px;font-size:7px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border)}
@@ -737,6 +736,7 @@ function App() {
   const boardZoom       = useRef({});
   const importInputRef  = useRef(null);
   const clipboardRef    = useRef([]);
+  const rotBtnDraggedRef = useRef(false);
 
   useEffect(() => { itemsRef.current         = items;         }, [items]);
   useEffect(() => { pidRef.current           = pid;           }, [pid]);
@@ -1528,7 +1528,7 @@ ${rows}
   };
 
   const onFreeRotatePD = (e, itemId) => {
-    e.stopPropagation(); e.preventDefault();
+    e.stopPropagation();
     const it = itemsRef.current.find(i => i.id === itemId);
     if (it?.locked) return;
     const beforeRot = itemsRef.current.map(i => ({...i}));
@@ -1536,10 +1536,15 @@ ${rows}
     const rect = el.getBoundingClientRect();
     const cx = rect.left + rect.width / 2;
     const cy = rect.top + rect.height / 2;
-    const startAngle = Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI;
+    const sx = e.clientX, sy = e.clientY;
+    const startAngle = Math.atan2(sy - cy, sx - cx) * 180 / Math.PI;
     const startFreeRot = it.freeRot || 0;
+    let moved = false;
     let finalRot = startFreeRot;
     const onMM = e => {
+      const dx = e.clientX - sx, dy = e.clientY - sy;
+      if (!moved && dx*dx + dy*dy < 16) return;
+      if (!moved) { moved = true; rotBtnDraggedRef.current = true; }
       const cur = Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI;
       const delta = cur - startAngle;
       finalRot = e.shiftKey
@@ -1552,6 +1557,7 @@ ${rows}
       window.removeEventListener('pointermove', onMM);
       window.removeEventListener('pointerup', onMU);
       setResizeDim(null);
+      if (!moved) return;
       const nit = itemsRef.current.map(i => i.id === itemId ? {...i, freeRot: finalRot} : i);
       undoStack.current = [...undoStack.current.slice(-49), beforeRot];
       redoStack.current = [];
@@ -2082,7 +2088,6 @@ ${rows}
                       onPointerDown={e => onItemPD(e, item.id)}
                       onClick={e => { e.stopPropagation(); if (wasDragged.current) { wasDragged.current = false; return; } if (!e.shiftKey) { selRef.current = [item.id]; setSel([item.id]); } }}
                     >
-                      <div className="rot-handle" onPointerDown={e => onFreeRotatePD(e, item.id)}/>
                       <div className="bitem-bar">
                         <button className="ibc fwd" title={t('bringFwdBtn')} onClick={e => { e.stopPropagation(); bringFwd(item.id); }}>↑</button>
                         <button className="ibc del" title={t('deleteBtn')}   onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
@@ -2183,9 +2188,10 @@ ${rows}
                       onMouseEnter={() => photo && showPhotoInfo(photo, 'board', `/photos/${pid}/${photo.id}/thumb`, item.w, displayH)}
                       onMouseLeave={clearHoverInfo}
                     >
-                      {!item.locked && <div className="rot-handle" onPointerDown={e => onFreeRotatePD(e, item.id)}/>}
                       <div className="bitem-bar">
-                        <button className="ibc rot" title={t('rotateBtn')}  onClick={e => { e.stopPropagation(); rotateItem(item.id); }}>↻</button>
+                        <button className="ibc rot" title={t('rotateBtn')}
+                          onPointerDown={e => { e.stopPropagation(); if (!item.locked) onFreeRotatePD(e, item.id); }}
+                          onClick={e => { e.stopPropagation(); if (rotBtnDraggedRef.current) { rotBtnDraggedRef.current = false; return; } rotateItem(item.id); }}>↻</button>
                         <button className="ibc fwd" title={t('bringFwdBtn')} onClick={e => { e.stopPropagation(); bringFwd(item.id); }}>↑</button>
                         <button className="ibc del" title={t('deleteBtn')}   onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
                         <button className="ibc" title={t('frameLabel')} onClick={e => { e.stopPropagation(); setPropsPanelId(id => id === item.id ? null : item.id); }}>▣</button>
