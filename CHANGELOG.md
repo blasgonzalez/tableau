@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.3.2] — 2026-05-13
+### Añadido
+- Filtro "Sin colocar" en la cabecera de la biblioteca: muestra solo las fotos que no están en ningún tablero del proyecto; el contador cambia a N/Total al activarlo; estado persistente entre sesiones
+
+### Mejorado
+- El botón "+ Subir foto" se ha movido a la cabecera de la biblioteca, junto al resto de controles
+
+---
+
 ## [1.3.1] — 2026-05-12
 ### Añadido
 - Etiquetas de foto multilinea: clic en la etiqueta abre una ventana emergente con área de texto; × descarta los cambios, Guardar los confirma; la ventana recuerda su tamaño por foto

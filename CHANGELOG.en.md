@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.3.2] — 2026-05-13
+### Added
+- "Unplaced" filter in the library header: shows only photos not placed on any board in the project; counter changes to N/Total when active; state persists across sessions
+
+### Improved
+- The upload button has been moved to the library header, alongside the other library controls
+
+---
+
 ## [1.3.1] — 2026-05-12
 ### Added
 - Multiline photo labels: clicking the label opens a popup editor; × discards changes, Save confirms; window size is remembered per photo

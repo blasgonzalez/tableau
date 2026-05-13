@@ -58,11 +58,11 @@
     "id": "mou35og1zyj",
     "type": "note",
     "text": "Ahora se pueden añadir notas en el tablero.\nEn estas notas se puede añadir también un enlace web:\n",
-    "x": 50,
-    "y": 641.3333333333334,
+    "x": 75,
+    "y": 566.3333333333334,
     "w": 324,
     "h": 298,
-    "z": 234,
+    "z": 237,
     "link": {
       "url": "https://blasgonzalezfotografia.com/",
       "domain": "blasgonzalezfotografia.com",
@@ -73,13 +73,13 @@
     "inMemory": true
   },
   {
-    "id": "mp2jk2jhe05",
-    "photoId": "8febc52d726d",
-    "x": 1225,
-    "y": 584.1383093999698,
-    "w": 176,
-    "z": 233,
-    "label": "xxx\nesta es una forma \nridicula de introducir\n",
+    "id": "mp32a4a9q5g",
+    "photoId": "a291a63819ee",
+    "x": 1425,
+    "y": 100,
+    "w": 320,
+    "z": 236,
+    "label": "",
     "rot": 0,
     "frame": 0
   }
