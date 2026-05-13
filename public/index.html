@@ -122,7 +122,7 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .bitem{position:absolute;cursor:grab;user-select:none}
 .bitem:active{cursor:grabbing}
 .bitem.locked{cursor:default}
-.lock-badge{position:absolute;top:calc(5px / var(--canvas-zoom,1));left:calc(5px / var(--canvas-zoom,1));width:calc(13px / var(--canvas-zoom,1));height:calc(15px / var(--canvas-zoom,1));display:flex;align-items:center;justify-content:center;opacity:.8;pointer-events:none;z-index:15;color:var(--text)}
+.lock-badge{position:absolute;top:calc(5px / var(--canvas-zoom,1));left:calc(5px / var(--canvas-zoom,1));width:calc(18px / var(--canvas-zoom,1));height:calc(18px / var(--canvas-zoom,1));display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:15;color:#fff;background:rgba(0,0,0,0.55);border-radius:calc(3px / var(--canvas-zoom,1))}
 .lock-badge svg{width:100%;height:100%}
 .bitem-img{display:block;pointer-events:none}
 .bitem-img-wrap{position:relative;overflow:hidden}
@@ -206,6 +206,10 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .lib-sort{font-size:9px;background:var(--surf);border:1px solid var(--border2);color:var(--dim);padding:2px 5px;cursor:pointer;font-family:'IBM Plex Mono',monospace;letter-spacing:.3px;outline:none}
 .lib-sort:focus{border-color:var(--acc-dim)}
 .lib-sort option{background:var(--panel)}
+.lib-search{width:100px;flex-shrink:0;background:transparent;border:none;border-bottom:1px solid var(--border2);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:9px;padding:1px 4px;outline:none;letter-spacing:.3px}
+.lib-search:focus{border-bottom-color:var(--acc-dim)}
+.lib-search::placeholder{color:var(--muted)}
+.lib-thumb-slider{width:48px;accent-color:var(--acc-dim);cursor:pointer;flex-shrink:0}
 .lib-filter{font-size:9px;background:var(--surf);border:1px solid var(--border2);color:var(--dim);padding:2px 6px;cursor:pointer;font-family:'IBM Plex Mono',monospace;letter-spacing:.3px;outline:none;transition:all .15s}
 .lib-filter:hover{border-color:var(--acc-dim);color:var(--text)}
 .lib-filter.active{background:var(--acc);color:var(--bg);border-color:var(--acc)}
@@ -433,7 +437,7 @@ const I18N = {
     noteTitlePh:'título…', noteInMemoryBtn:'Incluir en memoria', noteExcludeMemBtn:'Excluir de memoria', notesSectionTitle:'Notas',
     renameBtn:'Renombrar',
     projectPhotosL1:'Fotos del', projectPhotosL2:'proyecto',
-    libTitle:'Biblioteca', sortImported:'Importación', sortName:'Nombre A→Z', filterPending:'Sin colocar',
+    libTitle:'Biblioteca', sortImported:'Importación', sortName:'Nombre A→Z', filterPending:'Sin colocar', libSearchPh:'buscar…',
     uploadHint:'Sube fotos con + Subir →', dragFilesHint:'o arrastra archivos al canvas',
     alreadyInTableau:'ya en el tableau',
     newProjectTitle:'Nuevo proyecto', projectNamePh:'Nombre del proyecto…',
@@ -517,7 +521,7 @@ const I18N = {
     noteTitlePh:'title…', noteInMemoryBtn:'Include in report', noteExcludeMemBtn:'Exclude from report', notesSectionTitle:'Notes',
     renameBtn:'Rename',
     projectPhotosL1:'Project', projectPhotosL2:'photos',
-    libTitle:'Library', sortImported:'Import date', sortName:'Name A→Z', filterPending:'Unplaced',
+    libTitle:'Library', sortImported:'Import date', sortName:'Name A→Z', filterPending:'Unplaced', libSearchPh:'search…',
     uploadHint:'Upload photos with + Upload →', dragFilesHint:'or drag files to canvas',
     alreadyInTableau:'already in tableau',
     newProjectTitle:'New project', projectNamePh:'Project name…',
@@ -630,6 +634,8 @@ function App() {
   const [libOpen,       setLibOpen]       = useState(() => localStorage.getItem('libOpen') !== 'false');
   const [photoSort,     setPhotoSort]     = useState(() => localStorage.getItem('photoSort') || 'imported');
   const [photoFilter,   setPhotoFilter]   = useState(() => localStorage.getItem('photoFilter') || 'all');
+  const [libSearch,     setLibSearch]     = useState('');
+  const [thumbSize,     setThumbSize]     = useState(() => parseInt(localStorage.getItem('thumbSize') || '84'));
   const [labelEditId,   setLabelEditId]   = useState(null);
   const labelEditOrigRef = useRef(null);
   const [renaming,      setRenaming]      = useState(null);
@@ -688,6 +694,7 @@ function App() {
   const wrapRef         = useRef(null);
   const undoStack       = useRef([]);
   const redoStack       = useRef([]);
+  const wasDragged      = useRef(false);
   const boardZoom       = useRef({});
   const importInputRef  = useRef(null);
 
@@ -739,6 +746,8 @@ function App() {
     });
   }, [pid]);
 
+  useEffect(() => { setLibSearch(''); }, [pid]);
+
   useEffect(() => {
     if (!bid || !pid) { setItems([]); itemsRef.current = []; return; }
     api.get(`/api/boards/${pid}/${bid}/items`).then(it => {
@@ -786,18 +795,44 @@ function App() {
 
   useEffect(() => {
     const onKey = e => {
-      if (!e.ctrlKey && !e.metaKey) return;
-      if (e.key === '+' || e.key === '=') { e.preventDefault(); zoomStep(1); }
-      if (e.key === '-') { e.preventDefault(); zoomStep(-1); }
-      if (e.key === '0') { e.preventDefault(); boardPxRef.current ? fitBoard() : fitWidth(); }
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key === '+' || e.key === '=') { e.preventDefault(); zoomStep(1); }
+        if (e.key === '-') { e.preventDefault(); zoomStep(-1); }
+        if (e.key === '0') { e.preventDefault(); boardPxRef.current ? fitBoard() : fitWidth(); }
+      }
       const tag = document.activeElement?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
-      if (e.key === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); }
-      if (e.key === 'y') { e.preventDefault(); redo(); }
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); }
+        if (e.key === 'y') { e.preventDefault(); redo(); }
+        if (e.key === 'a') { e.preventDefault(); const ids = itemsRef.current.map(i => i.id); selRef.current = ids; setSel(ids); }
+      }
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selRef.current.length) {
+        e.preventDefault();
+        pushUndo();
+        const nit = itemsRef.current.filter(i => !selRef.current.includes(i.id));
+        setItems(nit); itemsRef.current = nit;
+        selRef.current = []; setSel([]);
+        saveItemsNow(nit);
+      }
+      if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key) && selRef.current.length) {
+        e.preventDefault();
+        const step = e.shiftKey ? 10 : 1;
+        const dx = e.key === 'ArrowLeft' ? -step : e.key === 'ArrowRight' ? step : 0;
+        const dy = e.key === 'ArrowUp' ? -step : e.key === 'ArrowDown' ? step : 0;
+        if (!e.repeat) pushUndo();
+        const nit = itemsRef.current.map(i =>
+          selRef.current.includes(i.id) && !i.locked
+            ? { ...i, x: (i.x || 0) + dx, y: (i.y || 0) + dy }
+            : i
+        );
+        setItems(nit); itemsRef.current = nit;
+        saveItemsNow(nit);
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [zoomStep, fitBoard, undo, redo]);
+  }, [zoomStep, fitBoard, undo, redo, pushUndo, saveItemsNow]);
 
   const saveItemsNow = useCallback((its) => {
     const p = pidRef.current, b = bidRef.current;
@@ -1357,6 +1392,7 @@ ${rows}
         return { ...i, x, y };
       });
       if (ldx !== 0 || ldy !== 0) {
+        wasDragged.current = true;
         undoStack.current = [...undoStack.current.slice(-49), beforeDrag];
         redoStack.current = [];
       }
@@ -1516,7 +1552,7 @@ ${rows}
     const anchor = itemsRef.current.find(i => i.id === ids[0]);
     if (!anchor) return;
     const anchorH = getItemH(anchor);
-    const others  = selIt.filter(i => i.id !== ids[0]);
+    const others  = selIt.filter(i => i.id !== ids[0] && !i.locked);
     let nit = [...itemsRef.current];
     const upd = (id, patch) => { nit = nit.map(i => i.id === id ? { ...i, ...patch } : i); };
     switch (type) {
@@ -1528,8 +1564,8 @@ ${rows}
       case 'cv':     others.forEach(i => upd(i.id, {y: Math.round(anchor.y + anchorH/2 - getItemH(i)/2)})); break;
       case 'eqw':    others.forEach(i => upd(i.id, {w: anchor.w})); break;
       case 'dh': {
-        if (selIt.length < 3) return;
-        const sorted = [...selIt].sort((a,b)=>a.x-b.x);
+        const sorted = [...selIt].filter(i => !i.locked).sort((a,b)=>a.x-b.x);
+        if (sorted.length < 3) return;
         const span = sorted[sorted.length-1].x + sorted[sorted.length-1].w - sorted[0].x;
         const gap  = (span - sorted.reduce((s,i)=>s+i.w,0)) / (sorted.length-1);
         let cx = sorted[0].x + sorted[0].w + gap;
@@ -1537,8 +1573,8 @@ ${rows}
         break;
       }
       case 'dv': {
-        if (selIt.length < 3) return;
-        const sorted = [...selIt].sort((a,b)=>a.y-b.y);
+        const sorted = [...selIt].filter(i => !i.locked).sort((a,b)=>a.y-b.y);
+        if (sorted.length < 3) return;
         const span = sorted[sorted.length-1].y + getItemH(sorted[sorted.length-1]) - sorted[0].y;
         const gap  = (span - sorted.reduce((s,i)=>s+getItemH(i),0)) / (sorted.length-1);
         let cy = sorted[0].y + getItemH(sorted[0]) + gap;
@@ -1915,7 +1951,7 @@ ${rows}
                     <div key={item.id} className={`nitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}${item.inMemory?' inmem':''}`}
                       style={{ left: item.x, top: item.y, width: item.w, height: item.h || 150, zIndex: item.z||1 }}
                       onPointerDown={e => onItemPD(e, item.id)}
-                      onClick={e => { e.stopPropagation(); if (!e.shiftKey) { selRef.current = [item.id]; setSel([item.id]); } }}
+                      onClick={e => { e.stopPropagation(); if (wasDragged.current) { wasDragged.current = false; return; } if (!e.shiftKey) { selRef.current = [item.id]; setSel([item.id]); } }}
                     >
                       <div className="bitem-bar">
                         <button className="ibc fwd" title={t('bringFwdBtn')} onClick={e => { e.stopPropagation(); bringFwd(item.id); }}>↑</button>
@@ -1997,7 +2033,7 @@ ${rows}
                     <div key={item.id} className={`bitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}${item.locked?' locked':''}`}
                       style={{ left: item.x, top: item.y, width: item.w, zIndex: item.z||1 }}
                       onPointerDown={e => onItemPD(e, item.id)}
-                      onClick={e => { e.stopPropagation(); if (!e.shiftKey) { selRef.current = [item.id]; setSel([item.id]); } }}
+                      onClick={e => { e.stopPropagation(); if (wasDragged.current) { wasDragged.current = false; return; } if (!e.shiftKey) { selRef.current = [item.id]; setSel([item.id]); } }}
                       onMouseEnter={() => photo && showPhotoInfo(photo, 'board', `/photos/${pid}/${photo.id}/thumb`, item.w, displayH)}
                       onMouseLeave={clearHoverInfo}
                     >
@@ -2074,9 +2110,10 @@ ${rows}
               const sortedPhotos = photoSort === 'name'
                 ? [...photos].sort((a, b) => a.name.localeCompare(b.name))
                 : photos;
-              const displayedPhotos = photoFilter === 'pending'
+              const displayedPhotos = (photoFilter === 'pending'
                 ? sortedPhotos.filter(p => photoBoardNames(p.id).length === 0)
-                : sortedPhotos;
+                : sortedPhotos)
+                .filter(p => !libSearch || p.name.toLowerCase().includes(libSearch.toLowerCase()));
               const toggleLib = () => { const v = !libOpen; setLibOpen(v); localStorage.setItem('libOpen', v); };
               const toggleFilter = (e) => { e.stopPropagation(); const v = photoFilter === 'pending' ? 'all' : 'pending'; setPhotoFilter(v); localStorage.setItem('photoFilter', v); };
               return (
@@ -2084,9 +2121,12 @@ ${rows}
                 <div className="lib-header" onClick={toggleLib}>
                   <button className="lib-toggle-btn" onClick={e => { e.stopPropagation(); toggleLib(); }} title={libOpen ? t('collapsePanel') : t('openPanel')}>{libOpen ? '▼' : '▲'}</button>
                   <span className="lib-title">{t('libTitle')}</span>
-                  <span className="lib-count">{photoFilter === 'pending' ? `${displayedPhotos.length}/${photos.length}` : photos.length}</span>
+                  <span className="lib-count">{displayedPhotos.length < photos.length ? `${displayedPhotos.length}/${photos.length}` : photos.length}</span>
                   <span className="lib-spacer"/>
                   {pid && <>
+                    <input className="lib-search" type="text" placeholder={t('libSearchPh')}
+                      value={libSearch} onClick={e => e.stopPropagation()}
+                      onChange={e => setLibSearch(e.target.value)}/>
                     <button className={`lib-filter${photoFilter === 'pending' ? ' active' : ''}`} onClick={toggleFilter} title={t('filterPending')}>⊘ {t('filterPending')}</button>
                     <span className="lib-sort-icon">⇅</span>
                     <select className="lib-sort" value={photoSort}
@@ -2095,6 +2135,11 @@ ${rows}
                       <option value="imported">{t('sortImported')}</option>
                       <option value="name">{t('sortName')}</option>
                     </select>
+                    <input type="range" min="48" max="160" value={thumbSize}
+                      className="lib-thumb-slider"
+                      onClick={e => e.stopPropagation()}
+                      onChange={e => { const v = parseInt(e.target.value); setThumbSize(v); localStorage.setItem('thumbSize', v); }}
+                    />
                     <input type="file" accept="image/*" multiple style={{display:'none'}} id="tb-upload"
                       onChange={e => { uploadFiles(e.target.files); e.target.value = ''; }}
                     />
@@ -2118,6 +2163,7 @@ ${rows}
                           const inBoard = items.some(i => i.photoId === p.id);
                           return (
                             <div key={p.id} className={`thumb${inBoard?' in-board':''}`}
+                              style={{width:thumbSize,height:thumbSize}}
                               draggable onDragStart={e => onLibDS(e, p.id)}
                               onMouseEnter={() => showPhotoInfo(p, inBoard?'board':'proj', `/photos/${pid}/${p.id}/thumb`)}
                               onMouseLeave={clearHoverInfo}

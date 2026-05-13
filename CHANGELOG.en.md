@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.3.3] — 2026-05-13
+### Added
+- Keyboard shortcuts: Del/Backspace deletes selected elements, Ctrl+A selects all on the board, arrow keys nudge selection 1 px (Shift+arrows 10 px)
+- Search by filename in the library header
+- Slider to adjust thumbnail size in the library (48–160 px, persistent)
+
+### Improved
+- Lock badge now shows a dark semi-transparent background and is visible over any photo
+- Locked elements are excluded from all operations: drag, alignment and distribution
+- Dragging a multi-selection no longer resets the selection on release
+
+### Fixed
+- Ctrl+A + drag: all selected elements now move correctly
+
+---
+
 ## [1.3.2] — 2026-05-13
 ### Added
 - "Unplaced" filter in the library header: shows only photos not placed on any board in the project; counter changes to N/Total when active; state persists across sessions

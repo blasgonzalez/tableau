@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.3.3] — 2026-05-13
+### Añadido
+- Atajos de teclado: Supr/Retroceso elimina los elementos seleccionados, Ctrl+A selecciona todo el tablero, flechas mueven la selección 1 px (Shift+flechas 10 px)
+- Búsqueda por nombre en la cabecera de la biblioteca
+- Slider para ajustar el tamaño de las miniaturas en la biblioteca (48–160 px, persistente)
+
+### Mejorado
+- El icono de candado ahora muestra fondo oscuro semitransparente y es visible sobre cualquier foto
+- Los elementos bloqueados quedan excluidos de todas las operaciones: arrastre, alineación y distribución
+- Arrastrar una selección múltiple ya no resetea la selección al soltar
+
+### Corregido
+- Ctrl+A + arrastrar: todos los elementos seleccionados se mueven correctamente
+
+---
+
 ## [1.3.2] — 2026-05-13
 ### Añadido
 - Filtro "Sin colocar" en la cabecera de la biblioteca: muestra solo las fotos que no están en ningún tablero del proyecto; el contador cambia a N/Total al activarlo; estado persistente entre sesiones
