@@ -71,9 +71,16 @@ Haz clic en **+ Subir** en la cabecera de la librería para seleccionar archivos
 
 | Control | Efecto |
 |---|---|
-| **⇅** | Ordenar por fecha de importación (predeterminado) o nombre A→Z |
+| **⇅** | Ordenar por fecha de importación (predeterminado), nombre A→Z, tono o luminosidad |
 | Filtro **Sin colocar** | Mostrar solo las fotos que no están en ningún tablero |
+| **# Etiquetas** | Filtrar por etiquetas de texto libre (ver sección Etiquetas) |
 | **→** (al pasar el ratón) | Copiar la foto a otro proyecto sin moverla del proyecto actual |
+
+**Ordenar por Tono** agrupa las fotos por su dominante cromática (rojo → naranja → verde → azul → morado → neutro al final). **Ordenar por Luminosidad** las ordena de más oscura a más clara. Cada miniatura muestra un pequeño punto circular cuyo color va de negro (foto oscura) a blanco (foto clara).
+
+### Redimensionar la biblioteca
+
+Arrastra la barra separadora entre el canvas y la biblioteca para ajustar su altura. Al ampliarla, las miniaturas se reorganizan automáticamente en cuadrícula. El tamaño de las miniaturas se controla de forma independiente con el slider de la cabecera.
 
 ### Selección múltiple en la librería
 
@@ -177,6 +184,29 @@ Haz clic en **+ Nota** en la barra superior para añadir una nota de texto libre
 - **Color** — el botón **■** abre un selector con 6 colores de fondo (amarillo, verde, azul, rosa, morado, naranja) más el predeterminado
 - **Enlace** — asigna una URL para mostrar una vista previa del enlace (título, dominio, favicon)
 - **Incluir en informe** — activa o desactiva el botón 📄 para incluir o excluir la nota del informe del proyecto
+
+---
+
+## Etiquetas (tags)
+
+Las etiquetas permiten categorizar las fotos con texto libre y filtrar la biblioteca por ellas.
+
+### Asignar etiquetas
+
+Pasa el ratón sobre una miniatura y haz clic en el botón **#** que aparece en los controles. Se abre un pequeño panel con:
+
+- Las etiquetas ya existentes en el proyecto como casillas de verificación — marca o desmarca para añadir o quitar la etiqueta de esa foto
+- Un campo de texto al final para crear una etiqueta nueva: escribe y pulsa **Enter**
+
+Las fotos con etiquetas muestran un badge **#N** en la esquina superior izquierda de la miniatura.
+
+### Filtrar por etiquetas
+
+Haz clic en el botón **# Etiquetas** en la cabecera de la biblioteca. Se abre un panel con todas las etiquetas del proyecto; selecciona una o varias. El filtro es **OR** — se muestran las fotos que tengan al menos una de las etiquetas activas. El botón muestra un badge con el número de filtros activos.
+
+Para desactivar todos los filtros de etiqueta, selecciona **Todas** en el panel o haz clic de nuevo en las etiquetas activas.
+
+Los filtros de etiqueta se combinan con el filtro **Sin colocar** y con la búsqueda por nombre.
 
 ---
 

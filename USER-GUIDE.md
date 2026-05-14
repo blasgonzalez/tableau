@@ -71,9 +71,16 @@ Click **+ Upload** in the library header to select individual files, or **+ Fold
 
 | Control | Effect |
 |---|---|
-| **⇅** | Sort by import date (default) or name A→Z |
+| **⇅** | Sort by import date (default), name A→Z, hue, or brightness |
 | **Unplaced** filter | Show only photos not placed on any board |
+| **# Tags** | Filter by free-text tags (see Tags section) |
 | **→** (on hover) | Copy the photo to another project without removing it from the current one |
+
+**Sort by Hue** groups photos by their average dominant colour (red → orange → green → blue → purple → neutral last). **Sort by Brightness** orders them from darkest to lightest. Each thumbnail shows a small circle ranging from black (dark photo) to white (bright photo).
+
+### Resizing the library
+
+Drag the splitter bar between the canvas and the library to adjust its height. When enlarged, thumbnails reflow automatically into a grid. Thumbnail size is controlled independently with the slider in the library header.
 
 ### Library multi-select
 
@@ -177,6 +184,29 @@ Click **+ Note** in the top bar to add a free-text note to the canvas. Notes beh
 - **Color** — the **■** button opens a picker with 6 background colors (yellow, green, blue, pink, purple, orange) plus the default
 - **Link** — assign a URL to show a link preview (title, domain, favicon)
 - **Include in report** — toggle the 📄 button to include or exclude the note from the project report
+
+---
+
+## Tags
+
+Tags let you categorise photos with free-text labels and filter the library by them.
+
+### Assigning tags
+
+Hover over a thumbnail and click the **#** button. A panel opens with:
+
+- All existing tags in the project as checkboxes — tick or untick to add or remove the tag from that photo
+- A text field at the bottom to create a new tag: type and press **Enter**
+
+Photos with tags show a **#N** badge in the top-left corner of the thumbnail.
+
+### Filtering by tags
+
+Click the **# Tags** button in the library header. A panel shows all tags in the project; select one or more. The filter is **OR** — photos with at least one of the active tags are shown. The button displays a badge with the number of active filters.
+
+To clear all tag filters, select **All** in the panel or click the active tags again.
+
+Tag filters combine with the **Unplaced** filter and the name search.
 
 ---
 
