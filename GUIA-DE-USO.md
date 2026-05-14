@@ -42,6 +42,9 @@ Cada proyecto puede tener varios tableros. Un tablero es un canvas libre donde c
 | Renombrar | Pasa el ratón sobre el nombre → icono de lápiz |
 | Duplicar | Pasa el ratón sobre el nombre → botón **⧉** |
 | Eliminar | Pasa el ratón sobre el nombre → botón **×** |
+| Reordenar | Arrastra el asa **⠿** de cada fila para cambiar el orden |
+
+Cada fila de tablero muestra un contador con el número de fotos que tiene colocadas.
 
 ### Configuración del tablero (⚙ Config)
 
@@ -71,6 +74,24 @@ Haz clic en **+ Subir** en la cabecera de la librería para seleccionar archivos
 | **⇅** | Ordenar por fecha de importación (predeterminado) o nombre A→Z |
 | Filtro **Sin colocar** | Mostrar solo las fotos que no están en ningún tablero |
 | **→** (al pasar el ratón) | Copiar la foto a otro proyecto sin moverla del proyecto actual |
+
+### Selección múltiple en la librería
+
+Puedes seleccionar varias fotos antes de añadirlas al canvas o eliminarlas:
+
+- **Ctrl + clic** — alterna la selección de una foto
+- **Shift + clic** — selecciona el rango entre la última foto seleccionada y la que pulsas
+
+Con una o más fotos seleccionadas aparece una barra en la parte inferior de la librería con:
+
+| Botón | Acción |
+|---|---|
+| **Añadir al tablero** | Coloca todas las fotos seleccionadas en el canvas activo |
+| **× Eliminar** | Elimina las fotos seleccionadas de la librería (pide confirmación) |
+
+Al eliminar una foto que ya está colocada en algún tablero, el aviso de confirmación lista los tableros afectados.
+
+Al arrastrar al canvas con varias fotos seleccionadas se muestra una pila animada con un contador.
 
 ### Panel de información
 
@@ -124,7 +145,15 @@ El botón **▣** abre un panel para establecer el grosor del marco en la unidad
 
 ## Multiselección y alineación
 
-Haz clic y arrastra sobre el canvas vacío para seleccionar varios elementos con un rectángulo lasso. Aparece una barra de selección en la parte superior:
+Hay tres formas de seleccionar varios elementos:
+
+- **Lasso** — haz clic y arrastra sobre el canvas vacío para trazar un rectángulo de selección
+- **Shift + clic** — alterna un elemento concreto sin desmarcar el resto
+- **Ctrl + A** — selecciona todos los elementos del tablero
+
+Al hacer clic en cualquier miembro de un grupo se selecciona automáticamente todo el grupo.
+
+Con una selección activa aparece una barra en la parte superior:
 
 | Botón | Acción |
 |---|---|
@@ -156,9 +185,11 @@ Haz clic en **+ Nota** en la barra superior para añadir una nota de texto libre
 | Botón | Efecto |
 |---|---|
 | **Cuadrícula** | Mostrar / ocultar la cuadrícula de alineación |
-| **Ajustar** | Activar / desactivar el ajuste a cuadrícula al mover elementos |
+| **Ajustar** | Activar / desactivar el ajuste automático al mover elementos |
 
 El selector de tamaño de cuadrícula (junto a Ajustar) ofrece tamaño automático o valores específicos en mm, cm o px según las unidades configuradas en el tablero.
+
+Con **Ajustar** activado, al mover un elemento se alinea primero con los bordes y centros del resto de elementos del tablero (snap a elementos). Aparecen guías naranjas que indican el ajuste activo. Si no hay ningún elemento cercano al que ajustarse, se aplica el snap a la cuadrícula.
 
 ---
 

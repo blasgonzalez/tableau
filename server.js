@@ -62,7 +62,10 @@ async function processImage(input, pid) {
     .jpeg({ quality: JPEG_QUALITY, mozjpeg: true })
     .toBuffer();
 
-  const meta = await sharp(resized).metadata();
+  const [meta, stats] = await Promise.all([
+    sharp(resized).metadata(),
+    sharp(resized).stats(),
+  ]);
 
   const thumb = await sharp(input)
     .rotate()
@@ -73,7 +76,10 @@ async function processImage(input, pid) {
   fs.writeFileSync(path.join(photoDir(pid), `${id}.jpg`), resized);
   fs.writeFileSync(path.join(photoDir(pid), `${id}_thumb.jpg`), thumb);
 
-  return { id, w: meta.width, h: meta.height, size: resized.length };
+  const ch = stats.channels;
+  const brightness = Math.round((0.299 * ch[0].mean + 0.587 * ch[1].mean + 0.114 * ch[2].mean) / 255 * 100) / 100;
+  const meanColor = { r: Math.round(ch[0].mean), g: Math.round(ch[1].mean), b: Math.round(ch[2].mean) };
+  return { id, w: meta.width, h: meta.height, size: resized.length, dominant: stats.dominant, brightness, meanColor };
 }
 
 // ── Middleware ───────────────────────────────────────────────────────────────
@@ -262,9 +268,9 @@ app.post('/api/projects/:pid/photos', upload.single('photo'), async (req, res) =
   const { pid } = req.params;
   if (!req.file) return res.status(400).json({ error: 'No se recibió ningún fichero' });
   try {
-    const { id, w, h, size } = await processImage(req.file.buffer, pid);
+    const { id, w, h, size, dominant, brightness, meanColor } = await processImage(req.file.buffer, pid);
     const photos = readJSON(photosMeta(pid));
-    const p = { id, name: req.file.originalname, w, h, size, created: Date.now() };
+    const p = { id, name: req.file.originalname, w, h, size, dominant, brightness, meanColor, created: Date.now() };
     photos.push(p);
     writeJSON(photosMeta(pid), photos);
     res.json(p);
@@ -281,6 +287,39 @@ app.delete('/api/projects/:pid/photos/:id', (req, res) => {
   [path.join(photoDir(pid), `${id}.jpg`), path.join(photoDir(pid), `${id}_thumb.jpg`)]
     .forEach(f => { try { fs.unlinkSync(f); } catch {} });
   res.json({ ok: true });
+});
+
+app.patch('/api/projects/:pid/photos/:id/tags', (req, res) => {
+  const { pid, id } = req.params;
+  const { tags } = req.body;
+  if (!Array.isArray(tags)) return res.status(400).json({ error: 'tags array required' });
+  const photos = readJSON(photosMeta(pid));
+  const p = photos.find(p => p.id === id);
+  if (!p) return res.status(404).json({ error: 'not found' });
+  p.tags = tags.map(t => t.trim()).filter(Boolean);
+  writeJSON(photosMeta(pid), photos);
+  res.json(p);
+});
+
+app.post('/api/projects/:pid/photos/analyze-colors', async (req, res) => {
+  const { pid } = req.params;
+  const photos = readJSON(photosMeta(pid));
+  let updated = 0;
+  for (const p of photos) {
+    if (p.dominant) continue;
+    const pFile = path.join(photoDir(pid), `${p.id}.jpg`);
+    if (!fs.existsSync(pFile)) continue;
+    try {
+      const stats = await sharp(pFile).stats();
+      p.dominant = stats.dominant;
+      const ch = stats.channels;
+      p.brightness = Math.round((0.299 * ch[0].mean + 0.587 * ch[1].mean + 0.114 * ch[2].mean) / 255 * 100) / 100;
+      p.meanColor = { r: Math.round(ch[0].mean), g: Math.round(ch[1].mean), b: Math.round(ch[2].mean) };
+      updated++;
+    } catch {}
+  }
+  if (updated > 0) writeJSON(photosMeta(pid), photos);
+  res.json({ ok: true, updated });
 });
 
 app.post('/api/projects/:pid/photos/:photoId/copy-to/:targetPid', (req, res) => {

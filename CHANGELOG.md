@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.3.7] — 2026-05-14
+### Añadido
+- Biblioteca redimensionable: arrastra la barra separadora entre el canvas y la biblioteca para ajustar su altura; las miniaturas se reorganizan automáticamente en cuadrícula
+- Ordenar por Tono: ordena las fotos por su dominante de color media (rojo → naranja → verde → azul → morado → neutro)
+- Ordenar por Luminosidad: ordena las fotos de más oscura a más clara según la luminosidad perceptual media
+- Indicador de luminosidad: punto circular en cada miniatura que va de negro (foto oscura) a blanco (foto clara)
+- Etiquetas (tags): botón # en cada miniatura para asignar etiquetas de texto libre; badge con el número de etiquetas activas; filtro múltiple OR en la cabecera de la biblioteca
+
+### Mejorado
+- Las miniaturas de la biblioteca se reorganizan en cuadrícula al ampliar la altura; el tamaño de miniatura y la altura de la biblioteca son independientes
+
+---
+
 ## [1.3.6] — 2026-05-14
 ### Añadido
 - Reordenar tableros: arrastra el asa ⠿ de cada tablero en el panel lateral para cambiar su orden

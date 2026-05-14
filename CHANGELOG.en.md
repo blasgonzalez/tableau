@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.3.7] — 2026-05-14
+### Added
+- Resizable library: drag the splitter bar between the canvas and the library to adjust its height; thumbnails reflow automatically into a grid
+- Sort by Hue: sorts photos by their average dominant colour (red → orange → green → blue → purple → neutral)
+- Sort by Brightness: sorts photos from darkest to lightest using perceptual mean luminosity
+- Brightness indicator: small circle on each thumbnail ranging from black (dark photo) to white (bright photo)
+- Tags: # button on each thumbnail to assign free-text tags; badge showing active tag count; multi-tag OR filter in the library header
+
+### Improved
+- Library thumbnails reflow into a grid when the panel is enlarged; thumbnail size and library height are now independent controls
+
+---
+
 ## [1.3.6] — 2026-05-14
 ### Added
 - Board reordering: drag the ⠿ handle on each board row in the side panel to change the order

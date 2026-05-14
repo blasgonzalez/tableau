@@ -42,6 +42,9 @@ Each project can have multiple boards. A board is a free-form canvas where you a
 | Rename | Hover over the board name → pencil icon |
 | Duplicate | Hover over the board name → **⧉** button |
 | Delete | Hover over the board name → **×** button |
+| Reorder | Drag the **⠿** handle on each row to change the order |
+
+Each board row shows a counter with the number of photos placed on it.
 
 ### Board settings (⚙ Config)
 
@@ -71,6 +74,24 @@ Click **+ Upload** in the library header to select individual files, or **+ Fold
 | **⇅** | Sort by import date (default) or name A→Z |
 | **Unplaced** filter | Show only photos not placed on any board |
 | **→** (on hover) | Copy the photo to another project without removing it from the current one |
+
+### Library multi-select
+
+You can select multiple photos before adding them to the canvas or deleting them:
+
+- **Ctrl + click** — toggle a single photo in or out of the selection
+- **Shift + click** — select the range between the last selected photo and the one you click
+
+When one or more photos are selected, an action bar appears at the bottom of the library:
+
+| Button | Action |
+|---|---|
+| **Add to board** | Place all selected photos onto the active canvas |
+| **× Delete** | Delete the selected photos from the library (asks for confirmation) |
+
+If a photo you are deleting is already placed on a board, the confirmation dialog lists the affected boards.
+
+When dragging to the canvas with multiple photos selected, an animated stack with a count badge is shown as the drag ghost.
 
 ### Info panel
 
@@ -124,7 +145,15 @@ The **▣** button opens a panel to set a frame thickness in the board's configu
 
 ## Multi-selection and alignment
 
-Click and drag on empty canvas space to select multiple elements with a lasso rectangle. A selection toolbar appears at the top:
+There are three ways to select multiple elements:
+
+- **Lasso** — click and drag on empty canvas space to draw a selection rectangle
+- **Shift + click** — toggle a single element without deselecting the rest
+- **Ctrl + A** — select all elements on the board
+
+Clicking any member of a group automatically selects the entire group.
+
+With an active selection, a toolbar appears at the top:
 
 | Button | Action |
 |---|---|
@@ -156,9 +185,11 @@ Click **+ Note** in the top bar to add a free-text note to the canvas. Notes beh
 | Button | Effect |
 |---|---|
 | **Grid** | Show / hide the alignment grid |
-| **Snap** | Enable / disable snap-to-grid when moving items |
+| **Snap** | Enable / disable automatic snapping when moving items |
 
 The grid size selector (next to Snap) offers automatic sizing or specific values in mm, cm, or px depending on the board's configured units.
+
+With **Snap** enabled, moving an element will first try to align it with the edges and centres of other elements on the board (snap to elements). Orange guide lines appear to show the active snap. If no nearby element is found, the item snaps to the grid instead.
 
 ---
 

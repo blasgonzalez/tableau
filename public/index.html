@@ -225,8 +225,9 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .lib-filter:hover{border-color:var(--acc-dim);color:var(--text)}
 .lib-filter.active{background:var(--acc);color:var(--bg);border-color:var(--acc)}
 .lib-body{flex:1;overflow:hidden;display:flex;flex-direction:column}
-.lib-scroll{flex:1;overflow-x:auto;display:flex;align-items:center;gap:8px;padding:7px 12px;min-height:0}
-.lib-scroll::-webkit-scrollbar{height:3px}
+.lib-scroll{flex:1;overflow-x:hidden;overflow-y:auto;display:flex;flex-wrap:wrap;align-items:flex-start;align-content:flex-start;gap:8px;padding:7px 12px;min-height:0}
+.lib-scroll:has(.lib-empty){align-content:center;justify-content:center}
+.lib-scroll::-webkit-scrollbar{width:3px}
 .lib-scroll::-webkit-scrollbar-thumb{background:var(--border2)}
 .thumb{flex-shrink:0;width:84px;height:84px;cursor:grab;position:relative;overflow:hidden;border:2px solid var(--border2);transition:border-color .15s}
 .thumb:hover{border-color:var(--acc-dim)}
@@ -329,6 +330,25 @@ select.inp{cursor:pointer;appearance:none;padding-right:28px;background-image:ur
 .thumb-cp{position:absolute;bottom:2px;right:22px;width:18px;height:18px;background:rgba(13,12,11,.75);color:var(--sub);border:none;cursor:pointer;font-size:10px;border-radius:2px;display:none;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;line-height:1;z-index:2}
 .thumb:hover .thumb-cp{display:flex}
 .thumb-cp:hover{color:var(--acc)}
+.thumb-color{position:absolute;bottom:4px;left:4px;width:9px;height:9px;border-radius:50%;border:1.5px solid rgba(255,255,255,.6);pointer-events:none;z-index:2;box-shadow:0 1px 3px rgba(0,0,0,.5)}
+.thumb-tag{position:absolute;bottom:2px;right:42px;width:18px;height:18px;background:rgba(13,12,11,.75);color:var(--sub);border:none;cursor:pointer;font-size:9px;border-radius:2px;display:none;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;line-height:1;z-index:2}
+.thumb:hover .thumb-tag{display:flex}
+.thumb-tag:hover{color:var(--acc)}
+.thumb-tag-badge{position:absolute;top:3px;left:3px;background:var(--acc);color:var(--bg);border-radius:8px;min-width:14px;height:14px;font-size:7px;display:flex;align-items:center;justify-content:center;padding:0 3px;font-family:'IBM Plex Mono',monospace;font-weight:700;pointer-events:none;z-index:2}
+.tag-pop{position:fixed;background:var(--panel);border:1px solid var(--border2);z-index:600;min-width:170px;max-width:240px;box-shadow:0 4px 20px rgba(0,0,0,.5);padding:6px 0}
+.tag-pop-hd{padding:4px 10px 6px;font-size:7px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border)}
+.tag-pop-item{display:flex;align-items:center;gap:7px;padding:5px 10px;font-size:10px;color:var(--sub);cursor:pointer;letter-spacing:.3px;transition:background .1s}
+.tag-pop-item:hover{background:var(--surf);color:var(--text)}
+.tag-pop-item input[type=checkbox]{accent-color:var(--acc);cursor:pointer;flex-shrink:0}
+.tag-pop-item.active{color:var(--acc)}
+.tag-pop-new{display:flex;align-items:center;padding:6px 10px 2px;border-top:1px solid var(--border);gap:5px}
+.tag-pop-input{flex:1;background:transparent;border:none;border-bottom:1px solid var(--border2);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 2px;outline:none;letter-spacing:.3px}
+.tag-pop-input:focus{border-bottom-color:var(--acc-dim)}
+.tag-pop-input::placeholder{color:var(--muted)}
+.tag-filter-btn{font-size:9px;background:var(--surf);border:1px solid var(--border2);color:var(--dim);padding:2px 6px;cursor:pointer;font-family:'IBM Plex Mono',monospace;letter-spacing:.3px;outline:none;transition:all .15s;display:flex;align-items:center;gap:3px}
+.tag-filter-btn:hover{border-color:var(--acc-dim);color:var(--text)}
+.tag-filter-btn.active{background:var(--acc);color:var(--bg);border-color:var(--acc)}
+.tag-filter-badge{background:var(--bg);color:var(--acc);border-radius:8px;min-width:12px;height:12px;font-size:7px;display:inline-flex;align-items:center;justify-content:center;padding:0 2px;font-weight:700}
 .uploading-bar{position:fixed;bottom:128px;left:0;right:0;height:2px;background:var(--acc);z-index:500}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:var(--surf)}
@@ -429,6 +449,20 @@ const api = {
 
 const fmtSize = b => b > 1e6 ? (b/1e6).toFixed(1)+' MB' : Math.round(b/1024)+' KB';
 
+const rgbToHsl = (r, g, b) => {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  if (max === min) return { h: 0, s: 0, l };
+  const d = max - min;
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  let h;
+  if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+  else if (max === g) h = ((b - r) / d + 2) / 6;
+  else h = ((r - g) / d + 4) / 6;
+  return { h: h * 360, s, l };
+};
+
 // Convert canvas px → physical units given DPI
 const pxToPhys = (px, dpi, units) => {
   if (!dpi || !units || units === 'px') return null;
@@ -481,7 +515,7 @@ const I18N = {
     noteTitlePh:'título…', noteInMemoryBtn:'Incluir en memoria', noteExcludeMemBtn:'Excluir de memoria', notesSectionTitle:'Notas',
     renameBtn:'Renombrar',
     projectPhotosL1:'Fotos del', projectPhotosL2:'proyecto',
-    libTitle:'Biblioteca', sortImported:'Importación', sortName:'Nombre A→Z', filterPending:'Sin colocar', libSearchPh:'buscar…',
+    libTitle:'Biblioteca', sortImported:'Importación', sortName:'Nombre A→Z', sortColor:'Tono', sortBrightness:'Luminosidad', filterPending:'Sin colocar', libSearchPh:'buscar…', tagFilterBtn:'Etiquetas', tagFilterAll:'Todas', tagPopHd:'Etiquetas', tagNewPh:'nueva etiqueta…', noTagsYet:'Sin etiquetas aún',
     uploadHint:'Sube fotos con + Subir →', dragFilesHint:'o arrastra archivos al canvas',
     alreadyInTableau:'ya en el tableau',
     newProjectTitle:'Nuevo proyecto', projectNamePh:'Nombre del proyecto…',
@@ -582,7 +616,7 @@ const I18N = {
     noteTitlePh:'title…', noteInMemoryBtn:'Include in report', noteExcludeMemBtn:'Exclude from report', notesSectionTitle:'Notes',
     renameBtn:'Rename',
     projectPhotosL1:'Project', projectPhotosL2:'photos',
-    libTitle:'Library', sortImported:'Import date', sortName:'Name A→Z', filterPending:'Unplaced', libSearchPh:'search…',
+    libTitle:'Library', sortImported:'Import date', sortName:'Name A→Z', sortColor:'Hue', sortBrightness:'Brightness', filterPending:'Unplaced', libSearchPh:'search…', tagFilterBtn:'Tags', tagFilterAll:'All', tagPopHd:'Tags', tagNewPh:'new tag…', noTagsYet:'No tags yet',
     uploadHint:'Upload photos with + Upload →', dragFilesHint:'or drag files to canvas',
     alreadyInTableau:'already in tableau',
     newProjectTitle:'New project', projectNamePh:'Project name…',
@@ -723,8 +757,8 @@ function App() {
   const [dragOver,      setDragOver]      = useState(false);
   const [sbOpen,        setSbOpen]        = useState(true);
   const [libOpen,       setLibOpen]       = useState(() => localStorage.getItem('libOpen') !== 'false');
-  const [libHeight,     setLibHeight]     = useState(() => parseInt(localStorage.getItem('tb-libh') || '128'));
-  const libHeightRef    = useRef(parseInt(localStorage.getItem('tb-libh') || '128'));
+  const [libHeight,     setLibHeight]     = useState(() => parseInt(localStorage.getItem('tb-libh') || '160'));
+  const libHeightRef    = useRef(parseInt(localStorage.getItem('tb-libh') || '160'));
   const [photoSort,     setPhotoSort]     = useState(() => localStorage.getItem('photoSort') || 'imported');
   const [photoFilter,   setPhotoFilter]   = useState(() => localStorage.getItem('photoFilter') || 'all');
   const [libSearch,     setLibSearch]     = useState('');
@@ -737,6 +771,10 @@ function App() {
   const [snapGuides,    setSnapGuides]    = useState({ h: [], v: [] });
   const [libSel,        setLibSel]        = useState([]);
   const libSelRef = useRef([]);
+  const [tagFilter,     setTagFilter]     = useState([]);
+  const [tagPopover,    setTagPopover]    = useState(null); // {photoId, x, y}
+  const [tagInput,      setTagInput]      = useState('');
+  const [tagFilterPop,  setTagFilterPop]  = useState(false);
   const [hoverInfo,     setHoverInfo]     = useState(null);
   // board config edit state (only live while modal is open)
   const [cfgUnits,      setCfgUnits]      = useState('cm');
@@ -842,6 +880,11 @@ function App() {
       setBoards(bs);
       setBid(bs[0]?.id || null);
       setPhotos(ps);
+      if (ps.some(p => !p.dominant || p.brightness == null || !p.meanColor)) {
+        api.post(`/api/projects/${pid}/photos/analyze-colors`, {})
+          .then(r => { if (r.updated > 0) api.get(`/api/projects/${pid}/photos`).then(setPhotos); })
+          .catch(() => {});
+      }
       // Load all board items for cross-board presence
       if (bs.length) {
         const allIt = await Promise.all(bs.map(b => api.get(`/api/boards/${pid}/${b.id}/items`)));
@@ -852,7 +895,7 @@ function App() {
     });
   }, [pid]);
 
-  useEffect(() => { setLibSearch(''); setLibSelection([]); }, [pid]);
+  useEffect(() => { setLibSearch(''); setLibSelection([]); setTagFilter([]); setTagPopover(null); }, [pid]);
   useEffect(() => { boardHistoryRef.current = {}; previousBidRef.current = null; }, [pid]);
 
   useEffect(() => {
@@ -1464,6 +1507,25 @@ ${rows}
   };
 
   const setLibSelection = ids => { libSelRef.current = ids; setLibSel(ids); };
+
+  const savePhotoTags = async (photoId, tags) => {
+    await api.patch(`/api/projects/${pidRef.current}/photos/${photoId}/tags`, { tags });
+    setPhotos(ps => ps.map(p => p.id === photoId ? { ...p, tags } : p));
+  };
+  const toggleTagOnPhoto = (photoId, tag) => {
+    const photo = photosRef.current.find(p => p.id === photoId);
+    const cur = photo?.tags || [];
+    savePhotoTags(photoId, cur.includes(tag) ? cur.filter(t => t !== tag) : [...cur, tag]);
+  };
+  const addTagToPhoto = (photoId, raw) => {
+    const tag = raw.trim();
+    if (!tag) return;
+    const photo = photosRef.current.find(p => p.id === photoId);
+    const cur = photo?.tags || [];
+    if (!cur.includes(tag)) savePhotoTags(photoId, [...cur, tag]);
+    setTagInput('');
+  };
+  const toggleTagFilter = tag => setTagFilter(tf => tf.includes(tag) ? tf.filter(t => t !== tag) : [...tf, tag]);
 
   const deletePhoto = async id => {
     const placedBoards = boards.filter(b =>
@@ -2186,7 +2248,6 @@ ${rows}
       const newH = Math.max(80, Math.min(startH + dy, maxH));
       libHeightRef.current = newH;
       setLibHeight(newH);
-      setThumbSize(Math.max(48, Math.min(newH - 44, 160)));
       if (startCanvasH > 0) {
         const newCanvasH = window.innerHeight - TOPBAR - 5 - newH;
         const newZoom = Math.max(0.25, Math.min(startZoom * newCanvasH / startCanvasH, 2.0));
@@ -2201,7 +2262,6 @@ ${rows}
       lib.classList.remove('resizing');
       const h = libHeightRef.current;
       localStorage.setItem('tb-libh', h);
-      localStorage.setItem('thumbSize', Math.max(48, Math.min(h - 44, 160)));
       if (bidRef.current) {
         boardZoom.current[bidRef.current] = zoomRef.current;
         localStorage.setItem(`tb-zoom-${bidRef.current}`, String(zoomRef.current));
@@ -2722,10 +2782,29 @@ ${rows}
               const libH = libOpen ? libHeight : 30;
               const sortedPhotos = photoSort === 'name'
                 ? [...photos].sort((a, b) => a.name.localeCompare(b.name))
+                : photoSort === 'color'
+                ? [...photos].sort((a, b) => {
+                    const ac = a.meanColor, bc = b.meanColor;
+                    if (!ac && !bc) return 0;
+                    if (!ac) return 1;
+                    if (!bc) return -1;
+                    const aH = rgbToHsl(ac.r, ac.g, ac.b);
+                    const bH = rgbToHsl(bc.r, bc.g, bc.b);
+                    const aN = aH.s < 0.1;
+                    const bN = bH.s < 0.1;
+                    if (aN && bN) return aH.l - bH.l;
+                    if (aN) return 1;
+                    if (bN) return -1;
+                    return aH.h - bH.h;
+                  })
+                : photoSort === 'brightness'
+                ? [...photos].sort((a, b) => (a.brightness ?? 0.5) - (b.brightness ?? 0.5))
                 : photos;
+              const allTags = [...new Set(photos.flatMap(p => p.tags || []))].sort();
               const displayedPhotos = (photoFilter === 'pending'
                 ? sortedPhotos.filter(p => photoBoardNames(p.id).length === 0)
                 : sortedPhotos)
+                .filter(p => tagFilter.length === 0 || tagFilter.some(t => (p.tags || []).includes(t)))
                 .filter(p => !libSearch || p.name.toLowerCase().includes(libSearch.toLowerCase()));
               const toggleLib = () => { const v = !libOpen; setLibOpen(v); localStorage.setItem('libOpen', v); };
               const toggleFilter = (e) => { e.stopPropagation(); const v = photoFilter === 'pending' ? 'all' : 'pending'; setPhotoFilter(v); localStorage.setItem('photoFilter', v); };
@@ -2741,12 +2820,19 @@ ${rows}
                       value={libSearch} onClick={e => e.stopPropagation()}
                       onChange={e => setLibSearch(e.target.value)}/>
                     <button className={`lib-filter${photoFilter === 'pending' ? ' active' : ''}`} onClick={toggleFilter} title={t('filterPending')}>⊘ {t('filterPending')}</button>
+                    <button className={`tag-filter-btn${tagFilter.length > 0 ? ' active' : ''}`}
+                      onClick={e => { e.stopPropagation(); setTagFilterPop(v => !v); }}
+                      title={t('tagFilterBtn')}>
+                      # {t('tagFilterBtn')}{tagFilter.length > 0 && <span className="tag-filter-badge">{tagFilter.length}</span>}
+                    </button>
                     <span className="lib-sort-icon">⇅</span>
                     <select className="lib-sort" value={photoSort}
                       onClick={e => e.stopPropagation()}
                       onChange={e => { const v = e.target.value; setPhotoSort(v); localStorage.setItem('photoSort', v); }}>
                       <option value="imported">{t('sortImported')}</option>
                       <option value="name">{t('sortName')}</option>
+                      <option value="color">{t('sortColor')}</option>
+                      <option value="brightness">{t('sortBrightness')}</option>
                     </select>
                     <input type="range" min="48" max="160" value={thumbSize}
                       className="lib-thumb-slider"
@@ -2806,6 +2892,9 @@ ${rows}
                               title={`${p.name}${inBoard?' · '+t('alreadyInTableau'):''}`}
                             >
                               <img src={`/photos/${pid}/${p.id}/thumb`} alt={p.name}/>
+                              {p.brightness != null && <span className="thumb-color" style={{background:`rgb(${Math.round(p.brightness*255)},${Math.round(p.brightness*255)},${Math.round(p.brightness*255)})`}}/>}
+                              {(p.tags||[]).length > 0 && <span className="thumb-tag-badge">{p.tags.length}</span>}
+                              <button className="thumb-tag" title={t('tagPopHd')} onClick={e => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setTagPopover(v => v?.photoId === p.id ? null : {photoId:p.id, x:r.left, y:r.top}); setTagInput(''); }}>#</button>
                               <button className="thumb-x" onClick={e => { e.stopPropagation(); deletePhoto(p.id); }}>×</button>
                               <button className="thumb-cp" title={t('copyToProject')}
                                 onClick={e => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setCopyToMenu({ photoId: p.id, x: r.left, y: r.top }); }}>→</button>
@@ -2846,6 +2935,62 @@ ${rows}
       {resizeDim && <div className="resize-tip" style={{left:resizeDim.x, top:resizeDim.y}}>{resizeDim.label}</div>}
       {uploading && <div className="uploading-bar" style={{bottom: libOpen ? libHeight : 30}}/>}
       {toast && <div className={`toast${toast.err?' err':''}`} style={{bottom: (libOpen ? libHeight : 30) + 8}}>{toast.msg}</div>}
+
+      {tagPopover && (() => {
+        const photo = photos.find(p => p.id === tagPopover.photoId);
+        const photoTags = photo?.tags || [];
+        const allTagsNow = [...new Set(photos.flatMap(p => p.tags || []))].sort();
+        return (
+          <>
+            <div style={{position:'fixed',inset:0,zIndex:599}} onClick={() => setTagPopover(null)}/>
+            <div className="tag-pop" style={{left:tagPopover.x, top:tagPopover.y - 4, transform:'translateY(-100%)'}}>
+              <div className="tag-pop-hd">{t('tagPopHd')}</div>
+              {allTagsNow.length === 0 && <div className="cp-menu-empty">{t('noTagsYet')}</div>}
+              {allTagsNow.map(tag => (
+                <div key={tag} className={`tag-pop-item${photoTags.includes(tag) ? ' active' : ''}`}
+                  onClick={() => toggleTagOnPhoto(tagPopover.photoId, tag)}>
+                  <input type="checkbox" readOnly checked={photoTags.includes(tag)}/>
+                  {tag}
+                </div>
+              ))}
+              <div className="tag-pop-new">
+                <input className="tag-pop-input" placeholder={t('tagNewPh')} value={tagInput}
+                  onClick={e => e.stopPropagation()}
+                  onChange={e => setTagInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') { addTagToPhoto(tagPopover.photoId, tagInput); } }}
+                />
+              </div>
+            </div>
+          </>
+        );
+      })()}
+
+      {tagFilterPop && (() => {
+        const allTagsNow = [...new Set(photos.flatMap(p => p.tags || []))].sort();
+        const btn = document.querySelector('.tag-filter-btn');
+        const r = btn ? btn.getBoundingClientRect() : {left:0, bottom:0};
+        return (
+          <>
+            <div style={{position:'fixed',inset:0,zIndex:599}} onClick={() => setTagFilterPop(false)}/>
+            <div className="tag-pop" style={{left:r.left, top:r.bottom + 4}}>
+              <div className="tag-pop-hd">{t('tagFilterBtn')}</div>
+              {allTagsNow.length === 0 && <div className="cp-menu-empty">{t('noTagsYet')}</div>}
+              {tagFilter.length > 0 && (
+                <div className="tag-pop-item" onClick={() => setTagFilter([])}>
+                  <input type="checkbox" readOnly checked={false}/> {t('tagFilterAll')}
+                </div>
+              )}
+              {allTagsNow.map(tag => (
+                <div key={tag} className={`tag-pop-item${tagFilter.includes(tag) ? ' active' : ''}`}
+                  onClick={() => toggleTagFilter(tag)}>
+                  <input type="checkbox" readOnly checked={tagFilter.includes(tag)}/>
+                  {tag}
+                </div>
+              ))}
+            </div>
+          </>
+        );
+      })()}
 
       {copyToMenu && (
         <>
