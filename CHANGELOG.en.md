@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.3.6] — 2026-05-14
+### Added
+- Board reordering: drag the ⠿ handle on each board row in the side panel to change the order
+- Photo count per board: number of placed photos shown on each row in the side panel
+- Snap to other elements: moving a photo or note snaps automatically to the edges and centres of all other elements; orange guide lines show the active snap
+- Library multi-select: Ctrl+click toggles, Shift+click selects a range; action bar to add to canvas or delete
+- Multi-photo drag to canvas: when the library has multiple photos selected, dragging shows an animated stack with a count badge
+
+### Improved
+- Photoshop-style SVG icons for all alignment and distribution tools
+- Clear SVG icons for export/import throughout the app; group/ungroup with dedicated icons
+- Shift+click on the canvas toggles a single item without deselecting the rest; clicking any group member selects the whole group
+- Delete warning when removing a photo already placed on boards: lists the affected boards
+- Improved colour visibility across all themes: secondary text, board counters and UI controls
+
+---
+
 ## [1.3.5] — 2026-05-14
 ### Added
 - Lasso selection: drag on empty canvas to select multiple elements with a rubber-band rectangle

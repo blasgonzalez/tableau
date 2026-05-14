@@ -1,71 +1,47 @@
 [
   {
-    "id": "mooh5okh04d",
-    "photoId": "45083f5c8eb9",
-    "x": 1209.3333333333333,
-    "y": 125,
-    "w": 321,
-    "z": 325,
-    "label": "Estas son notas relativas a esta fotografia. Aqui puedes indicar cuestiones relacionadas con la producción",
-    "rot": 0,
-    "locked": false,
-    "freeRot": 0
-  },
-  {
     "id": "mooh5sexjm8",
     "photoId": "5d43c345bf0b",
-    "x": 575,
-    "y": 65.51136363636363,
+    "x": 634.3311237373738,
+    "y": 117.33333333333341,
     "w": 439,
-    "z": 264,
+    "z": 578,
     "label": "Morbi consequat dolor iaculis mi pretium, quis laoreet lectus egestas. Praesent lacinia facilisis arcu, sed laoreet dolor vehicula ac. Mauris convallis est lacus. Etiam ornare justo et libero hendrerit, a accumsan justo posuere. Vivamus aliquet lacus id pretium ultrices. Phasellus ut finibus sem. Nullam et varius orci, ac vulputate metus. Integer ornare vitae lectus at volutpat. Morbi maximus faucibus nisi, in vestibulum tortor aliquam sed. Sed vulputate, massa ut lobortis lacinia, libero urna dictum nunc, non iaculis arcu purus nec nulla. In nisi erat, eleifend at tellus a, mattis volutpat dui. Nam facilisis, libero sed feugiat tempor, felis nibh commodo ipsum, id rhoncus nunc nunc eget augue.",
     "rot": 0,
     "frame": 0.4,
-    "locked": true
-  },
-  {
-    "id": "mooh8sbvgrb",
-    "photoId": "175037ef4e80",
-    "x": 1659.3333333333333,
-    "y": 475,
-    "w": 141,
-    "z": 326,
-    "label": "",
-    "rot": 0
+    "locked": false
   },
   {
     "id": "moohphyqiuo",
     "photoId": "ca790c30f072",
-    "x": 350,
-    "y": 88,
+    "x": 395.9977904040404,
+    "y": 112.66666666666683,
     "w": 194,
-    "z": 319,
+    "z": 575,
     "label": "",
     "rot": 0,
-    "locked": false,
-    "groupId": "mp536475"
+    "locked": false
   },
   {
     "id": "mopn58v2imh",
     "photoId": "9b76c48154ec",
-    "x": 61.33554292929293,
-    "y": 175,
+    "x": 100,
+    "y": 216.6666666666668,
     "w": 260,
-    "z": 320,
+    "z": 576,
     "label": "Brobdingnag: KM0",
     "rot": 0,
-    "locked": false,
-    "groupId": "mp536475"
+    "locked": false
   },
   {
     "id": "mou35og1zyj",
     "type": "note",
     "text": "Ahora se pueden añadir notas en el tablero.\nEn estas notas se puede añadir también un enlace web:\n",
-    "x": 75,
-    "y": 600,
-    "w": 324,
-    "h": 298,
-    "z": 281,
+    "x": 100,
+    "y": 668,
+    "w": 379,
+    "h": 304,
+    "z": 352,
     "link": {
       "url": "https://blasgonzalezfotografia.com/",
       "domain": "blasgonzalezfotografia.com",
@@ -74,28 +50,44 @@
     },
     "title": "NOTA PRIDUCCIÓN 1",
     "inMemory": true,
-    "noteColor": "pink"
+    "noteColor": "blue",
+    "fontSize": 14,
+    "locked": false
   },
   {
     "id": "mp32a4a9q5g",
     "photoId": "a291a63819ee",
-    "x": 1575.6666666666667,
-    "y": 150,
+    "x": 1812.6874375413188,
+    "y": 346.66666666666674,
+    "w": 383,
+    "z": 583,
+    "label": "",
+    "rot": 0,
+    "frame": 0,
+    "groupId": "mp5jnz2n"
+  },
+  {
+    "id": "mp5d8z5928m",
+    "photoId": "8febc52d726d",
+    "x": 1141.3333333333333,
+    "y": 272.66666666666674,
+    "w": 199,
+    "z": 584,
+    "label": "",
+    "rot": 0,
+    "frame": 0,
+    "locked": false,
+    "groupId": "mp5jnz2n"
+  },
+  {
+    "id": "mp5k9ik77g3",
+    "photoId": "175037ef4e80",
+    "x": 1400,
+    "y": 413,
     "w": 320,
-    "z": 327,
+    "z": 586,
     "label": "",
     "rot": 0,
     "frame": 0
-  },
-  {
-    "id": "mp4h5l4p0ls",
-    "photoId": "ca790c30f072",
-    "x": 1250.6666666666667,
-    "y": 625,
-    "w": 194,
-    "z": 328,
-    "label": "",
-    "rot": 0,
-    "locked": false
   }
 ]

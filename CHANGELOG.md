@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.3.6] — 2026-05-14
+### Añadido
+- Reordenar tableros: arrastra el asa ⠿ de cada tablero en el panel lateral para cambiar su orden
+- Contador de fotos por tablero: número de fotos colocadas visible en cada fila del panel lateral
+- Snap a otros elementos: al mover una foto o nota se alinea automáticamente con los bordes y centros del resto de elementos; guías visuales naranjas muestran el ajuste
+- Selección múltiple en la biblioteca: Ctrl+clic alterna, Shift+clic selecciona rango; barra con acciones (añadir al tablero, eliminar)
+- Arrastre de varias fotos al canvas: si hay selección múltiple en la biblioteca, arrastrar muestra una pila animada con contador
+
+### Mejorado
+- Iconos SVG estilo Photoshop para todas las herramientas de alineación y distribución
+- Iconos SVG claros para exportar / importar en toda la aplicación; agrupar / desagrupar con icono propio
+- Shift+clic en el canvas alterna la selección de un elemento sin desmarcar el resto; clic en un miembro de grupo selecciona todo el grupo
+- Aviso al borrar una foto que ya está colocada en tableros: lista los tableros afectados
+- Visibilidad mejorada en todos los temas de color: textos secundarios, contador de tableros y controles de interfaz
+
+---
+
 ## [1.3.5] — 2026-05-14
 ### Añadido
 - Selección lasso: arrastra sobre el canvas vacío para seleccionar varios elementos con un rectángulo de goma

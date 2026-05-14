@@ -70,24 +70,28 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .nproj-row{display:flex;align-items:center;padding:6px 8px 6px 8px;cursor:pointer;transition:background .1s;border-left:2px solid transparent}
 .nproj-row:hover{background:var(--panel)}
 .nproj-row.active{border-left-color:var(--acc);background:var(--acc-faint)}
-.nproj-arrow{font-size:9px;color:var(--muted);margin-right:5px;flex-shrink:0;width:10px}
+.nproj-arrow{font-size:9px;color:var(--dim);margin-right:5px;flex-shrink:0;width:10px}
 .nproj-row.active .nproj-arrow{color:var(--acc-dim)}
 .nproj-name{font-size:11px;color:var(--sub);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .nproj-row.active .nproj-name{color:var(--text)}
 .nrow-acts{display:flex;gap:1px;opacity:0;transition:opacity .1s;flex-shrink:0}
 .nproj-row:hover .nrow-acts,.nboard-row:hover .nrow-acts{opacity:1}
-.nact{width:17px;height:17px;border:none;background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;transition:color .1s;flex-shrink:0}
+.nact{width:17px;height:17px;border:none;background:transparent;color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;transition:color .1s;flex-shrink:0}
 .nact.edit:hover{color:var(--sub)}
 .nact.del:hover{color:var(--danger)}
 .nboards{background:var(--deep)}
 .nboard-row{display:flex;align-items:center;padding:5px 8px 5px 22px;cursor:pointer;transition:background .1s;border-left:2px solid transparent}
 .nboard-row:hover{background:var(--panel)}
 .nboard-row.active{border-left-color:var(--acc);background:var(--acc-faint)}
-.nboard-dash{color:var(--muted);font-size:9px;margin-right:6px;flex-shrink:0}
+.nboard-dash{color:var(--dim);font-size:9px;margin-right:6px;flex-shrink:0}
 .nboard-name{font-size:10px;color:var(--dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .nboard-row.active .nboard-name{color:var(--acc)}
-.nboard-add{display:flex;align-items:center;padding:5px 8px 5px 22px;cursor:pointer;color:var(--muted);font-size:9px;letter-spacing:.5px;transition:color .12s}
-.nboard-add:hover{color:var(--acc-dim)}
+.nboard-add{display:flex;align-items:center;padding:5px 8px 5px 22px;cursor:pointer;color:var(--dim);font-size:9px;letter-spacing:.5px;transition:color .12s}
+.nboard-add:hover{color:var(--acc)}
+.nboard-drag{color:var(--muted);font-size:10px;margin-right:3px;cursor:grab;flex-shrink:0;opacity:0;line-height:1;user-select:none}
+.nboard-row:hover .nboard-drag{opacity:.6}
+.nboard-row.drag-over{border-top:2px solid var(--acc)}
+.nboard-count{font-size:9px;color:var(--dim);margin-right:4px;flex-shrink:0}
 .n-rename{flex:1;background:var(--bg);border:1px solid var(--acc-dim);color:var(--acc);font-family:'IBM Plex Mono',monospace;font-size:10px;padding:1px 6px;outline:none;min-width:0}
 
 /* ── ALIGN TOOLBAR ── */
@@ -97,11 +101,11 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .abt:hover{color:var(--text);border-color:var(--border2);background:var(--surf)}
 .abt:active{background:var(--acc-faint);color:var(--acc)}
 .abt:disabled{opacity:.25;cursor:default}
-.abt-label{font-size:7px;letter-spacing:1.5px;color:var(--muted);padding:0 6px;text-transform:uppercase;user-select:none;white-space:nowrap}
+.abt-label{font-size:7px;letter-spacing:1.5px;color:var(--dim);padding:0 6px;text-transform:uppercase;user-select:none;white-space:nowrap}
 
 /* ── INFO PANEL ── */
 .info-panel{padding:9px 10px;display:flex;gap:9px;align-items:flex-start}
-.info-empty{flex:1;display:flex;align-items:center;justify-content:center;font-size:9px;letter-spacing:1px;color:var(--muted);text-align:center;min-height:72px;padding:8px;line-height:1.7}
+.info-empty{flex:1;display:flex;align-items:center;justify-content:center;font-size:9px;letter-spacing:1px;color:var(--dim);text-align:center;min-height:72px;padding:8px;line-height:1.7}
 .info-thumb{width:60px;height:60px;flex-shrink:0;object-fit:cover;border:1px solid var(--border2);display:block;background:var(--deep)}
 .info-meta{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
 .info-name{font-size:10px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -133,13 +137,16 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .props-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .props-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
 .props-inp{width:64px;font-size:10px;background:var(--panel);border:1px solid var(--border2);color:var(--text);border-radius:2px;padding:3px 5px;text-align:right}
-.bitem:hover .bitem-bar,.bitem.sel .bitem-bar{opacity:1}
-.ibc{width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;border:none;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-weight:500}
+.bitem:hover .bitem-bar{opacity:1}
+
+.ibc{width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;border:none;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-weight:500;background:var(--surf);color:var(--sub)}
+.ibc:hover{color:var(--text)}
 .ibc.del{background:var(--danger);color:#fff}
+.ibc.del:hover{color:#fff}
 .ibc.fwd,.ibc.rot{background:var(--border2);color:var(--sub)}
 .ibc.fwd:hover,.ibc.rot:hover{color:var(--text)}
 .rh{position:absolute;bottom:calc(-6px / var(--canvas-zoom,1));right:calc(-6px / var(--canvas-zoom,1));width:14px;height:14px;background:var(--acc);cursor:se-resize;opacity:0;transition:opacity .12s;zoom:calc(1 / var(--canvas-zoom,1))}
-.bitem:hover .rh,.bitem.sel .rh{opacity:1}
+.bitem:hover .rh{opacity:1}
 .lbl{position:absolute;left:0;right:0;box-sizing:border-box;font-size:calc(10px / var(--canvas-zoom,1));font-family:'IBM Plex Mono',monospace;color:var(--text);background:var(--panel2);border:none;border-top:1px solid var(--border2);padding:0 calc(6px / var(--canvas-zoom,1));letter-spacing:.3px;z-index:10;cursor:pointer;height:calc(26px / var(--canvas-zoom,1));display:flex;align-items:center;overflow:hidden;white-space:nowrap;user-select:none}
 .lbl:hover{border-top-color:var(--acc-dim)}
 .lbl-ph{color:var(--muted);font-style:italic}
@@ -154,18 +161,18 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .lbl-popup-ta{background:var(--surf);border:1px solid var(--border2);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12px;padding:8px 10px;outline:none;resize:none;flex:1;min-height:0;overflow-y:auto;line-height:1.6;letter-spacing:.3px;width:100%;box-sizing:border-box}
 .lbl-popup-ta:focus{border-color:var(--acc-dim)}
 /* dimension tag visible on hover/select */
-.dim-tag{position:absolute;bottom:calc(22px / var(--canvas-zoom,1));left:0;background:rgba(13,12,11,.88);color:var(--acc);font-size:8px;padding:2px 7px;letter-spacing:.4px;pointer-events:none;opacity:0;transition:opacity .12s;white-space:nowrap;zoom:calc(1 / var(--canvas-zoom,1))}
-.bitem:hover .dim-tag,.bitem.sel .dim-tag{opacity:1}
+.dim-tag{position:absolute;bottom:calc(22px / var(--canvas-zoom,1));left:0;background:rgba(13,12,11,.88);color:rgba(255,255,255,.9);font-size:8px;padding:2px 7px;letter-spacing:.4px;pointer-events:none;opacity:0;transition:opacity .12s;white-space:nowrap;zoom:calc(1 / var(--canvas-zoom,1))}
+.bitem:hover .dim-tag{opacity:1}
 /* ── NOTE ITEMS ── */
 .nitem{position:absolute;cursor:grab;user-select:none}
 .nitem-body{width:100%;height:100%;background:var(--panel);border:1px solid var(--border2);border-left:3px solid var(--acc-dim);display:flex;flex-direction:column;box-sizing:border-box}
 .nitem.sel .nitem-body{outline:2px dashed var(--acc-dim);outline-offset:2px}
 .nitem.anchor .nitem-body{outline:2px solid var(--acc);outline-offset:2px}
-.nitem:hover .bitem-bar,.nitem.sel .bitem-bar{opacity:1}
+.nitem:hover .bitem-bar{opacity:1}
 .nitem-txt{flex:1;background:transparent;border:none;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.6;padding:8px 10px;resize:none;outline:none;width:100%;box-sizing:border-box}
 .nitem-txt::placeholder{color:var(--muted);font-style:italic}
 .nitem-rc{position:absolute;bottom:0;right:0;width:14px;height:14px;cursor:nwse-resize;opacity:0;transition:opacity .12s;background:linear-gradient(135deg,transparent 50%,var(--border2) 50%)}
-.nitem:hover .nitem-rc,.nitem.sel .nitem-rc{opacity:1;background:linear-gradient(135deg,transparent 50%,var(--acc-dim) 50%)}
+.nitem:hover .nitem-rc{opacity:1;background:linear-gradient(135deg,transparent 50%,var(--acc-dim) 50%)}
 .nitem-link{display:flex;align-items:center;gap:7px;padding:5px 8px;border-top:1px solid var(--border);background:var(--deep);text-decoration:none;cursor:pointer;transition:background .12s;flex-shrink:0}
 .nitem-link:hover{background:var(--panel)}
 .nitem-link-info{flex:1;min-width:0}
@@ -174,7 +181,7 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .nitem-link-rm{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:0 2px;line-height:1;flex-shrink:0}
 .nitem-link-rm:hover{color:var(--danger)}
 .nitem-link-row{border-top:1px solid var(--border);padding:4px 8px;display:flex;align-items:center;gap:5px;flex-shrink:0;opacity:0;transition:opacity .12s}
-.nitem:hover .nitem-link-row,.nitem.sel .nitem-link-row{opacity:1}
+.nitem:hover .nitem-link-row{opacity:1}
 .nitem-link-inp{flex:1;background:transparent;border:none;color:var(--sub);font-family:'IBM Plex Mono',monospace;font-size:10px;outline:none;min-width:0}
 .nitem-link-inp::placeholder{color:var(--muted)}
 .nitem-link-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:9px;letter-spacing:.5px;text-transform:uppercase;padding:0;font-family:'IBM Plex Mono',monospace}
@@ -194,7 +201,11 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .mem-lbl{font-size:8px;color:var(--muted);font-style:italic;margin-top:2px;letter-spacing:.2px;white-space:pre-wrap}
 
 /* ── LIBRARY ── */
+.lib-splitter{height:5px;flex-shrink:0;cursor:ns-resize;z-index:101;display:flex;align-items:center;justify-content:center;background:transparent;user-select:none}
+.lib-splitter::after{content:'';width:32px;height:2px;background:var(--border2);border-radius:1px;transition:background .15s;pointer-events:none}
+.lib-splitter:hover::after,.lib-splitter.active::after{background:var(--acc-dim)}
 .library{background:var(--surf);border-top:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;z-index:100;overflow:hidden;transition:height .18s ease}
+.library.resizing{transition:none !important}
 .lib-header{height:30px;display:flex;align-items:center;gap:7px;padding:0 10px 0 8px;flex-shrink:0;cursor:pointer;border-bottom:1px solid var(--border);user-select:none}
 .lib-header:hover{background:var(--panel)}
 .lib-toggle-btn{width:22px;height:22px;border:1px solid var(--border2);background:transparent;color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0;transition:all .15s;font-family:'IBM Plex Mono',monospace}
@@ -213,8 +224,8 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .lib-filter{font-size:9px;background:var(--surf);border:1px solid var(--border2);color:var(--dim);padding:2px 6px;cursor:pointer;font-family:'IBM Plex Mono',monospace;letter-spacing:.3px;outline:none;transition:all .15s}
 .lib-filter:hover{border-color:var(--acc-dim);color:var(--text)}
 .lib-filter.active{background:var(--acc);color:var(--bg);border-color:var(--acc)}
-.lib-body{flex:1;overflow:hidden;display:flex}
-.lib-scroll{flex:1;overflow-x:auto;display:flex;align-items:center;gap:8px;padding:7px 12px}
+.lib-body{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.lib-scroll{flex:1;overflow-x:auto;display:flex;align-items:center;gap:8px;padding:7px 12px;min-height:0}
 .lib-scroll::-webkit-scrollbar{height:3px}
 .lib-scroll::-webkit-scrollbar-thumb{background:var(--border2)}
 .thumb{flex-shrink:0;width:84px;height:84px;cursor:grab;position:relative;overflow:hidden;border:2px solid var(--border2);transition:border-color .15s}
@@ -222,6 +233,13 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .thumb:active{cursor:grabbing}
 .thumb img{width:100%;height:100%;object-fit:cover;pointer-events:none;display:block}
 .thumb.in-board{border-color:var(--acc)}
+.thumb.lib-sel{outline:2px solid var(--acc);outline-offset:-1px}
+.lib-sel-bar{display:flex;align-items:center;gap:8px;padding:5px 10px;background:var(--acc-faint);border-top:1px solid var(--acc-dim);font-size:9px;color:var(--acc);flex-shrink:0;letter-spacing:.3px}
+.lib-sel-count{flex:1}
+.lib-sel-btn{background:none;border:1px solid var(--acc-dim);color:var(--acc);cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:9px;padding:2px 7px;letter-spacing:.3px;transition:background .12s}
+.lib-sel-btn:hover{background:var(--acc-faint)}
+.lib-sel-btn.danger{border-color:var(--danger);color:var(--danger)}
+.lib-sel-btn.danger:hover{background:rgba(196,80,80,.1)}
 .thumb.in-board::before{content:'● EN TABLEAU';position:absolute;top:0;left:0;right:0;background:var(--acc);color:var(--bg);font-size:6px;letter-spacing:.5px;text-align:center;padding:2px;pointer-events:none;z-index:1;font-weight:700}
 .thumb-x{position:absolute;top:2px;right:2px;width:18px;height:18px;background:rgba(196,74,74,.9);color:#fff;border:none;cursor:pointer;font-size:12px;border-radius:50%;display:none;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;line-height:1;z-index:2}
 .thumb:hover .thumb-x{display:flex}
@@ -378,6 +396,8 @@ const THEMES = {
 
 const ZOOM_STEPS = [0.25, 0.33, 0.5, 0.67, 0.75, 1.0, 1.25, 1.5, 2.0];
 
+const NOTE_FONT_CYCLE = [null, 9, 14, 18]; // null = default M (11px)
+const NOTE_FONT_LABEL = v => v === 9 ? 'S' : v === 14 ? 'L' : v === 18 ? 'XL' : 'M';
 const NOTE_COLORS = ['yellow','green','blue','pink','purple','orange'];
 const NOTE_COLOR_VALS = {
   yellow: ['#c8a832','rgba(200,168,50,.15)'],
@@ -440,7 +460,7 @@ const dimLabel = (w, h, dpi, units, frame = 0) => {
 
 const I18N = {
   es: {
-    upload:'+ Subir foto', report:'≡ Memoria', config:'⚙ Config', exportJpeg:'⬇ Exportar JPEG',
+    upload:'+ Subir foto', report:'≡ Memoria', config:'⚙ Config', exportJpeg:'Exportar JPEG',
     showPanel:'▶ Panel', preferences:'Preferencias', themeLabel:'Tema', langLabel:'Idioma',
     noProjHint:'Sin proyecto — crea uno en el panel izquierdo',
     projBoards:'Proyectos y Tableros', newProject:'Nuevo proyecto', collapsePanel:'Colapsar panel',
@@ -494,6 +514,11 @@ const I18N = {
     confirmDeleteBoard:'¿Eliminar este tablero?',
     duplicateBoard:'Duplicar tablero',
     confirmDeletePhoto:'¿Eliminar esta foto del proyecto?',
+    confirmDeletePhotoPlaced: boards => `Esta foto está colocada en: ${boards}. Se eliminará del canvas también. ¿Continuar?`,
+    confirmDeletePhotos: n => `¿Eliminar ${n} foto${n!==1?'s':''} del proyecto?`,
+    confirmDeletePhotosPlaced: n => `\n${n} de ellas están colocadas en tableros y se eliminarán del canvas.`,
+    libSelAdd:'Añadir al tablero', selected:'seleccionadas',
+    libSelClearTip:'Quitar selección', libSelAddTip:'Añadir todas al tablero en fila', libSelDeleteTip:'Eliminar seleccionadas del proyecto',
     inBoard:'EN TABLEAU', inProject:'en proyecto', importBtn:'+ Importar',
     aboutLabel:'Acerca de', authorLabel:'Autor',
     alLeft:'Alinear borde izquierdo', alRight:'Alinear borde derecho', alCH:'Centrar horizontalmente',
@@ -526,6 +551,7 @@ const I18N = {
     pasted: n => `${n} elemento${n>1?'s':''} pegado${n>1?'s':''}`,
     duplicated: n => `${n} elemento${n>1?'s':''} duplicado${n>1?'s':''}`,
     noteColor:'Color',
+    noteFontSize:'Tamaño de fuente',
     copyToProject:'Copiar a proyecto',
     photoCopied:'Foto copiada al proyecto',
     noOtherProjects:'Sin otros proyectos',
@@ -535,7 +561,7 @@ const I18N = {
     ungroupItems:'Desagrupar',
   },
   en: {
-    upload:'+ Upload', report:'≡ Report', config:'⚙ Config', exportJpeg:'⬇ Export JPEG',
+    upload:'+ Upload', report:'≡ Report', config:'⚙ Config', exportJpeg:'Export JPEG',
     showPanel:'▶ Panel', preferences:'Preferences', themeLabel:'Theme', langLabel:'Language',
     noProjHint:'No project — create one in the left panel',
     projBoards:'Projects & Boards', newProject:'New project', collapsePanel:'Collapse panel',
@@ -589,6 +615,11 @@ const I18N = {
     confirmDeleteBoard:'Delete this board?',
     duplicateBoard:'Duplicate board',
     confirmDeletePhoto:'Delete this photo from the project?',
+    confirmDeletePhotoPlaced: boards => `This photo is placed on: ${boards}. It will also be removed from the board. Continue?`,
+    confirmDeletePhotos: n => `Delete ${n} photo${n!==1?'s':''} from the project?`,
+    confirmDeletePhotosPlaced: n => `\n${n} of them are placed on boards and will be removed from the canvas.`,
+    libSelAdd:'Add to board', selected:'selected',
+    libSelClearTip:'Clear selection', libSelAddTip:'Add all to board in a row', libSelDeleteTip:'Delete selected from project',
     inBoard:'IN TABLEAU', inProject:'in project', importBtn:'+ Import',
     aboutLabel:'About', authorLabel:'Author',
     alLeft:'Align left edges', alRight:'Align right edges', alCH:'Center horizontally',
@@ -621,6 +652,7 @@ const I18N = {
     pasted: n => `${n} item${n>1?'s':''} pasted`,
     duplicated: n => `${n} item${n>1?'s':''} duplicated`,
     noteColor:'Color',
+    noteFontSize:'Font size',
     copyToProject:'Copy to project',
     photoCopied:'Photo copied to project',
     noOtherProjects:'No other projects',
@@ -659,6 +691,19 @@ const SvgUnlock = () => (
     <path d="M3.5 5.5V3.5a2 2 0 0 1 4 0V1.2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
   </svg>
 );
+const SvgAlignL  = () => <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><rect x="2" y="2" width="1.5" height="12"/><rect x="3.5" y="2.5" width="9" height="4.5"/><rect x="3.5" y="9" width="5" height="4.5"/></svg>;
+const SvgAlignCH = () => <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><rect x="7.5" y="2" width="1" height="12"/><rect x="2" y="2.5" width="12" height="4.5"/><rect x="4.5" y="9" width="7" height="4.5"/></svg>;
+const SvgAlignR  = () => <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><rect x="12.5" y="2" width="1.5" height="12"/><rect x="3.5" y="2.5" width="9" height="4.5"/><rect x="7.5" y="9" width="5" height="4.5"/></svg>;
+const SvgAlignT  = () => <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><rect x="2" y="2" width="12" height="1.5"/><rect x="2.5" y="3.5" width="4.5" height="9"/><rect x="9" y="3.5" width="4.5" height="5"/></svg>;
+const SvgAlignCV = () => <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><rect x="2" y="7.5" width="12" height="1"/><rect x="2.5" y="2" width="4.5" height="12"/><rect x="9" y="4.5" width="4.5" height="7"/></svg>;
+const SvgAlignB  = () => <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><rect x="2" y="12.5" width="12" height="1.5"/><rect x="2.5" y="3.5" width="4.5" height="9"/><rect x="9" y="7.5" width="4.5" height="5"/></svg>;
+const SvgDistH   = () => <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><rect x="1" y="3" width="3" height="10"/><rect x="6.5" y="3" width="3" height="10"/><rect x="12" y="3" width="3" height="10"/></svg>;
+const SvgDistV   = () => <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><rect x="3" y="1" width="10" height="3"/><rect x="3" y="6.5" width="10" height="3"/><rect x="3" y="12" width="10" height="3"/></svg>;
+const SvgEqW     = () => <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><rect x="2" y="3" width="12" height="4"/><rect x="2" y="9" width="12" height="4"/></svg>;
+const SvgGroup   = () => <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.1"><rect x="1.5" y="1.5" width="13" height="13" strokeDasharray="2.5 1.5" rx=".5"/><rect x="3" y="3" width="4" height="4" fill="currentColor" stroke="none"/><rect x="9" y="9" width="4" height="4" fill="currentColor" stroke="none"/></svg>;
+const SvgUngroup = () => <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.1"><rect x="1.5" y="1.5" width="6" height="6" strokeDasharray="2.5 1.5" rx=".5"/><rect x="8.5" y="8.5" width="6" height="6" strokeDasharray="2.5 1.5" rx=".5"/><rect x="3" y="3" width="3" height="3" fill="currentColor" stroke="none"/><rect x="10" y="10" width="3" height="3" fill="currentColor" stroke="none"/></svg>;
+const SvgExport  = ({size=14}) => <svg viewBox="0 0 16 16" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="4,6 8,10 12,6"/><line x1="8" y1="2" x2="8" y2="10"/><rect x="2" y="12" width="12" height="2" fill="currentColor" stroke="none" rx=".5"/></svg>;
+const SvgImport  = ({size=14}) => <svg viewBox="0 0 16 16" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="4,10 8,6 12,10"/><line x1="8" y1="14" x2="8" y2="6"/><rect x="2" y="2" width="12" height="2" fill="currentColor" stroke="none" rx=".5"/></svg>;
 
 function App() {
   const [projects,      setProjects]      = useState([]);
@@ -678,6 +723,8 @@ function App() {
   const [dragOver,      setDragOver]      = useState(false);
   const [sbOpen,        setSbOpen]        = useState(true);
   const [libOpen,       setLibOpen]       = useState(() => localStorage.getItem('libOpen') !== 'false');
+  const [libHeight,     setLibHeight]     = useState(() => parseInt(localStorage.getItem('tb-libh') || '128'));
+  const libHeightRef    = useRef(parseInt(localStorage.getItem('tb-libh') || '128'));
   const [photoSort,     setPhotoSort]     = useState(() => localStorage.getItem('photoSort') || 'imported');
   const [photoFilter,   setPhotoFilter]   = useState(() => localStorage.getItem('photoFilter') || 'all');
   const [libSearch,     setLibSearch]     = useState('');
@@ -685,6 +732,11 @@ function App() {
   const [labelEditId,   setLabelEditId]   = useState(null);
   const labelEditOrigRef = useRef(null);
   const [renaming,      setRenaming]      = useState(null);
+  const [boardDragId,   setBoardDragId]   = useState(null);
+  const [boardDragOver, setBoardDragOver] = useState(null);
+  const [snapGuides,    setSnapGuides]    = useState({ h: [], v: [] });
+  const [libSel,        setLibSel]        = useState([]);
+  const libSelRef = useRef([]);
   const [hoverInfo,     setHoverInfo]     = useState(null);
   // board config edit state (only live while modal is open)
   const [cfgUnits,      setCfgUnits]      = useState('cm');
@@ -800,7 +852,7 @@ function App() {
     });
   }, [pid]);
 
-  useEffect(() => { setLibSearch(''); }, [pid]);
+  useEffect(() => { setLibSearch(''); setLibSelection([]); }, [pid]);
   useEffect(() => { boardHistoryRef.current = {}; previousBidRef.current = null; }, [pid]);
 
   useEffect(() => {
@@ -1380,6 +1432,17 @@ ${rows}
     setBid(copy.id);
   };
 
+  const reorderBoards = async (fromId, toId) => {
+    if (fromId === toId) return;
+    const bs = [...boards];
+    const fromIdx = bs.findIndex(b => b.id === fromId);
+    const toIdx   = bs.findIndex(b => b.id === toId);
+    const [moved] = bs.splice(fromIdx, 1);
+    bs.splice(toIdx, 0, moved);
+    setBoards(bs);
+    await api.put(`/api/projects/${pid}/boards/order`, { order: bs.map(b => b.id) });
+  };
+
   // ── upload ────────────────────────────────────────────────────────────────
   const uploadFiles = async (files, dropPos = null) => {
     const p = pidRef.current;
@@ -1400,12 +1463,75 @@ ${rows}
     if (ok) showToast(t('photosAdded', ok));
   };
 
+  const setLibSelection = ids => { libSelRef.current = ids; setLibSel(ids); };
+
   const deletePhoto = async id => {
-    if (!confirm(t('confirmDeletePhoto'))) return;
+    const placedBoards = boards.filter(b =>
+      (allBoardItemsRef.current[b.id] || []).some(i => i.photoId === id)
+    );
+    const msg = placedBoards.length > 0
+      ? t('confirmDeletePhotoPlaced', placedBoards.map(b => b.name).join(', '))
+      : t('confirmDeletePhoto');
+    if (!confirm(msg)) return;
     await api.del(`/api/projects/${pidRef.current}/photos/${id}`);
     setPhotos(ps => ps.filter(p => p.id !== id));
     const nit = itemsRef.current.filter(i => i.photoId !== id);
-    setItems(nit); saveItemsNow(nit);
+    setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
+    setAllBoardItems(prev => Object.fromEntries(
+      Object.entries(prev).map(([bid, its]) => [bid, its.filter(i => i.photoId !== id)])
+    ));
+  };
+
+  const deleteSelectedPhotos = async () => {
+    const ids = libSelRef.current;
+    if (!ids.length) return;
+    const placedCount = ids.filter(id =>
+      Object.values(allBoardItemsRef.current).some(its => its.some(i => i.photoId === id))
+    ).length;
+    const msg = t('confirmDeletePhotos', ids.length) +
+      (placedCount > 0 ? t('confirmDeletePhotosPlaced', placedCount) : '');
+    if (!confirm(msg)) return;
+    for (const id of ids) await api.del(`/api/projects/${pidRef.current}/photos/${id}`);
+    setPhotos(ps => ps.filter(p => !ids.includes(p.id)));
+    const nit = itemsRef.current.filter(i => !ids.includes(i.photoId));
+    setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
+    setAllBoardItems(prev => Object.fromEntries(
+      Object.entries(prev).map(([bid, its]) => [bid, its.filter(i => !ids.includes(i.photoId))])
+    ));
+    setLibSelection([]);
+  };
+
+  const addSelectedToCanvas = () => {
+    const ids = libSelRef.current;
+    if (!ids.length || !bidRef.current) return;
+    pushUndo();
+    const wrap = wrapRef.current;
+    const z = zoomRef.current;
+    const pad = boardPxRef.current ? BOARD_PAD : 0;
+    const cx = (wrap.scrollLeft + wrap.clientWidth  / 2 - pad) / z;
+    const cy = (wrap.scrollTop  + wrap.clientHeight / 2 - pad) / z;
+    const W = 320, GAP = 20;
+    const maxZ = itemsRef.current.length ? Math.max(...itemsRef.current.map(i => i.z || 0)) : 0;
+    const defFrame = boardsRef.current.find(b => b.id === bidRef.current)?.defaultFrame || 0;
+    const newItems = ids.map((photoId, idx) => {
+      const photo = photosRef.current.find(p => p.id === photoId);
+      if (!photo) return null;
+      const h = Math.round(W * photo.h / photo.w);
+      return { id: Date.now().toString(36) + Math.random().toString(36).slice(2,5) + idx,
+               photoId, w: W, h, z: maxZ + idx + 1, label: '', rot: 0, frame: defFrame };
+    }).filter(Boolean);
+    const totalW = newItems.length * W + (newItems.length - 1) * GAP;
+    const bp = boardPxRef.current;
+    newItems.forEach((item, idx) => {
+      item.x = Math.round(cx - totalW / 2 + idx * (W + GAP));
+      item.y = Math.round(cy - item.h / 2);
+      if (bp) { item.x = Math.max(0, Math.min(item.x, bp.w - W)); item.y = Math.max(0, Math.min(item.y, bp.h - item.h)); }
+    });
+    const nit = [...itemsRef.current, ...newItems];
+    const norm = applyNormalized(nit);
+    selRef.current = newItems.map(i => i.id); setSel(selRef.current);
+    saveItemsNow(norm);
+    setLibSelection([]);
   };
 
   // ── import from repo ──────────────────────────────────────────────────────
@@ -1415,7 +1541,33 @@ ${rows}
   const clearHoverInfo = () => setHoverInfo(null);
 
   // ── drag ──────────────────────────────────────────────────────────────────
-  const onLibDS = (e, id) => { e.dataTransfer.setData('tb-photo', id); e.dataTransfer.effectAllowed = 'copy'; };
+  const onLibDS = (e, id) => {
+    const ids = libSelRef.current.includes(id) && libSelRef.current.length > 1
+      ? libSelRef.current : [id];
+    e.dataTransfer.setData('tb-photos', JSON.stringify(ids));
+    e.dataTransfer.effectAllowed = 'copy';
+    if (ids.length > 1) {
+      const SZ = 60;
+      const wrap = document.createElement('div');
+      wrap.style.cssText = `position:fixed;left:-9999px;top:0;width:${SZ+20}px;height:${SZ+20}px;pointer-events:none`;
+      const preview = ids.slice(0, 3).reverse();
+      const rots = [-7, 0, 7];
+      preview.forEach((pid2, i) => {
+        const img = document.createElement('img');
+        img.src = `/photos/${pidRef.current}/${pid2}/thumb`;
+        img.style.cssText = `position:absolute;width:${SZ}px;height:${SZ}px;object-fit:cover;border:2px solid rgba(255,255,255,.8);box-shadow:0 2px 10px rgba(0,0,0,.6);transform:rotate(${rots[i]||0}deg);left:${i*5}px;top:${i*3}px`;
+        wrap.appendChild(img);
+      });
+      const badge = document.createElement('div');
+      const acc = getComputedStyle(document.documentElement).getPropertyValue('--acc').trim() || '#c4894a';
+      badge.textContent = ids.length;
+      badge.style.cssText = `position:absolute;bottom:0;right:0;background:${acc};color:#000;border-radius:10px;min-width:18px;height:18px;padding:0 4px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;font-family:monospace`;
+      wrap.appendChild(badge);
+      document.body.appendChild(wrap);
+      e.dataTransfer.setDragImage(wrap, SZ / 2, SZ / 2);
+      setTimeout(() => document.body.removeChild(wrap), 100);
+    }
+  };
 
   const onCanvasDrop = async e => {
     e.preventDefault(); setDragOver(false);
@@ -1429,10 +1581,30 @@ ${rows}
       await uploadFiles(e.dataTransfer.files, pos);
       return;
     }
-    const photoId = e.dataTransfer.getData('tb-photo');
-    if (photoId) {
-      const photo = photosRef.current.find(p => p.id === photoId);
+    const rawPhotos = e.dataTransfer.getData('tb-photos');
+    const singleId  = e.dataTransfer.getData('tb-photo');
+    const photoIds  = rawPhotos ? JSON.parse(rawPhotos) : singleId ? [singleId] : [];
+    if (photoIds.length === 1) {
+      const photo = photosRef.current.find(p => p.id === photoIds[0]);
       if (photo) placePhoto(photo, pos.x, pos.y);
+    } else if (photoIds.length > 1) {
+      pushUndo();
+      const W = 320, GAP = 20;
+      const maxZ = itemsRef.current.length ? Math.max(...itemsRef.current.map(i => i.z||0)) : 0;
+      const defFrame = boardsRef.current.find(b => b.id === bidRef.current)?.defaultFrame || 0;
+      const newItems = photoIds.map((photoId, idx) => {
+        const photo = photosRef.current.find(p => p.id === photoId);
+        if (!photo) return null;
+        const h = Math.round(W * photo.h / photo.w);
+        return { id: Date.now().toString(36) + Math.random().toString(36).slice(2,5) + idx,
+                 photoId, w: W, h, z: maxZ + idx + 1, label: '', rot: 0, frame: defFrame,
+                 x: Math.round(pos.x + idx * (W + GAP)), y: Math.round(pos.y) };
+      }).filter(Boolean);
+      const nit = [...itemsRef.current, ...newItems];
+      const norm = applyNormalized(nit);
+      selRef.current = newItems.map(i => i.id); setSel(selRef.current);
+      saveItemsNow(norm);
+      setLibSelection([]);
     }
   };
 
@@ -1492,8 +1664,62 @@ ${rows}
       const h = getItemH(i);
       return { x: Math.max(0, Math.min(x, bp.w - i.w)), y: Math.max(0, Math.min(y, bp.h - h)) };
     };
+    const ELEM_SNAP_THRESH = 8;
     const applySnap = (rawDx, rawDy) => {
-      if (!snapGrid || !showGrid || dragIds.length === 0) return { sdx: rawDx, sdy: rawDy };
+      if (!snapGrid) {
+        setSnapGuides({ h: [], v: [] });
+        return { sdx: rawDx, sdy: rawDy };
+      }
+      // ── snap to other elements ──────────────────────────────────────────────
+      const allItems = itemsRef.current;
+      const others = allItems.filter(i => !dragIds.includes(i.id) && !i.locked);
+      const thresh = ELEM_SNAP_THRESH / zoomRef.current;
+      // Compute bounding box of dragged group after applying raw delta
+      let bx = Infinity, by = Infinity, bx2 = -Infinity, by2 = -Infinity;
+      for (const id of dragIds) {
+        const it = allItems.find(i => i.id === id);
+        if (!it) continue;
+        const nx = starts[id].x + rawDx, ny = starts[id].y + rawDy;
+        const ih = getItemH(it);
+        bx  = Math.min(bx,  nx);         by  = Math.min(by,  ny);
+        bx2 = Math.max(bx2, nx + it.w);  by2 = Math.max(by2, ny + ih);
+      }
+      const bw = bx2 - bx, bh = by2 - by;
+      let bestDx = null, bestDy = null;
+      const newGuides = { h: [], v: [] };
+      for (const oi of others) {
+        const oh = getItemH(oi);
+        const ox2 = oi.x + oi.w, oy2 = oi.y + oh;
+        // H check (snap x)
+        for (const [de, ie] of [
+          [bx, oi.x], [bx, ox2], [bx2, oi.x], [bx2, ox2],
+          [bx + bw / 2, oi.x + oi.w / 2],
+        ]) {
+          const diff = de - ie;
+          if (Math.abs(diff) < thresh && (bestDx === null || Math.abs(diff) < Math.abs(bestDx))) bestDx = diff;
+          if (Math.abs(diff) < thresh) {
+            newGuides.v.push({ pos: ie, from: Math.min(by, oi.y) - 12, to: Math.max(by2, oy2) + 12 });
+          }
+        }
+        // V check (snap y)
+        for (const [de, ie] of [
+          [by, oi.y], [by, oy2], [by2, oi.y], [by2, oy2],
+          [by + bh / 2, oi.y + oh / 2],
+        ]) {
+          const diff = de - ie;
+          if (Math.abs(diff) < thresh && (bestDy === null || Math.abs(diff) < Math.abs(bestDy))) bestDy = diff;
+          if (Math.abs(diff) < thresh) {
+            newGuides.h.push({ pos: ie, from: Math.min(bx, oi.x) - 12, to: Math.max(bx2, ox2) + 12 });
+          }
+        }
+      }
+      if (newGuides.h.length > 0 || newGuides.v.length > 0) {
+        setSnapGuides(newGuides);
+        return { sdx: rawDx - (bestDx ?? 0), sdy: rawDy - (bestDy ?? 0) };
+      }
+      setSnapGuides({ h: [], v: [] });
+      // ── fall back to grid snap ──────────────────────────────────────────────
+      if (!showGrid || dragIds.length === 0) return { sdx: rawDx, sdy: rawDy };
       const anchor = starts[dragIds[0]];
       const snappedX = snapVal(anchor.x + rawDx, gridCellPx);
       const snappedY = snapVal(anchor.y + rawDy, gridCellPx);
@@ -1512,12 +1738,14 @@ ${rows}
     const onMU = () => {
       window.removeEventListener('pointermove', onMM);
       window.removeEventListener('pointerup',   onMU);
+      setSnapGuides({ h: [], v: [] });
       const z = zoomRef.current;
       const { sdx, sdy } = applySnap(ldx/z, ldy/z);
+      setSnapGuides({ h: [], v: [] }); // clear any guides set by applySnap above
       const nit = itemsRef.current.map(i => {
         if (!dragIds.includes(i.id)) return i;
-        let rx = starts[i.id].x + (snapGrid && showGrid ? sdx : Math.round(ldx/z));
-        let ry = starts[i.id].y + (snapGrid && showGrid ? sdy : Math.round(ldy/z));
+        let rx = starts[i.id].x + (snapGrid ? sdx : Math.round(ldx/z));
+        let ry = starts[i.id].y + (snapGrid ? sdy : Math.round(ldy/z));
         const { x, y } = clampItem(i, rx, ry);
         return { ...i, x, y };
       });
@@ -1679,6 +1907,12 @@ ${rows}
     itemsRef.current = u; setItems(u); saveItemsNow(u);
     setNoteColorPanelId(null);
   };
+  const cycleNoteFontSize = (id, current) => {
+    const idx = NOTE_FONT_CYCLE.indexOf(current ?? null);
+    const next = NOTE_FONT_CYCLE[(idx + 1) % NOTE_FONT_CYCLE.length];
+    const u = itemsRef.current.map(i => i.id === id ? {...i, fontSize: next} : i);
+    itemsRef.current = u; setItems(u); saveItemsNow(u);
+  };
   const deleteItem = id => {
     pushUndo();
     const nit = itemsRef.current.filter(i => i.id !== id);
@@ -1828,6 +2062,24 @@ ${rows}
     saveItemsNow(norm);
   };
 
+  const handleItemClick = (e, item) => {
+    e.stopPropagation();
+    if (wasDragged.current) { wasDragged.current = false; return; }
+    const idsToToggle = item.groupId
+      ? itemsRef.current.filter(i => i.groupId === item.groupId).map(i => i.id)
+      : [item.id];
+    if (e.shiftKey) {
+      const cur = selRef.current;
+      const allPresent = idsToToggle.every(id => cur.includes(id));
+      const next = allPresent
+        ? cur.filter(id => !idsToToggle.includes(id))
+        : [...cur, ...idsToToggle.filter(id => !cur.includes(id))];
+      selRef.current = next; setSel(next);
+    } else {
+      selRef.current = idsToToggle; setSel(idsToToggle);
+    }
+  };
+
   const groupItems = () => {
     if (selRef.current.length < 2) return;
     pushUndo();
@@ -1917,6 +2169,48 @@ ${rows}
     return t('scaleHint', mm, cm, (dpi/2.54).toFixed(0));
   };
 
+  const onSplitterPD = e => {
+    e.preventDefault();
+    const splitter = e.currentTarget;
+    const lib = splitter.nextSibling;
+    const startY = e.clientY;
+    const startH = libHeightRef.current;
+    const startZoom = zoomRef.current;
+    const TOPBAR = 46;
+    const startCanvasH = window.innerHeight - TOPBAR - 5 - startH;
+    splitter.classList.add('active');
+    lib.classList.add('resizing');
+    const onMove = ev => {
+      const dy = startY - ev.clientY;
+      const maxH = Math.floor(window.innerHeight * 0.65);
+      const newH = Math.max(80, Math.min(startH + dy, maxH));
+      libHeightRef.current = newH;
+      setLibHeight(newH);
+      setThumbSize(Math.max(48, Math.min(newH - 44, 160)));
+      if (startCanvasH > 0) {
+        const newCanvasH = window.innerHeight - TOPBAR - 5 - newH;
+        const newZoom = Math.max(0.25, Math.min(startZoom * newCanvasH / startCanvasH, 2.0));
+        zoomRef.current = newZoom;
+        setZoom(newZoom);
+      }
+    };
+    const onUp = () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      splitter.classList.remove('active');
+      lib.classList.remove('resizing');
+      const h = libHeightRef.current;
+      localStorage.setItem('tb-libh', h);
+      localStorage.setItem('thumbSize', Math.max(48, Math.min(h - 44, 160)));
+      if (bidRef.current) {
+        boardZoom.current[bidRef.current] = zoomRef.current;
+        localStorage.setItem(`tb-zoom-${bidRef.current}`, String(zoomRef.current));
+      }
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  };
+
   return (
     <div className="app" onClick={() => { selRef.current = []; setSel([]); renaming && setRenaming(null); setThemeOpen(false); setPropsPanelId(null); }}>
 
@@ -1960,8 +2254,8 @@ ${rows}
           </button>
         )}
         {bid && <>
-          <button className={`btn${showGrid?' acc':''}`} style={{fontSize:10,letterSpacing:.3}} onClick={toggleGrid} title={t('gridToggle')}>
-            ▦
+          <button className={`btn${showGrid?' acc':''}`} style={{fontSize:9,letterSpacing:.3}} onClick={toggleGrid} title={t('gridToggle')}>
+            {t('gridToggle')}
           </button>
           {showGrid && (<>
             <select className="btn" style={{fontSize:9,padding:'5px 8px',cursor:'pointer'}}
@@ -1969,20 +2263,20 @@ ${rows}
               onChange={e => changeGridStep(Number(e.target.value))}>
               {gridOptions.map(o => <option key={o.v} value={o.v}>{o.label}</option>)}
             </select>
-            <button className={`btn${snapGrid?' acc':''}`} style={{fontSize:11}} title={t('snapGrid')}
+            <button className={`btn${snapGrid?' acc':''}`} style={{fontSize:9}} title={t('snapGrid')}
               onClick={() => { const n=!snapGrid; setSnapGrid(n); localStorage.setItem('tb-snap',n?'on':'off'); }}>
-              ⊕
+              {t('snapGrid')}
             </button>
           </>)}
           <button className="btn" style={{fontSize:10}} onClick={openBoardConfig} title={t('boardConfig')}>
             {t('config')}
           </button>
-          <a className="btn" style={{fontSize:10}}
+          <a className="btn" style={{fontSize:10,gap:5}}
             href={`/api/boards/${pid}/${bid}/export`}
             download
             title={t('exportJpeg')}
           >
-            {t('exportJpeg')}
+            <SvgExport/>{t('exportJpeg')}
           </a>
         </>}
         {!sbOpen && (
@@ -2068,7 +2362,7 @@ ${rows}
                     <button className="sb-sec-btn" title={t('newProject')}
                       onClick={() => { setNameVal(''); setModal('project'); }}>+</button>
                     <button className="sb-sec-btn" title={t('importProjectBtn')}
-                      onClick={() => importInputRef.current?.click()}>⬆</button>
+                      onClick={() => importInputRef.current?.click()}><SvgImport size={12}/></button>
                     <input ref={importInputRef} type="file" accept=".zip" style={{display:'none'}}
                       onChange={e => { handleImportFile(e.target.files[0]); e.target.value = ''; }} />
                     <button className="sb-sec-btn" title={t('collapsePanel')} style={{marginLeft:2}}
@@ -2093,10 +2387,10 @@ ${rows}
                                 onBlur={submitRename} onClick={e => e.stopPropagation()}
                               />
                             ) : (
-                              <span className="nproj-name" title={p.name}>{p.name}</span>
+                              <span className="nproj-name" title={p.name} onDoubleClick={e => { e.stopPropagation(); startRename('project', p.id, p.name, e); }}>{p.name}</span>
                             )}
                             <div className="nrow-acts">
-                              <button className="nact edit" title={t('exportProjectBtn')} onClick={e => exportProject(p.id, e)}>↓</button>
+                              <button className="nact edit" title={t('exportProjectBtn')} onClick={e => exportProject(p.id, e)}><SvgExport size={11}/></button>
                               <button className="nact edit" title={t('renameBtn')} onClick={e => startRename('project', p.id, p.name, e)}>✎</button>
                               <button className="nact del"  title={t('deleteBtn')}  onClick={e => deleteProject(p.id, e)}>×</button>
                             </div>
@@ -2104,7 +2398,17 @@ ${rows}
                           {isActive && (
                             <div className="nboards">
                               {boards.map(b => (
-                                <div key={b.id} className={`nboard-row${b.id === bid ? ' active' : ''}`} onClick={() => setBid(b.id)}>
+                                <div key={b.id}
+                                  className={`nboard-row${b.id === bid ? ' active' : ''}${boardDragOver === b.id ? ' drag-over' : ''}`}
+                                  onClick={() => setBid(b.id)}
+                                  draggable
+                                  onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; setBoardDragId(b.id); }}
+                                  onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setBoardDragOver(b.id); }}
+                                  onDragLeave={() => setBoardDragOver(null)}
+                                  onDrop={e => { e.preventDefault(); setBoardDragOver(null); if (boardDragId) reorderBoards(boardDragId, b.id); setBoardDragId(null); }}
+                                  onDragEnd={() => { setBoardDragId(null); setBoardDragOver(null); }}
+                                >
+                                  <span className="nboard-drag">⠿</span>
                                   <span className="nboard-dash">└</span>
                                   {renaming?.type === 'board' && renaming.id === b.id ? (
                                     <input className="n-rename" autoFocus value={renaming.value}
@@ -2113,7 +2417,10 @@ ${rows}
                                       onBlur={submitRename} onClick={e => e.stopPropagation()}
                                     />
                                   ) : (
-                                    <span className="nboard-name" title={b.name}>{b.name}</span>
+                                    <span className="nboard-name" title={b.name} onDoubleClick={e => { e.stopPropagation(); startRename('board', b.id, b.name, e); }}>{b.name}</span>
+                                  )}
+                                  {!(renaming?.type === 'board' && renaming.id === b.id) && (
+                                    <span className="nboard-count">{(allBoardItems[b.id] || []).filter(i => i.type !== 'note').length || ''}</span>
                                   )}
                                   <div className="nrow-acts">
                                     <button className="nact edit" title={t('renameBtn')}      onClick={e => startRename('board', b.id, b.name, e)}>✎</button>
@@ -2161,32 +2468,32 @@ ${rows}
                   <span className="abt-label">{sel.length}</span>
                   {sel.length >= 2 && <>
                     <div className="align-bar-sep"/>
-                    <button className="abt" title={t('alLeft')}   onClick={() => alignItems('left')}>⊢</button>
-                    <button className="abt" title={t('alCH')}     onClick={() => alignItems('ch')}>⋮</button>
-                    <button className="abt" title={t('alRight')}  onClick={() => alignItems('right')}>⊣</button>
+                    <button className="abt" title={t('alLeft')}   onClick={() => alignItems('left')}><SvgAlignL/></button>
+                    <button className="abt" title={t('alCH')}     onClick={() => alignItems('ch')}><SvgAlignCH/></button>
+                    <button className="abt" title={t('alRight')}  onClick={() => alignItems('right')}><SvgAlignR/></button>
                     <div className="align-bar-sep"/>
-                    <button className="abt" title={t('alTop')}    onClick={() => alignItems('top')}>⊤</button>
-                    <button className="abt" title={t('alCV')}     onClick={() => alignItems('cv')}>⋯</button>
-                    <button className="abt" title={t('alBottom')} onClick={() => alignItems('bottom')}>⊥</button>
+                    <button className="abt" title={t('alTop')}    onClick={() => alignItems('top')}><SvgAlignT/></button>
+                    <button className="abt" title={t('alCV')}     onClick={() => alignItems('cv')}><SvgAlignCV/></button>
+                    <button className="abt" title={t('alBottom')} onClick={() => alignItems('bottom')}><SvgAlignB/></button>
                     {sel.length >= 3 && <>
                       <div className="align-bar-sep"/>
-                      <button className="abt" title={t('distH')}  onClick={() => alignItems('dh')}>↔</button>
-                      <button className="abt" title={t('distV')}  onClick={() => alignItems('dv')}>↕</button>
+                      <button className="abt" title={t('distH')}  onClick={() => alignItems('dh')}><SvgDistH/></button>
+                      <button className="abt" title={t('distV')}  onClick={() => alignItems('dv')}><SvgDistV/></button>
                     </>}
                     <div className="align-bar-sep"/>
-                    <button className="abt" title={t('eqWidth')}  onClick={() => alignItems('eqw')}>⊟</button>
+                    <button className="abt" title={t('eqWidth')}  onClick={() => alignItems('eqw')}><SvgEqW/></button>
                   </>}
                   <div className="align-bar-sep"/>
-                  <button className="abt" title={t('exportSelJpeg')} onClick={exportSelection}>⬇</button>
+                  <button className="abt" title={t('exportSelJpeg')} onClick={exportSelection}><SvgExport/></button>
                   {sel.length >= 2 && (
-                    <button className="abt" title={t('groupItems')} onClick={groupItems} style={{fontSize:10}}>⊓</button>
+                    <button className="abt" title={t('groupItems')} onClick={groupItems}><SvgGroup/></button>
                   )}
                   {sel.some(id => items.find(i => i.id === id)?.groupId) && (
-                    <button className="abt" title={t('ungroupItems')} onClick={ungroupItems} style={{fontSize:10}}>⊔</button>
+                    <button className="abt" title={t('ungroupItems')} onClick={ungroupItems}><SvgUngroup/></button>
                   )}
                   <div className="align-bar-sep"/>
-                  <button className="abt" style={{fontSize:10,color:'var(--muted)'}} title={t('clearSel')}
-                    onClick={() => { selRef.current = []; setSel([]); }}>✕</button>
+                  <button className="abt" style={{color:'var(--dim)',fontSize:14}} title={t('clearSel')}
+                    onClick={() => { selRef.current = []; setSel([]); }}>×</button>
                 </div>
               )}
               <div className="canvas" style={{
@@ -2205,6 +2512,8 @@ ${rows}
                 } : {})
               }} onClick={e => { if (wasDragged.current) { wasDragged.current = false; e.stopPropagation(); return; } selRef.current = []; setSel([]); }}>
                 {lasso && <div className="lasso" style={{left:lasso.x1,top:lasso.y1,width:Math.max(0,lasso.x2-lasso.x1),height:Math.max(0,lasso.y2-lasso.y1)}}/>}
+                {snapGuides.v.map((g, i) => <div key={`sgv${i}`} style={{position:'absolute',left:g.pos,top:g.from,width:1/zoom,height:g.to-g.from,background:'var(--acc)',opacity:.85,pointerEvents:'none',zIndex:9999}}/>)}
+                {snapGuides.h.map((g, i) => <div key={`sgh${i}`} style={{position:'absolute',left:g.from,top:g.pos,width:g.to-g.from,height:1/zoom,background:'var(--acc)',opacity:.85,pointerEvents:'none',zIndex:9999}}/>)}
                 {!bid && (
                   <div className="hint">
                     <em>{t('noBoard')}</em>
@@ -2222,14 +2531,17 @@ ${rows}
 
                 {[...items].sort((a, b) => (a.z||0)-(b.z||0)).map(item => {
                   if (item.type === 'note') return (
-                    <div key={item.id} className={`nitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}${item.inMemory?' inmem':''}${item.groupId?' grouped':''}`}
+                    <div key={item.id} className={`nitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}${item.inMemory?' inmem':''}${item.locked?' locked':''}${item.groupId?' grouped':''}`}
                       style={{ left: item.x, top: item.y, width: item.w, height: item.h || 150, zIndex: item.z||1, ...(item.freeRot ? {transform:`rotate(${item.freeRot}deg)`,transformOrigin:'center center'} : {}) }}
                       onPointerDown={e => onItemPD(e, item.id)}
-                      onClick={e => { e.stopPropagation(); if (wasDragged.current) { wasDragged.current = false; return; } if (!e.shiftKey) { const ids = item.groupId ? itemsRef.current.filter(i => i.groupId === item.groupId).map(i => i.id) : [item.id]; selRef.current = ids; setSel(ids); } }}
+                      onClick={e => handleItemClick(e, item)}
                     >
-                      <div className="bitem-bar">
+                      <div className="bitem-bar" onPointerDown={e => e.stopPropagation()}>
                         <button className="ibc fwd" title={t('bringFwdBtn')} onClick={e => { e.stopPropagation(); bringFwd(item.id); }}>↑</button>
-                        <button className="ibc del" title={t('deleteBtn')}   onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
+                        <button className="ibc" title={t('noteFontSize')}
+                          style={{fontSize:9,letterSpacing:.3,fontWeight:600,color:item.fontSize?'var(--acc)':'var(--dim)'}}
+                          onClick={e => { e.stopPropagation(); cycleNoteFontSize(item.id, item.fontSize ?? null); }}>
+                          {NOTE_FONT_LABEL(item.fontSize ?? null)}</button>
                         <button className="ibc" title={t('noteColor')}
                           onClick={e => { e.stopPropagation(); setNoteColorPanelId(id => id === item.id ? null : item.id); }}
                           style={{background: item.noteColor ? NOTE_COLOR_VALS[item.noteColor]?.[0] : undefined, color: item.noteColor ? 'rgba(255,255,255,.85)' : undefined}}>■</button>
@@ -2238,6 +2550,10 @@ ${rows}
                           onClick={e => { e.stopPropagation(); updateNoteInMemory(item.id, !item.inMemory); }}>
                           {item.inMemory ? <SvgMemOn/> : <SvgMemOff/>}
                         </button>
+                        <button className="ibc" title={t(item.locked ? 'unlockBtn' : 'lockBtn')}
+                          style={{color: item.locked ? 'var(--acc)' : undefined}}
+                          onClick={e => { e.stopPropagation(); updateItemLocked(item.id, !item.locked); }}>{item.locked ? <SvgUnlock/> : <SvgLock/>}</button>
+                        <button className="ibc del" title={t('deleteBtn')} onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
                       </div>
                       {noteColorPanelId === item.id && (
                         <div className="props-panel" style={{top: 'calc(100% + 2px)'}} onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
@@ -2260,7 +2576,7 @@ ${rows}
                           onPointerDown={e => e.stopPropagation()}
                           onClick={e => e.stopPropagation()}
                         />
-                        <textarea className="nitem-txt" value={item.text||''} placeholder={lang==='es'?'nota…':'note…'}
+                        <textarea className="nitem-txt" value={item.text||''} placeholder={lang==='es'?'nota…':'note…'} style={item.fontSize ? {fontSize:item.fontSize} : undefined}
                           onChange={e => updateNoteText(item.id, e.target.value)}
                           onFocus={pushUndo}
                           onBlur={saveLabel}
@@ -2324,18 +2640,21 @@ ${rows}
                     <div key={item.id} className={`bitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}${item.locked?' locked':''}${item.groupId?' grouped':''}`}
                       style={{ left: item.x, top: item.y, width: item.w, zIndex: item.z||1, ...(item.freeRot ? {transform:`rotate(${item.freeRot}deg)`,transformOrigin:'center center'} : {}) }}
                       onPointerDown={e => onItemPD(e, item.id)}
-                      onClick={e => { e.stopPropagation(); if (wasDragged.current) { wasDragged.current = false; return; } if (!e.shiftKey) { const ids = item.groupId ? itemsRef.current.filter(i => i.groupId === item.groupId).map(i => i.id) : [item.id]; selRef.current = ids; setSel(ids); } }}
+                      onClick={e => handleItemClick(e, item)}
                       onMouseEnter={() => photo && showPhotoInfo(photo, 'board', `/photos/${pid}/${photo.id}/thumb`, item.w, displayH)}
                       onMouseLeave={clearHoverInfo}
                     >
-                      <div className="bitem-bar">
+                      {item.locked && <div className="lock-badge"><SvgLock/></div>}
+                      <div className="bitem-bar" onPointerDown={e => e.stopPropagation()}>
                         <button className="ibc rot" title={t('rotateBtn')}
                           onPointerDown={e => { e.stopPropagation(); if (!item.locked) onFreeRotatePD(e, item.id); }}
                           onClick={e => { e.stopPropagation(); if (rotBtnDraggedRef.current) { rotBtnDraggedRef.current = false; return; } rotateItem(item.id); }}>↻</button>
                         <button className="ibc fwd" title={t('bringFwdBtn')} onClick={e => { e.stopPropagation(); bringFwd(item.id); }}>↑</button>
-                        <button className="ibc del" title={t('deleteBtn')}   onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
                         <button className="ibc" title={t('frameLabel')} onClick={e => { e.stopPropagation(); setPropsPanelId(id => id === item.id ? null : item.id); }}>▣</button>
-                        <button className="ibc" title={t(item.locked ? 'unlockBtn' : 'lockBtn')} onClick={e => { e.stopPropagation(); updateItemLocked(item.id, !item.locked); }}>{item.locked ? <SvgUnlock/> : <SvgLock/>}</button>
+                        <button className="ibc" title={t(item.locked ? 'unlockBtn' : 'lockBtn')}
+                          style={{color: item.locked ? 'var(--acc)' : undefined}}
+                          onClick={e => { e.stopPropagation(); updateItemLocked(item.id, !item.locked); }}>{item.locked ? <SvgUnlock/> : <SvgLock/>}</button>
+                        <button className="ibc del" title={t('deleteBtn')}   onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
                       </div>
                       {propsPanelId === item.id && (() => {
                         const frameUnit = boardUnits !== 'px' ? boardUnits : 'px';
@@ -2378,7 +2697,6 @@ ${rows}
                       </div>
                         );
                       })()}
-                      {item.locked && <div className="lock-badge"><SvgLock/></div>}
                       {item.groupId && <div className="group-badge">⊓</div>}
                       <div className="dim-tag">{dimLabel(item.w, displayH, boardDpi, boardUnits, item.frame)}</div>
                       <div className="lbl"
@@ -2399,8 +2717,9 @@ ${rows}
             </div>
 
             {/* LIBRARY */}
+            {libOpen && <div className="lib-splitter" onPointerDown={onSplitterPD}/>}
             {(() => {
-              const libH = libOpen ? 128 : 30;
+              const libH = libOpen ? libHeight : 30;
               const sortedPhotos = photoSort === 'name'
                 ? [...photos].sort((a, b) => a.name.localeCompare(b.name))
                 : photos;
@@ -2461,13 +2780,29 @@ ${rows}
                       ) : (
                         displayedPhotos.map(p => {
                           const inBoard = items.some(i => i.photoId === p.id);
+                          const isSel = libSel.includes(p.id);
                           return (
-                            <div key={p.id} className={`thumb${inBoard?' in-board':''}`}
+                            <div key={p.id} className={`thumb${inBoard?' in-board':''}${isSel?' lib-sel':''}`}
                               style={{width:thumbSize,height:thumbSize}}
                               draggable onDragStart={e => onLibDS(e, p.id)}
                               onMouseEnter={() => showPhotoInfo(p, inBoard?'board':'proj', `/photos/${pid}/${p.id}/thumb`)}
                               onMouseLeave={clearHoverInfo}
-                              onClick={() => { if (!bid) return showToast(t('createBoardFirst'), true); addToCenter(p.id); }}
+                              onClick={e => {
+                                if (e.ctrlKey || e.metaKey) {
+                                  const next = isSel ? libSel.filter(x => x !== p.id) : [...libSel, p.id];
+                                  setLibSelection(next);
+                                } else if (e.shiftKey && libSel.length > 0) {
+                                  const all = displayedPhotos.map(ph => ph.id);
+                                  const lastIdx = all.lastIndexOf(libSelRef.current[libSelRef.current.length - 1]);
+                                  const thisIdx = all.indexOf(p.id);
+                                  const [from, to] = lastIdx <= thisIdx ? [lastIdx, thisIdx] : [thisIdx, lastIdx];
+                                  setLibSelection([...new Set([...libSelRef.current, ...all.slice(from, to + 1)])]);
+                                } else {
+                                  setLibSelection([]);
+                                  if (!bid) return showToast(t('createBoardFirst'), true);
+                                  addToCenter(p.id);
+                                }
+                              }}
                               title={`${p.name}${inBoard?' · '+t('alreadyInTableau'):''}`}
                             >
                               <img src={`/photos/${pid}/${p.id}/thumb`} alt={p.name}/>
@@ -2479,6 +2814,14 @@ ${rows}
                         })
                       )}
                     </div>
+                    {libSel.length > 0 && (
+                      <div className="lib-sel-bar" onClick={e => e.stopPropagation()}>
+                        <span className="lib-sel-count">{libSel.length} {t('selected')}</span>
+                        <button className="lib-sel-btn" title={t('libSelClearTip')} onClick={() => setLibSelection([])}>✕</button>
+                        {bid && <button className="lib-sel-btn" title={t('libSelAddTip')} onClick={addSelectedToCanvas}>{t('libSelAdd')}</button>}
+                        <button className="lib-sel-btn danger" title={t('libSelDeleteTip')} onClick={deleteSelectedPhotos}>× {t('deleteBtn')}</button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -2489,7 +2832,7 @@ ${rows}
       )}
 
       {bid && (
-        <div className="zoom-ctrl" style={{bottom: (libOpen ? 128 : 30) + 20}}>
+        <div className="zoom-ctrl" style={{bottom: (libOpen ? libHeight : 30) + 20}}>
           <button className="zc-btn" title="Zoom − (Ctrl+−)" onClick={() => zoomStep(-1)}>−</button>
           <span className="zc-pct" style={{cursor: boardPx ? 'pointer' : 'default'}}>
             {boardPx
@@ -2501,8 +2844,8 @@ ${rows}
         </div>
       )}
       {resizeDim && <div className="resize-tip" style={{left:resizeDim.x, top:resizeDim.y}}>{resizeDim.label}</div>}
-      {uploading && <div className="uploading-bar" style={{bottom: libOpen ? 128 : 30}}/>}
-      {toast && <div className={`toast${toast.err?' err':''}`} style={{bottom: (libOpen ? 128 : 30) + 8}}>{toast.msg}</div>}
+      {uploading && <div className="uploading-bar" style={{bottom: libOpen ? libHeight : 30}}/>}
+      {toast && <div className={`toast${toast.err?' err':''}`} style={{bottom: (libOpen ? libHeight : 30) + 8}}>{toast.msg}</div>}
 
       {copyToMenu && (
         <>

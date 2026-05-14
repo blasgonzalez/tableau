@@ -4,7 +4,13 @@
       "Bash(npm install *)",
       "Bash(gh repo *)",
       "Bash(curl -s http://localhost:3000/api/version)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(grep -v \"CSS\\\\|css\\\\|\\\\\\\\.bitem-bar\")",
+      "Bash(Start-Sleep -Seconds 2)",
+      "Bash(Invoke-RestMethod -Uri \"http://localhost:3000/api/projects\" -Method Get)",
+      "Bash(ConvertTo-Json)",
+      "PowerShell(Start-Sleep -Seconds 2; try { Invoke-RestMethod -Uri \"http://localhost:3000/api/projects\" -Method Get | ConvertTo-Json } catch { \"Server not yet ready: $_\" })",
+      "PowerShell(Invoke-RestMethod -Uri \"http://localhost:3000/api/projects/644a2d3620/boards\" -Method Get)"
     ]
   }
 }

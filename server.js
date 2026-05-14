@@ -241,6 +241,18 @@ app.post('/api/projects/:pid/boards/:bid/duplicate', (req, res) => {
   res.json(copy);
 });
 
+app.put('/api/projects/:pid/boards/order', (req, res) => {
+  const { pid } = req.params;
+  const { order } = req.body;
+  if (!Array.isArray(order)) return res.status(400).json({ error: 'order required' });
+  const boards = readJSON(boardsMeta(pid));
+  const map = Object.fromEntries(boards.map(b => [b.id, b]));
+  const sorted = order.map(id => map[id]).filter(Boolean);
+  boards.forEach(b => { if (!order.includes(b.id)) sorted.push(b); });
+  writeJSON(boardsMeta(pid), sorted);
+  res.json({ ok: true });
+});
+
 // ── Photos – upload ──────────────────────────────────────────────────────────
 app.get('/api/projects/:pid/photos', (req, res) => {
   res.json(readJSON(photosMeta(req.params.pid)));
