@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.3.5] — 2026-05-14
+### Añadido
+- Selección lasso: arrastra sobre el canvas vacío para seleccionar varios elementos con un rectángulo de goma
+- Exportar selección como JPEG: botón ⬇ en la barra de selección (también visible con 1 elemento) exporta únicamente los elementos seleccionados
+- Agrupación de elementos: botón ⊓ agrupa los elementos seleccionados; al hacer clic en cualquier miembro del grupo se selecciona todo el grupo; botón ⊔ para desagrupar
+- Historial de deshacer persistente por tablero: al cambiar de tablero el historial de deshacer/rehacer se conserva y se restaura al volver
+- Importar carpeta: botón + Carpeta en la biblioteca importa todas las imágenes de una carpeta de golpe
+
+### Corregido
+- Selección lasso: los elementos dentro del rectángulo no quedaban seleccionados al soltar (el clic burbujeaba al contenedor raíz y borraba la selección)
+- Mover grupo con imán activado: cada foto se ajustaba individualmente a la guía más próxima rompiendo las distancias; ahora el ajuste se calcula una sola vez sobre el anclaje y se aplica igual a todo el grupo
+
+---
+
 ## [1.3.4] — 2026-05-13
 ### Añadido
 - Copiar/pegar elementos: Ctrl+C copia la selección, Ctrl+V pega con desplazamiento de 20 px; funciona entre tableros del mismo proyecto

@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.3.5] — 2026-05-14
+### Added
+- Lasso selection: drag on empty canvas to select multiple elements with a rubber-band rectangle
+- Export selection as JPEG: ⬇ button in the selection bar (visible with 1 or more items) exports only the selected elements
+- Element grouping: ⊓ button groups selected elements; clicking any group member selects the whole group; ⊔ to ungroup
+- Persistent undo history per board: undo/redo history is preserved when switching boards and restored on return
+- Import folder: + Folder button in the library imports all images from a folder at once
+
+### Fixed
+- Lasso selection: items inside the rectangle were not selected on release (click bubbled to the root container and cleared the selection)
+- Move group with snap enabled: each item was snapping individually to its nearest grid line, breaking relative spacing; snap is now calculated once on the anchor and applied uniformly to the whole group
+
+---
+
 ## [1.3.4] — 2026-05-13
 ### Added
 - Copy/paste elements: Ctrl+C copies the selection, Ctrl+V pastes with a 20 px offset; works across boards within the same project

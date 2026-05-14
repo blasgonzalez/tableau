@@ -2,10 +2,10 @@
   {
     "id": "mooh5okh04d",
     "photoId": "45083f5c8eb9",
-    "x": 1082,
-    "y": 76,
+    "x": 1209.3333333333333,
+    "y": 125,
     "w": 321,
-    "z": 289,
+    "z": 325,
     "label": "Estas son notas relativas a esta fotografia. Aqui puedes indicar cuestiones relacionadas con la producción",
     "rot": 0,
     "locked": false,
@@ -26,34 +26,36 @@
   {
     "id": "mooh8sbvgrb",
     "photoId": "175037ef4e80",
-    "x": 1550,
-    "y": 425,
+    "x": 1659.3333333333333,
+    "y": 475,
     "w": 141,
-    "z": 279,
+    "z": 326,
     "label": "",
     "rot": 0
   },
   {
     "id": "moohphyqiuo",
     "photoId": "ca790c30f072",
-    "x": 325,
-    "y": 65.51136363636363,
+    "x": 350,
+    "y": 88,
     "w": 194,
-    "z": 277,
+    "z": 319,
     "label": "",
     "rot": 0,
-    "locked": true
+    "locked": false,
+    "groupId": "mp536475"
   },
   {
     "id": "mopn58v2imh",
     "photoId": "9b76c48154ec",
-    "x": 50,
+    "x": 61.33554292929293,
     "y": 175,
     "w": 260,
-    "z": 280,
+    "z": 320,
     "label": "Brobdingnag: KM0",
     "rot": 0,
-    "locked": false
+    "locked": false,
+    "groupId": "mp536475"
   },
   {
     "id": "mou35og1zyj",
@@ -77,10 +79,10 @@
   {
     "id": "mp32a4a9q5g",
     "photoId": "a291a63819ee",
-    "x": 1451,
-    "y": 76,
+    "x": 1575.6666666666667,
+    "y": 150,
     "w": 320,
-    "z": 290,
+    "z": 327,
     "label": "",
     "rot": 0,
     "frame": 0
@@ -88,10 +90,10 @@
   {
     "id": "mp4h5l4p0ls",
     "photoId": "ca790c30f072",
-    "x": 1138,
-    "y": 580,
+    "x": 1250.6666666666667,
+    "y": 625,
     "w": 194,
-    "z": 292,
+    "z": 328,
     "label": "",
     "rot": 0,
     "locked": false

@@ -1,6 +1,6 @@
 {
-  "version": "1.3.4",
+  "version": "1.3.5",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-05-13",
-  "notes": "Copiar/pegar · Duplicar · Rotación libre · Color de notas · Copiar fotos entre proyectos"
+  "releaseDate": "2026-05-14",
+  "notes": "Selección lasso · Exportar selección JPEG · Agrupación de elementos · Historial deshacer persistente · Importar carpeta · Correcciones lasso y snap en grupo"
 }

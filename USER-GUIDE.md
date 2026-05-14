@@ -62,7 +62,7 @@ The library strip at the bottom shows all photos uploaded to the active project.
 
 ### Uploading photos
 
-Click **+ Upload** in the library header or drag image files directly onto the canvas. Photos are automatically resized to a maximum of 1800 px and stored as JPEG.
+Click **+ Upload** in the library header to select individual files, or **+ Folder** to import all images from a folder at once. You can also drag image files directly onto the canvas. Photos are automatically resized to a maximum of 1800 px and stored as JPEG.
 
 ### Sorting and filtering
 
@@ -124,15 +124,18 @@ The **▣** button opens a panel to set a frame thickness in the board's configu
 
 ## Multi-selection and alignment
 
-Click and drag on empty canvas space to select multiple photos. An alignment toolbar appears at the top:
+Click and drag on empty canvas space to select multiple elements with a lasso rectangle. A selection toolbar appears at the top:
 
 | Button | Action |
 |---|---|
-| Align left / right edges | |
-| Align top / bottom edges | |
-| Center horizontally / vertically | |
-| Distribute horizontally / vertically | |
+| Align left / right edges | With ≥ 2 elements |
+| Align top / bottom edges | With ≥ 2 elements |
+| Center horizontally / vertically | With ≥ 2 elements |
+| Distribute horizontally / vertically | With ≥ 3 elements |
 | Match width to anchor | The anchor is the first item selected (solid outline) |
+| **⬇** | Export selection as JPEG (available with ≥ 1 element) |
+| **⊓** | Group selected elements (≥ 2) |
+| **⊔** | Ungroup (visible when any grouped element is selected) |
 | Deselect | |
 
 ---

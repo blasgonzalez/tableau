@@ -62,7 +62,7 @@ La franja inferior muestra todas las fotos subidas al proyecto activo.
 
 ### Subir fotos
 
-Haz clic en **+ Subir** en la cabecera de la librería o arrastra archivos de imagen directamente al canvas. Las fotos se redimensionan automáticamente a un máximo de 1800 px y se guardan en JPEG.
+Haz clic en **+ Subir** en la cabecera de la librería para seleccionar archivos individuales, o en **+ Carpeta** para importar todas las imágenes de una carpeta de golpe. También puedes arrastrar archivos de imagen directamente al canvas. Las fotos se redimensionan automáticamente a un máximo de 1800 px y se guardan en JPEG.
 
 ### Ordenación y filtros
 
@@ -124,15 +124,18 @@ El botón **▣** abre un panel para establecer el grosor del marco en la unidad
 
 ## Multiselección y alineación
 
-Haz clic y arrastra sobre el canvas para seleccionar varias fotos. Aparece una barra de alineación en la parte superior:
+Haz clic y arrastra sobre el canvas vacío para seleccionar varios elementos con un rectángulo lasso. Aparece una barra de selección en la parte superior:
 
 | Botón | Acción |
 |---|---|
-| Alinear bordes izquierdos / derechos | |
-| Alinear bordes superiores / inferiores | |
-| Centrar horizontalmente / verticalmente | |
-| Distribuir horizontalmente / verticalmente | |
+| Alinear bordes izquierdos / derechos | Con ≥ 2 elementos |
+| Alinear bordes superiores / inferiores | Con ≥ 2 elementos |
+| Centrar horizontalmente / verticalmente | Con ≥ 2 elementos |
+| Distribuir horizontalmente / verticalmente | Con ≥ 3 elementos |
 | Igualar ancho al anclaje | El anclaje es el primer elemento seleccionado (contorno sólido) |
+| **⬇** | Exportar selección como JPEG (disponible con ≥ 1 elemento) |
+| **⊓** | Agrupar los elementos seleccionados (≥ 2) |
+| **⊔** | Desagrupar (visible cuando algún elemento del grupo está seleccionado) |
 | Deseleccionar | |
 
 ---

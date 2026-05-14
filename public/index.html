@@ -305,6 +305,8 @@ select.inp{cursor:pointer;appearance:none;padding-right:28px;background-image:ur
 .cp-menu-item{padding:7px 12px;font-size:10px;color:var(--sub);cursor:pointer;letter-spacing:.3px;transition:background .1s}
 .cp-menu-item:hover{background:var(--surf);color:var(--text)}
 .cp-menu-empty{padding:7px 12px;font-size:9px;color:var(--muted);letter-spacing:.3px}
+.lasso{position:absolute;pointer-events:none;border:1.5px dashed var(--acc);background:rgba(196,137,74,0.07);z-index:500}
+.group-badge{position:absolute;right:0;top:0;font-size:6px;color:var(--muted);padding:1px 3px;pointer-events:none;zoom:calc(1/var(--canvas-zoom,1));background:var(--panel);letter-spacing:.5px;border-radius:0 0 0 3px}
 /* ── THUMB COPY BUTTON ── */
 .thumb-cp{position:absolute;bottom:2px;right:22px;width:18px;height:18px;background:rgba(13,12,11,.75);color:var(--sub);border:none;cursor:pointer;font-size:10px;border-radius:2px;display:none;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;line-height:1;z-index:2}
 .thumb:hover .thumb-cp{display:flex}
@@ -527,6 +529,10 @@ const I18N = {
     copyToProject:'Copiar a proyecto',
     photoCopied:'Foto copiada al proyecto',
     noOtherProjects:'Sin otros proyectos',
+    uploadFolder:'+ Carpeta',
+    exportSelJpeg:'Exportar selección JPEG',
+    groupItems:'Agrupar',
+    ungroupItems:'Desagrupar',
   },
   en: {
     upload:'+ Upload', report:'≡ Report', config:'⚙ Config', exportJpeg:'⬇ Export JPEG',
@@ -618,6 +624,10 @@ const I18N = {
     copyToProject:'Copy to project',
     photoCopied:'Photo copied to project',
     noOtherProjects:'No other projects',
+    uploadFolder:'+ Folder',
+    exportSelJpeg:'Export selection JPEG',
+    groupItems:'Group',
+    ungroupItems:'Ungroup',
   },
 };
 
@@ -693,6 +703,7 @@ function App() {
   const [propsPanelId,  setPropsPanelId]  = useState(null);
   const [noteColorPanelId, setNoteColorPanelId] = useState(null);
   const [copyToMenu,    setCopyToMenu]    = useState(null); // {photoId, x, y}
+  const [lasso,         setLasso]         = useState(null); // {x1,y1,x2,y2} canvas coords
 
   const [theme,         setTheme]         = useState(() => localStorage.getItem('tb-theme') || 'dark-amber');
   const [themeOpen,     setThemeOpen]     = useState(false);
@@ -737,6 +748,9 @@ function App() {
   const importInputRef  = useRef(null);
   const clipboardRef    = useRef([]);
   const rotBtnDraggedRef = useRef(false);
+  const lassoRef        = useRef(null);
+  const boardHistoryRef = useRef({});
+  const previousBidRef  = useRef(null);
 
   useEffect(() => { itemsRef.current         = items;         }, [items]);
   useEffect(() => { pidRef.current           = pid;           }, [pid]);
@@ -787,14 +801,24 @@ function App() {
   }, [pid]);
 
   useEffect(() => { setLibSearch(''); }, [pid]);
+  useEffect(() => { boardHistoryRef.current = {}; previousBidRef.current = null; }, [pid]);
 
   useEffect(() => {
-    if (!bid || !pid) { setItems([]); itemsRef.current = []; return; }
+    // Save undo/redo for previous board before switching
+    const prevBid = previousBidRef.current;
+    if (prevBid) {
+      boardHistoryRef.current[prevBid] = { undo: undoStack.current, redo: redoStack.current };
+    }
+    previousBidRef.current = bid;
+    if (!bid || !pid) { setItems([]); itemsRef.current = []; undoStack.current = []; redoStack.current = []; return; }
+    // Restore history for this board, or start fresh
+    const saved = boardHistoryRef.current[bid];
+    if (saved) { undoStack.current = saved.undo; redoStack.current = saved.redo; }
+    else { undoStack.current = []; redoStack.current = []; }
     api.get(`/api/boards/${pid}/${bid}/items`).then(it => {
       setItems(it); itemsRef.current = it;
     });
     selRef.current = []; setSel([]);
-    undoStack.current = []; redoStack.current = [];
   }, [bid, pid]);
 
   const showToast = (msg, err = false) => {
@@ -1431,7 +1455,26 @@ ${rows}
       }
     }
 
-    const dragIds = [...selRef.current].filter(id => !itemsRef.current.find(i => i.id === id)?.locked);
+    const baseIds = [...selRef.current];
+    const expandedIds = [...new Set([
+      ...baseIds,
+      ...baseIds.flatMap(id => {
+        const it = itemsRef.current.find(i => i.id === id);
+        return it?.groupId ? itemsRef.current.filter(i => i.groupId === it.groupId).map(i => i.id) : [];
+      }),
+    ])];
+    // If any member of a group is locked, the whole group is immovable
+    const lockedGroups = new Set(
+      expandedIds
+        .filter(id => itemsRef.current.find(i => i.id === id)?.locked)
+        .flatMap(id => { const it = itemsRef.current.find(i => i.id === id); return it?.groupId ? [it.groupId] : []; })
+    );
+    const dragIds = expandedIds.filter(id => {
+      const it = itemsRef.current.find(i => i.id === id);
+      if (!it || it.locked) return false;
+      if (it.groupId && lockedGroups.has(it.groupId)) return false;
+      return true;
+    });
     // Bring to front (only unlocked items)
     let z = Math.max(0, ...itemsRef.current.map(i => i.z || 0));
     const fwd = itemsRef.current.map(i => dragIds.includes(i.id) ? { ...i, z: ++z } : i);
@@ -1449,14 +1492,20 @@ ${rows}
       const h = getItemH(i);
       return { x: Math.max(0, Math.min(x, bp.w - i.w)), y: Math.max(0, Math.min(y, bp.h - h)) };
     };
+    const applySnap = (rawDx, rawDy) => {
+      if (!snapGrid || !showGrid || dragIds.length === 0) return { sdx: rawDx, sdy: rawDy };
+      const anchor = starts[dragIds[0]];
+      const snappedX = snapVal(anchor.x + rawDx, gridCellPx);
+      const snappedY = snapVal(anchor.y + rawDy, gridCellPx);
+      return { sdx: snappedX - anchor.x, sdy: snappedY - anchor.y };
+    };
     const onMM = e => {
       ldx = e.clientX - sx; ldy = e.clientY - sy;
       const z = zoomRef.current;
+      const { sdx, sdy } = applySnap(ldx/z, ldy/z);
       setItems(its => its.map(i => {
         if (!dragIds.includes(i.id)) return i;
-        let rx = starts[i.id].x + ldx/z, ry = starts[i.id].y + ldy/z;
-        if (snapGrid && showGrid) { rx = snapVal(rx, gridCellPx); ry = snapVal(ry, gridCellPx); }
-        const { x, y } = clampItem(i, rx, ry);
+        const { x, y } = clampItem(i, starts[i.id].x + sdx, starts[i.id].y + sdy);
         return { ...i, x, y };
       }));
     };
@@ -1464,11 +1513,11 @@ ${rows}
       window.removeEventListener('pointermove', onMM);
       window.removeEventListener('pointerup',   onMU);
       const z = zoomRef.current;
+      const { sdx, sdy } = applySnap(ldx/z, ldy/z);
       const nit = itemsRef.current.map(i => {
         if (!dragIds.includes(i.id)) return i;
-        let rx = starts[i.id].x + ldx/z, ry = starts[i.id].y + ldy/z;
-        if (snapGrid && showGrid) { rx = snapVal(rx, gridCellPx); ry = snapVal(ry, gridCellPx); }
-        else { rx = Math.round(rx); ry = Math.round(ry); }
+        let rx = starts[i.id].x + (snapGrid && showGrid ? sdx : Math.round(ldx/z));
+        let ry = starts[i.id].y + (snapGrid && showGrid ? sdy : Math.round(ldy/z));
         const { x, y } = clampItem(i, rx, ry);
         return { ...i, x, y };
       });
@@ -1566,6 +1615,64 @@ ${rows}
     window.addEventListener('pointermove', onMM);
     window.addEventListener('pointerup', onMU);
   };
+
+  // lasso: all on window so nothing in the React tree can block it
+  useEffect(() => {
+    const onPD = e => {
+      if (e.button !== 0) return;
+      const wrap = wrapRef.current;
+      if (!wrap || !wrap.contains(e.target)) return;
+      if (e.target.closest('.align-bar,.bitem,.nitem')) return;
+      const toCanvas = (cx, cy) => {
+        const r = wrap.getBoundingClientRect();
+        const z = zoomRef.current;
+        const pad = boardPxRef.current ? BOARD_PAD : 0;
+        return { x: (cx - r.left + wrap.scrollLeft - pad) / z, y: (cy - r.top + wrap.scrollTop - pad) / z };
+      };
+      const anchor = toCanvas(e.clientX, e.clientY);
+      let started = false;
+      const onMove = ev => {
+        const cp = toCanvas(ev.clientX, ev.clientY);
+        const dx = cp.x - anchor.x, dy = cp.y - anchor.y;
+        if (!started && dx*dx + dy*dy < 9) return;
+        started = true;
+        const l = { x1: Math.min(anchor.x, cp.x), y1: Math.min(anchor.y, cp.y), x2: Math.max(anchor.x, cp.x), y2: Math.max(anchor.y, cp.y) };
+        lassoRef.current = l; setLasso(l);
+      };
+      const onUp = () => {
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup',   onUp);
+        if (lassoRef.current) {
+          wasDragged.current = true;
+          const { x1, y1, x2, y2 } = lassoRef.current;
+          const selected = itemsRef.current.filter(i => {
+            const ih = i.type === 'note'
+              ? (i.h || i.w)
+              : (() => {
+                  const p = photosRef.current.find(ph => ph.id === i.photoId);
+                  if (!p) return i.w;
+                  return (i.rot || 0) % 180 !== 0 ? Math.round(i.w * p.w / p.h) : Math.round(i.w * p.h / p.w);
+                })();
+            return i.x < x2 && (i.x + (i.w || 0)) > x1 && i.y < y2 && (i.y + ih) > y1;
+          }).map(i => i.id);
+          const withGroups = [...new Set([
+            ...selected,
+            ...selected.flatMap(id => {
+              const it = itemsRef.current.find(i => i.id === id);
+              return it?.groupId ? itemsRef.current.filter(i => i.groupId === it.groupId).map(i => i.id) : [];
+            }),
+          ])];
+          selRef.current = withGroups;
+          ReactDOM.flushSync(() => setSel(withGroups));
+        }
+        lassoRef.current = null; setLasso(null);
+      };
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup',   onUp);
+    };
+    window.addEventListener('pointerdown', onPD);
+    return () => window.removeEventListener('pointerdown', onPD);
+  }, []);
 
   const updateNoteColor = (id, color) => {
     const u = itemsRef.current.map(i => i.id === id ? {...i, noteColor: color} : i);
@@ -1719,6 +1826,27 @@ ${rows}
     }
     const norm = applyNormalized(nit);
     saveItemsNow(norm);
+  };
+
+  const groupItems = () => {
+    if (selRef.current.length < 2) return;
+    pushUndo();
+    const gid = Date.now().toString(36);
+    const nit = itemsRef.current.map(i => selRef.current.includes(i.id) ? { ...i, groupId: gid } : i);
+    setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
+  };
+  const ungroupItems = () => {
+    if (!selRef.current.length) return;
+    pushUndo();
+    const nit = itemsRef.current.map(i => selRef.current.includes(i.id) ? { ...i, groupId: undefined } : i);
+    setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
+  };
+
+  const exportSelection = () => {
+    const ids = selRef.current.join(',');
+    const p = pidRef.current, b = bidRef.current;
+    if (!p || !b || !ids) return;
+    window.location.href = `/api/boards/${p}/${b}/export?ids=${encodeURIComponent(ids)}`;
   };
 
   if (!ready) return (
@@ -2028,24 +2156,34 @@ ${rows}
               onDrop={onCanvasDrop}
             >
               {dragOver && <div className="canvas-drop-hint">{t('dropHint')}</div>}
-              {sel.length >= 2 && (
+              {sel.length >= 1 && (
                 <div className="align-bar" onClick={e => e.stopPropagation()}>
                   <span className="abt-label">{sel.length}</span>
-                  <div className="align-bar-sep"/>
-                  <button className="abt" title={t('alLeft')}   onClick={() => alignItems('left')}>⊢</button>
-                  <button className="abt" title={t('alCH')}     onClick={() => alignItems('ch')}>⋮</button>
-                  <button className="abt" title={t('alRight')}  onClick={() => alignItems('right')}>⊣</button>
-                  <div className="align-bar-sep"/>
-                  <button className="abt" title={t('alTop')}    onClick={() => alignItems('top')}>⊤</button>
-                  <button className="abt" title={t('alCV')}     onClick={() => alignItems('cv')}>⋯</button>
-                  <button className="abt" title={t('alBottom')} onClick={() => alignItems('bottom')}>⊥</button>
-                  {sel.length >= 3 && <>
+                  {sel.length >= 2 && <>
                     <div className="align-bar-sep"/>
-                    <button className="abt" title={t('distH')}  onClick={() => alignItems('dh')}>↔</button>
-                    <button className="abt" title={t('distV')}  onClick={() => alignItems('dv')}>↕</button>
+                    <button className="abt" title={t('alLeft')}   onClick={() => alignItems('left')}>⊢</button>
+                    <button className="abt" title={t('alCH')}     onClick={() => alignItems('ch')}>⋮</button>
+                    <button className="abt" title={t('alRight')}  onClick={() => alignItems('right')}>⊣</button>
+                    <div className="align-bar-sep"/>
+                    <button className="abt" title={t('alTop')}    onClick={() => alignItems('top')}>⊤</button>
+                    <button className="abt" title={t('alCV')}     onClick={() => alignItems('cv')}>⋯</button>
+                    <button className="abt" title={t('alBottom')} onClick={() => alignItems('bottom')}>⊥</button>
+                    {sel.length >= 3 && <>
+                      <div className="align-bar-sep"/>
+                      <button className="abt" title={t('distH')}  onClick={() => alignItems('dh')}>↔</button>
+                      <button className="abt" title={t('distV')}  onClick={() => alignItems('dv')}>↕</button>
+                    </>}
+                    <div className="align-bar-sep"/>
+                    <button className="abt" title={t('eqWidth')}  onClick={() => alignItems('eqw')}>⊟</button>
                   </>}
                   <div className="align-bar-sep"/>
-                  <button className="abt" title={t('eqWidth')}  onClick={() => alignItems('eqw')}>⊟</button>
+                  <button className="abt" title={t('exportSelJpeg')} onClick={exportSelection}>⬇</button>
+                  {sel.length >= 2 && (
+                    <button className="abt" title={t('groupItems')} onClick={groupItems} style={{fontSize:10}}>⊓</button>
+                  )}
+                  {sel.some(id => items.find(i => i.id === id)?.groupId) && (
+                    <button className="abt" title={t('ungroupItems')} onClick={ungroupItems} style={{fontSize:10}}>⊔</button>
+                  )}
                   <div className="align-bar-sep"/>
                   <button className="abt" style={{fontSize:10,color:'var(--muted)'}} title={t('clearSel')}
                     onClick={() => { selRef.current = []; setSel([]); }}>✕</button>
@@ -2065,7 +2203,8 @@ ${rows}
                   boxShadow: '0 8px 48px rgba(0,0,0,.7)',
                   overflow: 'hidden',
                 } : {})
-              }} onClick={() => { selRef.current = []; setSel([]); }}>
+              }} onClick={e => { if (wasDragged.current) { wasDragged.current = false; e.stopPropagation(); return; } selRef.current = []; setSel([]); }}>
+                {lasso && <div className="lasso" style={{left:lasso.x1,top:lasso.y1,width:Math.max(0,lasso.x2-lasso.x1),height:Math.max(0,lasso.y2-lasso.y1)}}/>}
                 {!bid && (
                   <div className="hint">
                     <em>{t('noBoard')}</em>
@@ -2083,10 +2222,10 @@ ${rows}
 
                 {[...items].sort((a, b) => (a.z||0)-(b.z||0)).map(item => {
                   if (item.type === 'note') return (
-                    <div key={item.id} className={`nitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}${item.inMemory?' inmem':''}`}
+                    <div key={item.id} className={`nitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}${item.inMemory?' inmem':''}${item.groupId?' grouped':''}`}
                       style={{ left: item.x, top: item.y, width: item.w, height: item.h || 150, zIndex: item.z||1, ...(item.freeRot ? {transform:`rotate(${item.freeRot}deg)`,transformOrigin:'center center'} : {}) }}
                       onPointerDown={e => onItemPD(e, item.id)}
-                      onClick={e => { e.stopPropagation(); if (wasDragged.current) { wasDragged.current = false; return; } if (!e.shiftKey) { selRef.current = [item.id]; setSel([item.id]); } }}
+                      onClick={e => { e.stopPropagation(); if (wasDragged.current) { wasDragged.current = false; return; } if (!e.shiftKey) { const ids = item.groupId ? itemsRef.current.filter(i => i.groupId === item.groupId).map(i => i.id) : [item.id]; selRef.current = ids; setSel(ids); } }}
                     >
                       <div className="bitem-bar">
                         <button className="ibc fwd" title={t('bringFwdBtn')} onClick={e => { e.stopPropagation(); bringFwd(item.id); }}>↑</button>
@@ -2163,6 +2302,7 @@ ${rows}
                         )}
                       </div>
                       <div className="nitem-rc" onPointerDown={e => onResizeNotePD(e, item.id)}/>
+                      {item.groupId && <div className="group-badge">⊓</div>}
                     </div>
                   );
                   const photo = photos.find(p => p.id === item.photoId);
@@ -2181,10 +2321,10 @@ ${rows}
                   const offX = (item.w  - naturalW) / 2;
                   const offY = (displayH - naturalH) / 2;
                   return (
-                    <div key={item.id} className={`bitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}${item.locked?' locked':''}`}
+                    <div key={item.id} className={`bitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}${item.locked?' locked':''}${item.groupId?' grouped':''}`}
                       style={{ left: item.x, top: item.y, width: item.w, zIndex: item.z||1, ...(item.freeRot ? {transform:`rotate(${item.freeRot}deg)`,transformOrigin:'center center'} : {}) }}
                       onPointerDown={e => onItemPD(e, item.id)}
-                      onClick={e => { e.stopPropagation(); if (wasDragged.current) { wasDragged.current = false; return; } if (!e.shiftKey) { selRef.current = [item.id]; setSel([item.id]); } }}
+                      onClick={e => { e.stopPropagation(); if (wasDragged.current) { wasDragged.current = false; return; } if (!e.shiftKey) { const ids = item.groupId ? itemsRef.current.filter(i => i.groupId === item.groupId).map(i => i.id) : [item.id]; selRef.current = ids; setSel(ids); } }}
                       onMouseEnter={() => photo && showPhotoInfo(photo, 'board', `/photos/${pid}/${photo.id}/thumb`, item.w, displayH)}
                       onMouseLeave={clearHoverInfo}
                     >
@@ -2239,6 +2379,7 @@ ${rows}
                         );
                       })()}
                       {item.locked && <div className="lock-badge"><SvgLock/></div>}
+                      {item.groupId && <div className="group-badge">⊓</div>}
                       <div className="dim-tag">{dimLabel(item.w, displayH, boardDpi, boardUnits, item.frame)}</div>
                       <div className="lbl"
                         style={{ top: displayH + (item.frame ? physToPx(item.frame, boardDpi, boardUnits) : 0) }}
@@ -2296,6 +2437,12 @@ ${rows}
                     <input type="file" accept="image/*" multiple style={{display:'none'}} id="tb-upload"
                       onChange={e => { uploadFiles(e.target.files); e.target.value = ''; }}
                     />
+                    <input type="file" accept="image/*" multiple webkitdirectory="" style={{display:'none'}} id="tb-upload-folder"
+                      onChange={e => { uploadFiles(e.target.files); e.target.value = ''; }}
+                    />
+                    <label htmlFor="tb-upload-folder" className="btn" style={{cursor:'pointer',fontSize:9}} onClick={e => e.stopPropagation()}>
+                      {t('uploadFolder')}
+                    </label>
                     <label htmlFor="tb-upload" className="btn acc" style={{cursor:'pointer',fontSize:9}} onClick={e => e.stopPropagation()}>
                       {t('upload')}
                     </label>

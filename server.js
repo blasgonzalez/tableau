@@ -317,7 +317,9 @@ app.put('/api/boards/:pid/:bid/items', (req, res) => {
 // ── Board export (JPEG composite) ─────────────────────────────────────────────
 app.get('/api/boards/:pid/:bid/export', async (req, res) => {
   const { pid, bid } = req.params;
-  const boardItems = readJSON(boardFile(pid, bid), []);
+  const { ids } = req.query;
+  let boardItems = readJSON(boardFile(pid, bid), []);
+  if (ids) { const idSet = new Set(ids.split(',')); boardItems = boardItems.filter(i => idSet.has(i.id)); }
   const photosData = readJSON(photosMeta(pid));
   const boardsData = readJSON(boardsMeta(pid));
   const board      = boardsData.find(b => b.id === bid);
