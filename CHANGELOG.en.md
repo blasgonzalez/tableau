@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.3.10] — 2026-05-15
+### Added
+- Batch tagging: with multiple photos selected in the library, the **# Tags** button in the selection bar opens a panel to add or remove tags from all of them at once; checkboxes show an indeterminate state when only some selected photos have a given tag
+- Batch rating: pressing a key 0–5 while the cursor is over a selected photo and more than one photo is selected applies the rating to all selected photos
+- Enhanced info panel: the side panel now shows the star rating, dominant hue with colour swatch, brightness percentage, and assigned tags for each photo
+
+---
+
+## [1.3.9] — 2026-05-15
+### Added
+- Drag image files from the file explorer directly onto the library to upload them without placing on the canvas; the library shows an outline highlight while files are dragged over it
+- ⊞/⊟ snap button in the library header to toggle between compact height and extended view (70 % of the screen) in one click; canvas zoom adjusts automatically
+
+### Improved
+- All 5 rating stars are now always visible on each thumbnail: filled and accent-coloured when rated, faint and empty when not; makes it easy to assess ratings at a glance without hovering
+
+---
+
 ## [1.3.8] — 2026-05-15
 ### Added
 - Right-click context menu on photos and notes: Bring forward, Frame (photos only), Set as default size (photos only), Duplicate, Delete

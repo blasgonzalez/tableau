@@ -115,10 +115,21 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .ibd-tag{font-size:7px;letter-spacing:.4px;padding:1px 5px;border:1px solid var(--border2);color:var(--sub)}
 .ibd-tag.cur{border-color:var(--acc-dim);color:var(--acc);background:var(--acc-faint)}
 .ibd-none{font-size:8px;color:var(--muted);margin-top:2px}
+.info-rating{display:flex;align-items:center;gap:1px;font-size:9px;color:var(--border2);margin-top:2px;letter-spacing:1px}
+.info-rating .on{color:var(--acc)}
+.info-rating .none{font-size:8px;color:var(--muted);letter-spacing:.2px}
+.info-color-row{display:flex;align-items:center;gap:5px;margin-top:3px}
+.info-color-swatch{width:10px;height:10px;border-radius:2px;border:1px solid rgba(255,255,255,.12);flex-shrink:0}
+.info-color-label{font-size:9px;color:var(--dim);letter-spacing:.2px}
+.info-bright-bar{width:36px;height:5px;border-radius:2px;background:linear-gradient(to right,#111,#fff);border:1px solid var(--border2);flex-shrink:0;position:relative;overflow:hidden}
+.info-bright-bar-fill{position:absolute;top:0;left:0;height:100%;width:2px;background:var(--acc);transform:translateX(-50%)}
+.info-tag-list{display:flex;flex-wrap:wrap;gap:2px;margin-top:3px}
+.info-tag-chip{font-size:7px;padding:1px 4px;border:1px solid var(--border2);color:var(--dim);letter-spacing:.2px}
 
 /* ── WORKSPACE ── */
 .workspace{flex:1;display:flex;flex-direction:column;overflow:hidden}
 .canvas-wrap{flex:1;overflow:auto;background:var(--bg)}
+.canvas-wrap.lib-expanded .bitem-bar,.canvas-wrap.lib-expanded .dim-tag{display:none !important}
 .canvas{position:relative;min-width:3000px;min-height:2200px;z-index:1}
 .canvas-drop-hint{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(196,137,74,.06);border:3px dashed var(--acc-dim);font-size:14px;letter-spacing:3px;color:var(--acc);pointer-events:none;z-index:500}
 
@@ -132,7 +143,7 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .bitem-img-wrap{position:relative;overflow:hidden}
 .bitem.sel .bitem-img-wrap{outline:2px dashed var(--acc-dim);outline-offset:2px}
 .bitem.sel.anchor .bitem-img-wrap{outline:2px solid var(--acc);outline-offset:2px}
-.bitem-bar{position:absolute;top:calc(-26px / var(--canvas-zoom,1));right:0;display:flex;gap:3px;opacity:0;transition:opacity .12s;zoom:calc(1 / var(--canvas-zoom,1));z-index:250}
+.bitem-bar{position:absolute;bottom:100%;right:0;display:flex;gap:3px;opacity:0;transition:opacity .12s;zoom:calc(1 / var(--canvas-zoom,1));z-index:250}
 .props-panel{position:absolute;top:0;left:0;background:var(--panel2);border:1px solid var(--border2);border-radius:3px;padding:8px 10px;z-index:200;min-width:160px;box-shadow:0 4px 14px rgba(0,0,0,.45);display:flex;flex-direction:column;gap:6px;zoom:calc(1 / var(--canvas-zoom,1))}
 .props-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .props-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
@@ -206,6 +217,9 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .lib-splitter:hover::after,.lib-splitter.active::after{background:var(--acc-dim)}
 .library{background:var(--surf);border-top:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;z-index:100;overflow:hidden;transition:height .18s ease}
 .library.resizing{transition:none !important}
+.library.lib-drop-active .lib-body{outline:2px dashed var(--acc-dim);outline-offset:-3px;background:color-mix(in srgb,var(--acc) 6%,transparent)}
+.lib-snap-btn{width:22px;height:22px;border:1px solid var(--border2);background:transparent;color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;transition:all .15s}
+.lib-snap-btn:hover{color:var(--text);border-color:var(--acc-dim)}
 .lib-header{height:30px;display:flex;align-items:center;gap:7px;padding:0 10px 0 8px;flex-shrink:0;cursor:pointer;border-bottom:1px solid var(--border);user-select:none}
 .lib-header:hover{background:var(--panel)}
 .lib-toggle-btn{width:22px;height:22px;border:1px solid var(--border2);background:transparent;color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0;transition:all .15s;font-family:'IBM Plex Mono',monospace}
@@ -238,7 +252,8 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .thumb:active{cursor:grabbing}
 .thumb img{width:100%;height:100%;object-fit:cover;pointer-events:none;display:block}
 .thumb.in-board{border-color:var(--acc)}
-.thumb.lib-sel{outline:2px solid var(--acc);outline-offset:-1px}
+.thumb.lib-sel{outline:3px solid var(--text);outline-offset:-2px}
+.thumb.lib-sel::after{content:'✓';position:absolute;top:3px;right:3px;width:15px;height:15px;background:var(--acc);color:var(--bg);border-radius:50%;font-size:9px;font-weight:700;line-height:15px;text-align:center;z-index:10;pointer-events:none}
 .lib-sel-bar{display:flex;align-items:center;gap:8px;padding:5px 10px;background:var(--acc-faint);border-top:1px solid var(--acc-dim);font-size:9px;color:var(--acc);flex-shrink:0;letter-spacing:.3px}
 .lib-sel-count{flex:1}
 .lib-sel-btn{background:none;border:1px solid var(--acc-dim);color:var(--acc);cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:9px;padding:2px 7px;letter-spacing:.3px;transition:background .12s}
@@ -360,7 +375,8 @@ select.inp{cursor:pointer;appearance:none;padding-right:28px;background-image:ur
 .tag-filter-btn:hover{border-color:var(--acc-dim);color:var(--text)}
 .tag-filter-btn.active{background:var(--acc);color:var(--bg);border-color:var(--acc)}
 .tag-filter-badge{background:var(--bg);color:var(--acc);border-radius:8px;min-width:12px;height:12px;font-size:7px;display:inline-flex;align-items:center;justify-content:center;padding:0 2px;font-weight:700}
-.thumb-stars{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.55);color:var(--acc);font-size:7px;text-align:center;padding:1px 0;letter-spacing:1px;pointer-events:none;z-index:2}
+.thumb-stars{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.55);color:var(--acc);font-size:7px;text-align:center;padding:1px 0;letter-spacing:1px;pointer-events:none;z-index:2;display:flex;align-items:center;justify-content:center;gap:0}
+.thumb-star-empty{color:var(--border2);opacity:.6}
 .lib-preview{position:fixed;background:var(--panel);border:1px solid var(--border2);z-index:700;box-shadow:0 6px 24px rgba(0,0,0,.6);pointer-events:none;padding:4px}
 .lib-preview img{display:block;max-width:280px;max-height:280px;object-fit:contain;background:#111}
 .lib-preview-name{padding:4px 4px 0;font-size:8px;color:var(--dim);font-family:'IBM Plex Mono',monospace;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px}
@@ -532,6 +548,7 @@ const I18N = {
     projectPhotosL1:'Fotos del', projectPhotosL2:'proyecto',
     libTitle:'Biblioteca', sortImported:'Importación', sortName:'Nombre A→Z', sortColor:'Tono', sortBrightness:'Luminosidad', sortRating:'Valoración', filterPending:'Sin colocar', libSearchPh:'buscar…', tagFilterBtn:'Etiquetas', tagFilterAll:'Todas', tagPopHd:'Etiquetas', tagNewPh:'nueva etiqueta…', noTagsYet:'Sin etiquetas aún', libPreviewToggle:'Vista previa al pasar el ratón', bgColor:'Color de fondo', bgColorNone:'Sin color (tema)', ratingFilterHint:'Filtrar por valoración mínima',
     setDefaultSize:'Usar como tamaño de referencia', duplicateItem:'Duplicar', defaultSizeSet:'Tamaño de referencia guardado', defaultSizeActive: w => `Tamaño de referencia: ${w} px`, clear:'Limpiar', swapPos:'Intercambiar posición',
+    libSnapExpand:'Ampliar librería', libSnapCollapse:'Reducir librería',
     uploadHint:'Sube fotos con + Subir →', dragFilesHint:'o arrastra archivos al canvas',
     alreadyInTableau:'ya en el tableau',
     newProjectTitle:'Nuevo proyecto', projectNamePh:'Nombre del proyecto…',
@@ -609,6 +626,8 @@ const I18N = {
     exportSelJpeg:'Exportar selección JPEG',
     groupItems:'Agrupar',
     ungroupItems:'Desagrupar',
+    batchTagBtn:'# Etiquetas', batchTagHd: n => `Etiquetar ${n} fotos`,
+    batchRated: n => `${n} foto${n!==1?'s':''} puntuada${n!==1?'s':''}`,
   },
   en: {
     upload:'+ Upload', report:'≡ Report', config:'⚙ Config', exportJpeg:'Export JPEG',
@@ -634,6 +653,7 @@ const I18N = {
     projectPhotosL1:'Project', projectPhotosL2:'photos',
     libTitle:'Library', sortImported:'Import date', sortName:'Name A→Z', sortColor:'Hue', sortBrightness:'Brightness', sortRating:'Rating', filterPending:'Unplaced', libSearchPh:'search…', tagFilterBtn:'Tags', tagFilterAll:'All', tagPopHd:'Tags', tagNewPh:'new tag…', noTagsYet:'No tags yet', libPreviewToggle:'Hover preview', bgColor:'Background colour', bgColorNone:'No colour (theme)', ratingFilterHint:'Filter by minimum rating',
     setDefaultSize:'Set as default size', duplicateItem:'Duplicate', defaultSizeSet:'Default size saved', defaultSizeActive: w => `Default size: ${w} px`, clear:'Clear', swapPos:'Swap positions',
+    libSnapExpand:'Expand library', libSnapCollapse:'Collapse library',
     uploadHint:'Upload photos with + Upload →', dragFilesHint:'or drag files to canvas',
     alreadyInTableau:'already in tableau',
     newProjectTitle:'New project', projectNamePh:'Project name…',
@@ -711,6 +731,8 @@ const I18N = {
     exportSelJpeg:'Export selection JPEG',
     groupItems:'Group',
     ungroupItems:'Ungroup',
+    batchTagBtn:'# Tags', batchTagHd: n => `Tag ${n} photos`,
+    batchRated: n => `${n} photo${n!==1?'s':''} rated`,
   },
 };
 
@@ -772,6 +794,8 @@ function App() {
   const [modal,         setModal]         = useState(null); // 'project'|'board'|'boardcfg'
   const [nameVal,       setNameVal]       = useState('');
   const [dragOver,      setDragOver]      = useState(false);
+  const [libDragOver,   setLibDragOver]   = useState(false);
+  const [libExpanded,   setLibExpanded]   = useState(false);
   const [sbOpen,        setSbOpen]        = useState(true);
   const [libOpen,       setLibOpen]       = useState(() => localStorage.getItem('libOpen') !== 'false');
   const [libHeight,     setLibHeight]     = useState(() => parseInt(localStorage.getItem('tb-libh') || '160'));
@@ -792,6 +816,8 @@ function App() {
   const [tagPopover,    setTagPopover]    = useState(null); // {photoId, x, y}
   const [tagInput,      setTagInput]      = useState('');
   const [tagFilterPop,  setTagFilterPop]  = useState(false);
+  const [batchTagPop,   setBatchTagPop]   = useState(null); // {x, y}
+  const [batchTagInput, setBatchTagInput] = useState('');
   const [ratingFilter,  setRatingFilter]  = useState(0); // 0 = no filter, 1-5 = min rating
   const [ctxMenu,       setCtxMenu]       = useState(null); // {x, y, itemId}
   const [showLibPreview, setShowLibPreview] = useState(() => localStorage.getItem('tb-lib-preview') !== 'false');
@@ -927,7 +953,7 @@ function App() {
     });
   }, [pid]);
 
-  useEffect(() => { setLibSearch(''); setLibSelection([]); setTagFilter([]); setTagPopover(null); setRatingFilter(0); }, [pid]);
+  useEffect(() => { setLibSearch(''); setLibSelection([]); setTagFilter([]); setTagPopover(null); setBatchTagPop(null); setRatingFilter(0); }, [pid]);
   useEffect(() => { boardHistoryRef.current = {}; previousBidRef.current = null; }, [pid]);
 
   useEffect(() => {
@@ -1611,13 +1637,59 @@ ${rows}
     setPhotos(ps => ps.map(p => p.id === photoId ? { ...p, rating } : p));
   };
 
+  const setRatingBatch = async (ids, rating) => {
+    await Promise.all(ids.map(id => api.patch(`/api/projects/${pidRef.current}/photos/${id}/rating`, { rating })));
+    setPhotos(ps => ps.map(p => ids.includes(p.id) ? { ...p, rating } : p));
+    showToast(t('batchRated', ids.length));
+  };
+
+  const toggleTagBatch = async (tag) => {
+    const ids = libSelRef.current;
+    const allHave = ids.every(id => (photosRef.current.find(p => p.id === id)?.tags || []).includes(tag));
+    await Promise.all(ids.map(id => {
+      const photo = photosRef.current.find(p => p.id === id);
+      const cur = photo?.tags || [];
+      const next = allHave ? cur.filter(t => t !== tag) : cur.includes(tag) ? cur : [...cur, tag];
+      if (cur.length === next.length && cur.every((v, i) => v === next[i])) return Promise.resolve();
+      return api.patch(`/api/projects/${pidRef.current}/photos/${id}/tags`, { tags: next });
+    }));
+    setPhotos(ps => ps.map(p => {
+      if (!ids.includes(p.id)) return p;
+      const cur = p.tags || [];
+      return { ...p, tags: allHave ? cur.filter(t => t !== tag) : cur.includes(tag) ? cur : [...cur, tag] };
+    }));
+  };
+
+  const addTagBatch = async (raw) => {
+    const tag = raw.trim();
+    if (!tag) return;
+    const ids = libSelRef.current;
+    await Promise.all(ids.map(id => {
+      const photo = photosRef.current.find(p => p.id === id);
+      const cur = photo?.tags || [];
+      if (cur.includes(tag)) return Promise.resolve();
+      return api.patch(`/api/projects/${pidRef.current}/photos/${id}/tags`, { tags: [...cur, tag] });
+    }));
+    setPhotos(ps => ps.map(p => {
+      if (!ids.includes(p.id)) return p;
+      const cur = p.tags || [];
+      return { ...p, tags: cur.includes(tag) ? cur : [...cur, tag] };
+    }));
+    setBatchTagInput('');
+  };
+
   useEffect(() => {
     const handler = e => {
       if (!hoveredThumbRef.current) return;
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       const n = parseInt(e.key);
-      if (!isNaN(n) && n >= 0 && n <= 5) setRating(hoveredThumbRef.current, n);
+      if (!isNaN(n) && n >= 0 && n <= 5) {
+        const hovered = hoveredThumbRef.current;
+        const sel = libSelRef.current;
+        if (sel.length > 1 && sel.includes(hovered)) setRatingBatch(sel, n);
+        else setRating(hovered, n);
+      }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
@@ -1657,6 +1729,7 @@ ${rows}
       Object.entries(prev).map(([bid, its]) => [bid, its.filter(i => !ids.includes(i.photoId))])
     ));
     setLibSelection([]);
+    setBatchTagPop(null);
   };
 
   const addSelectedToCanvas = () => {
@@ -1691,6 +1764,7 @@ ${rows}
     selRef.current = newItems.map(i => i.id); setSel(selRef.current);
     saveItemsNow(norm);
     setLibSelection([]);
+    setBatchTagPop(null);
   };
 
   // ── import from repo ──────────────────────────────────────────────────────
@@ -2279,6 +2353,26 @@ ${rows}
     );
     const { photo, status, thumbSrc, itemW, itemH } = hoverInfo;
     const boardNames = photo?.id ? photoBoardNames(photo.id) : [];
+    const rating = photo?.rating || 0;
+    const tags = photo?.tags || [];
+    const mc = photo?.meanColor;
+    const brightness = photo?.brightness;
+    let hueLabel = null, hueColor = null;
+    if (mc) {
+      const { h, s } = rgbToHsl(mc.r, mc.g, mc.b);
+      hueColor = `rgb(${mc.r},${mc.g},${mc.b})`;
+      if (s < 0.12) {
+        hueLabel = lang === 'es' ? 'Neutro' : 'Neutral';
+      } else {
+        const names = lang === 'es'
+          ? ['Rojo','Naranja','Amarillo','Verde','Cian','Azul','Violeta','Magenta']
+          : ['Red','Orange','Yellow','Green','Cyan','Blue','Violet','Magenta'];
+        const bounds = [20, 45, 70, 155, 190, 265, 290, 340];
+        const bucket = bounds.findIndex(b => h < b);
+        hueLabel = names[bucket === -1 ? 0 : bucket];
+      }
+    }
+    const brightPct = brightness != null ? Math.round(brightness * 100) : null;
     return (
       <div className="info-panel">
         <img className="info-thumb"
@@ -2307,6 +2401,28 @@ ${rows}
               )}
             </>
           )}
+          <div className="info-rating">
+            {rating > 0
+              ? [1,2,3,4,5].map(n => <span key={n} className={n <= rating ? 'on' : ''}>★</span>)
+              : <span className="none">{lang === 'es' ? 'sin valorar' : 'unrated'}</span>}
+          </div>
+          {(hueLabel || brightPct != null) && (
+            <div className="info-color-row">
+              {hueColor && <span className="info-color-swatch" style={{background:hueColor}}/>}
+              {hueLabel && <span className="info-color-label">{hueLabel}</span>}
+              {brightPct != null && <>
+                <div className="info-bright-bar" title={`${brightPct}%`}>
+                  <div className="info-bright-bar-fill" style={{left:`${brightPct}%`}}/>
+                </div>
+                <span className="info-color-label">{brightPct}%</span>
+              </>}
+            </div>
+          )}
+          {tags.length > 0 && (
+            <div className="info-tag-list">
+              {tags.map(tag => <span key={tag} className="info-tag-chip">#{tag}</span>)}
+            </div>
+          )}
           <div className="info-boards">
             {boardNames.length === 0
               ? <div className="ibd-none">{t('notInAnyBoard')}</div>
@@ -2327,6 +2443,44 @@ ${rows}
     const mm = (25.4 / dpi).toFixed(3);
     const cm = (2.54 / dpi).toFixed(4);
     return t('scaleHint', mm, cm, (dpi/2.54).toFixed(0));
+  };
+
+  const LIB_COMPACT = 160;
+  const snapLib = (e) => {
+    e.stopPropagation();
+    const TOPBAR = 46;
+    const maxH = Math.floor(window.innerHeight * 0.70);
+    const isLarge = libHeightRef.current > window.innerHeight * 0.40;
+    const newH = isLarge ? LIB_COMPACT : maxH;
+    if (!libOpen) { setLibOpen(true); localStorage.setItem('libOpen', 'true'); }
+    const startCanvasH = window.innerHeight - TOPBAR - 5 - libHeightRef.current;
+    libHeightRef.current = newH;
+    setLibHeight(newH);
+    setLibExpanded(!isLarge);
+    localStorage.setItem('tb-libh', newH);
+    if (startCanvasH > 0 && bidRef.current) {
+      const newCanvasH = window.innerHeight - TOPBAR - 5 - newH;
+      const newZoom = Math.max(0.25, Math.min(zoomRef.current * newCanvasH / startCanvasH, 2.0));
+      zoomRef.current = newZoom; setZoom(newZoom);
+      boardZoom.current[bidRef.current] = newZoom;
+      localStorage.setItem(`tb-zoom-${bidRef.current}`, String(newZoom));
+    }
+  };
+
+  const onLibDragOver = (e) => {
+    if (!e.dataTransfer.types.includes('Files')) return;
+    e.preventDefault(); e.stopPropagation();
+    setLibDragOver(true);
+  };
+  const onLibDragLeave = (e) => {
+    if (!e.currentTarget.contains(e.relatedTarget)) setLibDragOver(false);
+  };
+  const onLibDrop = (e) => {
+    e.preventDefault(); e.stopPropagation();
+    setLibDragOver(false);
+    if (!pidRef.current) return;
+    const files = [...e.dataTransfer.files].filter(f => f.type.startsWith('image/'));
+    if (files.length) uploadFiles(files);
   };
 
   const onSplitterPD = e => {
@@ -2622,7 +2776,7 @@ ${rows}
           <div className="workspace">
 
             {/* CANVAS */}
-            <div ref={wrapRef} className="canvas-wrap"
+            <div ref={wrapRef} className={`canvas-wrap${libExpanded ? ' lib-expanded' : ''}`}
               style={boardPx ? { background: '#1e1e1e', padding: BOARD_PAD } : {}}
               onDragOver={e => { e.preventDefault(); setDragOver(true); }}
               onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget)) setDragOver(false); }}
@@ -2933,9 +3087,10 @@ ${rows}
               const toggleFilter = (e) => { e.stopPropagation(); const v = photoFilter === 'pending' ? 'all' : 'pending'; setPhotoFilter(v); localStorage.setItem('photoFilter', v); };
               const toggleStarFilter = (n, e) => { e.stopPropagation(); setRatingFilter(f => f === n ? 0 : n); };
               return (
-              <div className="library" style={{height: libH}} onClick={e => e.stopPropagation()}>
+              <div className={`library${libDragOver ? ' lib-drop-active' : ''}`} style={{height: libH}} onClick={e => e.stopPropagation()}>
                 <div className="lib-header" onClick={toggleLib}>
                   <button className="lib-toggle-btn" onClick={e => { e.stopPropagation(); toggleLib(); }} title={libOpen ? t('collapsePanel') : t('openPanel')}>{libOpen ? '▼' : '▲'}</button>
+                  <button className="lib-snap-btn" onClick={snapLib} title={libHeightRef.current > window.innerHeight * 0.40 ? t('libSnapCollapse') : t('libSnapExpand')}>{libHeightRef.current > window.innerHeight * 0.40 ? '⊟' : '⊞'}</button>
                   <span className="lib-title">{t('libTitle')}</span>
                   <span className="lib-count">{displayedPhotos.length < photos.length ? `${displayedPhotos.length}/${photos.length}` : photos.length}</span>
                   <span className="lib-spacer"/>
@@ -2983,7 +3138,10 @@ ${rows}
                   </>}
                 </div>
                 {libOpen && (
-                  <div className="lib-body">
+                  <div className="lib-body"
+                    onDragOver={onLibDragOver}
+                    onDragLeave={onLibDragLeave}
+                    onDrop={onLibDrop}>
                     <div className="lib-scroll">
                       {photos.length === 0 ? (
                         <div className="lib-empty">
@@ -3033,7 +3191,7 @@ ${rows}
                               <img src={`/photos/${pid}/${p.id}/thumb`} alt={p.name}/>
                               {p.brightness != null && <span className="thumb-color" style={{background:`rgb(${Math.round(p.brightness*255)},${Math.round(p.brightness*255)},${Math.round(p.brightness*255)})`}}/>}
                               {(p.tags||[]).length > 0 && <span className="thumb-tag-badge">{p.tags.length}</span>}
-                              {(p.rating||0) > 0 && <div className="thumb-stars">{'★'.repeat(p.rating)}{'☆'.repeat(5-p.rating)}</div>}
+                              <div className="thumb-stars">{[1,2,3,4,5].map(n => n <= (p.rating||0) ? <span key={n}>★</span> : <span key={n} className="thumb-star-empty">★</span>)}</div>
                               <button className="thumb-tag" title={t('tagPopHd')} onClick={e => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setTagPopover(v => v?.photoId === p.id ? null : {photoId:p.id, x:r.left, y:r.top}); setTagInput(''); }}>#</button>
                               <button className="thumb-x" onClick={e => { e.stopPropagation(); deletePhoto(p.id); }}>×</button>
                               <button className="thumb-cp" title={t('copyToProject')}
@@ -3046,7 +3204,8 @@ ${rows}
                     {libSel.length > 0 && (
                       <div className="lib-sel-bar" onClick={e => e.stopPropagation()}>
                         <span className="lib-sel-count">{libSel.length} {t('selected')}</span>
-                        <button className="lib-sel-btn" title={t('libSelClearTip')} onClick={() => setLibSelection([])}>✕</button>
+                        <button className="lib-sel-btn" title={t('libSelClearTip')} onClick={() => { setLibSelection([]); setBatchTagPop(null); }}>✕</button>
+                        <button className="lib-sel-btn" title={t('batchTagBtn')} onClick={e => { const r = e.currentTarget.getBoundingClientRect(); setBatchTagPop(v => v ? null : {x: r.left, y: r.top}); setBatchTagInput(''); }}>{t('batchTagBtn')}</button>
                         {bid && <button className="lib-sel-btn" title={t('libSelAddTip')} onClick={addSelectedToCanvas}>{t('libSelAdd')}</button>}
                         <button className="lib-sel-btn danger" title={t('libSelDeleteTip')} onClick={deleteSelectedPhotos}>× {t('deleteBtn')}</button>
                       </div>
@@ -3124,6 +3283,43 @@ ${rows}
                   onClick={e => e.stopPropagation()}
                   onChange={e => setTagInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') { addTagToPhoto(tagPopover.photoId, tagInput); } }}
+                />
+              </div>
+            </div>
+          </>
+        );
+      })()}
+
+      {batchTagPop && libSel.length > 0 && (() => {
+        const allTagsNow = [...new Set(photos.flatMap(p => p.tags || []))].sort();
+        const selPhotos = libSel.map(id => photos.find(p => p.id === id)).filter(Boolean);
+        const tagState = tag => {
+          const count = selPhotos.filter(p => (p.tags||[]).includes(tag)).length;
+          return count === selPhotos.length ? 'all' : count > 0 ? 'some' : 'none';
+        };
+        return (
+          <>
+            <div style={{position:'fixed',inset:0,zIndex:599}} onClick={() => setBatchTagPop(null)}/>
+            <div className="tag-pop" style={{left: Math.min(batchTagPop.x, window.innerWidth - 260), top: batchTagPop.y - 4, transform:'translateY(-100%)'}}>
+              <div className="tag-pop-hd">{t('batchTagHd', libSel.length)}</div>
+              {allTagsNow.length === 0 && <div className="cp-menu-empty">{t('noTagsYet')}</div>}
+              {allTagsNow.map(tag => {
+                const st = tagState(tag);
+                return (
+                  <div key={tag} className={`tag-pop-item${st !== 'none' ? ' active' : ''}`}
+                    onClick={() => toggleTagBatch(tag)}>
+                    <input type="checkbox" readOnly checked={st === 'all'}
+                      ref={el => { if (el) el.indeterminate = st === 'some'; }}/>
+                    {tag}
+                    {st === 'some' && <span style={{marginLeft:'auto',fontSize:8,color:'var(--dim)'}}>{selPhotos.filter(p => (p.tags||[]).includes(tag)).length}/{libSel.length}</span>}
+                  </div>
+                );
+              })}
+              <div className="tag-pop-new">
+                <input className="tag-pop-input" placeholder={t('tagNewPh')} value={batchTagInput}
+                  onClick={e => e.stopPropagation()}
+                  onChange={e => setBatchTagInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') addTagBatch(batchTagInput); }}
                 />
               </div>
             </div>

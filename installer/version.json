@@ -1,6 +1,6 @@
 {
-  "version": "1.3.8",
+  "version": "1.3.10",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-05-15",
-  "notes": "Menú contextual en fotos y notas · Intercambiar posición de dos elementos · Tamaño de referencia para nuevas fotos · Corrección: configuración del tablero ahora persiste"
+  "notes": "Etiquetado en lote y puntuación en lote para selección múltiple en la librería"
 }

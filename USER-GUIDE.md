@@ -65,7 +65,7 @@ The library strip at the bottom shows all photos uploaded to the active project.
 
 ### Uploading photos
 
-Click **+ Upload** in the library header to select individual files, or **+ Folder** to import all images from a folder at once. You can also drag image files directly onto the canvas. Photos are automatically resized to a maximum of 1800 px and stored as JPEG.
+Click **+ Upload** in the library header to select individual files, or **+ Folder** to import all images from a folder at once. You can also drag image files directly onto the canvas, or drop them onto the library panel to upload without placing them on the board. Photos are automatically resized to a maximum of 1800 px and stored as JPEG.
 
 ### Sorting and filtering
 
@@ -82,6 +82,8 @@ Click **+ Upload** in the library header to select individual files, or **+ Fold
 
 Drag the splitter bar between the canvas and the library to adjust its height. When enlarged, thumbnails reflow automatically into a grid. Thumbnail size is controlled independently with the slider in the library header.
 
+Click the **⊞** button in the library header to snap to an extended view (70 % of the screen height). Click **⊟** to return to compact height. The canvas zoom adjusts automatically.
+
 ### Library multi-select
 
 You can select multiple photos before adding them to the canvas or deleting them:
@@ -93,6 +95,7 @@ When one or more photos are selected, an action bar appears at the bottom of the
 
 | Button | Action |
 |---|---|
+| **# Tags** | Open the batch tag panel (see Tags section) |
 | **Add to board** | Place all selected photos onto the active canvas |
 | **× Delete** | Delete the selected photos from the library (asks for confirmation) |
 
@@ -102,7 +105,14 @@ When dragging to the canvas with multiple photos selected, an animated stack wit
 
 ### Info panel
 
-Hover over a photo in the library to see its name, original dimensions, file size, physical size (if DPI is set), and which boards it appears on.
+Hover over a photo in the library to see in the bottom-right side panel:
+
+- Name, original dimensions, and file size
+- Size on the board and physical dimensions (if DPI is configured)
+- Star rating (or "unrated" if none)
+- Dominant hue with colour swatch and brightness percentage
+- Assigned tags
+- Boards the photo is placed on
 
 ### Repository tab
 
@@ -203,7 +213,7 @@ Click **+ Note** in the top bar to add a free-text note to the canvas. Notes beh
 
 Tags let you categorise photos with free-text labels and filter the library by them.
 
-### Assigning tags
+### Assigning tags to a single photo
 
 Hover over a thumbnail and click the **#** button. A panel opens with:
 
@@ -211,6 +221,20 @@ Hover over a thumbnail and click the **#** button. A panel opens with:
 - A text field at the bottom to create a new tag: type and press **Enter**
 
 Photos with tags show a **#N** badge in the top-left corner of the thumbnail.
+
+### Batch tagging
+
+With multiple photos selected in the library, click **# Tags** in the selection bar. The panel shows all tags in the project with the state of each one:
+
+- **Checked** — all selected photos have the tag
+- **Indeterminate** — only some photos have it (count N/total is shown)
+- **Unchecked** — no selected photo has the tag
+
+Clicking a tag adds it to photos that didn't have it, or removes it from all if they all had it. You can also create a new tag by typing in the field at the bottom and pressing Enter.
+
+### Batch rating
+
+Select multiple photos in the library, hover over any of the selected photos, and press a key from **0** to **5**. The rating is applied to all photos in the selection. If only one photo is selected, the key rates that photo only.
 
 ### Filtering by tags
 

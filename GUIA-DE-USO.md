@@ -65,7 +65,7 @@ La franja inferior muestra todas las fotos subidas al proyecto activo.
 
 ### Subir fotos
 
-Haz clic en **+ Subir** en la cabecera de la librería para seleccionar archivos individuales, o en **+ Carpeta** para importar todas las imágenes de una carpeta de golpe. También puedes arrastrar archivos de imagen directamente al canvas. Las fotos se redimensionan automáticamente a un máximo de 1800 px y se guardan en JPEG.
+Haz clic en **+ Subir** en la cabecera de la librería para seleccionar archivos individuales, o en **+ Carpeta** para importar todas las imágenes de una carpeta de golpe. También puedes arrastrar archivos de imagen directamente al canvas, o soltarlos sobre el panel de la librería para subirlos sin colocarlos en el tablero. Las fotos se redimensionan automáticamente a un máximo de 1800 px y se guardan en JPEG.
 
 ### Ordenación y filtros
 
@@ -82,6 +82,8 @@ Haz clic en **+ Subir** en la cabecera de la librería para seleccionar archivos
 
 Arrastra la barra separadora entre el canvas y la biblioteca para ajustar su altura. Al ampliarla, las miniaturas se reorganizan automáticamente en cuadrícula. El tamaño de las miniaturas se controla de forma independiente con el slider de la cabecera.
 
+Haz clic en el botón **⊞** de la cabecera para ampliar la librería a vista extendida (70 % de la pantalla). Haz clic en **⊟** para volver a la altura compacta. El zoom del canvas se ajusta automáticamente.
+
 ### Selección múltiple en la librería
 
 Puedes seleccionar varias fotos antes de añadirlas al canvas o eliminarlas:
@@ -93,6 +95,7 @@ Con una o más fotos seleccionadas aparece una barra en la parte inferior de la 
 
 | Botón | Acción |
 |---|---|
+| **# Etiquetas** | Abre el panel de etiquetado en lote (ver sección Etiquetas) |
 | **Añadir al tablero** | Coloca todas las fotos seleccionadas en el canvas activo |
 | **× Eliminar** | Elimina las fotos seleccionadas de la librería (pide confirmación) |
 
@@ -102,7 +105,14 @@ Al arrastrar al canvas con varias fotos seleccionadas se muestra una pila animad
 
 ### Panel de información
 
-Pasa el ratón sobre una foto en la librería para ver su nombre, dimensiones originales, tamaño de archivo, tamaño físico (si hay DPI configurado) y en qué tableros aparece.
+Pasa el ratón sobre una foto en la librería para ver en el panel lateral inferior derecho:
+
+- Nombre, dimensiones originales y tamaño de archivo
+- Tamaño en el tablero y dimensiones físicas (si hay DPI configurado)
+- Valoración en estrellas (o "sin valorar" si no tiene)
+- Tono dominante con muestra de color y porcentaje de luminosidad
+- Etiquetas asignadas
+- Tableros en los que aparece colocada
 
 ### Pestaña Repositorio
 
@@ -203,7 +213,7 @@ Haz clic en **+ Nota** en la barra superior para añadir una nota de texto libre
 
 Las etiquetas permiten categorizar las fotos con texto libre y filtrar la biblioteca por ellas.
 
-### Asignar etiquetas
+### Asignar etiquetas a una foto
 
 Pasa el ratón sobre una miniatura y haz clic en el botón **#** que aparece en los controles. Se abre un pequeño panel con:
 
@@ -211,6 +221,20 @@ Pasa el ratón sobre una miniatura y haz clic en el botón **#** que aparece en 
 - Un campo de texto al final para crear una etiqueta nueva: escribe y pulsa **Enter**
 
 Las fotos con etiquetas muestran un badge **#N** en la esquina superior izquierda de la miniatura.
+
+### Etiquetado en lote
+
+Con varias fotos seleccionadas en la librería, haz clic en **# Etiquetas** en la barra de selección. El panel muestra todas las etiquetas del proyecto con el estado de cada una:
+
+- **Casilla marcada** — todas las fotos seleccionadas tienen la etiqueta
+- **Casilla indeterminada** — solo algunas fotos la tienen (se muestra el conteo N/total)
+- **Casilla vacía** — ninguna foto la tiene
+
+Hacer clic en una etiqueta la añade a las fotos que no la tenían, o la elimina de todas si ya la tenían todas. También puedes crear una nueva etiqueta escribiendo en el campo inferior y pulsando Enter.
+
+### Puntuación en lote
+
+Selecciona varias fotos en la librería, pasa el cursor sobre cualquiera de las fotos seleccionadas y pulsa una tecla del **0** al **5**. La valoración se aplica a todas las fotos de la selección. Si solo hay una foto seleccionada, la tecla puntúa únicamente esa foto.
 
 ### Filtrar por etiquetas
 
