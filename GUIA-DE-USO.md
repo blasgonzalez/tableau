@@ -132,13 +132,24 @@ Pasa el ratón sobre una foto en el canvas para ver sus controles:
 | Asa naranja (esquina inferior derecha) | Redimensionar |
 | **↻** (clic) | Rotar 90° |
 | **↻** (arrastrar) | Rotación libre a cualquier ángulo · Shift encaja en múltiplos de 15° |
-| **↑** | Traer al frente (subir orden Z) |
-| **▣** | Ajustar grosor del marco |
 | **🔒** | Bloquear / desbloquear (evita movimientos accidentales) |
 | **×** | Eliminar del tablero |
 | Barra de etiqueta (debajo de la foto) | Clic para editar el texto |
+| **Clic derecho** | Abrir menú contextual |
 
 Las fotos bloqueadas muestran un icono de candado. Mientras están bloqueadas puedes seguir editando su etiqueta y su marco.
+
+### Menú contextual
+
+Haz clic derecho sobre cualquier foto o nota del canvas para abrir un menú con acciones secundarias:
+
+| Opción | Acción |
+|---|---|
+| **↑ Traer al frente** | Sube el elemento en el orden Z |
+| **▣ Marco** | Ajusta el grosor del marco (solo fotos) |
+| **⊞ Usar como tamaño de referencia** | Las fotos que añadas después llegarán a ese ancho (solo fotos) |
+| **⧉ Duplicar** | Crea una copia desplazada 20 px |
+| **× Eliminar** | Elimina del tablero |
 
 ### Etiquetas
 
@@ -146,7 +157,7 @@ Al hacer clic en la barra de etiqueta se abre un editor emergente que admite var
 
 ### Marcos
 
-El botón **▣** abre un panel para establecer el grosor del marco en la unidad configurada del tablero. La etiqueta y el tooltip de dimensión muestran el tamaño total incluyendo el marco.
+La opción **▣ Marco** del menú contextual abre un panel para establecer el grosor en la unidad configurada del tablero. La etiqueta y el tooltip de dimensión muestran el tamaño total incluyendo el marco.
 
 ---
 
@@ -169,6 +180,7 @@ Con una selección activa aparece una barra en la parte superior:
 | Centrar horizontalmente / verticalmente | Con ≥ 2 elementos |
 | Distribuir horizontalmente / verticalmente | Con ≥ 3 elementos |
 | Igualar ancho al anclaje | El anclaje es el primer elemento seleccionado (contorno sólido) |
+| **⇄** | Intercambiar la posición de los dos elementos seleccionados (exactamente 2) |
 | **⬇** | Exportar selección como JPEG (disponible con ≥ 1 elemento) |
 | **⊓** | Agrupar los elementos seleccionados (≥ 2) |
 | **⊔** | Desagrupar (visible cuando algún elemento del grupo está seleccionado) |

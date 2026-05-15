@@ -4,7 +4,8 @@
     "name": "Paisaje",
     "created": 1777733132681,
     "units": "cm",
-    "dpi": 72
+    "dpi": 72,
+    "defaultW": 320
   },
   {
     "id": "bd2ca26466",

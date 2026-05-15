@@ -132,13 +132,24 @@ Hover over a photo on the canvas to reveal its controls:
 | Orange handle (bottom-right corner) | Resize |
 | **↻** (click) | Rotate 90° |
 | **↻** (drag) | Free rotation to any angle · Shift snaps to 15° increments |
-| **↑** | Bring forward (raise z-order) |
-| **▣** | Set frame thickness |
 | **🔒** | Lock / unlock (prevents accidental moves) |
 | **×** | Delete from board |
 | Label bar (below the photo) | Click to edit the text label |
+| **Right-click** | Open context menu |
 
 Locked photos show a padlock badge. You can still edit their label and frame while locked.
+
+### Context menu
+
+Right-click any photo or note on the canvas to open a context menu with secondary actions:
+
+| Option | Action |
+|---|---|
+| **↑ Bring forward** | Raise the element in the stacking order |
+| **▣ Frame** | Set frame thickness (photos only) |
+| **⊞ Set as default size** | All photos placed afterwards arrive at this width (photos only) |
+| **⧉ Duplicate** | Create a copy offset by 20 px |
+| **× Delete** | Remove from board |
 
 ### Labels
 
@@ -146,7 +157,7 @@ Clicking the label bar below a photo opens a popup editor that supports multiple
 
 ### Frames
 
-The **▣** button opens a panel to set a frame thickness in the board's configured unit. The label and dimension tooltip show the total size including the frame.
+The **▣** option in the context menu opens a panel to set a frame thickness in the board's configured unit. The label and dimension tooltip show the total size including the frame.
 
 ---
 
@@ -169,6 +180,7 @@ With an active selection, a toolbar appears at the top:
 | Center horizontally / vertically | With ≥ 2 elements |
 | Distribute horizontally / vertically | With ≥ 3 elements |
 | Match width to anchor | The anchor is the first item selected (solid outline) |
+| **⇄** | Swap positions of the two selected elements (exactly 2) |
 | **⬇** | Export selection as JPEG (available with ≥ 1 element) |
 | **⊓** | Group selected elements (≥ 2) |
 | **⊔** | Ungroup (visible when any grouped element is selected) |

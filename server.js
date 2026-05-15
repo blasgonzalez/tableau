@@ -211,13 +211,19 @@ app.post('/api/projects/:pid/boards', (req, res) => {
 
 app.patch('/api/projects/:pid/boards/:bid', (req, res) => {
   const { pid, bid } = req.params;
-  const { name, units, dpi } = req.body;
+  const { name, units, dpi, fixed, fixedW, fixedH, defaultFrame, background, defaultW } = req.body;
   const boards = readJSON(boardsMeta(pid)).map(b => {
     if (b.id !== bid) return b;
     const u = { ...b };
-    if (name  !== undefined) u.name  = name.trim();
-    if (units !== undefined) u.units = units;
-    if (dpi   !== undefined) u.dpi   = Number(dpi) || 300;
+    if (name         !== undefined) u.name         = name.trim();
+    if (units        !== undefined) u.units        = units;
+    if (dpi          !== undefined) u.dpi          = Number(dpi) || 300;
+    if (fixed        !== undefined) u.fixed        = fixed;
+    if (fixedW       !== undefined) u.fixedW       = fixedW;
+    if (fixedH       !== undefined) u.fixedH       = fixedH;
+    if (defaultFrame !== undefined) u.defaultFrame = defaultFrame;
+    if (background   !== undefined) u.background   = background;
+    if (defaultW     !== undefined) u.defaultW     = defaultW;
     return u;
   });
   writeJSON(boardsMeta(pid), boards);
@@ -287,6 +293,18 @@ app.delete('/api/projects/:pid/photos/:id', (req, res) => {
   [path.join(photoDir(pid), `${id}.jpg`), path.join(photoDir(pid), `${id}_thumb.jpg`)]
     .forEach(f => { try { fs.unlinkSync(f); } catch {} });
   res.json({ ok: true });
+});
+
+app.patch('/api/projects/:pid/photos/:id/rating', (req, res) => {
+  const { pid, id } = req.params;
+  const { rating } = req.body;
+  if (typeof rating !== 'number' || rating < 0 || rating > 5) return res.status(400).json({ error: 'rating 0-5 required' });
+  const photos = readJSON(photosMeta(pid));
+  const p = photos.find(p => p.id === id);
+  if (!p) return res.status(404).json({ error: 'not found' });
+  p.rating = rating;
+  writeJSON(photosMeta(pid), photos);
+  res.json(p);
 });
 
 app.patch('/api/projects/:pid/photos/:id/tags', (req, res) => {

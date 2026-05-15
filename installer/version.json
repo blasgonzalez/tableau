@@ -1,6 +1,6 @@
 {
-  "version": "1.3.7",
+  "version": "1.3.8",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-05-14",
-  "notes": "Biblioteca redimensionable con splitter · Ordenar por tono y luminosidad · Indicador de luminosidad en thumbnails · Etiquetas (tags) con filtro múltiple"
+  "releaseDate": "2026-05-15",
+  "notes": "Menú contextual en fotos y notas · Intercambiar posición de dos elementos · Tamaño de referencia para nuevas fotos · Corrección: configuración del tablero ahora persiste"
 }

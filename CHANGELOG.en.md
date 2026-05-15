@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.3.8] — 2026-05-15
+### Added
+- Right-click context menu on photos and notes: Bring forward, Frame (photos only), Set as default size (photos only), Duplicate, Delete
+- Swap positions: select exactly 2 elements and click ⇄ in the selection toolbar to exchange their positions
+- Default photo size: right-click a photo → "Set as default size" — all photos placed afterwards arrive at that width; indicator shown in ⚙ Config with a Clear button
+
+### Improved
+- Buttons removed from photo hover bar (↑ Bring forward and ▣ Frame) — now in context menu; keeps only ↻, 🔒 and ×
+- Button removed from note hover bar (↑ Bring forward) — now in context menu
+
+### Fixed
+- Board configuration (fixed size, default frame, background colour) was only saved in memory and lost on page reload — now fully persisted to disk
+
+---
+
 ## [1.3.7] — 2026-05-14
 ### Added
 - Resizable library: drag the splitter bar between the canvas and the library to adjust its height; thumbnails reflow automatically into a grid
