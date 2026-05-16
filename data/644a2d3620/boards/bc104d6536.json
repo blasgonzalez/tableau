@@ -7,7 +7,7 @@
     "w": 276,
     "z": 578,
     "label": "Morbi consequat dolor iaculis mi pretium, quis laoreet lectus egestas. Praesent lacinia facilisis arcu, sed laoreet dolor vehicula ac. Mauris convallis est lacus. Etiam ornare justo et libero hendrerit, a accumsan justo posuere. Vivamus aliquet lacus id pretium ultrices. Phasellus ut finibus sem. Nullam et varius orci, ac vulputate metus. Integer ornare vitae lectus at volutpat. Morbi maximus faucibus nisi, in vestibulum tortor aliquam sed. Sed vulputate, massa ut lobortis lacinia, libero urna dictum nunc, non iaculis arcu purus nec nulla. In nisi erat, eleifend at tellus a, mattis volutpat dui. Nam facilisis, libero sed feugiat tempor, felis nibh commodo ipsum, id rhoncus nunc nunc eget augue.",
-    "rot": 0,
+    "rot": 90,
     "frame": 0.4,
     "locked": false
   },
@@ -61,22 +61,23 @@
     "y": 216.6666666666668,
     "w": 383,
     "z": 597,
-    "label": "",
+    "label": "Este es el mapa de Brobdingnag",
     "rot": 0,
     "frame": 0
   },
   {
     "id": "mp5d8z5928m",
-    "photoId": "8febc52d726d",
+    "photoId": "d0f388d26773",
     "x": 1141.3333333333335,
     "y": 216.6666666666668,
     "w": 199,
     "z": 596,
     "label": "",
-    "rot": 0,
+    "rot": 90,
     "frame": 0,
     "locked": false,
-    "groupId": "mp5jnz2n"
+    "groupId": "mp5jnz2n",
+    "h": 131
   },
   {
     "id": "mp5k9ik77g3",
@@ -87,17 +88,50 @@
     "z": 598,
     "label": "",
     "rot": 0,
-    "frame": 0
+    "frame": 0,
+    "freeRot": -17,
+    "locked": false
   },
   {
     "id": "mp6qtjbwcs3",
     "photoId": "d0f388d26773",
-    "x": 2632,
-    "y": 531,
+    "x": 821.3333333333335,
+    "y": 841.9501915708813,
     "w": 320,
-    "z": 599,
+    "z": 612,
     "label": "",
     "rot": 0,
     "frame": 0
+  },
+  {
+    "id": "mp7a4xi9u44",
+    "type": "text",
+    "text": "Este es un texto\nlibre..",
+    "x": 741.3120567375888,
+    "y": 377.66666666666674,
+    "w": 593,
+    "h": 260,
+    "z": 613,
+    "fontSize": 60,
+    "textAlign": "left",
+    "fontFamily": "display",
+    "textColor": "",
+    "locked": false,
+    "rot": 90,
+    "freeRot": -31
+  },
+  {
+    "id": "mp7asbhiegi",
+    "type": "text",
+    "text": "Otro texto",
+    "x": 1474.187437541319,
+    "y": 91.33333333333343,
+    "w": 420,
+    "h": 130,
+    "z": 606,
+    "fontSize": 60,
+    "textAlign": "center",
+    "fontFamily": "mono",
+    "textColor": "#959717"
   }
 ]

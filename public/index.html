@@ -6,7 +6,7 @@
 <title>Tableau</title>
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -126,6 +126,48 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .info-tag-list{display:flex;flex-wrap:wrap;gap:2px;margin-top:3px}
 .info-tag-chip{font-size:7px;padding:1px 4px;border:1px solid var(--border2);color:var(--dim);letter-spacing:.2px}
 
+/* ── PRESENTATION MODE ── */
+.app.presentation .topbar,.app.presentation .update-banner,.app.presentation .sidebar,.app.presentation .lib-splitter,.app.presentation .library,.app.presentation .zoom-ctrl,.app.presentation .align-bar{display:none !important}
+.app.presentation .bitem-bar{display:none !important}
+.app.presentation .canvas{background-image:none !important}
+.app.presentation .nitem{display:none !important}
+.app.presentation .lbl{display:none !important}
+.titem{position:absolute;cursor:grab;user-select:none;display:flex;flex-direction:column;outline:1px dashed rgba(128,128,128,.4)}
+.titem:active{cursor:grabbing}
+.titem.locked{cursor:default}
+.titem:hover .bitem-bar,.titem.sel .bitem-bar{opacity:1}
+.titem.sel{outline:1px dashed rgba(128,128,128,.75)}
+.app.presentation .titem{outline:none !important}
+.titem-drag{height:18px;background:rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;padding:0 6px;cursor:grab;flex-shrink:0;gap:6px}
+.titem.locked .titem-drag{cursor:default}
+.app.presentation .titem-drag{display:none}
+.titem-drag-icon{color:var(--muted);font-size:9px;letter-spacing:2px;pointer-events:none}
+.titem-drag-label{font-size:7px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;pointer-events:none;flex:1}
+.titem-txt{flex:1;background:transparent;border:none;resize:none;outline:none;padding:8px 10px;line-height:1.35;overflow:hidden;cursor:text;color:inherit}
+.titem-txt::placeholder{opacity:.25}
+.tfmt-panel{position:absolute;top:calc(100% + 4px);left:0;background:var(--panel2);border:1px solid var(--border2);padding:9px 11px;z-index:300;box-shadow:0 4px 14px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:7px;zoom:calc(1 / var(--canvas-zoom,1));min-width:190px}
+.tfmt-row{display:flex;align-items:center;gap:4px}
+.tfmt-lbl{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;width:38px;flex-shrink:0}
+.tfmt-btn{font-size:9px;padding:2px 7px;background:var(--panel);border:1px solid var(--border2);color:var(--dim);cursor:pointer;letter-spacing:.2px;line-height:1.6}
+.tfmt-btn:hover{color:var(--text)}
+.tfmt-btn.on{background:var(--acc-dim);color:var(--acc);border-color:var(--acc-dim)}
+.tfmt-swatch{width:20px;height:20px;border:1px solid var(--border2);cursor:pointer;position:relative;overflow:hidden;flex-shrink:0}
+.tfmt-swatch input[type=color]{position:absolute;inset:-4px;opacity:0;cursor:pointer;width:calc(100% + 8px);height:calc(100% + 8px)}
+.pres-exit{position:fixed;top:14px;right:14px;z-index:2000;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7);font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.6px;padding:5px 10px;cursor:pointer;backdrop-filter:blur(4px);opacity:0;transition:opacity .2s;pointer-events:none}
+.pres-exit:hover{color:#fff;border-color:rgba(255,255,255,.4)}
+.app.presentation:hover .pres-exit{opacity:1;pointer-events:auto}
+.pres-title{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:2000;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.4);font-family:'Playfair Display',serif;font-size:13px;padding:5px 16px;letter-spacing:.5px;pointer-events:none;backdrop-filter:blur(4px);opacity:0;transition:opacity .2s;display:flex;align-items:center;gap:10px}
+.app.presentation:hover .pres-title{opacity:1}
+.pres-dots{display:flex;gap:5px;align-items:center}
+.pres-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.25);transition:background .2s}
+.pres-dot.active{background:rgba(255,255,255,.75)}
+.pres-nav{position:fixed;top:50%;z-index:2000;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);width:32px;height:48px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;backdrop-filter:blur(4px);opacity:0;transition:opacity .2s;pointer-events:none;transform:translateY(-50%)}
+.pres-nav:hover{color:#fff;border-color:rgba(255,255,255,.3)}
+.pres-nav.prev{left:12px}
+.pres-nav.next{right:12px}
+.app.presentation:hover .pres-nav{opacity:1;pointer-events:auto}
+.pres-nav.disabled{opacity:0 !important;pointer-events:none}
+
 /* ── WORKSPACE ── */
 .workspace{flex:1;display:flex;flex-direction:column;overflow:hidden}
 .canvas-wrap{flex:1;overflow:auto;background:var(--bg)}
@@ -143,6 +185,7 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .bitem-img-wrap{position:relative;overflow:hidden}
 .bitem.sel .bitem-img-wrap{outline:2px dashed var(--acc-dim);outline-offset:2px}
 .bitem.sel.anchor .bitem-img-wrap{outline:2px solid var(--acc);outline-offset:2px}
+.bitem.replacing .bitem-img-wrap{outline:2px solid #e06060 !important;outline-offset:3px;animation:replacing-pulse 1s ease-in-out infinite}
 .bitem-bar{position:absolute;bottom:100%;right:0;display:flex;gap:3px;opacity:0;transition:opacity .12s;zoom:calc(1 / var(--canvas-zoom,1));z-index:250}
 .props-panel{position:absolute;top:0;left:0;background:var(--panel2);border:1px solid var(--border2);border-radius:3px;padding:8px 10px;z-index:200;min-width:160px;box-shadow:0 4px 14px rgba(0,0,0,.45);display:flex;flex-direction:column;gap:6px;zoom:calc(1 / var(--canvas-zoom,1))}
 .props-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
@@ -238,6 +281,13 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .lib-filter{font-size:9px;background:var(--surf);border:1px solid var(--border2);color:var(--dim);padding:2px 6px;cursor:pointer;font-family:'IBM Plex Mono',monospace;letter-spacing:.3px;outline:none;transition:all .15s}
 .lib-filter:hover{border-color:var(--acc-dim);color:var(--text)}
 .lib-filter.active{background:var(--acc);color:var(--bg);border-color:var(--acc)}
+.lib-filter.active.danger{background:var(--danger);border-color:var(--danger)}
+.thumb-rejected{position:absolute;inset:0;background:rgba(196,80,80,.35);display:flex;align-items:center;justify-content:center;z-index:5;pointer-events:none}
+.thumb-rejected-label{background:rgba(196,80,80,.85);color:#fff;font-size:6px;letter-spacing:1.5px;padding:2px 5px;font-family:'IBM Plex Mono',monospace}
+.thumb.rejected-thumb{opacity:.55}
+.thumb-reject-btn{position:absolute;bottom:20px;right:2px;width:18px;height:18px;background:rgba(0,0,0,.65);border:1px solid rgba(196,80,80,.5);color:rgba(196,80,80,.8);cursor:pointer;font-size:10px;display:none;align-items:center;justify-content:center;z-index:6;line-height:1;padding:0}
+.thumb:hover .thumb-reject-btn{display:flex}
+.thumb-reject-btn:hover{color:#ff7070;border-color:#ff7070}
 .lib-star-filter{display:flex;align-items:center;gap:1px;padding:0 2px}
 .lib-star-filter button{background:none;border:none;padding:0 1px;font-size:11px;cursor:pointer;line-height:1;color:var(--dim);outline:none;transition:color .1s}
 .lib-star-filter button:hover{color:var(--acc)}
@@ -351,15 +401,16 @@ select.inp{cursor:pointer;appearance:none;padding-right:28px;background-image:ur
 .cp-menu-item:hover{background:var(--surf);color:var(--text)}
 .cp-menu-empty{padding:7px 12px;font-size:9px;color:var(--muted);letter-spacing:.3px}
 .lasso{position:absolute;pointer-events:none;border:1.5px dashed var(--acc);background:rgba(196,137,74,0.07);z-index:500}
+@keyframes replacing-pulse{0%,100%{outline-opacity:1}50%{outline-opacity:.3}}
 .group-badge{position:absolute;right:0;top:0;font-size:6px;color:var(--muted);padding:1px 3px;pointer-events:none;zoom:calc(1/var(--canvas-zoom,1));background:var(--panel);letter-spacing:.5px;border-radius:0 0 0 3px}
 /* ── THUMB COPY BUTTON ── */
-.thumb-cp{position:absolute;bottom:2px;right:22px;width:18px;height:18px;background:rgba(13,12,11,.75);color:var(--sub);border:none;cursor:pointer;font-size:10px;border-radius:2px;display:none;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;line-height:1;z-index:2}
+.thumb-cp{position:absolute;bottom:2px;right:22px;width:18px;height:18px;background:rgba(0,0,0,.62);color:rgba(255,255,255,.82);border:1px solid rgba(255,255,255,.18);cursor:pointer;font-size:10px;border-radius:2px;display:none;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;line-height:1;z-index:2}
 .thumb:hover .thumb-cp{display:flex}
-.thumb-cp:hover{color:var(--acc)}
+.thumb-cp:hover{color:#fff;background:rgba(0,0,0,.82)}
 .thumb-color{position:absolute;bottom:4px;left:4px;width:9px;height:9px;border-radius:50%;border:1.5px solid rgba(255,255,255,.6);pointer-events:none;z-index:2;box-shadow:0 1px 3px rgba(0,0,0,.5)}
-.thumb-tag{position:absolute;bottom:2px;right:42px;width:18px;height:18px;background:rgba(13,12,11,.75);color:var(--sub);border:none;cursor:pointer;font-size:9px;border-radius:2px;display:none;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;line-height:1;z-index:2}
+.thumb-tag{position:absolute;bottom:2px;right:42px;width:18px;height:18px;background:rgba(0,0,0,.62);color:rgba(255,255,255,.82);border:1px solid rgba(255,255,255,.18);cursor:pointer;font-size:9px;border-radius:2px;display:none;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;line-height:1;z-index:2}
 .thumb:hover .thumb-tag{display:flex}
-.thumb-tag:hover{color:var(--acc)}
+.thumb-tag:hover{color:#fff;background:rgba(0,0,0,.82)}
 .thumb-tag-badge{position:absolute;top:3px;left:3px;background:var(--acc);color:var(--bg);border-radius:8px;min-width:14px;height:14px;font-size:7px;display:flex;align-items:center;justify-content:center;padding:0 3px;font-family:'IBM Plex Mono',monospace;font-weight:700;pointer-events:none;z-index:2}
 .tag-pop{position:fixed;background:var(--panel);border:1px solid var(--border2);z-index:600;min-width:170px;max-width:240px;box-shadow:0 4px 20px rgba(0,0,0,.5);padding:6px 0}
 .tag-pop-hd{padding:4px 10px 6px;font-size:7px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border)}
@@ -375,12 +426,18 @@ select.inp{cursor:pointer;appearance:none;padding-right:28px;background-image:ur
 .tag-filter-btn:hover{border-color:var(--acc-dim);color:var(--text)}
 .tag-filter-btn.active{background:var(--acc);color:var(--bg);border-color:var(--acc)}
 .tag-filter-badge{background:var(--bg);color:var(--acc);border-radius:8px;min-width:12px;height:12px;font-size:7px;display:inline-flex;align-items:center;justify-content:center;padding:0 2px;font-weight:700}
-.thumb-stars{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.55);color:var(--acc);font-size:7px;text-align:center;padding:1px 0;letter-spacing:1px;pointer-events:none;z-index:2;display:flex;align-items:center;justify-content:center;gap:0}
-.thumb-star-empty{color:var(--border2);opacity:.6}
+.thumb-stars{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.55);color:#e0a838;font-size:7px;text-align:center;padding:1px 0;letter-spacing:1px;pointer-events:none;z-index:2;display:flex;align-items:center;justify-content:center;gap:0}
+.thumb-star-empty{color:rgba(255,255,255,.35);opacity:1}
 .lib-preview{position:fixed;background:var(--panel);border:1px solid var(--border2);z-index:700;box-shadow:0 6px 24px rgba(0,0,0,.6);pointer-events:none;padding:4px}
+.lib-preview.pinned{z-index:710;border-color:var(--acc-dim);box-shadow:0 8px 32px rgba(0,0,0,.75);position:fixed;padding-top:4px}
 .lib-preview img{display:block;max-width:280px;max-height:280px;object-fit:contain;background:#111}
 .lib-preview-name{padding:4px 4px 0;font-size:8px;color:var(--dim);font-family:'IBM Plex Mono',monospace;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px}
+.lib-preview-close{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);border:none;color:var(--dim);width:18px;height:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;z-index:1;line-height:1}
+.lib-preview-close:hover{color:var(--text)}
 .uploading-bar{position:fixed;bottom:128px;left:0;right:0;height:2px;background:var(--acc);z-index:500}
+.replace-banner{position:fixed;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--acc-dim);color:var(--acc);font-size:9px;letter-spacing:.5px;padding:5px 12px;z-index:600;display:flex;align-items:center;gap:10px;box-shadow:0 4px 16px rgba(0,0,0,.5);white-space:nowrap}
+.replace-banner-close{background:none;border:1px solid var(--acc-dim);color:var(--acc-dim);font-family:'IBM Plex Mono',monospace;font-size:8px;padding:1px 6px;cursor:pointer;letter-spacing:.5px}
+.replace-banner-close:hover{color:var(--acc);border-color:var(--acc)}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:var(--surf)}
 ::-webkit-scrollbar-thumb{background:var(--border2)}
@@ -449,6 +506,21 @@ const ZOOM_STEPS = [0.25, 0.33, 0.5, 0.67, 0.75, 1.0, 1.25, 1.5, 2.0];
 
 const NOTE_FONT_CYCLE = [null, 9, 14, 18]; // null = default M (11px)
 const NOTE_FONT_LABEL = v => v === 9 ? 'S' : v === 14 ? 'L' : v === 18 ? 'XL' : 'M';
+const TEXT_FONT_SIZES = [16, 26, 40, 60];
+const TEXT_FONT_LABEL = v => v >= 50 ? 'XL' : v >= 36 ? 'L' : v >= 22 ? 'M' : 'S';
+const TEXT_ALIGN_CYCLE = ['left', 'center', 'right'];
+const TEXT_ALIGN_ICON  = { left: '⫷', center: '⊟', right: '⫸' };
+const TEXT_FONTS = [
+  { id: 'serif',   label: 'Serif',   family: "'Playfair Display',serif" },
+  { id: 'sans',    label: 'Sans',    family: "'DM Sans',sans-serif" },
+  { id: 'display', label: 'Display', family: "'Bebas Neue',cursive" },
+  { id: 'mono',    label: 'Mono',    family: "'IBM Plex Mono',monospace" },
+];
+const bgContrast = hex => {
+  if (!hex || !hex.startsWith('#')) return '';
+  const r = parseInt(hex.slice(1,3),16)/255, g = parseInt(hex.slice(3,5),16)/255, b = parseInt(hex.slice(5,7),16)/255;
+  return (0.299*r + 0.587*g + 0.114*b) > 0.5 ? '#1a1a1a' : '#ffffff';
+};
 const NOTE_COLORS = ['yellow','green','blue','pink','purple','orange'];
 const NOTE_COLOR_VALS = {
   yellow: ['#c8a832','rgba(200,168,50,.15)'],
@@ -628,6 +700,12 @@ const I18N = {
     ungroupItems:'Desagrupar',
     batchTagBtn:'# Etiquetas', batchTagHd: n => `Etiquetar ${n} fotos`,
     batchRated: n => `${n} foto${n!==1?'s':''} puntuada${n!==1?'s':''}`,
+    presentationBtn:'Presentación', exitPresentation:'Salir · ESC', addText:'+ Texto',
+    textFmtSize:'Tamaño', textFmtFont:'Fuente', textFmtAlign:'Alinear', textFmtColor:'Color',
+    rejectBtn:'Rechazar', unrejectBtn:'Recuperar', filterRejected:'Rechazadas', filterRejectedHide:'Ocultar rechazadas',
+    rejectedLabel:'RECHAZADA',
+    replacePhoto:'Reemplazar foto', replaceModeHint:'Selecciona la foto nueva en la librería · ESC cancela', replaceDone:'Foto reemplazada',
+    pinnedPreviewHint:'Clic para fijar · ESC cierra',
   },
   en: {
     upload:'+ Upload', report:'≡ Report', config:'⚙ Config', exportJpeg:'Export JPEG',
@@ -733,6 +811,12 @@ const I18N = {
     ungroupItems:'Ungroup',
     batchTagBtn:'# Tags', batchTagHd: n => `Tag ${n} photos`,
     batchRated: n => `${n} photo${n!==1?'s':''} rated`,
+    presentationBtn:'Present', exitPresentation:'Exit · ESC', addText:'+ Text',
+    textFmtSize:'Size', textFmtFont:'Font', textFmtAlign:'Align', textFmtColor:'Color',
+    rejectBtn:'Reject', unrejectBtn:'Recover', filterRejected:'Rejected', filterRejectedHide:'Hide rejected',
+    rejectedLabel:'REJECTED',
+    replacePhoto:'Replace photo', replaceModeHint:'Select the new photo in the library · ESC to cancel', replaceDone:'Photo replaced',
+    pinnedPreviewHint:'Click to pin · ESC closes',
   },
 };
 
@@ -820,12 +904,16 @@ function App() {
   const [batchTagInput, setBatchTagInput] = useState('');
   const [ratingFilter,  setRatingFilter]  = useState(0); // 0 = no filter, 1-5 = min rating
   const [ctxMenu,       setCtxMenu]       = useState(null); // {x, y, itemId}
+  const [canvasCtx,     setCanvasCtx]     = useState(null); // {x, y, cx, cy} canvas right-click
   const [showLibPreview, setShowLibPreview] = useState(() => localStorage.getItem('tb-lib-preview') !== 'false');
   const showLibPreviewRef = useRef(localStorage.getItem('tb-lib-preview') !== 'false');
   const [libPreview,    setLibPreview]    = useState(null); // {photo, x, y}
+  const [pinnedPreview, setPinnedPreview] = useState(null); // {photo, x, y} — click-pinned
   const previewTimer    = useRef(null);
   const hoveredThumbRef = useRef(null);
-  const [cfgBackground, setCfgBackground] = useState('');
+  const [presentation,  setPresentation]  = useState(false);
+  const [rejectedFilter, setRejectedFilter] = useState(false); // false=ocultar rechazadas, true=solo rechazadas, null=todas
+  const [replaceMode,   setReplaceMode]   = useState(null); // {itemId} when active
   const [hoverInfo,     setHoverInfo]     = useState(null);
   // board config edit state (only live while modal is open)
   const [cfgUnits,      setCfgUnits]      = useState('cm');
@@ -842,6 +930,7 @@ function App() {
   const [importState,   setImportState]   = useState(null); // {tempId,projectName,conflict,existingProject,busy}
   const [cfgDefaultFrame, setCfgDefaultFrame] = useState('0');
   const [propsPanelId,  setPropsPanelId]  = useState(null);
+  const [textFmtPanelId, setTextFmtPanelId] = useState(null);
   const [noteColorPanelId, setNoteColorPanelId] = useState(null);
   const [copyToMenu,    setCopyToMenu]    = useState(null); // {photoId, x, y}
   const [lasso,         setLasso]         = useState(null); // {x1,y1,x2,y2} canvas coords
@@ -1039,7 +1128,7 @@ function App() {
             ...it,
             id: pfx + idx.toString(36) + Math.random().toString(36).slice(2, 4),
             x: it.x + 20, y: it.y + 20, z: ++z,
-          })).filter(it => it.type === 'note' || photosRef.current.some(p => p.id === it.photoId));
+          })).filter(it => it.type === 'note' || it.type === 'text' || photosRef.current.some(p => p.id === it.photoId));
           if (!copies.length) return;
           const nit = [...itemsRef.current, ...copies];
           selRef.current = copies.map(c => c.id); setSel(copies.map(c => c.id));
@@ -1164,7 +1253,6 @@ function App() {
     setCfgBoardW(activeBoardMeta?.fixedW != null ? String(activeBoardMeta.fixedW) : '');
     setCfgBoardH(activeBoardMeta?.fixedH != null ? String(activeBoardMeta.fixedH) : '');
     setCfgDefaultFrame(String(activeBoardMeta?.defaultFrame || 0));
-    setCfgBackground(activeBoardMeta?.background || '');
     setModal('boardcfg');
   };
 
@@ -1186,7 +1274,7 @@ function App() {
       });
       if (overflow && !confirm(t('confirmOverflow'))) return;
     }
-    const patch = { units: cfgUnits, dpi, fixed: cfgFixed, fixedW: cfgFixed ? fixedW : null, fixedH: cfgFixed ? fixedH : null, defaultFrame: parseFloat(cfgDefaultFrame) || 0, background: cfgBackground };
+    const patch = { units: cfgUnits, dpi, fixed: cfgFixed, fixedW: cfgFixed ? fixedW : null, fixedH: cfgFixed ? fixedH : null, defaultFrame: parseFloat(cfgDefaultFrame) || 0 };
     await api.patch(`/api/projects/${pid}/boards/${bid}`, patch);
     setBoards(bs => bs.map(b => b.id === bid ? { ...b, ...patch } : b));
     setModal(null);
@@ -1206,19 +1294,27 @@ function App() {
       const units = board.units || 'px';
       const hasPhys = dpi && units !== 'px';
       const bPx = getBoardPx(board);
-      const photoItemsPr = boardIt.filter(i => i.type !== 'note').map(item => {
+      const photoItemsPr = boardIt.filter(i => i.type !== 'note' && i.type !== 'text').map(item => {
         const photo = photosRef.current.find(p => p.id === item.photoId);
-        const rot = item.rot || 0;
+        const rot = item.rot || 0; const freeRot = item.freeRot || 0;
         const isSwapped = rot % 180 !== 0;
-        const naturalH = isSwapped
-          ? (photo ? Math.round(item.w * photo.w / photo.h) : item.w)
-          : (photo ? Math.round(item.w * photo.h / photo.w) : item.w);
-        return { ...item, displayH: isSwapped ? item.w : naturalH };
+        const naturalW = isSwapped ? (photo ? Math.round(item.w * photo.w / photo.h) : item.w) : item.w;
+        const naturalH = isSwapped ? item.w : (photo ? Math.round(item.w * photo.h / photo.w) : item.w);
+        const displayH = isSwapped ? naturalW : naturalH;
+        const offX = Math.round((item.w - naturalW) / 2);
+        const offY = Math.round((displayH - naturalH) / 2);
+        const ar = freeRot * Math.PI / 180;
+        const cos = Math.abs(Math.cos(ar)); const sin = Math.abs(Math.sin(ar));
+        const bbW = cos * item.w + sin * displayH; const bbH = sin * item.w + cos * displayH;
+        const cx = item.x + item.w / 2; const cy = item.y + displayH / 2;
+        return { ...item, naturalW, naturalH, displayH, offX, offY, vL: cx - bbW/2, vT: cy - bbH/2, vW: bbW, vH: bbH };
       });
-      const minXpr = bPx ? 0 : (photoItemsPr.length ? Math.min(...photoItemsPr.map(i => i.x)) : 0);
-      const minYpr = bPx ? 0 : (photoItemsPr.length ? Math.min(...photoItemsPr.map(i => i.y)) : 0);
-      const bW = bPx?.w ?? (photoItemsPr.length ? Math.max(...photoItemsPr.map(i => i.x + i.w)) - minXpr : 0);
-      const bH = bPx?.h ?? (photoItemsPr.length ? Math.max(...photoItemsPr.map(i => i.y + i.displayH)) - minYpr : 0);
+      const textItemsPr = boardIt.filter(i => i.type === 'text');
+      const allBoundsPr = [...photoItemsPr, ...textItemsPr.map(i => ({ vL: i.x, vT: i.y, vW: i.w, vH: i.h || 130 }))];
+      const minXpr = bPx ? 0 : (allBoundsPr.length ? Math.min(...allBoundsPr.map(i => i.vL)) : 0);
+      const minYpr = bPx ? 0 : (allBoundsPr.length ? Math.min(...allBoundsPr.map(i => i.vT)) : 0);
+      const bW = bPx?.w ?? (allBoundsPr.length ? Math.max(...allBoundsPr.map(i => i.vL + i.vW)) - minXpr : 0);
+      const bH = bPx?.h ?? (allBoundsPr.length ? Math.max(...allBoundsPr.map(i => i.vT + i.vH)) - minYpr : 0);
       let previewHtml = '';
       if (bW > 0 && bH > 0) {
         const sc = Math.min(580 / bW, 200 / bH, 1);
@@ -1226,11 +1322,30 @@ function App() {
         const bg = bPx ? '#f5f5f5' : '#111';
         const border = bPx ? '1px solid #ddd' : '1px dashed #aaa';
         const imgs = photoItemsPr.map(item => {
+          const rot = item.rot || 0; const freeRot = item.freeRot || 0;
+          const iL = Math.round((item.x - minXpr) * sc); const iT = Math.round((item.y - minYpr) * sc);
+          const iW = Math.round(item.w * sc); const iH = Math.round(item.displayH * sc);
           const fPx = item.frame > 0 ? Math.max(1, Math.round(physToPx(item.frame, dpi, units) * sc)) : 0;
           const frameStyle = fPx > 0 ? `outline:${fPx}px solid #c8c8c8;` : '';
-          return `<img src="/photos/${pid}/${item.photoId}/thumb" style="position:absolute;left:${Math.round((item.x-minXpr)*sc)}px;top:${Math.round((item.y-minYpr)*sc)}px;width:${Math.round(item.w*sc)}px;height:${Math.round(item.displayH*sc)}px;object-fit:cover;${frameStyle}" alt="" />`;
+          const freeRotStyle = freeRot ? `transform:rotate(${freeRot}deg);transform-origin:center;` : '';
+          const imgW = Math.round(item.naturalW * sc); const imgH = Math.round(item.naturalH * sc);
+          const imgL = Math.round(item.offX * sc); const imgT = Math.round(item.offY * sc);
+          const rotStyle = rot ? `transform:rotate(${rot}deg);transform-origin:center;` : '';
+          return `<div style="position:absolute;left:${iL}px;top:${iT}px;width:${iW}px;height:${iH}px;overflow:hidden;${freeRotStyle}${frameStyle}"><img src="/photos/${pid}/${item.photoId}/thumb" style="position:absolute;left:${imgL}px;top:${imgT}px;width:${imgW}px;height:${imgH}px;object-fit:cover;${rotStyle}" alt="" /></div>`;
         }).join('');
-        previewHtml = `<div class="preview-wrap"><div class="preview-box" style="width:${pW}px;height:${pH}px;background:${bg};border:${border}">${imgs}</div><div class="preview-dim">${dimLabel(bW, bH, dpi, units)}</div></div>`;
+        const fontMap = { serif:'Georgia,serif', sans:'Arial,sans-serif', display:'Impact,sans-serif', mono:'Courier New,monospace' };
+        const alignMap = { left:'flex-start', center:'center', right:'flex-end' };
+        const textEls = textItemsPr.map(item => {
+          const rot = item.freeRot || 0;
+          const rotStyle = rot ? `transform:rotate(${rot}deg);transform-origin:center;` : '';
+          const color = item.textColor || '#111';
+          const font = fontMap[item.fontFamily || 'serif'] || 'Georgia,serif';
+          const justify = alignMap[item.textAlign || 'center'] || 'center';
+          const scaledSize = Math.max(6, Math.round((item.fontSize || 26) * sc));
+          const txt = (item.text || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>');
+          return `<div style="position:absolute;left:${Math.round((item.x-minXpr)*sc)}px;top:${Math.round((item.y-minYpr)*sc)}px;width:${Math.round(item.w*sc)}px;height:${Math.round((item.h||130)*sc)}px;font-size:${scaledSize}px;font-family:${font};text-align:${item.textAlign||'center'};color:${color};display:flex;align-items:center;justify-content:${justify};padding:${Math.round(4*sc)}px;overflow:hidden;box-sizing:border-box;${rotStyle}">${txt}</div>`;
+        }).join('');
+        previewHtml = `<div class="preview-wrap"><div class="preview-box" style="width:${pW}px;height:${pH}px;background:${bg};border:${border}">${imgs}${textEls}</div><div class="preview-dim">${dimLabel(bW, bH, dpi, units)}</div></div>`;
       }
       rows += `<section><h2>${board.name}<span class="bcfg">${hasPhys ? ` · ${dpi} dpi · ${units}` : ` · ${t('noScaleConfigured')}`}</span></h2>`;
       if (!boardIt.length) { rows += `<p class="empty">${t('emptyBoardMem')}</p></section>`; return; }
@@ -1288,7 +1403,7 @@ function App() {
   td.lbl{color:#777;font-style:italic}
   .preview-wrap{margin:10px 0 16px}
   .preview-box{position:relative;overflow:hidden}
-  .preview-box img{position:absolute;object-fit:cover}
+  .preview-box > img{position:absolute;object-fit:cover}
   .preview-dim{font-size:8px;color:#888;letter-spacing:.8px;text-transform:uppercase;margin-top:4px}
   .notes-section{margin-top:12px}
   .notes-hd{font-size:8px;text-transform:uppercase;letter-spacing:1px;color:#888;border-top:1px solid #ddd;padding-top:6px;margin-bottom:6px}
@@ -1298,7 +1413,7 @@ function App() {
   .note-link-row{margin-top:5px}
   .note-link{font-size:10px;color:#1a6fbf;text-decoration:underline;word-break:break-all}
   .note-link-domain{color:#888;font-size:9px;margin-left:4px}
-  @media print{body{padding:10mm 12mm} section{page-break-inside:avoid}}
+  @media print{@page{margin:12mm 14mm} body{padding:0;margin:0;max-width:none} section+section{page-break-before:always} .preview-wrap{page-break-inside:avoid}}
 </style></head><body>
 <header><h1>${proj?.name || ''}</h1><p>${t('reportHeading')} · ${date}</p></header>
 ${rows}
@@ -1360,6 +1475,18 @@ ${rows}
     const nit = [...itemsRef.current, copy];
     selRef.current = [copy.id]; setSel([copy.id]);
     setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
+  };
+
+  const replacePhotoInCanvas = (itemId, newPhotoId) => {
+    const it = itemsRef.current.find(i => i.id === itemId);
+    const newPhoto = photosRef.current.find(p => p.id === newPhotoId);
+    if (!it || !newPhoto) return;
+    pushUndo();
+    const newH = Math.round(it.w * newPhoto.h / newPhoto.w);
+    const nit = itemsRef.current.map(i => i.id === itemId ? { ...i, photoId: newPhotoId, h: newH } : i);
+    setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
+    setReplaceMode(null);
+    showToast(t('replaceDone'));
   };
 
   const setDefaultW = async (w) => {
@@ -1632,6 +1759,14 @@ ${rows}
   };
   const toggleTagFilter = tag => setTagFilter(tf => tf.includes(tag) ? tf.filter(t => t !== tag) : [...tf, tag]);
 
+  const toggleRejected = async (photoId) => {
+    const photo = photosRef.current.find(p => p.id === photoId);
+    if (!photo) return;
+    const next = !photo.rejected;
+    await api.patch(`/api/projects/${pidRef.current}/photos/${photoId}/rejected`, { rejected: next });
+    setPhotos(ps => ps.map(p => p.id === photoId ? { ...p, rejected: next } : p));
+  };
+
   const setRating = async (photoId, rating) => {
     await api.patch(`/api/projects/${pidRef.current}/photos/${photoId}/rating`, { rating });
     setPhotos(ps => ps.map(p => p.id === photoId ? { ...p, rating } : p));
@@ -1694,6 +1829,24 @@ ${rows}
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, []);
+
+  useEffect(() => {
+    const handler = e => {
+      if (presentation && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) {
+        const bs = boardsRef.current;
+        const idx = bs.findIndex(b => b.id === bidRef.current);
+        const next = e.key === 'ArrowRight' ? idx + 1 : idx - 1;
+        if (next >= 0 && next < bs.length) setBid(bs[next].id);
+        return;
+      }
+      if (e.key !== 'Escape') return;
+      if (presentation) { setPresentation(false); return; }
+      if (pinnedPreview) { setPinnedPreview(null); return; }
+      if (replaceMode) { setReplaceMode(null); return; }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [presentation, pinnedPreview, replaceMode]);
 
   const deletePhoto = async id => {
     const placedBoards = boards.filter(b =>
@@ -2034,7 +2187,11 @@ ${rows}
 
   const rotateItem = id => {
     pushUndo();
-    const nit = itemsRef.current.map(i => i.id === id ? { ...i, rot: ((i.rot || 0) + 90) % 360 } : i);
+    const nit = itemsRef.current.map(i => {
+      if (i.id !== id) return i;
+      if (i.type === 'note' || i.type === 'text') return { ...i, freeRot: ((i.freeRot || 0) + 90) % 360 };
+      return { ...i, rot: ((i.rot || 0) + 90) % 360 };
+    });
     setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
   };
 
@@ -2043,8 +2200,8 @@ ${rows}
     const it = itemsRef.current.find(i => i.id === itemId);
     if (it?.locked) return;
     const beforeRot = itemsRef.current.map(i => ({...i}));
-    const el = e.currentTarget.closest('.bitem,.nitem');
-    const rect = el.getBoundingClientRect();
+    const el = e.currentTarget.closest('.bitem,.nitem,.titem');
+    const rect = el ? el.getBoundingClientRect() : e.currentTarget.getBoundingClientRect();
     const cx = rect.left + rect.width / 2;
     const cy = rect.top + rect.height / 2;
     const sx = e.clientX, sy = e.clientY;
@@ -2084,7 +2241,7 @@ ${rows}
       if (e.button !== 0) return;
       const wrap = wrapRef.current;
       if (!wrap || !wrap.contains(e.target)) return;
-      if (e.target.closest('.align-bar,.bitem,.nitem')) return;
+      if (e.target.closest('.align-bar,.bitem,.nitem,.titem')) return;
       const toCanvas = (cx, cy) => {
         const r = wrap.getBoundingClientRect();
         const z = zoomRef.current;
@@ -2197,23 +2354,61 @@ ${rows}
     setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
   };
 
-  const addNote = () => {
+  const addNote = (pos = null) => {
     if (!bid) return;
     pushUndo();
     const maxZ = itemsRef.current.length ? Math.max(...itemsRef.current.map(i => i.z || 0)) : 0;
     const z = zoomRef.current;
     const wrapEl = wrapRef.current;
-    const cx = wrapEl ? Math.round(wrapEl.scrollLeft / z + wrapEl.clientWidth  / z / 2) : 200;
-    const cy = wrapEl ? Math.round(wrapEl.scrollTop  / z + wrapEl.clientHeight / z / 2) : 200;
     const w = 220, h = 150;
     const bp = boardPxRef.current;
-    let x = Math.round(cx - w / 2), y = Math.round(cy - h / 2);
+    let x, y;
+    if (pos) {
+      x = Math.round(pos.cx - w / 2); y = Math.round(pos.cy - h / 2);
+    } else {
+      const cx = wrapEl ? Math.round(wrapEl.scrollLeft / z + wrapEl.clientWidth  / z / 2) : 200;
+      const cy = wrapEl ? Math.round(wrapEl.scrollTop  / z + wrapEl.clientHeight / z / 2) : 200;
+      x = Math.round(cx - w / 2); y = Math.round(cy - h / 2);
+    }
     if (bp) { x = Math.max(0, Math.min(x, bp.w - w)); y = Math.max(0, Math.min(y, bp.h - h)); }
     const item = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), type: 'note', text: '', x, y, w, h, z: maxZ + 1 };
     const nit = [...itemsRef.current, item];
     selRef.current = [item.id]; setSel([item.id]);
     saveItemsNow(applyNormalized(nit));
   };
+
+  const addText = (pos = null) => {
+    if (!bid) return;
+    pushUndo();
+    const maxZ = itemsRef.current.length ? Math.max(...itemsRef.current.map(i => i.z || 0)) : 0;
+    const z = zoomRef.current;
+    const wrapEl = wrapRef.current;
+    const w = 420, h = 130;
+    const bp = boardPxRef.current;
+    let x, y;
+    if (pos) {
+      x = Math.round(pos.cx - w / 2); y = Math.round(pos.cy - h / 2);
+    } else {
+      const cx = wrapEl ? Math.round(wrapEl.scrollLeft / z + wrapEl.clientWidth  / z / 2) : 200;
+      const cy = wrapEl ? Math.round(wrapEl.scrollTop  / z + wrapEl.clientHeight / z / 2) : 200;
+      x = Math.round(cx - w / 2); y = Math.round(cy - h / 2);
+    }
+    if (bp) { x = Math.max(0, Math.min(x, bp.w - w)); y = Math.max(0, Math.min(y, bp.h - h)); }
+    const lastText = itemsRef.current.filter(i => i.type === 'text').slice(-1)[0];
+    const autoColor = boardPxRef.current ? bgContrast('#ffffff') : '';
+    const item = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
+      type: 'text', text: '', x, y, w, h, z: maxZ + 1,
+      fontSize:   lastText?.fontSize   ?? 26,
+      textAlign:  lastText?.textAlign  ?? 'center',
+      fontFamily: lastText?.fontFamily ?? 'serif',
+      textColor:  lastText?.textColor  || autoColor,
+    };
+    const nit = [...itemsRef.current, item];
+    selRef.current = [item.id]; setSel([item.id]);
+    saveItemsNow(applyNormalized(nit));
+  };
+
 
   const onResizeNotePD = (e, itemId) => {
     e.stopPropagation(); e.preventDefault();
@@ -2299,6 +2494,7 @@ ${rows}
   const handleItemClick = (e, item) => {
     e.stopPropagation();
     if (wasDragged.current) { wasDragged.current = false; return; }
+    setTextFmtPanelId(null);
     const idsToToggle = item.groupId
       ? itemsRef.current.filter(i => i.groupId === item.groupId).map(i => i.id)
       : [item.id];
@@ -2524,7 +2720,7 @@ ${rows}
   };
 
   return (
-    <div className="app" onClick={() => { selRef.current = []; setSel([]); renaming && setRenaming(null); setThemeOpen(false); setPropsPanelId(null); }}>
+    <div className={`app${presentation ? ' presentation' : ''}`} onClick={() => { selRef.current = []; setSel([]); renaming && setRenaming(null); setThemeOpen(false); setPropsPanelId(null); setTextFmtPanelId(null); }}>
 
       {updateInfo && !updateDismissed && (
         <div className="update-banner">
@@ -2559,7 +2755,7 @@ ${rows}
           }
         </div>
         <div style={{flex:1}}/>
-        {bid && <button className="btn" style={{fontSize:9}} onClick={addNote} title={t('addNote')}>{t('addNote')}</button>}
+        {bid && <button className="btn" style={{fontSize:9}} onClick={() => setPresentation(true)} title={t('presentationBtn')}>{t('presentationBtn')}</button>}
         {pid && boards.length > 0 && (
           <button className="btn" style={{fontSize:10}} onClick={() => setModal('memoria')} title={t('reportTitle')}>
             {t('report')}
@@ -2740,7 +2936,7 @@ ${rows}
                                     <span className="nboard-name" title={b.name} onDoubleClick={e => { e.stopPropagation(); startRename('board', b.id, b.name, e); }}>{b.name}</span>
                                   )}
                                   {!(renaming?.type === 'board' && renaming.id === b.id) && (
-                                    <span className="nboard-count">{(allBoardItems[b.id] || []).filter(i => i.type !== 'note').length || ''}</span>
+                                    <span className="nboard-count">{(allBoardItems[b.id] || []).filter(i => i.type !== 'note' && i.type !== 'text').length || ''}</span>
                                   )}
                                   <div className="nrow-acts">
                                     <button className="nact edit" title={t('renameBtn')}      onClick={e => startRename('board', b.id, b.name, e)}>✎</button>
@@ -2821,12 +3017,9 @@ ${rows}
                 </div>
               )}
               {(() => {
-                const boardBg = activeBoard?.background || '';
                 const gridColor = (() => {
-                  const bg = boardBg || (boardPx ? '#ffffff' : null);
-                  if (!bg) return 'var(--border)';
-                  const rv = parseInt(bg.slice(1,3),16)/255, gv = parseInt(bg.slice(3,5),16)/255, bv = parseInt(bg.slice(5,7),16)/255;
-                  return (0.299*rv + 0.587*gv + 0.114*bv) < 0.5 ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.09)';
+                  if (!boardPx) return 'var(--border)';
+                  return 'rgba(0,0,0,0.09)';
                 })();
               return (
               <div className="canvas" style={{
@@ -2839,11 +3032,20 @@ ${rows}
                 ...(boardPx ? {
                   width: boardPx.w, height: boardPx.h,
                   minWidth: boardPx.w, minHeight: boardPx.h,
-                  backgroundColor: boardBg || '#fff',
+                  backgroundColor: '#fff',
                   boxShadow: '0 8px 48px rgba(0,0,0,.7)',
                   overflow: 'hidden',
-                } : boardBg ? { backgroundColor: boardBg } : {})
-              }} onClick={e => { if (wasDragged.current) { wasDragged.current = false; e.stopPropagation(); return; } selRef.current = []; setSel([]); }}>
+                } : {})
+              }} onClick={e => { if (wasDragged.current) { wasDragged.current = false; e.stopPropagation(); return; } selRef.current = []; setSel([]); setCanvasCtx(null); }}
+              onContextMenu={e => {
+                if (!bid || presentation) return;
+                e.preventDefault();
+                const wrapEl = wrapRef.current;
+                const rect = wrapEl.getBoundingClientRect();
+                const cx = Math.round((e.clientX - rect.left + wrapEl.scrollLeft) / zoom);
+                const cy = Math.round((e.clientY - rect.top  + wrapEl.scrollTop)  / zoom);
+                setCanvasCtx({ x: Math.min(e.clientX, window.innerWidth - 160), y: Math.min(e.clientY, window.innerHeight - 90), cx, cy });
+              }}>
                 {lasso && <div className="lasso" style={{left:lasso.x1,top:lasso.y1,width:Math.max(0,lasso.x2-lasso.x1),height:Math.max(0,lasso.y2-lasso.y1)}}/>}
                 {snapGuides.v.map((g, i) => <div key={`sgv${i}`} style={{position:'absolute',left:g.pos,top:g.from,width:1/zoom,height:g.to-g.from,background:'var(--acc)',opacity:.85,pointerEvents:'none',zIndex:9999}}/>)}
                 {snapGuides.h.map((g, i) => <div key={`sgh${i}`} style={{position:'absolute',left:g.from,top:g.pos,width:g.to-g.from,height:1/zoom,background:'var(--acc)',opacity:.85,pointerEvents:'none',zIndex:9999}}/>)}
@@ -2863,6 +3065,75 @@ ${rows}
                 )}
 
                 {[...items].sort((a, b) => (a.z||0)-(b.z||0)).map(item => {
+                  if (item.type === 'text') {
+                    const tFont = TEXT_FONTS.find(f => f.id === (item.fontFamily || 'serif')) || TEXT_FONTS[0];
+                    const tFmtOpen = textFmtPanelId === item.id;
+                    const autoColor = boardPx ? bgContrast('#ffffff') : '';
+                    const textColor = item.textColor || autoColor || 'var(--text)';
+                    const setTextProp = (prop, val) => { const nit = itemsRef.current.map(i => i.id === item.id ? {...i, [prop]: val} : i); setItems(nit); itemsRef.current = nit; saveItemsNow(nit); };
+                    return (
+                      <div key={item.id} className={`titem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}${item.locked?' locked':''}${item.groupId?' grouped':''}`}
+                        style={{ left: item.x, top: item.y, width: item.w, height: item.h || 130, zIndex: item.z||1, color: textColor, ...(item.freeRot ? {transform:`rotate(${item.freeRot}deg)`,transformOrigin:'center center'} : {}) }}
+                        onPointerDown={e => onItemPD(e, item.id)}
+                        onClick={e => handleItemClick(e, item)}
+                        onContextMenu={e => openCtxMenu(e, item.id)}
+                      >
+                        {item.locked && <div className="lock-badge"><SvgLock/></div>}
+                        <div className="bitem-bar" onPointerDown={e => e.stopPropagation()}>
+                          <button className="ibc rot" title={t('rotateBtn')} onPointerDown={e => { e.stopPropagation(); if (!item.locked) onFreeRotatePD(e, item.id); }} onClick={e => { e.stopPropagation(); if (rotBtnDraggedRef.current) { rotBtnDraggedRef.current = false; return; } rotateItem(item.id); }}>↻</button>
+                          <button className={`ibc${tFmtOpen?' active':''}`} title={lang==='es'?'Formato':'Format'} onClick={e => { e.stopPropagation(); setTextFmtPanelId(tFmtOpen ? null : item.id); }}>T▾</button>
+                          <button className="ibc" title={t(item.locked ? 'unlockBtn' : 'lockBtn')} style={{color: item.locked ? 'var(--acc)' : undefined}} onClick={e => { e.stopPropagation(); updateItemLocked(item.id, !item.locked); }}>{item.locked ? <SvgUnlock/> : <SvgLock/>}</button>
+                          <button className="ibc del" title={t('deleteBtn')} onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
+                        </div>
+                        {tFmtOpen && (
+                          <div className="tfmt-panel" onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
+                            <div className="tfmt-row">
+                              <span className="tfmt-lbl">{t('textFmtSize')}</span>
+                              {TEXT_FONT_SIZES.map(sz => (
+                                <button key={sz} className={`tfmt-btn${(item.fontSize||26)===sz?' on':''}`}
+                                  onClick={() => setTextProp('fontSize', sz)}>{TEXT_FONT_LABEL(sz)}</button>
+                              ))}
+                            </div>
+                            <div className="tfmt-row">
+                              <span className="tfmt-lbl">{t('textFmtFont')}</span>
+                              {TEXT_FONTS.map(f => (
+                                <button key={f.id} className={`tfmt-btn${(item.fontFamily||'serif')===f.id?' on':''}`}
+                                  style={{fontFamily: f.family}}
+                                  onClick={() => setTextProp('fontFamily', f.id)}>{f.label}</button>
+                              ))}
+                            </div>
+                            <div className="tfmt-row">
+                              <span className="tfmt-lbl">{t('textFmtAlign')}</span>
+                              {TEXT_ALIGN_CYCLE.map(a => (
+                                <button key={a} className={`tfmt-btn${(item.textAlign||'center')===a?' on':''}`}
+                                  onClick={() => setTextProp('textAlign', a)}>{TEXT_ALIGN_ICON[a]}</button>
+                              ))}
+                            </div>
+                            <div className="tfmt-row">
+                              <span className="tfmt-lbl">{t('textFmtColor')}</span>
+                              <div className="tfmt-swatch" style={{background: textColor}}>
+                                <input type="color" value={item.textColor || autoColor || '#ffffff'} onPointerDown={e => e.stopPropagation()} onChange={e => setTextProp('textColor', e.target.value)}/>
+                              </div>
+                              {item.textColor && <button className="tfmt-btn" title={lang==='es'?'Auto':'Auto'} onClick={() => setTextProp('textColor', '')}>✕</button>}
+                            </div>
+                          </div>
+                        )}
+                        <div className="titem-drag">
+                          <span className="titem-drag-icon">⠿⠿</span>
+                          <span className="titem-drag-label">{lang==='es'?'TEXTO':'TEXT'}</span>
+                        </div>
+                        <textarea className="titem-txt"
+                          value={item.text||''} placeholder={lang==='es'?'Texto…':'Text…'}
+                          style={{ fontSize: item.fontSize || 26, textAlign: item.textAlign || 'center', fontFamily: tFont.family }}
+                          onChange={e => updateNoteText(item.id, e.target.value)}
+                          onFocus={pushUndo} onBlur={saveLabel}
+                          onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}
+                        />
+                        <div className="rh" onPointerDown={e => onResizeNotePD(e, item.id)}/>
+                      </div>
+                    );
+                  }
+
                   if (item.type === 'note') return (
                     <div key={item.id} className={`nitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}${item.inMemory?' inmem':''}${item.locked?' locked':''}${item.groupId?' grouped':''}`}
                       style={{ left: item.x, top: item.y, width: item.w, height: item.h || 150, zIndex: item.z||1, ...(item.freeRot ? {transform:`rotate(${item.freeRot}deg)`,transformOrigin:'center center'} : {}) }}
@@ -2970,7 +3241,7 @@ ${rows}
                   const offX = (item.w  - naturalW) / 2;
                   const offY = (displayH - naturalH) / 2;
                   return (
-                    <div key={item.id} className={`bitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}${item.locked?' locked':''}${item.groupId?' grouped':''}`}
+                    <div key={item.id} className={`bitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}${item.locked?' locked':''}${item.groupId?' grouped':''}${replaceMode?.itemId===item.id?' replacing':''}`}
                       style={{ left: item.x, top: item.y, width: item.w, zIndex: item.z||1, ...(item.freeRot ? {transform:`rotate(${item.freeRot}deg)`,transformOrigin:'center center'} : {}) }}
                       onPointerDown={e => onItemPD(e, item.id)}
                       onClick={e => handleItemClick(e, item)}
@@ -3077,9 +3348,11 @@ ${rows}
                 ? [...photos].sort((a, b) => (b.rating || 0) - (a.rating || 0))
                 : photos;
               const allTags = [...new Set(photos.flatMap(p => p.tags || []))].sort();
+              const rejectedCount = photos.filter(p => p.rejected).length;
               const displayedPhotos = (photoFilter === 'pending'
                 ? sortedPhotos.filter(p => photoBoardNames(p.id).length === 0)
                 : sortedPhotos)
+                .filter(p => rejectedFilter === true ? p.rejected : rejectedFilter === false ? !p.rejected : true)
                 .filter(p => tagFilter.length === 0 || tagFilter.some(t => (p.tags || []).includes(t)))
                 .filter(p => ratingFilter === 0 || (p.rating || 0) >= ratingFilter)
                 .filter(p => !libSearch || p.name.toLowerCase().includes(libSearch.toLowerCase()));
@@ -3099,6 +3372,13 @@ ${rows}
                       value={libSearch} onClick={e => e.stopPropagation()}
                       onChange={e => setLibSearch(e.target.value)}/>
                     <button className={`lib-filter${photoFilter === 'pending' ? ' active' : ''}`} onClick={toggleFilter} title={t('filterPending')}>⊘ {t('filterPending')}</button>
+                    {(rejectedCount > 0 || rejectedFilter !== false) && (
+                      <button className={`lib-filter${rejectedFilter !== false ? ' active danger' : ''}`}
+                        onClick={e => { e.stopPropagation(); setRejectedFilter(f => f === false ? true : f === true ? null : false); }}
+                        title={rejectedFilter === true ? t('filterRejectedHide') : t('filterRejected')}>
+                        ✕ {t('filterRejected')}{rejectedCount > 0 && <span style={{marginLeft:3,opacity:.7}}>{rejectedCount}</span>}
+                      </button>
+                    )}
                     <div className="lib-star-filter" title={t('ratingFilterHint')}>
                       {[1,2,3,4,5].map(n => (
                         <button key={n} className={ratingFilter >= n ? 'lit' : ''} onClick={e => toggleStarFilter(n, e)}>★</button>
@@ -3155,7 +3435,7 @@ ${rows}
                           const inBoard = items.some(i => i.photoId === p.id);
                           const isSel = libSel.includes(p.id);
                           return (
-                            <div key={p.id} className={`thumb${inBoard?' in-board':''}${isSel?' lib-sel':''}`}
+                            <div key={p.id} className={`thumb${inBoard?' in-board':''}${isSel?' lib-sel':''}${p.rejected?' rejected-thumb':''}`}
                               style={{width:thumbSize,height:thumbSize}}
                               draggable onDragStart={e => onLibDS(e, p.id)}
                               onMouseEnter={e => {
@@ -3171,6 +3451,10 @@ ${rows}
                               }}
                               onMouseLeave={() => { clearHoverInfo(); hoveredThumbRef.current = null; clearTimeout(previewTimer.current); setLibPreview(null); }}
                               onClick={e => {
+                                if (replaceMode) {
+                                  replacePhotoInCanvas(replaceMode.itemId, p.id);
+                                  return;
+                                }
                                 if (e.ctrlKey || e.metaKey) {
                                   const next = isSel ? libSel.filter(x => x !== p.id) : [...libSel, p.id];
                                   setLibSelection(next);
@@ -3189,9 +3473,12 @@ ${rows}
                               title={`${p.name}${inBoard?' · '+t('alreadyInTableau'):''}`}
                             >
                               <img src={`/photos/${pid}/${p.id}/thumb`} alt={p.name}/>
+                              {p.rejected && <div className="thumb-rejected"><span className="thumb-rejected-label">{t('rejectedLabel')}</span></div>}
                               {p.brightness != null && <span className="thumb-color" style={{background:`rgb(${Math.round(p.brightness*255)},${Math.round(p.brightness*255)},${Math.round(p.brightness*255)})`}}/>}
                               {(p.tags||[]).length > 0 && <span className="thumb-tag-badge">{p.tags.length}</span>}
                               <div className="thumb-stars">{[1,2,3,4,5].map(n => n <= (p.rating||0) ? <span key={n}>★</span> : <span key={n} className="thumb-star-empty">★</span>)}</div>
+                              <button className="thumb-reject-btn" title={p.rejected ? t('unrejectBtn') : t('rejectBtn')}
+                                onClick={e => { e.stopPropagation(); toggleRejected(p.id); }}>✕</button>
                               <button className="thumb-tag" title={t('tagPopHd')} onClick={e => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setTagPopover(v => v?.photoId === p.id ? null : {photoId:p.id, x:r.left, y:r.top}); setTagInput(''); }}>#</button>
                               <button className="thumb-x" onClick={e => { e.stopPropagation(); deletePhoto(p.id); }}>×</button>
                               <button className="thumb-cp" title={t('copyToProject')}
@@ -3232,20 +3519,60 @@ ${rows}
         </div>
       )}
       {resizeDim && <div className="resize-tip" style={{left:resizeDim.x, top:resizeDim.y}}>{resizeDim.label}</div>}
+      {replaceMode && (
+        <div className="replace-banner" style={{bottom: (libOpen ? libHeight : 30) + 4}}>
+          ⇄ {t('replaceModeHint')}
+          <button className="replace-banner-close" onClick={() => setReplaceMode(null)}>ESC</button>
+        </div>
+      )}
       {uploading && <div className="uploading-bar" style={{bottom: libOpen ? libHeight : 30}}/>}
       {toast && <div className={`toast${toast.err?' err':''}`} style={{bottom: (libOpen ? libHeight : 30) + 8}}>{toast.msg}</div>}
 
-      {libPreview && (
-        <div className="lib-preview" style={{left:libPreview.x, top:libPreview.y}}>
+      {presentation && (() => {
+        const presIdx = boards.findIndex(b => b.id === bid);
+        const hasPrev = presIdx > 0;
+        const hasNext = presIdx < boards.length - 1;
+        return <>
+          <button className="pres-exit" onClick={() => setPresentation(false)}>{t('exitPresentation')}</button>
+          <button className={`pres-nav prev${!hasPrev ? ' disabled' : ''}`} onClick={() => hasPrev && setBid(boards[presIdx - 1].id)}>‹</button>
+          <button className={`pres-nav next${!hasNext ? ' disabled' : ''}`} onClick={() => hasNext && setBid(boards[presIdx + 1].id)}>›</button>
+          {activeBoard && <div className="pres-title">
+            <span>{activeProject?.name} · {activeBoard.name}</span>
+            {boards.length > 1 && <div className="pres-dots">{boards.map((b, i) => <div key={b.id} className={`pres-dot${b.id === bid ? ' active' : ''}`}/>)}</div>}
+          </div>}
+        </>;
+      })()}
+
+      {libPreview && !pinnedPreview && (
+        <div className="lib-preview" style={{left:libPreview.x, top:libPreview.y, cursor:'pointer', pointerEvents:'auto'}}
+          title={t('pinnedPreviewHint')}
+          onClick={() => { setPinnedPreview(libPreview); setLibPreview(null); clearTimeout(previewTimer.current); }}>
           <img src={`/photos/${pid}/${libPreview.photo.id}`} alt={libPreview.photo.name}/>
           <div className="lib-preview-name">{libPreview.photo.name}</div>
         </div>
+      )}
+      {pinnedPreview && (
+        <div className="lib-preview pinned" style={{left: Math.min(pinnedPreview.x, window.innerWidth - 310), top: Math.min(pinnedPreview.y, window.innerHeight - 340), pointerEvents:'auto', position:'fixed'}}>
+          <button className="lib-preview-close" onClick={() => setPinnedPreview(null)}>×</button>
+          <img src={`/photos/${pid}/${pinnedPreview.photo.id}`} alt={pinnedPreview.photo.name}/>
+          <div className="lib-preview-name">{pinnedPreview.photo.name}</div>
+        </div>
+      )}
+
+      {canvasCtx && (
+        <>
+          <div style={{position:'fixed',inset:0,zIndex:949}} onClick={() => setCanvasCtx(null)}/>
+          <div className="ctx-menu" style={{left: canvasCtx.x, top: canvasCtx.y}}>
+            <button className="ctx-item" onClick={() => { setCanvasCtx(null); addNote(canvasCtx); }}>{t('addNote')}</button>
+            <button className="ctx-item" onClick={() => { setCanvasCtx(null); addText(canvasCtx); }}>{t('addText')}</button>
+          </div>
+        </>
       )}
 
       {ctxMenu && (() => {
         const ctxItem = items.find(i => i.id === ctxMenu.itemId);
         if (!ctxItem) return null;
-        const isNote = ctxItem.type === 'note';
+        const isNote = ctxItem.type === 'note' || ctxItem.type === 'text';
         return (
           <div className="ctx-menu" style={{left: ctxMenu.x, top: ctxMenu.y}}
             onPointerDown={e => e.stopPropagation()} onContextMenu={e => e.preventDefault()}>
@@ -3253,6 +3580,7 @@ ${rows}
             {!isNote && <button className="ctx-item" onClick={() => { setPropsPanelId(id => id === ctxMenu.itemId ? null : ctxMenu.itemId); setCtxMenu(null); }}>▣ {t('frameLabel')}</button>}
             {!isNote && <><div className="ctx-sep"/>
               <button className="ctx-item" onClick={() => { setDefaultW(ctxItem.w); setCtxMenu(null); }}>⊞ {t('setDefaultSize')}</button>
+              <button className="ctx-item" onClick={() => { setReplaceMode({ itemId: ctxMenu.itemId }); setCtxMenu(null); if (!libOpen) { setLibOpen(true); localStorage.setItem('libOpen','true'); } }}>⇄ {t('replacePhoto')}</button>
             </>}
             <div className="ctx-sep"/>
             <button className="ctx-item" onClick={() => { dupItem(ctxMenu.itemId); setCtxMenu(null); }}>⧉ {t('duplicateItem')}</button>
@@ -3456,17 +3784,6 @@ ${rows}
             </div>
             <div className="cfg-row">
               <div>
-                <div className="cfg-label">{t('bgColor')}</div>
-                <div style={{display:'flex',gap:6,alignItems:'center'}}>
-                  <input type="color" value={cfgBackground || '#1a1a1a'} className="inp" style={{width:36,height:28,padding:2,cursor:'pointer'}}
-                    onChange={e => setCfgBackground(e.target.value)}/>
-                  <button className="btn" style={{fontSize:9}} onClick={() => setCfgBackground('')}>{t('bgColorNone')}</button>
-                  {cfgBackground && <span style={{width:14,height:14,borderRadius:'50%',background:cfgBackground,border:'1px solid var(--border2)',flexShrink:0,display:'inline-block'}}/>}
-                </div>
-              </div>
-            </div>
-            <div className="cfg-row">
-              <div>
                 <div className="cfg-label">{t('frameDefault')} {cfgUnits !== 'px' ? `(${cfgUnits})` : '(px)'}</div>
                 <input type="number" className="inp" value={cfgDefaultFrame} min="0"
                   step={cfgUnits === 'mm' ? 1 : 0.1}
@@ -3523,19 +3840,27 @@ ${rows}
                       <div className="mem-board-empty">{t('emptyBoardMem')}</div>
                     ) : (() => {
                       const bPx = getBoardPx(board);
-                      const photoItems = boardIt.filter(i => i.type !== 'note').map(item => {
+                      const textItems = boardIt.filter(i => i.type === 'text');
+                      const photoItems = boardIt.filter(i => i.type !== 'note' && i.type !== 'text').map(item => {
                         const photo = photos.find(p => p.id === item.photoId);
-                        const rot = item.rot || 0;
+                        const rot = item.rot || 0; const freeRot = item.freeRot || 0;
                         const isSwapped = rot % 180 !== 0;
-                        const naturalH = isSwapped
-                          ? (photo ? Math.round(item.w * photo.w / photo.h) : item.w)
-                          : (photo ? Math.round(item.w * photo.h / photo.w) : item.w);
-                        return { ...item, displayH: isSwapped ? item.w : naturalH };
+                        const naturalW = isSwapped ? (photo ? Math.round(item.w * photo.w / photo.h) : item.w) : item.w;
+                        const naturalH = isSwapped ? item.w : (photo ? Math.round(item.w * photo.h / photo.w) : item.w);
+                        const displayH = isSwapped ? naturalW : naturalH;
+                        const offX = Math.round((item.w - naturalW) / 2);
+                        const offY = Math.round((displayH - naturalH) / 2);
+                        const ar = freeRot * Math.PI / 180;
+                        const cos = Math.abs(Math.cos(ar)); const sin = Math.abs(Math.sin(ar));
+                        const bbW = cos * item.w + sin * displayH; const bbH = sin * item.w + cos * displayH;
+                        const cx = item.x + item.w / 2; const cy = item.y + displayH / 2;
+                        return { ...item, naturalW, naturalH, displayH, offX, offY, vL: cx - bbW/2, vT: cy - bbH/2, vW: bbW, vH: bbH };
                       });
-                      const minX = bPx ? 0 : (photoItems.length ? Math.min(...photoItems.map(i => i.x)) : 0);
-                      const minY = bPx ? 0 : (photoItems.length ? Math.min(...photoItems.map(i => i.y)) : 0);
-                      const bW = bPx?.w ?? (photoItems.length ? Math.max(...photoItems.map(i => i.x + i.w)) - minX : 0);
-                      const bH = bPx?.h ?? (photoItems.length ? Math.max(...photoItems.map(i => i.y + i.displayH)) - minY : 0);
+                      const allBoundsM = [...photoItems, ...textItems.map(i => ({ vL: i.x, vT: i.y, vW: i.w, vH: i.h || 130 }))];
+                      const minX = bPx ? 0 : (allBoundsM.length ? Math.min(...allBoundsM.map(i => i.vL)) : 0);
+                      const minY = bPx ? 0 : (allBoundsM.length ? Math.min(...allBoundsM.map(i => i.vT)) : 0);
+                      const bW = bPx?.w ?? (allBoundsM.length ? Math.max(...allBoundsM.map(i => i.vL + i.vW)) - minX : 0);
+                      const bH = bPx?.h ?? (allBoundsM.length ? Math.max(...allBoundsM.map(i => i.vT + i.vH)) - minY : 0);
                       const sc = bW && bH ? Math.min(560 / bW, 200 / bH, 1) : 1;
                       const pW = Math.round(bW * sc);
                       const pH = Math.round(bH * sc);
@@ -3549,28 +3874,32 @@ ${rows}
                                 border: bPx ? '1px solid var(--border2)' : '1px dashed var(--border2)',
                               }}>
                                 {photoItems.map(item => {
+                                  const rot = item.rot || 0; const freeRot = item.freeRot || 0;
                                   const fPx = item.frame > 0 ? Math.max(1, Math.round(physToPx(item.frame, dpi, units) * sc)) : 0;
+                                  const frameStyle = fPx > 0 ? { outline: `${fPx}px solid #c8c8c8` } : {};
+                                  const iL = Math.round((item.x - minX) * sc); const iT = Math.round((item.y - minY) * sc);
+                                  const iW = Math.round(item.w * sc); const iH = Math.round(item.displayH * sc);
                                   return (
-                                  <img key={item.id}
-                                    src={`/photos/${pid}/${item.photoId}/thumb`}
-                                    alt=""
-                                    style={{
-                                      position: 'absolute',
-                                      left: Math.round((item.x - minX) * sc),
-                                      top: Math.round((item.y - minY) * sc),
-                                      width: Math.round(item.w * sc),
-                                      height: Math.round(item.displayH * sc),
-                                      objectFit: 'cover',
-                                      ...(fPx > 0 ? { outline: `${fPx}px solid #c8c8c8` } : {}),
-                                    }}
-                                  />
+                                    <div key={item.id} style={{ position:'absolute', left:iL, top:iT, width:iW, height:iH, overflow:'hidden', ...(freeRot?{transform:`rotate(${freeRot}deg)`,transformOrigin:'center'}:{}), ...frameStyle }}>
+                                      <img src={`/photos/${pid}/${item.photoId}/thumb`} alt="" style={{ position:'absolute', left:Math.round(item.offX*sc), top:Math.round(item.offY*sc), width:Math.round(item.naturalW*sc), height:Math.round(item.naturalH*sc), objectFit:'cover', ...(rot?{transform:`rotate(${rot}deg)`,transformOrigin:'center'}:{}) }} />
+                                    </div>
+                                  );
+                                })}
+                                {textItems.map(item => {
+                                  const fontMap = { serif:'Georgia,serif', sans:'Arial,sans-serif', display:'Impact,sans-serif', mono:'Courier New,monospace' };
+                                  const alignMap = { left:'flex-start', center:'center', right:'flex-end' };
+                                  const rot = item.freeRot || 0;
+                                  return (
+                                    <div key={item.id} style={{ position:'absolute', left:Math.round((item.x-minX)*sc), top:Math.round((item.y-minY)*sc), width:Math.round(item.w*sc), height:Math.round((item.h||130)*sc), fontSize:Math.max(6,Math.round((item.fontSize||26)*sc)), fontFamily:fontMap[item.fontFamily||'serif']||'Georgia,serif', textAlign:item.textAlign||'center', color:item.textColor||'var(--text)', display:'flex', alignItems:'center', justifyContent:alignMap[item.textAlign||'center']||'center', padding:Math.round(4*sc), overflow:'hidden', boxSizing:'border-box', ...(rot?{transform:`rotate(${rot}deg)`,transformOrigin:'center'}:{}) }}>
+                                      {item.text || ''}
+                                    </div>
                                   );
                                 })}
                               </div>
                               <div className="mem-preview-dim">{dimLabel(bW, bH, dpi, units)}</div>
                             </div>
                           )}
-                          {boardIt.filter(i => i.type !== 'note').map((item, idx) => {
+                          {boardIt.filter(i => i.type !== 'note' && i.type !== 'text').map((item, idx) => {
                             const photo = photos.find(p => p.id === item.photoId);
                             const h = photo
                               ? ((item.rot || 0) % 180 !== 0

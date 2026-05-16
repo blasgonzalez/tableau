@@ -319,6 +319,17 @@ app.patch('/api/projects/:pid/photos/:id/tags', (req, res) => {
   res.json(p);
 });
 
+app.patch('/api/projects/:pid/photos/:id/rejected', (req, res) => {
+  const { pid, id } = req.params;
+  const { rejected } = req.body;
+  const photos = readJSON(photosMeta(pid));
+  const p = photos.find(p => p.id === id);
+  if (!p) return res.status(404).json({ error: 'not found' });
+  p.rejected = !!rejected;
+  writeJSON(photosMeta(pid), photos);
+  res.json(p);
+});
+
 app.post('/api/projects/:pid/photos/analyze-colors', async (req, res) => {
   const { pid } = req.params;
   const photos = readJSON(photosMeta(pid));

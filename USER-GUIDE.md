@@ -200,12 +200,33 @@ With an active selection, a toolbar appears at the top:
 
 ## Floating notes
 
-Click **+ Note** in the top bar to add a free-text note to the canvas. Notes behave like photos — they can be moved, resized, and locked.
+Right-click on the canvas and select **Add note** to place a free-text note. Notes behave like photos — they can be moved, resized, and locked.
 
 - **Title and body** — type directly in the note
 - **Color** — the **■** button opens a picker with 6 background colors (yellow, green, blue, pink, purple, orange) plus the default
 - **Link** — assign a URL to show a link preview (title, domain, favicon)
 - **Include in report** — toggle the 📄 button to include or exclude the note from the project report
+
+---
+
+## Text elements
+
+Right-click the canvas and select **Add text** to place a typographic block. Text elements are designed for presentations — unlike internal notes, they remain visible in presentation mode. A new element inherits the font, size, alignment and colour of the last text element placed.
+
+Click the **T▾** button on the element's floating bar to open the format panel:
+
+| Control | Action |
+|---|---|
+| **S / M / L / XL** | Change font size |
+| **Serif / Sans / Display / Mono** | Typeface — Playfair Display, DM Sans, Bebas Neue, IBM Plex Mono |
+| **⫷ / ⊟ / ⫸** | Text alignment (left, center, right) |
+| **A** (color picker) | Change text color |
+| **↻** (click) | Rotate 90° |
+| **↻** (drag) | Free rotation · Shift snaps to 15° increments |
+| **🔒** | Lock / unlock |
+| **×** | Delete from board |
+
+Text elements can be moved, resized, and grouped like all other canvas elements.
 
 ---
 
@@ -288,7 +309,7 @@ Up to 50 undo steps are kept per board. History resets when you switch to a diff
 
 Click **≡ Report** in the top bar to open the project report. It shows:
 
-- A preview of each board with photos in their actual positions
+- A preview of each board with photos in their actual positions (including rotated photos and text elements)
 - A table of all photos with dimensions, physical size (if DPI is configured), and label
 - Notes that are marked for inclusion (📄 icon)
 - Note links as clickable hyperlinks
@@ -300,6 +321,34 @@ Click **⎙ Print / Save PDF** to print or export as a PDF file.
 ## Exporting a board
 
 Click **⬇ Export JPEG** in the top bar to download the active board as a JPEG image.
+
+---
+
+## Presentation mode
+
+Click **Present** in the top bar to hide all UI and view the active board full-screen. The project and board name appear discreetly at the bottom on hover. Move the mouse to the top-right corner to reveal the exit button, or press **ESC** to return to normal view.
+
+Use the **‹** and **›** arrows on each side of the screen to navigate between boards without leaving presentation mode. Dot indicators in the bottom corner show which board is active; you can also use the **← →** arrow keys.
+
+In presentation mode: the alignment grid is hidden, internal notes and photo labels are hidden automatically. Text elements remain visible and are the recommended way to add captions or titles for presentations.
+
+---
+
+## Rejected photos
+
+The **✕** button that appears when hovering over a library thumbnail marks the photo as rejected. Rejected photos:
+
+- Are hidden from the library by default (the header shows how many there are)
+- Show a red **REJECTED** label when visible
+- Can be recovered by clicking ✕ again
+
+The **✕ Rejected** button in the library header cycles through three states: hide rejected (default) → show rejected only → show all.
+
+---
+
+## Replace photo on canvas
+
+Right-click a canvas photo and choose **⇄ Replace photo**. The library enters selection mode: a banner with instructions appears and the photo to replace is highlighted in red. Click any library thumbnail to swap the image — the new photo takes the same position, size and rotation. Press **ESC** or the banner button to cancel.
 
 ---
 

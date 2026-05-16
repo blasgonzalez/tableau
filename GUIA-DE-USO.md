@@ -200,12 +200,33 @@ Con una selección activa aparece una barra en la parte superior:
 
 ## Notas flotantes
 
-Haz clic en **+ Nota** en la barra superior para añadir una nota de texto libre al canvas. Las notas se comportan como fotos — se pueden mover, redimensionar y bloquear.
+Haz clic derecho sobre el canvas y selecciona **Añadir nota** para colocar una nota de texto libre. Las notas se comportan como fotos — se pueden mover, redimensionar y bloquear.
 
 - **Título y cuerpo** — escribe directamente en la nota
 - **Color** — el botón **■** abre un selector con 6 colores de fondo (amarillo, verde, azul, rosa, morado, naranja) más el predeterminado
 - **Enlace** — asigna una URL para mostrar una vista previa del enlace (título, dominio, favicon)
 - **Incluir en informe** — activa o desactiva el botón 📄 para incluir o excluir la nota del informe del proyecto
+
+---
+
+## Elementos de texto
+
+Haz clic derecho sobre el canvas y selecciona **Añadir texto** para colocar un bloque tipográfico. Los elementos de texto están diseñados para presentaciones — a diferencia de las notas internas, son visibles en modo presentación. El nuevo elemento hereda automáticamente el tamaño, fuente, alineación y color del último texto que hayas colocado.
+
+Usa la barra de arrastre superior del elemento para moverlo. Haz clic en el botón **T▾** de la barra de controles para abrir el panel de formato:
+
+| Control | Acción |
+|---|---|
+| **S / M / L / XL** | Tamaño de fuente |
+| **Serif / Sans / Display / Mono** | Tipografía (Playfair Display, DM Sans, Bebas Neue, IBM Plex Mono) |
+| **⫷ / ⊟ / ⫸** | Alineación del texto (izquierda, centro, derecha) |
+| **■** (muestra de color) | Color del texto |
+| **↻** (clic) | Rotar 90° |
+| **↻** (arrastrar) | Rotación libre; Mayús fija a incrementos de 15° |
+| **🔒** | Bloquear / desbloquear |
+| **×** | Eliminar del tablero |
+
+Los elementos de texto se pueden mover, redimensionar y agrupar igual que el resto de elementos del canvas.
 
 ---
 
@@ -288,7 +309,7 @@ Se guardan hasta 50 pasos por tablero. El historial se reinicia al cambiar de ta
 
 Haz clic en **≡ Informe** en la barra superior para abrir el informe del proyecto. Incluye:
 
-- Una vista previa de cada tablero con las fotos en sus posiciones reales
+- Una vista previa de cada tablero con las fotos en sus posiciones reales, incluidas las fotos rotadas y los elementos de texto
 - Una tabla de todas las fotos con dimensiones, tamaño físico (si hay DPI configurado) y etiqueta
 - Notas marcadas para inclusión (icono 📄)
 - Enlaces de las notas como hipervínculos clicables
@@ -300,6 +321,34 @@ Haz clic en **⎙ Imprimir / Guardar PDF** para imprimir o exportar como PDF.
 ## Exportar un tablero
 
 Haz clic en **⬇ Exportar JPEG** en la barra superior para descargar el tablero activo como imagen JPEG.
+
+---
+
+## Modo presentación
+
+Haz clic en **Presentación** en la barra superior para ocultar toda la interfaz y ver el tablero activo a pantalla completa. El nombre del proyecto y el tablero aparecen discretamente en la parte inferior al pasar el ratón. Pasa el ratón por la esquina superior derecha para ver el botón de salida, o pulsa **ESC** para volver a la vista normal.
+
+Para navegar entre tableros sin salir del modo, usa las **flechas ‹ ›** que aparecen a los lados de la pantalla al mover el ratón, o pulsa las **teclas ← →**. Los puntos de la esquina inferior indican el tablero actual y el total.
+
+En modo presentación: la cuadrícula se oculta automáticamente, las notas internas y las etiquetas de foto desaparecen. Los elementos de texto (añadidos con clic derecho → Añadir texto) permanecen visibles y son la forma recomendada de añadir títulos o pies para presentaciones.
+
+---
+
+## Fotos rechazadas
+
+El botón **✕** que aparece al pasar el ratón sobre una miniatura de la librería marca la foto como rechazada. Las fotos rechazadas:
+
+- Se ocultan de la librería por defecto (aparecen en la cabecera cuántas hay)
+- Muestran una etiqueta roja **RECHAZADA** si están visibles
+- Se pueden recuperar volviendo a pulsar ✕
+
+El botón **✕ Rechazadas** en la cabecera de la librería alterna entre tres estados: ocultar rechazadas (por defecto) → mostrar solo rechazadas → mostrar todas.
+
+---
+
+## Reemplazar foto en canvas
+
+Haz clic derecho sobre una foto del canvas y elige **⇄ Reemplazar foto**. La librería entra en modo selección: aparece un banner con instrucciones y la foto a reemplazar queda resaltada en rojo. Haz clic en cualquier miniatura de la librería para intercambiar la imagen — la nueva foto ocupa la misma posición, tamaño y rotación. Pulsa **ESC** o el botón del banner para cancelar.
 
 ---
 

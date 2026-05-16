@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.4.0] — 2026-05-16
+### Added
+- Presentation mode: button in the top bar hides all UI and shows only the board; project and board name appear at the bottom on hover; ESC to exit; the grid hides automatically
+- Board navigation in presentation: ‹ › arrows on each side and dot indicators in the corner to move between boards without leaving presentation mode
+- Text element: typographic block for the canvas with a format panel (T▾ button); four typefaces — Serif (Playfair Display), Sans (DM Sans), Display (Bebas Neue), Mono (IBM Plex Mono); customisable alignment and text colour; a new element inherits the settings of the last text element placed; visible in presentation mode unlike internal notes
+- Notes and text elements are now created by right-clicking on the canvas — the top-bar buttons have been removed to reduce clutter
+- Persistent preview: hovering a thumbnail shows the floating preview; clicking it pins it until closed with × or ESC
+- Rejected photo management: ✕ button on each thumbnail to mark or unmark a photo as rejected; rejected photos are hidden by default and show a red label; filter in the library header to show only rejected or all
+- Replace photo on canvas: right-click → Replace photo; the library enters selection mode and clicking any thumbnail swaps the image while keeping position, size and rotation; ESC cancels
+
+### Improved
+- In presentation mode, internal notes and photo labels are hidden automatically
+- The board preview in the report now shows rotated photos (both 90° steps and free rotation at any angle) and text elements in their correct positions
+- Fixed PDF generation: no more blank first page when the project has multiple boards; each board starts on a new page
+- Library action buttons (Copy photo →, Tags #, star ratings) are now legible in all colour themes, including Light Natural
+
+### Removed
+- Custom board background colour — it caused visibility conflicts with photo labels, notes and text elements
+
+---
+
 ## [1.3.10] — 2026-05-15
 ### Added
 - Batch tagging: with multiple photos selected in the library, the **# Tags** button in the selection bar opens a panel to add or remove tags from all of them at once; checkboxes show an indeterminate state when only some selected photos have a given tag

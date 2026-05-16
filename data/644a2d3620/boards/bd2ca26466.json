@@ -28,11 +28,24 @@
     "photoId": "5d43c345bf0b",
     "w": 320,
     "h": 427,
-    "z": 15,
+    "z": 21,
     "label": "",
     "rot": 0,
     "frame": 0,
-    "x": 1025,
-    "y": 625
+    "x": 1466.3333333333333,
+    "y": 575
+  },
+  {
+    "id": "mp7aeubnage",
+    "type": "note",
+    "text": "Estas notas son para producción",
+    "x": 820,
+    "y": 322,
+    "w": 220,
+    "h": 150,
+    "z": 22,
+    "fontSize": 18,
+    "title": "NOTA 1",
+    "noteColor": "blue"
   }
 ]
