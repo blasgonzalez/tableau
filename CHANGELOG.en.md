@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.5.3] — 2026-05-17
+### Fixed
+- The **↑ Upload ▾** button did not open the dropdown (menu was hidden behind the layout)
+- Photo controls on the canvas did not respond to clicks when the dropdown had failed to open (invisible overlay was blocking interaction)
+- The library collapsed when clicking the ↑ upload button on a section
+- Shift+click selected from the clicked photo to the end because the anchor was not cleared after moving a selection to a section
+- The library selection was not cleared after a file upload completed
+
+---
+
 ## [1.5.2] — 2026-05-17
 ### Added
 - Upload progress: bar at the bottom showing the current filename, N/Total counter and an animated progress bar while photos are being uploaded

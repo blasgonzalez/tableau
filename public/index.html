@@ -468,7 +468,7 @@ select.inp{cursor:pointer;appearance:none;padding-right:28px;background-image:ur
 .upload-progress-track{width:100%;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
 .upload-progress-fill{height:100%;background:var(--acc);border-radius:2px;transition:width .2s}
 .upload-drop-wrap{position:relative;flex-shrink:0}
-.upload-drop{position:absolute;bottom:calc(100% + 4px);right:0;background:var(--panel);border:1px solid var(--border2);z-index:500;min-width:120px;box-shadow:0 -4px 16px rgba(0,0,0,.4)}
+.upload-drop{position:fixed;background:var(--panel);border:1px solid var(--border2);z-index:500;min-width:120px;box-shadow:0 -4px 16px rgba(0,0,0,.4)}
 .upload-drop-item{display:block;width:100%;padding:7px 12px;font-size:9px;letter-spacing:.4px;color:var(--sub);cursor:pointer;background:none;border:none;text-align:left;font-family:inherit;transition:background .1s}
 .upload-drop-item:hover{background:var(--surf);color:var(--text)}
 .replace-banner{position:fixed;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--acc-dim);color:var(--acc);font-size:9px;letter-spacing:.5px;padding:5px 12px;z-index:600;display:flex;align-items:center;gap:10px;box-shadow:0 4px 16px rgba(0,0,0,.5);white-space:nowrap}
@@ -966,6 +966,7 @@ function App() {
   const [showLibPreview, setShowLibPreview] = useState(() => localStorage.getItem('tb-lib-preview') !== 'false');
   const [libMuted,       setLibMuted]       = useState(false);
   const [uploadDropOpen, setUploadDropOpen] = useState(false);
+  const [uploadDropPos,  setUploadDropPos]  = useState({right:0,top:0});
   const [gridModal,  setGridModal]  = useState(false);
   const [gridCols,   setGridCols]   = useState(2);
   const [gridGap,    setGridGap]    = useState(20);
@@ -1819,6 +1820,7 @@ ${rows}
       } catch { showToast(t('uploadError', file.name), true); }
     }
     setUploadProgress(null);
+    if (libSelRef.current.length) { setLibSelection([]); libSelAnchorRef.current = null; }
     if (ok) showToast(t('photosAdded', ok));
   };
 
@@ -1894,6 +1896,7 @@ ${rows}
     const ids = libSelRef.current;
     await Promise.all(ids.map(id => api.patch(`/api/projects/${pidRef.current}/photos/${id}/section`, { sectionId: sectionId || null })));
     setPhotos(ps => ps.map(p => ids.includes(p.id) ? { ...p, sectionId: sectionId || undefined } : p));
+    setLibSelection([]); libSelAnchorRef.current = null;
     setSectBatchPop(null);
   };
 
@@ -3722,17 +3725,24 @@ ${rows}
                       onChange={e => { uploadFiles(e.target.files); e.target.value = ''; }}
                     />
                     <input type="file" accept="image/*" multiple style={{display:'none'}} ref={uploadSectInput}
+                      onClick={e => e.stopPropagation()}
                       onChange={e => { uploadFiles(e.target.files, null, uploadSectRef.current); e.target.value = ''; uploadSectRef.current = null; }}
                     />
                     <button className="sect-add-btn" onClick={e => { e.stopPropagation(); addSection(); }} title={t('addSection')}>{t('addSection')}</button>
                     <button className={`lib-mute-btn${libMuted?' active':''}`} onClick={e => { e.stopPropagation(); setLibMuted(v => !v); }} title={libMuted ? t('libMuteOff') : t('libMuteOn')}>{libMuted ? t('libMuteOff') : t('libMuteOn')}</button>
                     <div className="upload-drop-wrap" onClick={e => e.stopPropagation()}>
-                      <button className="btn acc" style={{fontSize:9}} onClick={() => setUploadDropOpen(v => !v)}>
+                      <button className="btn acc" style={{fontSize:9}} onClick={e => {
+                        e.stopPropagation();
+                        if (uploadDropOpen) { setUploadDropOpen(false); return; }
+                        const r = e.currentTarget.getBoundingClientRect();
+                        setUploadDropPos({ right: window.innerWidth - r.right, top: r.top - 4 });
+                        setUploadDropOpen(true);
+                      }}>
                         {t('upload')} ▾
                       </button>
                       {uploadDropOpen && <>
                         <div style={{position:'fixed',inset:0,zIndex:499}} onClick={() => setUploadDropOpen(false)}/>
-                        <div className="upload-drop">
+                        <div className="upload-drop" style={{right: uploadDropPos.right, top: uploadDropPos.top, transform:'translateY(-100%)'}}>
                           <label htmlFor="tb-upload" className="upload-drop-item" onClick={() => setUploadDropOpen(false)}>{t('uploadPhotos')}</label>
                           <label htmlFor="tb-upload-folder" className="upload-drop-item" onClick={() => setUploadDropOpen(false)}>{t('uploadFolder')}</label>
                         </div>

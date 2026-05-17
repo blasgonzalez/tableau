@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.5.3] — 2026-05-17
+### Corregido
+- El botón **↑ Subir ▾** no abría el desplegable (el menú quedaba oculto detrás del layout)
+- Los controles de foto en el canvas no respondían al clic cuando el desplegable había fallado al abrirse (overlay invisible bloqueaba la interacción)
+- La biblioteca se colapsaba al pulsar el botón ↑ de subida en una sección
+- Shift+clic seleccionaba desde la foto pulsada hasta el final porque el anchor no se limpiaba al mover la selección a una sección
+- La selección de la biblioteca no se limpiaba al finalizar una subida de archivos
+
+---
+
 ## [1.5.2] — 2026-05-17
 ### Añadido
 - Progreso de subida: barra en la parte inferior con el nombre del archivo actual, contador N/Total y barra de progreso animada mientras se suben fotos
