@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.4] — 2026-05-17
+### Improved
+- Grid colour corrected across all themes: each theme now defines its own optimised grid colour; in the Light · Natural theme the grid is now visible (previously it was nearly identical to the background)
+- The grid is no longer painted when the zoom is so low that lines would be sub-pixel; the **Grid** button dims and shows an explanatory tooltip in that case
+- The density and snap controls (shown when the grid is active) no longer shift the top-bar buttons when the grid is toggled on or off
+
+---
+
 ## [1.5.3] — 2026-05-17
 ### Fixed
 - The **↑ Upload ▾** button did not open the dropdown (menu was hidden behind the layout)

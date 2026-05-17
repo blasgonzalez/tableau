@@ -1,6 +1,6 @@
 {
-  "version": "1.5.3",
+  "version": "1.5.4",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-05-17",
-  "notes": "Correcciones urgentes en el botón de subida y controles del canvas"
+  "notes": "Grid mejorado · Botones de barra fijos · Color de guías corregido en todos los temas"
 }

@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.4] — 2026-05-17
+### Mejorado
+- Color del grid corregido en todos los temas: cada tema define su propio color de guías optimizado para contraste; en el tema Claro · Natural el grid ya es visible (antes era casi idéntico al fondo)
+- El grid ya no se pinta cuando el zoom es tan bajo que las líneas serían sub-píxel; el botón **Guías** se atenúa y muestra un tooltip explicativo en ese caso
+- Los controles de densidad e imán (visibles cuando el grid está activo) ya no desplazan los botones de la barra al activarse o desactivarse el grid
+
+---
+
 ## [1.5.3] — 2026-05-17
 ### Corregido
 - El botón **↑ Subir ▾** no abría el desplegable (el menú quedaba oculto detrás del layout)

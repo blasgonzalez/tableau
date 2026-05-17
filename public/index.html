@@ -467,8 +467,7 @@ select.inp{cursor:pointer;appearance:none;padding-right:28px;background-image:ur
 .upload-progress-count{font-size:9px;color:var(--acc);font-family:'IBM Plex Mono',monospace;flex-shrink:0}
 .upload-progress-track{width:100%;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
 .upload-progress-fill{height:100%;background:var(--acc);border-radius:2px;transition:width .2s}
-.upload-drop-wrap{position:relative;flex-shrink:0}
-.upload-drop{position:fixed;background:var(--panel);border:1px solid var(--border2);z-index:500;min-width:120px;box-shadow:0 -4px 16px rgba(0,0,0,.4)}
+.upload-drop{background:var(--panel);border:1px solid var(--border2);min-width:120px;box-shadow:0 -4px 16px rgba(0,0,0,.4)}
 .upload-drop-item{display:block;width:100%;padding:7px 12px;font-size:9px;letter-spacing:.4px;color:var(--sub);cursor:pointer;background:none;border:none;text-align:left;font-family:inherit;transition:background .1s}
 .upload-drop-item:hover{background:var(--surf);color:var(--text)}
 .replace-banner{position:fixed;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--acc-dim);color:var(--acc);font-size:9px;letter-spacing:.5px;padding:5px 12px;z-index:600;display:flex;align-items:center;gap:10px;box-shadow:0 4px 16px rgba(0,0,0,.5);white-space:nowrap}
@@ -504,6 +503,7 @@ const THEMES = {
       '--border':'#2a231a','--border2':'#3d3020',
       '--acc':'#c4894a','--acc-dim':'#8a5f2e','--acc-faint':'rgba(196,137,74,0.1)',
       '--text':'#e0d4c0','--sub':'#b0a090','--dim':'#8a7c6e','--muted':'#5a4e42','--danger':'#c45050',
+      '--grid':'rgba(255,255,255,0.07)',
     }
   },
   'light-natural': {
@@ -514,6 +514,7 @@ const THEMES = {
       '--border':'#d0c8ba','--border2':'#b8ad9e',
       '--acc':'#8a5f2e','--acc-dim':'#6a4520','--acc-faint':'rgba(138,95,46,0.1)',
       '--text':'#271c10','--sub':'#4a3828','--dim':'#7a6550','--muted':'#a09080','--danger':'#c04040',
+      '--grid':'rgba(0,0,0,0.10)',
     }
   },
   'dark-cool': {
@@ -524,6 +525,7 @@ const THEMES = {
       '--border':'#202840','--border2':'#2a3550',
       '--acc':'#7a9fd4','--acc-dim':'#4d6fa8','--acc-faint':'rgba(122,159,212,0.1)',
       '--text':'#ccd4e4','--sub':'#8898b8','--dim':'#6070a0','--muted':'#3a4870','--danger':'#d06070',
+      '--grid':'rgba(255,255,255,0.06)',
     }
   },
   'high-contrast': {
@@ -534,6 +536,7 @@ const THEMES = {
       '--border':'#2a2a2a','--border2':'#444444',
       '--acc':'#ffcc33','--acc-dim':'#cc9900','--acc-faint':'rgba(255,204,51,0.12)',
       '--text':'#ffffff','--sub':'#e0e0e0','--dim':'#b0b0b0','--muted':'#606060','--danger':'#ff5555',
+      '--grid':'rgba(255,255,255,0.10)',
     }
   },
 };
@@ -707,7 +710,7 @@ const I18N = {
     confirmOverflow: 'Algunas fotos quedarán fuera de las nuevas dimensiones. ¿Continuar?',
     invalidDims: 'Las dimensiones deben ser mayores que cero',
     pxPreview: (w, h) => `${w} × ${h} px`,
-    gridToggle: 'Guías', gridAuto: 'Auto', fitView: 'Ajustar', fitWidth: 'Ajustar al ancho (Ctrl+0)', snapGrid: 'Imán', addNote: '+ Nota',
+    gridToggle: 'Guías', gridHiddenZoom: 'Guías activas — zoom demasiado bajo para mostrarlas', gridAuto: 'Auto', fitView: 'Ajustar', fitWidth: 'Ajustar al ancho (Ctrl+0)', snapGrid: 'Imán', addNote: '+ Nota',
     reportHeading:'Tableau — Memoria del Proyecto',
     noScaleConfigured:'sin escala configurada',
     reportDate: d => `Memoria del proyecto · ${d}`,
@@ -825,7 +828,7 @@ const I18N = {
     confirmOverflow: 'Some photos will be outside the new dimensions. Continue?',
     invalidDims: 'Dimensions must be greater than zero',
     pxPreview: (w, h) => `${w} × ${h} px`,
-    gridToggle: 'Grid', gridAuto: 'Auto', fitView: 'Fit', fitWidth: 'Fit to width (Ctrl+0)', snapGrid: 'Snap', addNote: '+ Note',
+    gridToggle: 'Grid', gridHiddenZoom: 'Grid active — zoom too low to display', gridAuto: 'Auto', fitView: 'Fit', fitWidth: 'Fit to width (Ctrl+0)', snapGrid: 'Snap', addNote: '+ Note',
     reportHeading:'Tableau — Project Report',
     noScaleConfigured:'no scale configured',
     reportDate: d => `Project report · ${d}`,
@@ -3077,10 +3080,13 @@ ${rows}
           </button>
         )}
         {bid && <>
-          <button className={`btn${showGrid?' acc':''}`} style={{fontSize:9,letterSpacing:.3}} onClick={toggleGrid} title={t('gridToggle')}>
+          <button className={`btn${showGrid?' acc':''}`}
+            style={{fontSize:9,letterSpacing:.3,opacity:(showGrid && gridCellPx*zoom<4)?0.45:1}}
+            onClick={toggleGrid}
+            title={showGrid && gridCellPx*zoom<4 ? t('gridHiddenZoom') : t('gridToggle')}>
             {t('gridToggle')}
           </button>
-          {showGrid && (<>
+          <div style={{display:'flex',gap:6,visibility:showGrid?'visible':'hidden',pointerEvents:showGrid?'auto':'none'}}>
             <select className="btn" style={{fontSize:9,padding:'5px 8px',cursor:'pointer'}}
               value={gridStep}
               onChange={e => changeGridStep(Number(e.target.value))}>
@@ -3090,7 +3096,7 @@ ${rows}
               onClick={() => { const n=!snapGrid; setSnapGrid(n); localStorage.setItem('tb-snap',n?'on':'off'); }}>
               {t('snapGrid')}
             </button>
-          </>)}
+          </div>
           <button className="btn" style={{fontSize:10}} onClick={openBoardConfig} title={t('boardConfig')}>
             {t('config')}
           </button>
@@ -3332,15 +3338,12 @@ ${rows}
                 </div>
               )}
               {(() => {
-                const gridColor = (() => {
-                  if (!boardPx) return 'var(--border)';
-                  return 'rgba(0,0,0,0.09)';
-                })();
+                const gridColor = boardPx ? 'rgba(0,0,0,0.09)' : 'var(--grid)';
               return (
               <div className="canvas" style={{
                 zoom,
                 '--canvas-zoom': zoom,
-                backgroundImage: showGrid
+                backgroundImage: (showGrid && gridCellPx * zoom >= 4)
                   ? `linear-gradient(${gridColor} 1px,transparent 1px),linear-gradient(90deg,${gridColor} 1px,transparent 1px)`
                   : 'none',
                 backgroundSize: `${gridCellPx}px ${gridCellPx}px`,
@@ -3730,8 +3733,7 @@ ${rows}
                     />
                     <button className="sect-add-btn" onClick={e => { e.stopPropagation(); addSection(); }} title={t('addSection')}>{t('addSection')}</button>
                     <button className={`lib-mute-btn${libMuted?' active':''}`} onClick={e => { e.stopPropagation(); setLibMuted(v => !v); }} title={libMuted ? t('libMuteOff') : t('libMuteOn')}>{libMuted ? t('libMuteOff') : t('libMuteOn')}</button>
-                    <div className="upload-drop-wrap" onClick={e => e.stopPropagation()}>
-                      <button className="btn acc" style={{fontSize:9}} onClick={e => {
+                    <button className="btn acc" style={{fontSize:9}} onClick={e => {
                         e.stopPropagation();
                         if (uploadDropOpen) { setUploadDropOpen(false); return; }
                         const r = e.currentTarget.getBoundingClientRect();
@@ -3740,14 +3742,6 @@ ${rows}
                       }}>
                         {t('upload')} ▾
                       </button>
-                      {uploadDropOpen && <>
-                        <div style={{position:'fixed',inset:0,zIndex:499}} onClick={() => setUploadDropOpen(false)}/>
-                        <div className="upload-drop" style={{right: uploadDropPos.right, top: uploadDropPos.top, transform:'translateY(-100%)'}}>
-                          <label htmlFor="tb-upload" className="upload-drop-item" onClick={() => setUploadDropOpen(false)}>{t('uploadPhotos')}</label>
-                          <label htmlFor="tb-upload-folder" className="upload-drop-item" onClick={() => setUploadDropOpen(false)}>{t('uploadFolder')}</label>
-                        </div>
-                      </>}
-                    </div>
                   </>}
                 </div>
                 {libOpen && (
@@ -4085,6 +4079,16 @@ ${rows}
           </>
         );
       })()}
+
+      {uploadDropOpen && (
+        <>
+          <div style={{position:'fixed',inset:0,zIndex:599}} onClick={() => setUploadDropOpen(false)}/>
+          <div className="upload-drop" style={{position:'fixed',right:uploadDropPos.right,top:uploadDropPos.top,transform:'translateY(-100%)',zIndex:600}}>
+            <label htmlFor="tb-upload" className="upload-drop-item" onClick={() => setUploadDropOpen(false)}>{t('uploadPhotos')}</label>
+            <label htmlFor="tb-upload-folder" className="upload-drop-item" onClick={() => setUploadDropOpen(false)}>{t('uploadFolder')}</label>
+          </div>
+        </>
+      )}
 
       {sectBatchPop && sections.length > 0 && (
         <>
