@@ -1,6 +1,6 @@
 {
-  "version": "1.5.1",
+  "version": "1.5.2",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-05-17",
-  "notes": "Secciones en la librería · Selección por rango · Silenciar librería · Exportación mejorada"
+  "notes": "Progreso de subida · Subir a sección · Mover selección a sección · Botón de subida unificado"
 }

@@ -261,6 +261,8 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .library{background:var(--surf);border-top:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;z-index:100;overflow:hidden;transition:height .18s ease}
 .library.resizing{transition:none !important}
 .library.lib-drop-active .lib-body{outline:2px dashed var(--acc-dim);outline-offset:-3px;background:color-mix(in srgb,var(--acc) 6%,transparent)}
+.sect-drop-active{background:color-mix(in srgb,var(--acc) 8%,transparent);border-radius:3px}
+.sect-drop-active .sect-header{border-bottom-color:var(--acc)}
 .lib-snap-btn{width:22px;height:22px;border:1px solid var(--border2);background:transparent;color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;transition:all .15s}
 .lib-snap-btn:hover{color:var(--text);border-color:var(--acc-dim)}
 .lib-header{height:30px;display:flex;align-items:center;gap:7px;padding:0 10px 0 8px;flex-shrink:0;cursor:pointer;border-bottom:1px solid var(--border);user-select:none}
@@ -459,7 +461,16 @@ select.inp{cursor:pointer;appearance:none;padding-right:28px;background-image:ur
 .lib-preview-name{padding:4px 4px 0;font-size:8px;color:var(--dim);font-family:'IBM Plex Mono',monospace;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px}
 .lib-preview-close{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);border:none;color:var(--dim);width:18px;height:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;z-index:1;line-height:1}
 .lib-preview-close:hover{color:var(--text)}
-.uploading-bar{position:fixed;bottom:128px;left:0;right:0;height:2px;background:var(--acc);z-index:500}
+.upload-progress{position:fixed;bottom:0;left:0;right:0;background:var(--panel);border-top:1px solid var(--border);z-index:600;padding:8px 16px;display:flex;flex-direction:column;gap:5px}
+.upload-progress-header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.upload-progress-label{font-size:9px;color:var(--dim);letter-spacing:.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.upload-progress-count{font-size:9px;color:var(--acc);font-family:'IBM Plex Mono',monospace;flex-shrink:0}
+.upload-progress-track{width:100%;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.upload-progress-fill{height:100%;background:var(--acc);border-radius:2px;transition:width .2s}
+.upload-drop-wrap{position:relative;flex-shrink:0}
+.upload-drop{position:absolute;bottom:calc(100% + 4px);right:0;background:var(--panel);border:1px solid var(--border2);z-index:500;min-width:120px;box-shadow:0 -4px 16px rgba(0,0,0,.4)}
+.upload-drop-item{display:block;width:100%;padding:7px 12px;font-size:9px;letter-spacing:.4px;color:var(--sub);cursor:pointer;background:none;border:none;text-align:left;font-family:inherit;transition:background .1s}
+.upload-drop-item:hover{background:var(--surf);color:var(--text)}
 .replace-banner{position:fixed;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--acc-dim);color:var(--acc);font-size:9px;letter-spacing:.5px;padding:5px 12px;z-index:600;display:flex;align-items:center;gap:10px;box-shadow:0 4px 16px rgba(0,0,0,.5);white-space:nowrap}
 .replace-banner-close{background:none;border:1px solid var(--acc-dim);color:var(--acc-dim);font-family:'IBM Plex Mono',monospace;font-size:8px;padding:1px 6px;cursor:pointer;letter-spacing:.5px}
 .replace-banner-close:hover{color:var(--acc);border-color:var(--acc)}
@@ -622,7 +633,7 @@ const dimLabel = (w, h, dpi, units, frame = 0) => {
 
 const I18N = {
   es: {
-    upload:'+ Subir foto', report:'≡ Memoria', config:'⚙ Config', exportJpeg:'Exportar JPEG',
+    upload:'↑ Subir', uploadPhotos:'Fotos', report:'≡ Memoria', config:'⚙ Config', exportJpeg:'Exportar JPEG',
     showPanel:'▶ Panel', preferences:'Preferencias', themeLabel:'Tema', langLabel:'Idioma',
     noProjHint:'Sin proyecto — crea uno en el panel izquierdo',
     projBoards:'Proyectos y Tableros', newProject:'Nuevo proyecto', collapsePanel:'Colapsar panel',
@@ -647,7 +658,7 @@ const I18N = {
     setDefaultSize:'Usar como tamaño de referencia', duplicateItem:'Duplicar', defaultSizeSet:'Tamaño de referencia guardado', defaultSizeActive: w => `Tamaño de referencia: ${w} px`, clear:'Limpiar', swapPos:'Intercambiar posición', flipH:'Voltear horizontal', flipV:'Voltear vertical',
     gridLayoutBtn:'Cuadrícula', gridTitle:'Colocar en cuadrícula', gridColsLabel:'Columnas', gridGapLabel:'Separación', gridFits:(n,tot)=>n>=tot?'Todas las fotos caben':`Caben ${n} de ${tot}`, gridPlace:'Colocar',
     libSnapExpand:'Ampliar librería', libSnapCollapse:'Reducir librería',
-    uploadHint:'Sube fotos con + Subir →', dragFilesHint:'o arrastra archivos al canvas',
+    uploadHint:'Sube fotos con ↑ Subir →', dragFilesHint:'o arrastra archivos al canvas',
     alreadyInTableau:'ya en el tableau',
     newProjectTitle:'Nuevo proyecto', projectNamePh:'Nombre del proyecto…',
     cancel:'Cancelar', create:'Crear',
@@ -720,7 +731,7 @@ const I18N = {
     copyToProject:'Copiar a proyecto',
     photoCopied:'Foto copiada al proyecto',
     noOtherProjects:'Sin otros proyectos',
-    uploadFolder:'+ Carpeta',
+    uploadFolder:'Carpeta',
     exportSelJpeg:'Exportar selección JPEG',
     groupItems:'Agrupar',
     ungroupItems:'Desagrupar',
@@ -732,15 +743,15 @@ const I18N = {
     rejectedLabel:'RECHAZADA',
     replacePhoto:'Reemplazar foto', replaceModeHint:'Selecciona la foto nueva en la librería · ESC cancela', replaceDone:'Foto reemplazada',
     pinnedPreviewHint:'Clic para fijar · ESC cierra',
-    addSection:'+ Sección', newSection:'Nueva sección', sectRename:'Renombrar sección', sectDelete:'Eliminar sección',
-    moveToSection:'Mover a sección', noSection:'Sin sección',
+    addSection:'+ Sección', newSection:'Nueva sección', sectRename:'Renombrar sección', sectDelete:'Eliminar sección', uploadToSection:'Subir fotos a esta sección',
+    moveToSection:'Mover a sección', noSection:'Sin sección', batchMoveSection:'⊞ Sección',
     confirmDeleteSection: n => n > 0 ? `Esta sección tiene ${n} foto${n!==1?'s':''}. ¿Eliminarla igualmente? Las fotos no se borran.` : '¿Eliminar esta sección?',
     libMuteOn:'◎ Silenciar', libMuteOff:'◎ Silenciada',
     exportPadLabel:'Borde exterior al exportar (px)',
     exportPadHint:'Espacio en blanco alrededor de las fotos en el JPEG',
   },
   en: {
-    upload:'+ Upload', report:'≡ Report', config:'⚙ Config', exportJpeg:'Export JPEG',
+    upload:'↑ Upload', uploadPhotos:'Photos', report:'≡ Report', config:'⚙ Config', exportJpeg:'Export JPEG',
     showPanel:'▶ Panel', preferences:'Preferences', themeLabel:'Theme', langLabel:'Language',
     noProjHint:'No project — create one in the left panel',
     projBoards:'Projects & Boards', newProject:'New project', collapsePanel:'Collapse panel',
@@ -765,7 +776,7 @@ const I18N = {
     setDefaultSize:'Set as default size', duplicateItem:'Duplicate', defaultSizeSet:'Default size saved', defaultSizeActive: w => `Default size: ${w} px`, clear:'Clear', swapPos:'Swap positions', flipH:'Flip horizontal', flipV:'Flip vertical',
     gridLayoutBtn:'Grid', gridTitle:'Place as grid', gridColsLabel:'Columns', gridGapLabel:'Gap', gridFits:(n,tot)=>n>=tot?'All photos fit':`${n} of ${tot} fit`, gridPlace:'Place',
     libSnapExpand:'Expand library', libSnapCollapse:'Collapse library',
-    uploadHint:'Upload photos with + Upload →', dragFilesHint:'or drag files to canvas',
+    uploadHint:'Upload photos with ↑ Upload →', dragFilesHint:'or drag files to canvas',
     alreadyInTableau:'already in tableau',
     newProjectTitle:'New project', projectNamePh:'Project name…',
     cancel:'Cancel', create:'Create',
@@ -838,7 +849,7 @@ const I18N = {
     copyToProject:'Copy to project',
     photoCopied:'Photo copied to project',
     noOtherProjects:'No other projects',
-    uploadFolder:'+ Folder',
+    uploadFolder:'Folder',
     exportSelJpeg:'Export selection JPEG',
     groupItems:'Group',
     ungroupItems:'Ungroup',
@@ -850,8 +861,8 @@ const I18N = {
     rejectedLabel:'REJECTED',
     replacePhoto:'Replace photo', replaceModeHint:'Select the new photo in the library · ESC to cancel', replaceDone:'Photo replaced',
     pinnedPreviewHint:'Click to pin · ESC closes',
-    addSection:'+ Section', newSection:'New section', sectRename:'Rename section', sectDelete:'Delete section',
-    moveToSection:'Move to section', noSection:'No section',
+    addSection:'+ Section', newSection:'New section', sectRename:'Rename section', sectDelete:'Delete section', uploadToSection:'Upload photos to this section',
+    moveToSection:'Move to section', noSection:'No section', batchMoveSection:'⊞ Section',
     confirmDeleteSection: n => n > 0 ? `This section has ${n} photo${n!==1?'s':''}. Delete it anyway? Photos are kept.` : 'Delete this section?',
     libMuteOn:'◎ Mute', libMuteOff:'◎ Muted',
     exportPadLabel:'Export border (px)',
@@ -912,12 +923,13 @@ function App() {
   const [sel,           setSel]           = useState([]);
   const [zoom,          setZoom]          = useState(1);
   const [ready,         setReady]         = useState(false);
-  const [uploading,     setUploading]     = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(null); // null | {done,total,name}
   const [toast,         setToast]         = useState(null);
   const [modal,         setModal]         = useState(null); // 'project'|'board'|'boardcfg'
   const [nameVal,       setNameVal]       = useState('');
   const [dragOver,      setDragOver]      = useState(false);
   const [libDragOver,   setLibDragOver]   = useState(false);
+  const [libDragOverSect, setLibDragOverSect] = useState(null);
   const [libExpanded,   setLibExpanded]   = useState(false);
   const [sbOpen,        setSbOpen]        = useState(true);
   const [libOpen,       setLibOpen]       = useState(() => localStorage.getItem('libOpen') !== 'false');
@@ -940,6 +952,7 @@ function App() {
   const sectionsRef = useRef([]);
   const [sectCollapsed, setSectCollapsed] = useState({}); // {sectionId: bool}
   const [sectCtxMenu,   setSectCtxMenu]   = useState(null); // {photoId, x, y}
+  const [sectBatchPop,  setSectBatchPop]  = useState(null); // {x, y}
   const [renamingSect,  setRenamingSect]  = useState(null); // sectionId being renamed
   const [tagFilter,     setTagFilter]     = useState([]);
   const [tagPopover,    setTagPopover]    = useState(null); // {photoId, x, y}
@@ -952,6 +965,7 @@ function App() {
   const [canvasCtx,     setCanvasCtx]     = useState(null); // {x, y, cx, cy} canvas right-click
   const [showLibPreview, setShowLibPreview] = useState(() => localStorage.getItem('tb-lib-preview') !== 'false');
   const [libMuted,       setLibMuted]       = useState(false);
+  const [uploadDropOpen, setUploadDropOpen] = useState(false);
   const [gridModal,  setGridModal]  = useState(false);
   const [gridCols,   setGridCols]   = useState(2);
   const [gridGap,    setGridGap]    = useState(20);
@@ -1019,6 +1033,8 @@ function App() {
   const photosRef       = useRef([]);
   const allBoardItemsRef= useRef({});
   const boardsRef       = useRef([]);
+  const uploadSectRef   = useRef(null);
+  const uploadSectInput = useRef(null);
   const boardPxRef      = useRef(null);
   const wrapRef         = useRef(null);
   const undoStack       = useRef([]);
@@ -1093,7 +1109,7 @@ function App() {
     });
   }, [pid]);
 
-  useEffect(() => { setLibSearch(''); setLibSelection([]); libSelAnchorRef.current = null; setTagFilter([]); setTagPopover(null); setBatchTagPop(null); setRatingFilter(0); setSectCtxMenu(null); setLibMuted(false); }, [pid]);
+  useEffect(() => { setLibSearch(''); setLibSelection([]); libSelAnchorRef.current = null; setTagFilter([]); setTagPopover(null); setBatchTagPop(null); setSectBatchPop(null); setRatingFilter(0); setSectCtxMenu(null); setLibMuted(false); setUploadDropOpen(false); }, [pid]);
 
   useEffect(() => {
     const proj = projects.find(p => p.id === pid);
@@ -1780,22 +1796,29 @@ ${rows}
   };
 
   // ── upload ────────────────────────────────────────────────────────────────
-  const uploadFiles = async (files, dropPos = null) => {
+  const uploadFiles = async (files, dropPos = null, sectionId = null) => {
     const p = pidRef.current;
     if (!p) return showToast(t('selectProjectFirst'), true);
-    setUploading(true);
+    const imageFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+    if (!imageFiles.length) return;
+    const total = imageFiles.length;
     let ok = 0;
-    for (const file of Array.from(files)) {
-      if (!file.type.startsWith('image/')) continue;
+    for (let i = 0; i < imageFiles.length; i++) {
+      const file = imageFiles[i];
+      setUploadProgress({ done: i, total, name: file.name });
       try {
         const photo = await api.upload(`/api/projects/${p}/photos`, file);
         if (photo.error) { showToast(photo.error, true); continue; }
+        if (sectionId) {
+          await api.patch(`/api/projects/${p}/photos/${photo.id}/section`, { sectionId });
+          photo.sectionId = sectionId;
+        }
         setPhotos(ps => [...ps, photo]);
         if (dropPos && bidRef.current) placePhoto(photo, dropPos.x, dropPos.y);
         ok++;
       } catch { showToast(t('uploadError', file.name), true); }
     }
-    setUploading(false);
+    setUploadProgress(null);
     if (ok) showToast(t('photosAdded', ok));
   };
 
@@ -1865,6 +1888,13 @@ ${rows}
     await api.patch(`/api/projects/${pidRef.current}/photos/${photoId}/section`, { sectionId: sectionId || null });
     setPhotos(ps => ps.map(p => p.id === photoId ? { ...p, sectionId: sectionId || undefined } : p));
     setSectCtxMenu(null);
+  };
+
+  const moveSelectionToSection = async (sectionId) => {
+    const ids = libSelRef.current;
+    await Promise.all(ids.map(id => api.patch(`/api/projects/${pidRef.current}/photos/${id}/section`, { sectionId: sectionId || null })));
+    setPhotos(ps => ps.map(p => ids.includes(p.id) ? { ...p, sectionId: sectionId || undefined } : p));
+    setSectBatchPop(null);
   };
 
   const setRating = async (photoId, rating) => {
@@ -2936,14 +2966,29 @@ ${rows}
     setLibDragOver(true);
   };
   const onLibDragLeave = (e) => {
-    if (!e.currentTarget.contains(e.relatedTarget)) setLibDragOver(false);
+    if (!e.currentTarget.contains(e.relatedTarget)) { setLibDragOver(false); setLibDragOverSect(null); }
   };
   const onLibDrop = (e) => {
     e.preventDefault(); e.stopPropagation();
-    setLibDragOver(false);
+    setLibDragOver(false); setLibDragOverSect(null);
     if (!pidRef.current) return;
     const files = [...e.dataTransfer.files].filter(f => f.type.startsWith('image/'));
     if (files.length) uploadFiles(files);
+  };
+  const onSectDragOver = (e, sectId) => {
+    if (!e.dataTransfer.types.includes('Files')) return;
+    e.preventDefault(); e.stopPropagation();
+    setLibDragOverSect(sectId); setLibDragOver(false);
+  };
+  const onSectDragLeave = (e) => {
+    if (!e.currentTarget.contains(e.relatedTarget)) setLibDragOverSect(null);
+  };
+  const onSectDrop = (e, sectId) => {
+    e.preventDefault(); e.stopPropagation();
+    setLibDragOverSect(null); setLibDragOver(false);
+    if (!pidRef.current) return;
+    const files = [...e.dataTransfer.files].filter(f => f.type.startsWith('image/'));
+    if (files.length) uploadFiles(files, null, sectId);
   };
 
   const onSplitterPD = e => {
@@ -3676,14 +3721,23 @@ ${rows}
                     <input type="file" accept="image/*" multiple webkitdirectory="" style={{display:'none'}} id="tb-upload-folder"
                       onChange={e => { uploadFiles(e.target.files); e.target.value = ''; }}
                     />
+                    <input type="file" accept="image/*" multiple style={{display:'none'}} ref={uploadSectInput}
+                      onChange={e => { uploadFiles(e.target.files, null, uploadSectRef.current); e.target.value = ''; uploadSectRef.current = null; }}
+                    />
                     <button className="sect-add-btn" onClick={e => { e.stopPropagation(); addSection(); }} title={t('addSection')}>{t('addSection')}</button>
                     <button className={`lib-mute-btn${libMuted?' active':''}`} onClick={e => { e.stopPropagation(); setLibMuted(v => !v); }} title={libMuted ? t('libMuteOff') : t('libMuteOn')}>{libMuted ? t('libMuteOff') : t('libMuteOn')}</button>
-                    <label htmlFor="tb-upload-folder" className="btn" style={{cursor:'pointer',fontSize:9}} onClick={e => e.stopPropagation()}>
-                      {t('uploadFolder')}
-                    </label>
-                    <label htmlFor="tb-upload" className="btn acc" style={{cursor:'pointer',fontSize:9}} onClick={e => e.stopPropagation()}>
-                      {t('upload')}
-                    </label>
+                    <div className="upload-drop-wrap" onClick={e => e.stopPropagation()}>
+                      <button className="btn acc" style={{fontSize:9}} onClick={() => setUploadDropOpen(v => !v)}>
+                        {t('upload')} ▾
+                      </button>
+                      {uploadDropOpen && <>
+                        <div style={{position:'fixed',inset:0,zIndex:499}} onClick={() => setUploadDropOpen(false)}/>
+                        <div className="upload-drop">
+                          <label htmlFor="tb-upload" className="upload-drop-item" onClick={() => setUploadDropOpen(false)}>{t('uploadPhotos')}</label>
+                          <label htmlFor="tb-upload-folder" className="upload-drop-item" onClick={() => setUploadDropOpen(false)}>{t('uploadFolder')}</label>
+                        </div>
+                      </>}
+                    </div>
                   </>}
                 </div>
                 {libOpen && (
@@ -3778,7 +3832,11 @@ ${rows}
                             const collapsed = sectCollapsed[s.id];
                             const cnt = bySection[s.id]?.length || 0;
                             return (
-                              <div key={s.id} style={{width:'100%'}}>
+                              <div key={s.id} style={{width:'100%'}}
+                                className={libDragOverSect === s.id ? 'sect-drop-active' : ''}
+                                onDragOver={e => onSectDragOver(e, s.id)}
+                                onDragLeave={onSectDragLeave}
+                                onDrop={e => onSectDrop(e, s.id)}>
                                 <div className="sect-header" onClick={() => setSectCollapsed(c => ({...c, [s.id]: !c[s.id]}))}>
                                   <span className="sect-toggle">{collapsed ? '▶' : '▼'}</span>
                                   {renamingSect === s.id
@@ -3791,6 +3849,7 @@ ${rows}
                                   }
                                   <span className="sect-count">{cnt}</span>
                                   <div className="sect-actions" onClick={e => e.stopPropagation()}>
+                                    <button className="sect-btn" title={t('uploadToSection')} onClick={e => { e.stopPropagation(); uploadSectRef.current = s.id; uploadSectInput.current?.click(); }}>↑</button>
                                     <button className="sect-btn" title={t('sectRename')} onClick={() => setRenamingSect(s.id)}>✎</button>
                                     <button className="sect-btn danger" title={t('sectDelete')} onClick={() => {
                                       if (window.confirm(t('confirmDeleteSection', cnt))) deleteSection(s.id);
@@ -3812,8 +3871,9 @@ ${rows}
                     {libSel.length > 0 && (
                       <div className="lib-sel-bar" onClick={e => e.stopPropagation()}>
                         <span className="lib-sel-count">{libSel.length} {t('selected')}</span>
-                        <button className="lib-sel-btn" title={t('libSelClearTip')} onClick={() => { setLibSelection([]); setBatchTagPop(null); }}>✕</button>
-                        <button className="lib-sel-btn" title={t('batchTagBtn')} onClick={e => { const r = e.currentTarget.getBoundingClientRect(); setBatchTagPop(v => v ? null : {x: r.left, y: r.top}); setBatchTagInput(''); }}>{t('batchTagBtn')}</button>
+                        <button className="lib-sel-btn" title={t('libSelClearTip')} onClick={() => { setLibSelection([]); setBatchTagPop(null); setSectBatchPop(null); }}>✕</button>
+                        <button className="lib-sel-btn" title={t('batchTagBtn')} onClick={e => { const r = e.currentTarget.getBoundingClientRect(); setBatchTagPop(v => v ? null : {x: r.left, y: r.top}); setBatchTagInput(''); setSectBatchPop(null); }}>{t('batchTagBtn')}</button>
+                        {sections.length > 0 && <button className="lib-sel-btn" title={t('moveToSection')} onClick={e => { const r = e.currentTarget.getBoundingClientRect(); setSectBatchPop(v => v ? null : {x: r.left, y: r.top}); setBatchTagPop(null); }}>{t('batchMoveSection')}</button>}
                         {bid && <button className="lib-sel-btn" title={t('libSelAddTip')} onClick={addSelectedToCanvas}>{t('libSelAdd')}</button>}
                         {bid && <button className="lib-sel-btn" onClick={openGridModal}>⊞ {t('gridLayoutBtn')}</button>}
                         <button className="lib-sel-btn danger" title={t('libSelDeleteTip')} onClick={deleteSelectedPhotos}>× {t('deleteBtn')}</button>
@@ -3847,7 +3907,17 @@ ${rows}
           <button className="replace-banner-close" onClick={() => setReplaceMode(null)}>ESC</button>
         </div>
       )}
-      {uploading && <div className="uploading-bar" style={{bottom: libOpen ? libHeight : 30}}/>}
+      {uploadProgress && (
+        <div className="upload-progress">
+          <div className="upload-progress-header">
+            <span className="upload-progress-label">{uploadProgress.name}</span>
+            <span className="upload-progress-count">{uploadProgress.done + 1} / {uploadProgress.total}</span>
+          </div>
+          <div className="upload-progress-track">
+            <div className="upload-progress-fill" style={{width: `${Math.round((uploadProgress.done / uploadProgress.total) * 100)}%`}}/>
+          </div>
+        </div>
+      )}
       {toast && <div className={`toast${toast.err?' err':''}`} style={{bottom: (libOpen ? libHeight : 30) + 8}}>{toast.msg}</div>}
 
       {presentation && (() => {
@@ -4005,6 +4075,21 @@ ${rows}
           </>
         );
       })()}
+
+      {sectBatchPop && sections.length > 0 && (
+        <>
+          <div style={{position:'fixed',inset:0,zIndex:599}} onClick={() => setSectBatchPop(null)}/>
+          <div className="sect-ctx" style={{left:sectBatchPop.x, top:sectBatchPop.y, transform:'translateY(-100%)'}}>
+            <div className="sect-ctx-item" style={{fontSize:9,color:'var(--dim)',cursor:'default',pointerEvents:'none'}}>{t('moveToSection')}</div>
+            <div className="sect-ctx-sep"/>
+            {sections.map(s => (
+              <button key={s.id} className="sect-ctx-item" onClick={() => moveSelectionToSection(s.id)}>{s.name}</button>
+            ))}
+            <div className="sect-ctx-sep"/>
+            <button className="sect-ctx-item" onClick={() => moveSelectionToSection(null)}>{t('noSection')}</button>
+          </div>
+        </>
+      )}
 
       {sectCtxMenu && (
         <>

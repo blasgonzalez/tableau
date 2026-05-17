@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.5.2] — 2026-05-17
+### Added
+- Upload progress: bar at the bottom showing the current filename, N/Total counter and an animated progress bar while photos are being uploaded
+- Upload directly to a section: **↑** button in each section header to upload files that are automatically assigned to that section; dragging files from the file explorer onto a section also assigns them to it (the section highlights on hover)
+- Move multiple selection to section: **⊞ Section** button in the library selection bar to move all selected photos to a section at once
+- Unified upload button: the *+ Folder* and *+ Upload photo* buttons are merged into a single **↑ Upload ▾** button with a dropdown
+
+---
+
 ## [1.5.1] — 2026-05-17
 ### Added
 - Library sections: create collapsible sections to group photos; **+ Section** button in the library header; sections can be renamed and deleted with buttons that appear on hover; right-click a thumbnail to move it to a section; sections are included in the project ZIP export/import

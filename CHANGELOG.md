@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.5.2] — 2026-05-17
+### Añadido
+- Progreso de subida: barra en la parte inferior con el nombre del archivo actual, contador N/Total y barra de progreso animada mientras se suben fotos
+- Subir fotos directamente a una sección: botón **↑** en la cabecera de cada sección para subir archivos que quedan asignados automáticamente a esa sección; arrastrar archivos desde el explorador sobre una sección también los asigna a ella (la sección se ilumina al pasar por encima)
+- Mover selección múltiple a sección: botón **⊞ Sección** en la barra de selección de la librería para mover todas las fotos seleccionadas a una sección de golpe
+- Botón de subida unificado: los botones *+ Carpeta* y *+ Subir foto* se fusionan en un único botón **↑ Subir ▾** con desplegable
+
+---
+
 ## [1.5.1] — 2026-05-17
 ### Añadido
 - Secciones en la librería: crea secciones colapsables para agrupar fotos; botón **+ Sección** en la cabecera de la librería; las secciones se renombran y eliminan con los botones que aparecen al pasar el ratón; clic derecho sobre una miniatura para mover la foto a una sección; las secciones se exportan e importan con el ZIP del proyecto
