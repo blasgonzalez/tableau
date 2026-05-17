@@ -2,7 +2,17 @@
   {
     "id": "644a2d3620",
     "name": "Brobdingnag",
-    "created": 1777732254932
+    "created": 1777732254932,
+    "sections": [
+      {
+        "id": "mp9dl89on3b",
+        "name": "Paisaxe"
+      },
+      {
+        "id": "mp9dllqeth9",
+        "name": "Abstracto"
+      }
+    ]
   },
   {
     "id": "615224c67c",

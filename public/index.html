@@ -293,8 +293,16 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .lib-star-filter button:hover{color:var(--acc)}
 .lib-star-filter button.lit{color:var(--acc)}
 .lib-body{flex:1;overflow:hidden;display:flex;flex-direction:column}
-.lib-scroll{flex:1;overflow-x:hidden;overflow-y:auto;display:flex;flex-wrap:wrap;align-items:flex-start;align-content:flex-start;gap:8px;padding:7px 12px;min-height:0}
-.lib-scroll:has(.lib-empty){align-content:center;justify-content:center}
+.lib-scroll{flex:1;overflow-x:hidden;overflow-y:auto;display:flex;flex-direction:column;gap:0;padding:7px 12px;min-height:0}
+.lib-scroll:has(.lib-empty){align-items:center;justify-content:center}
+.lib-scroll > *{flex-shrink:0}
+.lib-photo-row{display:flex;flex-wrap:wrap;align-items:flex-start;align-content:flex-start;gap:8px;padding:5px 0 8px 0}
+.lib-muted .thumb-stars,.lib-muted .thumb-tag-badge,.lib-muted .thumb-color,.lib-muted .thumb-reject-btn,.lib-muted .thumb-tag,.lib-muted .thumb-x,.lib-muted .thumb-cp,.lib-muted .thumb-rejected{display:none !important}
+.lib-muted .thumb.in-board{border-color:var(--border2)}
+.lib-muted .thumb.in-board::before{display:none}
+.lib-mute-btn{background:none;border:1px solid var(--border2);color:var(--dim);cursor:pointer;font-size:9px;padding:1px 5px;font-family:'IBM Plex Mono',monospace;transition:all .12s;flex-shrink:0;letter-spacing:.3px}
+.lib-mute-btn:hover{border-color:var(--acc-dim);color:var(--text)}
+.lib-mute-btn.active{background:var(--acc-faint);border-color:var(--acc-dim);color:var(--acc)}
 .lib-scroll::-webkit-scrollbar{width:3px}
 .lib-scroll::-webkit-scrollbar-thumb{background:var(--border2)}
 .thumb{flex-shrink:0;width:84px;height:84px;cursor:grab;position:relative;overflow:hidden;border:2px solid var(--border2);transition:border-color .15s}
@@ -310,6 +318,23 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .lib-sel-btn:hover{background:var(--acc-faint)}
 .lib-sel-btn.danger{border-color:var(--danger);color:var(--danger)}
 .lib-sel-btn.danger:hover{background:rgba(196,80,80,.1)}
+.sect-header{width:100%;display:flex;align-items:center;gap:5px;padding:3px 4px 3px 2px;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;min-height:24px;flex-shrink:0}
+.sect-header:hover .sect-actions{opacity:1}
+.sect-toggle{font-size:9px;color:var(--dim);width:14px;flex-shrink:0}
+.sect-name{font-size:10px;font-weight:700;color:var(--dim);flex:1;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sect-name-input{flex:1;background:var(--surf);border:1px solid var(--acc-dim);color:var(--text);font-size:10px;font-weight:700;font-family:'IBM Plex Mono',monospace;padding:1px 4px;outline:none;letter-spacing:.3px}
+.sect-count{font-size:8px;color:var(--muted);flex-shrink:0}
+.sect-actions{opacity:0;display:flex;gap:2px;flex-shrink:0;transition:opacity .15s}
+.sect-btn{background:none;border:1px solid var(--border2);color:var(--dim);cursor:pointer;font-size:9px;padding:1px 4px;line-height:1;transition:all .12s;font-family:'IBM Plex Mono',monospace}
+.sect-btn:hover{border-color:var(--acc-dim);color:var(--text)}
+.sect-btn.danger:hover{border-color:var(--danger);color:var(--danger)}
+.sect-add-btn{background:none;border:1px solid var(--border2);color:var(--dim);cursor:pointer;font-size:9px;padding:1px 5px;font-family:'IBM Plex Mono',monospace;transition:all .12s;flex-shrink:0}
+.sect-add-btn:hover{border-color:var(--acc-dim);color:var(--text)}
+.sect-ctx{position:fixed;background:var(--panel);border:1px solid var(--border);box-shadow:0 4px 16px rgba(0,0,0,.4);padding:4px 0;z-index:9999;min-width:140px}
+.sect-ctx-item{display:block;width:100%;text-align:left;background:none;border:none;color:var(--text);font-size:11px;padding:5px 14px;cursor:pointer;font-family:'IBM Plex Mono',monospace}
+.sect-ctx-item:hover{background:var(--acc-faint)}
+.sect-ctx-item.active{color:var(--acc)}
+.sect-ctx-sep{height:1px;background:var(--border);margin:3px 0}
 .thumb.in-board::before{content:'● EN TABLEAU';position:absolute;top:0;left:0;right:0;background:var(--acc);color:var(--bg);font-size:6px;letter-spacing:.5px;text-align:center;padding:2px;pointer-events:none;z-index:1;font-weight:700}
 .thumb-x{position:absolute;top:2px;right:2px;width:18px;height:18px;background:rgba(196,74,74,.9);color:#fff;border:none;cursor:pointer;font-size:12px;border-radius:50%;display:none;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;line-height:1;z-index:2}
 .thumb:hover .thumb-x{display:flex}
@@ -707,6 +732,12 @@ const I18N = {
     rejectedLabel:'RECHAZADA',
     replacePhoto:'Reemplazar foto', replaceModeHint:'Selecciona la foto nueva en la librería · ESC cancela', replaceDone:'Foto reemplazada',
     pinnedPreviewHint:'Clic para fijar · ESC cierra',
+    addSection:'+ Sección', newSection:'Nueva sección', sectRename:'Renombrar sección', sectDelete:'Eliminar sección',
+    moveToSection:'Mover a sección', noSection:'Sin sección',
+    confirmDeleteSection: n => n > 0 ? `Esta sección tiene ${n} foto${n!==1?'s':''}. ¿Eliminarla igualmente? Las fotos no se borran.` : '¿Eliminar esta sección?',
+    libMuteOn:'◎ Silenciar', libMuteOff:'◎ Silenciada',
+    exportPadLabel:'Borde exterior al exportar (px)',
+    exportPadHint:'Espacio en blanco alrededor de las fotos en el JPEG',
   },
   en: {
     upload:'+ Upload', report:'≡ Report', config:'⚙ Config', exportJpeg:'Export JPEG',
@@ -819,6 +850,12 @@ const I18N = {
     rejectedLabel:'REJECTED',
     replacePhoto:'Replace photo', replaceModeHint:'Select the new photo in the library · ESC to cancel', replaceDone:'Photo replaced',
     pinnedPreviewHint:'Click to pin · ESC closes',
+    addSection:'+ Section', newSection:'New section', sectRename:'Rename section', sectDelete:'Delete section',
+    moveToSection:'Move to section', noSection:'No section',
+    confirmDeleteSection: n => n > 0 ? `This section has ${n} photo${n!==1?'s':''}. Delete it anyway? Photos are kept.` : 'Delete this section?',
+    libMuteOn:'◎ Mute', libMuteOff:'◎ Muted',
+    exportPadLabel:'Export border (px)',
+    exportPadHint:'White space around photos in the exported JPEG',
   },
 };
 
@@ -898,6 +935,12 @@ function App() {
   const [snapGuides,    setSnapGuides]    = useState({ h: [], v: [] });
   const [libSel,        setLibSel]        = useState([]);
   const libSelRef = useRef([]);
+  const libSelAnchorRef = useRef(null);
+  const [sections,      setSections]      = useState([]); // [{id, name}]
+  const sectionsRef = useRef([]);
+  const [sectCollapsed, setSectCollapsed] = useState({}); // {sectionId: bool}
+  const [sectCtxMenu,   setSectCtxMenu]   = useState(null); // {photoId, x, y}
+  const [renamingSect,  setRenamingSect]  = useState(null); // sectionId being renamed
   const [tagFilter,     setTagFilter]     = useState([]);
   const [tagPopover,    setTagPopover]    = useState(null); // {photoId, x, y}
   const [tagInput,      setTagInput]      = useState('');
@@ -908,6 +951,7 @@ function App() {
   const [ctxMenu,       setCtxMenu]       = useState(null); // {x, y, itemId}
   const [canvasCtx,     setCanvasCtx]     = useState(null); // {x, y, cx, cy} canvas right-click
   const [showLibPreview, setShowLibPreview] = useState(() => localStorage.getItem('tb-lib-preview') !== 'false');
+  const [libMuted,       setLibMuted]       = useState(false);
   const [gridModal,  setGridModal]  = useState(false);
   const [gridCols,   setGridCols]   = useState(2);
   const [gridGap,    setGridGap]    = useState(20);
@@ -934,6 +978,7 @@ function App() {
   const [resizeDim,     setResizeDim]     = useState(null);
   const [importState,   setImportState]   = useState(null); // {tempId,projectName,conflict,existingProject,busy}
   const [cfgDefaultFrame, setCfgDefaultFrame] = useState('0');
+  const [cfgExportPad,   setCfgExportPad]   = useState('60');
   const [propsPanelId,  setPropsPanelId]  = useState(null);
   const [textFmtPanelId, setTextFmtPanelId] = useState(null);
   const [noteColorPanelId, setNoteColorPanelId] = useState(null);
@@ -1048,7 +1093,14 @@ function App() {
     });
   }, [pid]);
 
-  useEffect(() => { setLibSearch(''); setLibSelection([]); setTagFilter([]); setTagPopover(null); setBatchTagPop(null); setRatingFilter(0); }, [pid]);
+  useEffect(() => { setLibSearch(''); setLibSelection([]); libSelAnchorRef.current = null; setTagFilter([]); setTagPopover(null); setBatchTagPop(null); setRatingFilter(0); setSectCtxMenu(null); setLibMuted(false); }, [pid]);
+
+  useEffect(() => {
+    const proj = projects.find(p => p.id === pid);
+    const sects = proj?.sections || [];
+    setSections(sects);
+    sectionsRef.current = sects;
+  }, [pid, projects]);
   useEffect(() => { boardHistoryRef.current = {}; previousBidRef.current = null; }, [pid]);
   useEffect(() => { if (pid && bid) localStorage.setItem(`tb-lastbid-${pid}`, bid); }, [bid, pid]);
 
@@ -1260,6 +1312,7 @@ function App() {
     setCfgBoardW(activeBoardMeta?.fixedW != null ? String(activeBoardMeta.fixedW) : '');
     setCfgBoardH(activeBoardMeta?.fixedH != null ? String(activeBoardMeta.fixedH) : '');
     setCfgDefaultFrame(String(activeBoardMeta?.defaultFrame || 0));
+    setCfgExportPad(String(activeBoardMeta?.exportPad ?? 60));
     setModal('boardcfg');
   };
 
@@ -1281,7 +1334,7 @@ function App() {
       });
       if (overflow && !confirm(t('confirmOverflow'))) return;
     }
-    const patch = { units: cfgUnits, dpi, fixed: cfgFixed, fixedW: cfgFixed ? fixedW : null, fixedH: cfgFixed ? fixedH : null, defaultFrame: parseFloat(cfgDefaultFrame) || 0 };
+    const patch = { units: cfgUnits, dpi, fixed: cfgFixed, fixedW: cfgFixed ? fixedW : null, fixedH: cfgFixed ? fixedH : null, defaultFrame: parseFloat(cfgDefaultFrame) || 0, exportPad: cfgFixed ? null : Math.max(0, parseInt(cfgExportPad) || 0) };
     await api.patch(`/api/projects/${pid}/boards/${bid}`, patch);
     setBoards(bs => bs.map(b => b.id === bid ? { ...b, ...patch } : b));
     setModal(null);
@@ -1775,6 +1828,45 @@ ${rows}
     setPhotos(ps => ps.map(p => p.id === photoId ? { ...p, rejected: next } : p));
   };
 
+  const saveSections = async (newSections) => {
+    await api.put(`/api/projects/${pidRef.current}/sections`, { sections: newSections });
+    setSections(newSections);
+    sectionsRef.current = newSections;
+    setProjects(ps => ps.map(p => p.id === pidRef.current ? { ...p, sections: newSections } : p));
+  };
+
+  const addSection = async () => {
+    const name = t('newSection');
+    const sect = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name };
+    const next = [...sectionsRef.current, sect];
+    await saveSections(next);
+    setRenamingSect(sect.id);
+  };
+
+  const renameSection = async (id, name) => {
+    if (!name.trim()) return;
+    const next = sectionsRef.current.map(s => s.id === id ? { ...s, name: name.trim() } : s);
+    await saveSections(next);
+    setRenamingSect(null);
+  };
+
+  const deleteSection = async (id) => {
+    const next = sectionsRef.current.filter(s => s.id !== id);
+    await saveSections(next);
+    // Remove sectionId from all photos in that section
+    const affected = photosRef.current.filter(p => p.sectionId === id);
+    if (affected.length) {
+      await Promise.all(affected.map(p => api.patch(`/api/projects/${pidRef.current}/photos/${p.id}/section`, { sectionId: null })));
+      setPhotos(ps => ps.map(p => p.sectionId === id ? { ...p, sectionId: undefined } : p));
+    }
+  };
+
+  const movePhotoToSection = async (photoId, sectionId) => {
+    await api.patch(`/api/projects/${pidRef.current}/photos/${photoId}/section`, { sectionId: sectionId || null });
+    setPhotos(ps => ps.map(p => p.id === photoId ? { ...p, sectionId: sectionId || undefined } : p));
+    setSectCtxMenu(null);
+  };
+
   const setRating = async (photoId, rating) => {
     await api.patch(`/api/projects/${pidRef.current}/photos/${photoId}/rating`, { rating });
     setPhotos(ps => ps.map(p => p.id === photoId ? { ...p, rating } : p));
@@ -1848,13 +1940,14 @@ ${rows}
         return;
       }
       if (e.key !== 'Escape') return;
+      if (sectCtxMenu) { setSectCtxMenu(null); return; }
       if (presentation) { setPresentation(false); return; }
       if (pinnedPreview) { setPinnedPreview(null); return; }
       if (replaceMode) { setReplaceMode(null); return; }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [presentation, pinnedPreview, replaceMode]);
+  }, [presentation, pinnedPreview, replaceMode, sectCtxMenu]);
 
   const deletePhoto = async id => {
     const placedBoards = boards.filter(b =>
@@ -2700,7 +2793,9 @@ ${rows}
     const ids = selRef.current.join(',');
     const p = pidRef.current, b = bidRef.current;
     if (!p || !b || !ids) return;
-    window.location.href = `/api/boards/${p}/${b}/export?ids=${encodeURIComponent(ids)}`;
+    const board = boardsRef.current.find(b2 => b2.id === b);
+    const pad = boardPxRef.current ? '' : `&pad=${board?.exportPad ?? 60}`;
+    window.location.href = `/api/boards/${p}/${b}/export?ids=${encodeURIComponent(ids)}${pad}`;
   };
 
   if (!ready) return (
@@ -2952,10 +3047,10 @@ ${rows}
             {t('config')}
           </button>
           <a className="btn" style={{fontSize:10,gap:5}}
-            href={`/api/boards/${pid}/${bid}/export`}
-            download
-            title={t('exportJpeg')}
-          >
+            href={boardPx
+              ? `/api/boards/${pid}/${bid}/export?useBoard=1`
+              : `/api/boards/${pid}/${bid}/export?pad=${activeBoardMeta?.exportPad ?? 60}`}
+            download title={t('exportJpeg')}>
             <SvgExport/>{t('exportJpeg')}
           </a>
         </>}
@@ -3581,6 +3676,8 @@ ${rows}
                     <input type="file" accept="image/*" multiple webkitdirectory="" style={{display:'none'}} id="tb-upload-folder"
                       onChange={e => { uploadFiles(e.target.files); e.target.value = ''; }}
                     />
+                    <button className="sect-add-btn" onClick={e => { e.stopPropagation(); addSection(); }} title={t('addSection')}>{t('addSection')}</button>
+                    <button className={`lib-mute-btn${libMuted?' active':''}`} onClick={e => { e.stopPropagation(); setLibMuted(v => !v); }} title={libMuted ? t('libMuteOff') : t('libMuteOn')}>{libMuted ? t('libMuteOff') : t('libMuteOn')}</button>
                     <label htmlFor="tb-upload-folder" className="btn" style={{cursor:'pointer',fontSize:9}} onClick={e => e.stopPropagation()}>
                       {t('uploadFolder')}
                     </label>
@@ -3590,7 +3687,7 @@ ${rows}
                   </>}
                 </div>
                 {libOpen && (
-                  <div className="lib-body"
+                  <div className={`lib-body${libMuted?' lib-muted':''}`}
                     onDragOver={onLibDragOver}
                     onDragLeave={onLibDragLeave}
                     onDrop={onLibDrop}>
@@ -3602,14 +3699,15 @@ ${rows}
                           </label>
                           <span style={{fontSize:9,color:'var(--muted)'}}>{t('dragFilesHint')}</span>
                         </div>
-                      ) : (
-                        displayedPhotos.map(p => {
+                      ) : (() => {
+                        const renderThumb = p => {
                           const inBoard = items.some(i => i.photoId === p.id);
                           const isSel = libSel.includes(p.id);
                           return (
                             <div key={p.id} className={`thumb${inBoard?' in-board':''}${isSel?' lib-sel':''}${p.rejected?' rejected-thumb':''}`}
                               style={{width:thumbSize,height:thumbSize}}
                               draggable onDragStart={e => onLibDS(e, p.id)}
+                              onContextMenu={e => { e.preventDefault(); e.stopPropagation(); setSectCtxMenu({ photoId: p.id, x: e.clientX, y: e.clientY }); }}
                               onMouseEnter={e => {
                                 showPhotoInfo(p, inBoard?'board':'proj', `/photos/${pid}/${p.id}/thumb`);
                                 hoveredThumbRef.current = p.id;
@@ -3628,15 +3726,22 @@ ${rows}
                                   return;
                                 }
                                 if (e.ctrlKey || e.metaKey) {
+                                  libSelAnchorRef.current = p.id;
                                   const next = isSel ? libSel.filter(x => x !== p.id) : [...libSel, p.id];
                                   setLibSelection(next);
-                                } else if (e.shiftKey && libSel.length > 0) {
+                                } else if (e.shiftKey && libSelAnchorRef.current) {
                                   const all = displayedPhotos.map(ph => ph.id);
-                                  const lastIdx = all.lastIndexOf(libSelRef.current[libSelRef.current.length - 1]);
+                                  const anchorIdx = all.indexOf(libSelAnchorRef.current);
                                   const thisIdx = all.indexOf(p.id);
-                                  const [from, to] = lastIdx <= thisIdx ? [lastIdx, thisIdx] : [thisIdx, lastIdx];
-                                  setLibSelection([...new Set([...libSelRef.current, ...all.slice(from, to + 1)])]);
+                                  if (anchorIdx !== -1) {
+                                    const [from, to] = anchorIdx <= thisIdx ? [anchorIdx, thisIdx] : [thisIdx, anchorIdx];
+                                    setLibSelection(all.slice(from, to + 1));
+                                  } else {
+                                    libSelAnchorRef.current = p.id;
+                                    setLibSelection([p.id]);
+                                  }
                                 } else {
+                                  libSelAnchorRef.current = p.id;
                                   setLibSelection([]);
                                   if (!bid) return showToast(t('createBoardFirst'), true);
                                   addToCenter(p.id);
@@ -3657,8 +3762,52 @@ ${rows}
                                 onClick={e => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setCopyToMenu({ photoId: p.id, x: r.left, y: r.top }); }}>→</button>
                             </div>
                           );
-                        })
-                      )}
+                        };
+                        if (sections.length === 0) {
+                          return <div className="lib-photo-row">{displayedPhotos.map(renderThumb)}</div>;
+                        }
+                        const bySection = {};
+                        sections.forEach(s => { bySection[s.id] = []; });
+                        bySection['__none__'] = [];
+                        displayedPhotos.forEach(p => {
+                          const sid = p.sectionId && sections.find(s => s.id === p.sectionId) ? p.sectionId : '__none__';
+                          bySection[sid].push(p);
+                        });
+                        return <>
+                          {sections.map(s => {
+                            const collapsed = sectCollapsed[s.id];
+                            const cnt = bySection[s.id]?.length || 0;
+                            return (
+                              <div key={s.id} style={{width:'100%'}}>
+                                <div className="sect-header" onClick={() => setSectCollapsed(c => ({...c, [s.id]: !c[s.id]}))}>
+                                  <span className="sect-toggle">{collapsed ? '▶' : '▼'}</span>
+                                  {renamingSect === s.id
+                                    ? <input autoFocus className="sect-name-input" defaultValue={s.name}
+                                        onClick={e => e.stopPropagation()}
+                                        onBlur={e => renameSection(s.id, e.target.value)}
+                                        onKeyDown={e => { if (e.key === 'Enter') renameSection(s.id, e.target.value); if (e.key === 'Escape') setRenamingSect(null); }}
+                                      />
+                                    : <span className="sect-name">{s.name}</span>
+                                  }
+                                  <span className="sect-count">{cnt}</span>
+                                  <div className="sect-actions" onClick={e => e.stopPropagation()}>
+                                    <button className="sect-btn" title={t('sectRename')} onClick={() => setRenamingSect(s.id)}>✎</button>
+                                    <button className="sect-btn danger" title={t('sectDelete')} onClick={() => {
+                                      if (window.confirm(t('confirmDeleteSection', cnt))) deleteSection(s.id);
+                                    }}>×</button>
+                                  </div>
+                                </div>
+                                {!collapsed && <div className="lib-photo-row">{(bySection[s.id] || []).map(renderThumb)}</div>}
+                              </div>
+                            );
+                          })}
+                          {bySection['__none__'].length > 0 && (
+                            <div style={{width:'100%'}}>
+                              <div className="lib-photo-row">{bySection['__none__'].map(renderThumb)}</div>
+                            </div>
+                          )}
+                        </>;
+                      })()}
                     </div>
                     {libSel.length > 0 && (
                       <div className="lib-sel-bar" onClick={e => e.stopPropagation()}>
@@ -3857,6 +4006,30 @@ ${rows}
         );
       })()}
 
+      {sectCtxMenu && (
+        <>
+          <div style={{position:'fixed',inset:0,zIndex:599}} onClick={() => setSectCtxMenu(null)}/>
+          <div className="sect-ctx" style={{left:sectCtxMenu.x, top:sectCtxMenu.y, transform: sectCtxMenu.y > window.innerHeight - 200 ? 'translateY(-100%)' : 'none'}}>
+            <div className="sect-ctx-item" style={{fontSize:9,color:'var(--dim)',cursor:'default',pointerEvents:'none'}}>{t('moveToSection')}</div>
+            <div className="sect-ctx-sep"/>
+            {sections.map(s => {
+              const active = photos.find(p => p.id === sectCtxMenu.photoId)?.sectionId === s.id;
+              return (
+                <button key={s.id} className={`sect-ctx-item${active?' active':''}`}
+                  onClick={() => movePhotoToSection(sectCtxMenu.photoId, active ? null : s.id)}>
+                  {active ? '● ' : '○ '}{s.name}
+                </button>
+              );
+            })}
+            {sections.length > 0 && <div className="sect-ctx-sep"/>}
+            <button className={`sect-ctx-item${!photos.find(p => p.id === sectCtxMenu.photoId)?.sectionId?' active':''}`}
+              onClick={() => movePhotoToSection(sectCtxMenu.photoId, null)}>
+              {!photos.find(p => p.id === sectCtxMenu.photoId)?.sectionId ? '● ' : '○ '}{t('noSection')}
+            </button>
+          </div>
+        </>
+      )}
+
       {copyToMenu && (
         <>
           <div style={{position:'fixed',inset:0,zIndex:599}} onClick={() => setCopyToMenu(null)}/>
@@ -4026,6 +4199,14 @@ ${rows}
                   step={cfgUnits === 'mm' ? 1 : 0.1}
                   onChange={e => setCfgDefaultFrame(e.target.value)} placeholder="0"/>
               </div>
+              {!cfgFixed && (
+                <div>
+                  <div className="cfg-label">{t('exportPadLabel')}</div>
+                  <input type="number" className="inp" value={cfgExportPad} min="0" max="400"
+                    onChange={e => setCfgExportPad(e.target.value)} placeholder="60"/>
+                  <div style={{fontSize:8,color:'var(--muted)',marginTop:3}}>{t('exportPadHint')}</div>
+                </div>
+              )}
             </div>
             {activeBoardMeta?.defaultW > 0 && (
               <div className="cfg-row">

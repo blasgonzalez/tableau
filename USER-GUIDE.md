@@ -97,6 +97,7 @@ When one or more photos are selected, an action bar appears at the bottom of the
 |---|---|
 | **# Tags** | Open the batch tag panel (see Tags section) |
 | **Add to board** | Place all selected photos onto the active canvas |
+| **⊞ Grid** | Open the dialog to place selected photos as a grid (see Grid and snap section) |
 | **× Delete** | Delete the selected photos from the library (asks for confirmation) |
 
 If a photo you are deleting is already placed on a board, the confirmation dialog lists the affected boards.
@@ -158,6 +159,8 @@ Right-click any photo or note on the canvas to open a context menu with secondar
 | **↑ Bring forward** | Raise the element in the stacking order |
 | **▣ Frame** | Set frame thickness (photos only) |
 | **⊞ Set as default size** | All photos placed afterwards arrive at this width (photos only) |
+| **↔ Flip horizontal** | Mirror the photo left to right (photos only) |
+| **↕ Flip vertical** | Mirror the photo top to bottom (photos only) |
 | **⧉ Duplicate** | Create a copy offset by 20 px |
 | **× Delete** | Remove from board |
 
@@ -277,6 +280,21 @@ Tag filters combine with the **Unplaced** filter and the name search.
 The grid size selector (next to Snap) offers automatic sizing or specific values in mm, cm, or px depending on the board's configured units.
 
 With **Snap** enabled, moving an element will first try to align it with the edges and centres of other elements on the board (snap to elements). Orange guide lines appear to show the active snap. If no nearby element is found, the item snaps to the grid instead.
+
+Additionally, if the gap between the element you are dragging and a neighbour matches the gap between that neighbour and another element, **cyan** guide lines appear in both spaces and the system snaps automatically to that distance. This makes it easy to maintain equal spacing when extending rows or columns of photos.
+
+### Placing photos as a grid
+
+Select multiple photos in the library and click **⊞ Grid** in the selection bar. The dialog lets you configure:
+
+- **Columns** — number of columns in the grid
+- **Gap** — spacing between photos, in the board's configured units
+
+On **fixed boards** the cell width is calculated automatically from the board width, columns and gap. The dialog shows whether all photos fit; if not, adjust the number of columns or the gap until the indicator turns positive.
+
+On **variable boards** the board's default photo width is used and the grid is centred on the current view.
+
+Photos are placed in selection order (left to right, row by row). If photos have different aspect ratios, each cell height adapts to its photo and cells in the same row are vertically centred.
 
 ---
 

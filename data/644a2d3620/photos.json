@@ -14,7 +14,8 @@
     "tags": [
       "edificio",
       "Color"
-    ]
+    ],
+    "sectionId": "mp9dl89on3b"
   },
   {
     "id": "ca790c30f072",
@@ -32,7 +33,8 @@
     "tags": [
       "Color",
       "edificio"
-    ]
+    ],
+    "sectionId": "mp9dl89on3b"
   },
   {
     "id": "5d43c345bf0b",
@@ -68,7 +70,8 @@
     "tags": [
       "Color",
       "edificio"
-    ]
+    ],
+    "sectionId": "mp9dl89on3b"
   },
   {
     "id": "a291a63819ee",
@@ -82,7 +85,8 @@
       "g": 248,
       "b": 248
     },
-    "rating": 5
+    "rating": 5,
+    "sectionId": "mp9dl89on3b"
   },
   {
     "id": "8febc52d726d",
@@ -99,7 +103,8 @@
     "tags": [
       "Color"
     ],
-    "rejected": false
+    "rejected": false,
+    "sectionId": "mp9dl89on3b"
   },
   {
     "id": "d0f388d26773",
@@ -123,7 +128,8 @@
     "tags": [
       "ByN",
       "edificio"
-    ]
+    ],
+    "sectionId": "mp9dl89on3b"
   },
   {
     "id": "acce72fb6986",
@@ -146,7 +152,8 @@
     "rating": 3,
     "tags": [
       "ByN"
-    ]
+    ],
+    "sectionId": "mp9dllqeth9"
   },
   {
     "id": "9c91e91d34e1",
@@ -169,6 +176,7 @@
     "rating": 3,
     "tags": [
       "ByN"
-    ]
+    ],
+    "sectionId": "mp9dllqeth9"
   }
 ]

@@ -97,6 +97,7 @@ Con una o más fotos seleccionadas aparece una barra en la parte inferior de la 
 |---|---|
 | **# Etiquetas** | Abre el panel de etiquetado en lote (ver sección Etiquetas) |
 | **Añadir al tablero** | Coloca todas las fotos seleccionadas en el canvas activo |
+| **⊞ Cuadrícula** | Abre el diálogo para colocar las fotos seleccionadas en cuadrícula (ver sección Cuadrícula y ajuste) |
 | **× Eliminar** | Elimina las fotos seleccionadas de la librería (pide confirmación) |
 
 Al eliminar una foto que ya está colocada en algún tablero, el aviso de confirmación lista los tableros afectados.
@@ -158,6 +159,8 @@ Haz clic derecho sobre cualquier foto o nota del canvas para abrir un menú con 
 | **↑ Traer al frente** | Sube el elemento en el orden Z |
 | **▣ Marco** | Ajusta el grosor del marco (solo fotos) |
 | **⊞ Usar como tamaño de referencia** | Las fotos que añadas después llegarán a ese ancho (solo fotos) |
+| **↔ Voltear horizontal** | Voltea la foto de izquierda a derecha (solo fotos) |
+| **↕ Voltear vertical** | Voltea la foto de arriba a abajo (solo fotos) |
 | **⧉ Duplicar** | Crea una copia desplazada 20 px |
 | **× Eliminar** | Elimina del tablero |
 
@@ -277,6 +280,21 @@ Los filtros de etiqueta se combinan con el filtro **Sin colocar** y con la búsq
 El selector de tamaño de cuadrícula (junto a Ajustar) ofrece tamaño automático o valores específicos en mm, cm o px según las unidades configuradas en el tablero.
 
 Con **Ajustar** activado, al mover un elemento se alinea primero con los bordes y centros del resto de elementos del tablero (snap a elementos). Aparecen guías naranjas que indican el ajuste activo. Si no hay ningún elemento cercano al que ajustarse, se aplica el snap a la cuadrícula.
+
+Además, si la separación entre el elemento que estás moviendo y un vecino coincide con la que hay entre ese vecino y otro elemento del tablero, aparecen guías **cyan** en ambos huecos y el sistema encaja automáticamente a esa distancia. Esto permite mantener separaciones iguales al ampliar filas o columnas de fotos.
+
+### Colocar fotos en cuadrícula
+
+Selecciona varias fotos en la librería y pulsa **⊞ Cuadrícula** en la barra de selección. El diálogo permite configurar:
+
+- **Columnas** — número de columnas de la cuadrícula
+- **Separación** — hueco entre fotos, en las unidades del tablero
+
+En **tableros fijos** el ancho de celda se calcula automáticamente a partir del ancho del tablero, las columnas y la separación. El diálogo muestra si todas las fotos caben; si no caben, ajusta el número de columnas o la separación hasta que el indicador sea positivo.
+
+En **tableros variables** se usa el ancho de referencia del tablero y la cuadrícula se centra en la vista actual.
+
+Las fotos se colocan en el orden de selección (de izquierda a derecha, fila a fila). Si las fotos tienen proporciones distintas, la altura de cada celda se adapta a la foto y las celdas de la misma fila se alinean por el centro.
 
 ---
 

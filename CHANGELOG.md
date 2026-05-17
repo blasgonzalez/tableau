@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.5.1] — 2026-05-17
+### Añadido
+- Secciones en la librería: crea secciones colapsables para agrupar fotos; botón **+ Sección** en la cabecera de la librería; las secciones se renombran y eliminan con los botones que aparecen al pasar el ratón; clic derecho sobre una miniatura para mover la foto a una sección; las secciones se exportan e importan con el ZIP del proyecto
+- Selección por rango en la librería: **Shift + clic** selecciona todas las fotos entre la última seleccionada y la que se pulsa, sin necesidad de haber hecho Ctrl+clic primero
+- Silenciar librería: botón **◎ Silenciar** en la cabecera de la librería que oculta temporalmente todos los indicadores visuales sobre las miniaturas (estrellas, etiquetas, indicador de brillo, botones) para ver las fotos sin ruido visual
+- Exportación en tableros fijos: el JPEG exportado respeta exactamente las dimensiones configuradas del tablero en lugar de recortar al contenido
+- Borde exterior al exportar: los tableros variables permiten configurar el espacio en blanco alrededor de las fotos en el JPEG exportado (⚙ Config → *Borde exterior al exportar*)
+
+### Corregido
+- El scroll de la librería no funcionaba cuando había muchas fotos; ahora el contenido se desplaza correctamente
+- El volteo horizontal/vertical de las fotos no se aplicaba en el JPEG exportado; ahora se refleja correctamente
+- Los botones de subir carpeta y subir foto aparecían separados por otros controles; vuelven a estar juntos
+
+---
+
 ## [1.5.0] — 2026-05-17
 ### Añadido
 - Voltear foto: opciones *Voltear horizontal* y *Voltear vertical* en el menú de contexto de cada foto; el volteo se combina con la rotación y se guarda con el tablero; se refleja en la vista previa del informe y el PDF

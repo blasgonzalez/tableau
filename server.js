@@ -211,7 +211,7 @@ app.post('/api/projects/:pid/boards', (req, res) => {
 
 app.patch('/api/projects/:pid/boards/:bid', (req, res) => {
   const { pid, bid } = req.params;
-  const { name, units, dpi, fixed, fixedW, fixedH, defaultFrame, background, defaultW } = req.body;
+  const { name, units, dpi, fixed, fixedW, fixedH, defaultFrame, background, defaultW, exportPad } = req.body;
   const boards = readJSON(boardsMeta(pid)).map(b => {
     if (b.id !== bid) return b;
     const u = { ...b };
@@ -224,6 +224,7 @@ app.patch('/api/projects/:pid/boards/:bid', (req, res) => {
     if (defaultFrame !== undefined) u.defaultFrame = defaultFrame;
     if (background   !== undefined) u.background   = background;
     if (defaultW     !== undefined) u.defaultW     = defaultW;
+    if (exportPad    !== undefined) u.exportPad    = exportPad == null ? undefined : Math.max(0, Number(exportPad) || 0);
     return u;
   });
   writeJSON(boardsMeta(pid), boards);
@@ -330,6 +331,28 @@ app.patch('/api/projects/:pid/photos/:id/rejected', (req, res) => {
   res.json(p);
 });
 
+app.patch('/api/projects/:pid/photos/:id/section', (req, res) => {
+  const { pid, id } = req.params;
+  const { sectionId } = req.body;
+  const photos = readJSON(photosMeta(pid));
+  const p = photos.find(p => p.id === id);
+  if (!p) return res.status(404).json({ error: 'not found' });
+  if (sectionId) p.sectionId = sectionId; else delete p.sectionId;
+  writeJSON(photosMeta(pid), photos);
+  res.json(p);
+});
+
+app.put('/api/projects/:pid/sections', (req, res) => {
+  const { pid } = req.params;
+  const { sections } = req.body;
+  if (!Array.isArray(sections)) return res.status(400).json({ error: 'sections array required' });
+  const projects = readJSON(projsFile()).map(p =>
+    p.id === pid ? { ...p, sections } : p
+  );
+  writeJSON(projsFile(), projects);
+  res.json({ ok: true });
+});
+
 app.post('/api/projects/:pid/photos/analyze-colors', async (req, res) => {
   const { pid } = req.params;
   const photos = readJSON(photosMeta(pid));
@@ -397,7 +420,7 @@ app.put('/api/boards/:pid/:bid/items', (req, res) => {
 // ── Board export (JPEG composite) ─────────────────────────────────────────────
 app.get('/api/boards/:pid/:bid/export', async (req, res) => {
   const { pid, bid } = req.params;
-  const { ids } = req.query;
+  const { ids, useBoard, pad: padParam } = req.query;
   let boardItems = readJSON(boardFile(pid, bid), []);
   if (ids) { const idSet = new Set(ids.split(',')); boardItems = boardItems.filter(i => idSet.has(i.id)); }
   const photosData = readJSON(photosMeta(pid));
@@ -406,12 +429,12 @@ app.get('/api/boards/:pid/:bid/export', async (req, res) => {
 
   if (!boardItems.length) return res.status(400).json({ error: 'El tablero está vacío' });
 
-  const PAD    = 60;
+  const PAD    = padParam != null ? Math.max(0, parseInt(padParam) || 0) : 60;
   const sorted = [...boardItems].sort((a, b) => (a.z || 0) - (b.z || 0));
 
-  // Process each item: resize + rotate → get final pixel buffer + canvas position
+  // Process each item: resize + flip + rotate → get final pixel buffer + canvas position
   const layers = (await Promise.all(sorted.map(async item => {
-    if (item.type === 'note') return null;
+    if (item.type === 'note' || item.type === 'text') return null;
     const photo = photosData.find(p => p.id === item.photoId);
     if (!photo) return null;
     const pFile = path.join(photoDir(pid), `${item.photoId}.jpg`);
@@ -420,14 +443,14 @@ app.get('/api/boards/:pid/:bid/export', async (req, res) => {
     const rot       = item.rot || 0;
     const freeRot   = item.freeRot || 0;
     const isSwapped = rot % 180 !== 0;
-    // pre-rotation dimensions that produce the correct post-rotation canvas size
     const resizeW   = isSwapped ? Math.round(item.w * photo.w / photo.h) : item.w;
     const resizeH   = isSwapped ? item.w : Math.round(item.w * photo.h / photo.w);
-    const displayH  = isSwapped ? resizeW : resizeH;  // actual canvas height
+    const displayH  = isSwapped ? resizeW : resizeH;
 
-    let sharpChain = sharp(pFile)
-      .resize(resizeW, resizeH, { fit: 'fill' })
-      .rotate(rot, { background: { r: 255, g: 255, b: 255 } });
+    let sharpChain = sharp(pFile).resize(resizeW, resizeH, { fit: 'fill' });
+    if (item.flipH) sharpChain = sharpChain.flop();
+    if (item.flipV) sharpChain = sharpChain.flip();
+    sharpChain = sharpChain.rotate(rot, { background: { r: 255, g: 255, b: 255 } });
     if (freeRot) sharpChain = sharpChain.rotate(freeRot, { background: { r: 255, g: 255, b: 255 } });
     const imgBuf = await sharpChain.jpeg({ quality: 92 }).toBuffer();
 
@@ -440,28 +463,44 @@ app.get('/api/boards/:pid/:bid/export', async (req, res) => {
 
   if (!layers.length) return res.status(400).json({ error: 'No se pudieron procesar las imágenes' });
 
-  const minX = Math.min(...layers.map(l => l.cl));
-  const minY = Math.min(...layers.map(l => l.ct));
-  const maxX = Math.max(...layers.map(l => l.cl + l.rw));
-  const maxY = Math.max(...layers.map(l => l.ct + l.rh));
+  // Fixed board mode: use exact board dimensions as canvas
+  const fixedMode = useBoard === '1' && board?.fixed && board.fixedW > 0 && board.fixedH > 0;
 
-  const rawW = maxX - minX + PAD * 2;
-  const rawH = maxY - minY + PAD * 2;
+  let rawW, rawH, getLeft, getTop;
+  if (fixedMode) {
+    rawW    = board.fixedW;
+    rawH    = board.fixedH;
+    getLeft = (cl) => cl;
+    getTop  = (ct) => ct;
+  } else {
+    const minX = Math.min(...layers.map(l => l.cl));
+    const minY = Math.min(...layers.map(l => l.ct));
+    rawW    = Math.max(...layers.map(l => l.cl + l.rw)) - minX + PAD * 2;
+    rawH    = Math.max(...layers.map(l => l.ct + l.rh)) - minY + PAD * 2;
+    getLeft = (cl) => cl - minX + PAD;
+    getTop  = (ct) => ct - minY + PAD;
+  }
+
   const scale = Math.min(1, 7000 / Math.max(rawW, rawH));
   const outW  = Math.max(1, Math.round(rawW * scale));
   const outH  = Math.max(1, Math.round(rawH * scale));
 
-  const composites = await Promise.all(layers.map(async ({ input, cl, ct, rw, rh }) => {
-    const scaledInput = scale < 1
-      ? await sharp(input).resize(Math.max(1, Math.round(rw * scale)), Math.max(1, Math.round(rh * scale))).jpeg({ quality: 90 }).toBuffer()
-      : input;
-    return {
-      input: scaledInput,
-      left:  Math.max(0, Math.round((cl - minX + PAD) * scale)),
-      top:   Math.max(0, Math.round((ct - minY + PAD) * scale)),
-      blend: 'over',
-    };
-  }));
+  const composites = (await Promise.all(layers.map(async ({ input, cl, ct, rw, rh }) => {
+    const left = Math.round(getLeft(cl) * scale);
+    const top  = Math.round(getTop(ct)  * scale);
+    if (left >= outW || top >= outH) return null;
+    let img = input;
+    // Clip left/top overflow
+    let srcX = 0, srcY = 0, srcW = rw, srcH = rh, dstL = left, dstT = top;
+    if (dstL < 0) { srcX = Math.round(-dstL / scale); srcW = rw - srcX; dstL = 0; }
+    if (dstT < 0) { srcY = Math.round(-dstT / scale); srcH = rh - srcY; dstT = 0; }
+    if (srcW <= 0 || srcH <= 0) return null;
+    if (srcX > 0 || srcY > 0) img = await sharp(input).extract({ left: srcX, top: srcY, width: Math.min(srcW, rw - srcX), height: Math.min(srcH, rh - srcY) }).toBuffer();
+    const scaledW = Math.max(1, Math.round(srcW * scale));
+    const scaledH = Math.max(1, Math.round(srcH * scale));
+    const scaledInput = scale < 1 ? await sharp(img).resize(scaledW, scaledH).jpeg({ quality: 90 }).toBuffer() : img;
+    return { input: scaledInput, left: dstL, top: dstT, blend: 'over' };
+  }))).filter(Boolean);
 
   try {
     const output = await sharp({ create: { width: outW, height: outH, channels: 3, background: { r: 255, g: 255, b: 255 } } })
@@ -488,6 +527,7 @@ app.get('/api/projects/:pid/export', (req, res) => {
   const zip = new AdmZip();
   zip.addFile('tableau-export.json', Buffer.from(JSON.stringify({
     version: APP_VERSION, exportedAt: Date.now(), originId: pid, projectName: proj.name,
+    sections: proj.sections || [],
   }, null, 2)));
 
   const pMeta = photosMeta(pid);
@@ -582,12 +622,12 @@ app.post('/api/projects/import/:tempId/confirm', (req, res) => {
       const bDir = boardDir(newPid);
       if (fs.existsSync(pDir)) fs.readdirSync(pDir).forEach(f => { try { fs.unlinkSync(path.join(pDir, f)); } catch {} });
       if (fs.existsSync(bDir)) fs.readdirSync(bDir).forEach(f => { try { fs.unlinkSync(path.join(bDir, f)); } catch {} });
-      const projects = readJSON(projsFile()).map(p => p.id === newPid ? { ...p, name: exportMeta.projectName } : p);
+      const projects = readJSON(projsFile()).map(p => p.id === newPid ? { ...p, name: exportMeta.projectName, sections: exportMeta.sections || [] } : p);
       writeJSON(projsFile(), projects);
     } else {
       newPid = newId();
       const projects = readJSON(projsFile());
-      projects.push({ id: newPid, name: exportMeta.projectName, created: Date.now() });
+      projects.push({ id: newPid, name: exportMeta.projectName, created: Date.now(), sections: exportMeta.sections || [] });
       writeJSON(projsFile(), projects);
       initProject(newPid);
     }

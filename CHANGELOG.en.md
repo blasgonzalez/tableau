@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.5.1] — 2026-05-17
+### Added
+- Library sections: create collapsible sections to group photos; **+ Section** button in the library header; sections can be renamed and deleted with buttons that appear on hover; right-click a thumbnail to move it to a section; sections are included in the project ZIP export/import
+- Range selection in the library: **Shift + click** selects all photos between the last selected and the clicked one, without requiring a prior Ctrl+click
+- Mute library: **◎ Mute** button in the library header temporarily hides all visual indicators on thumbnails (stars, tags, brightness dot, action buttons) to view photos without visual noise
+- Fixed-board export: the exported JPEG now matches the exact board dimensions instead of cropping to the content bounding box
+- Variable-board export border: variable boards allow configuring the white space around photos in the exported JPEG (⚙ Config → *Export border*)
+
+### Fixed
+- Library scroll was broken when the library contained many photos; content now scrolls correctly
+- Horizontal/vertical flip was not applied in the exported JPEG; it is now reflected correctly
+- The upload folder and upload photo buttons were separated by other controls; they are together again
+
+---
+
 ## [1.5.0] — 2026-05-17
 ### Added
 - Flip photo: *Flip horizontal* and *Flip vertical* options in the context menu for each photo; flip combines with rotation and is saved with the board; reflected in the report preview and PDF
