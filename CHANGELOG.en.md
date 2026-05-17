@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.5.0] — 2026-05-17
+### Added
+- Flip photo: *Flip horizontal* and *Flip vertical* options in the context menu for each photo; flip combines with rotation and is saved with the board; reflected in the report preview and PDF
+- Grid from library: select multiple photos and click **⊞ Grid** in the selection bar; a dialog lets you choose columns and gap; on fixed boards the cell size is calculated automatically and shows how many photos fit; on variable boards the grid is centred on the current view
+- Equal-gap guides: when dragging an element with Snap enabled, if the gap to a neighbour matches the gap between that neighbour and another element, **cyan** guides appear in both spaces and the system snaps automatically to that distance; complements the edge alignment guides (orange) and both can appear at the same time
+
+### Fixed
+- Element controls (rotate, lock, delete) were hidden behind the top menu bar when a photo was placed near the top of the canvas; they now appear below the element in that situation
+- On page reload, the app always returned to the first board in the project; it now remembers the active board and restores it
+
+---
+
 ## [1.4.0] — 2026-05-16
 ### Added
 - Presentation mode: button in the top bar hides all UI and shows only the board; project and board name appear at the bottom on hover; ESC to exit; the grid hides automatically

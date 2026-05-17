@@ -619,7 +619,8 @@ const I18N = {
     renameBtn:'Renombrar',
     projectPhotosL1:'Fotos del', projectPhotosL2:'proyecto',
     libTitle:'Biblioteca', sortImported:'Importación', sortName:'Nombre A→Z', sortColor:'Tono', sortBrightness:'Luminosidad', sortRating:'Valoración', filterPending:'Sin colocar', libSearchPh:'buscar…', tagFilterBtn:'Etiquetas', tagFilterAll:'Todas', tagPopHd:'Etiquetas', tagNewPh:'nueva etiqueta…', noTagsYet:'Sin etiquetas aún', libPreviewToggle:'Vista previa al pasar el ratón', bgColor:'Color de fondo', bgColorNone:'Sin color (tema)', ratingFilterHint:'Filtrar por valoración mínima',
-    setDefaultSize:'Usar como tamaño de referencia', duplicateItem:'Duplicar', defaultSizeSet:'Tamaño de referencia guardado', defaultSizeActive: w => `Tamaño de referencia: ${w} px`, clear:'Limpiar', swapPos:'Intercambiar posición',
+    setDefaultSize:'Usar como tamaño de referencia', duplicateItem:'Duplicar', defaultSizeSet:'Tamaño de referencia guardado', defaultSizeActive: w => `Tamaño de referencia: ${w} px`, clear:'Limpiar', swapPos:'Intercambiar posición', flipH:'Voltear horizontal', flipV:'Voltear vertical',
+    gridLayoutBtn:'Cuadrícula', gridTitle:'Colocar en cuadrícula', gridColsLabel:'Columnas', gridGapLabel:'Separación', gridFits:(n,tot)=>n>=tot?'Todas las fotos caben':`Caben ${n} de ${tot}`, gridPlace:'Colocar',
     libSnapExpand:'Ampliar librería', libSnapCollapse:'Reducir librería',
     uploadHint:'Sube fotos con + Subir →', dragFilesHint:'o arrastra archivos al canvas',
     alreadyInTableau:'ya en el tableau',
@@ -730,7 +731,8 @@ const I18N = {
     renameBtn:'Rename',
     projectPhotosL1:'Project', projectPhotosL2:'photos',
     libTitle:'Library', sortImported:'Import date', sortName:'Name A→Z', sortColor:'Hue', sortBrightness:'Brightness', sortRating:'Rating', filterPending:'Unplaced', libSearchPh:'search…', tagFilterBtn:'Tags', tagFilterAll:'All', tagPopHd:'Tags', tagNewPh:'new tag…', noTagsYet:'No tags yet', libPreviewToggle:'Hover preview', bgColor:'Background colour', bgColorNone:'No colour (theme)', ratingFilterHint:'Filter by minimum rating',
-    setDefaultSize:'Set as default size', duplicateItem:'Duplicate', defaultSizeSet:'Default size saved', defaultSizeActive: w => `Default size: ${w} px`, clear:'Clear', swapPos:'Swap positions',
+    setDefaultSize:'Set as default size', duplicateItem:'Duplicate', defaultSizeSet:'Default size saved', defaultSizeActive: w => `Default size: ${w} px`, clear:'Clear', swapPos:'Swap positions', flipH:'Flip horizontal', flipV:'Flip vertical',
+    gridLayoutBtn:'Grid', gridTitle:'Place as grid', gridColsLabel:'Columns', gridGapLabel:'Gap', gridFits:(n,tot)=>n>=tot?'All photos fit':`${n} of ${tot} fit`, gridPlace:'Place',
     libSnapExpand:'Expand library', libSnapCollapse:'Collapse library',
     uploadHint:'Upload photos with + Upload →', dragFilesHint:'or drag files to canvas',
     alreadyInTableau:'already in tableau',
@@ -906,6 +908,9 @@ function App() {
   const [ctxMenu,       setCtxMenu]       = useState(null); // {x, y, itemId}
   const [canvasCtx,     setCanvasCtx]     = useState(null); // {x, y, cx, cy} canvas right-click
   const [showLibPreview, setShowLibPreview] = useState(() => localStorage.getItem('tb-lib-preview') !== 'false');
+  const [gridModal,  setGridModal]  = useState(false);
+  const [gridCols,   setGridCols]   = useState(2);
+  const [gridGap,    setGridGap]    = useState(20);
   const showLibPreviewRef = useRef(localStorage.getItem('tb-lib-preview') !== 'false');
   const [libPreview,    setLibPreview]    = useState(null); // {photo, x, y}
   const [pinnedPreview, setPinnedPreview] = useState(null); // {photo, x, y} — click-pinned
@@ -1025,7 +1030,8 @@ function App() {
       api.get(`/api/projects/${pid}/photos`),
     ]).then(async ([bs, ps]) => {
       setBoards(bs);
-      setBid(bs[0]?.id || null);
+      const savedBid = localStorage.getItem(`tb-lastbid-${pid}`);
+      setBid((savedBid && bs.find(b => b.id === savedBid)) ? savedBid : (bs[0]?.id || null));
       setPhotos(ps);
       if (ps.some(p => !p.dominant || p.brightness == null || !p.meanColor)) {
         api.post(`/api/projects/${pid}/photos/analyze-colors`, {})
@@ -1044,6 +1050,7 @@ function App() {
 
   useEffect(() => { setLibSearch(''); setLibSelection([]); setTagFilter([]); setTagPopover(null); setBatchTagPop(null); setRatingFilter(0); }, [pid]);
   useEffect(() => { boardHistoryRef.current = {}; previousBidRef.current = null; }, [pid]);
+  useEffect(() => { if (pid && bid) localStorage.setItem(`tb-lastbid-${pid}`, bid); }, [bid, pid]);
 
   useEffect(() => {
     // Save undo/redo for previous board before switching
@@ -1330,7 +1337,8 @@ function App() {
           const freeRotStyle = freeRot ? `transform:rotate(${freeRot}deg);transform-origin:center;` : '';
           const imgW = Math.round(item.naturalW * sc); const imgH = Math.round(item.naturalH * sc);
           const imgL = Math.round(item.offX * sc); const imgT = Math.round(item.offY * sc);
-          const rotStyle = rot ? `transform:rotate(${rot}deg);transform-origin:center;` : '';
+          const flipStyle = (item.flipH || item.flipV) ? ` scaleX(${item.flipH ? -1 : 1}) scaleY(${item.flipV ? -1 : 1})` : '';
+          const rotStyle = (rot || item.flipH || item.flipV) ? `transform:rotate(${rot}deg)${flipStyle};transform-origin:center;` : '';
           return `<div style="position:absolute;left:${iL}px;top:${iT}px;width:${iW}px;height:${iH}px;overflow:hidden;${freeRotStyle}${frameStyle}"><img src="/photos/${pid}/${item.photoId}/thumb" style="position:absolute;left:${imgL}px;top:${imgT}px;width:${imgW}px;height:${imgH}px;object-fit:cover;${rotStyle}" alt="" /></div>`;
         }).join('');
         const fontMap = { serif:'Georgia,serif', sans:'Arial,sans-serif', display:'Impact,sans-serif', mono:'Courier New,monospace' };
@@ -1920,6 +1928,83 @@ ${rows}
     setBatchTagPop(null);
   };
 
+  // ── grid layout ──────────────────────────────────────────────────────────
+  const openGridModal = () => {
+    const board = boardsRef.current.find(b => b.id === bidRef.current);
+    const units = board?.units || 'px';
+    const defaultGap = units === 'mm' ? 5 : units === 'cm' ? 0.5 : units === 'in' ? 0.2 : 20;
+    setGridGap(defaultGap);
+    setGridModal(true);
+  };
+
+  const placeAsGrid = (cols, gapUnits) => {
+    const ids = libSelRef.current;
+    if (!ids.length || !bidRef.current) return;
+    const board = boardsRef.current.find(b => b.id === bidRef.current);
+    if (!board) return;
+    const dpi = board.dpi || 300;
+    const units = board.units || 'px';
+    const gapPx = Math.round(physToPx(gapUnits, dpi, units));
+    const bPx = boardPxRef.current;
+    const selPhotos = ids.map(id => photosRef.current.find(p => p.id === id)).filter(Boolean);
+    if (!selPhotos.length) return;
+
+    const cellW = bPx
+      ? Math.max(1, Math.round((bPx.w - gapPx * (cols + 1)) / cols))
+      : (board.defaultW || 300);
+    const rows = Math.ceil(selPhotos.length / cols);
+    const rowHeights = [];
+    for (let r = 0; r < rows; r++) {
+      let maxH = 0;
+      for (let c = 0; c < cols; c++) {
+        const idx = r * cols + c;
+        if (idx >= selPhotos.length) break;
+        const h = Math.round(cellW * selPhotos[idx].h / selPhotos[idx].w);
+        if (h > maxH) maxH = h;
+      }
+      rowHeights.push(maxH);
+    }
+    const totalW = cols * cellW + gapPx * (cols - 1);
+    const totalH = rowHeights.reduce((s, h) => s + h, 0) + gapPx * (rows - 1);
+
+    let startX, startY;
+    if (bPx) {
+      startX = gapPx; startY = gapPx;
+    } else {
+      const wrap = wrapRef.current; const z = zoomRef.current;
+      const cx = (wrap.scrollLeft + wrap.clientWidth / 2) / z;
+      const cy = (wrap.scrollTop  + wrap.clientHeight / 2) / z;
+      startX = Math.round(cx - totalW / 2);
+      startY = Math.round(cy - totalH / 2);
+    }
+
+    pushUndo();
+    const maxZ = itemsRef.current.length ? Math.max(...itemsRef.current.map(i => i.z || 0)) : 0;
+    const defFrame = board.defaultFrame || 0;
+    const newItems = []; let y = startY;
+    for (let r = 0; r < rows; r++) {
+      let x = startX;
+      for (let c = 0; c < cols; c++) {
+        const idx = r * cols + c;
+        if (idx >= selPhotos.length) break;
+        const photo = selPhotos[idx];
+        const cellH = Math.round(cellW * photo.h / photo.w);
+        const offsetY = Math.round((rowHeights[r] - cellH) / 2);
+        newItems.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2,5) + idx,
+          photoId: photo.id, x: Math.round(x), y: Math.round(y + offsetY),
+          w: cellW, z: maxZ + newItems.length + 1, label: '', rot: 0, frame: defFrame });
+        x += cellW + gapPx;
+      }
+      y += rowHeights[r] + gapPx;
+    }
+    const nit = [...itemsRef.current, ...newItems];
+    const norm = applyNormalized(nit);
+    selRef.current = newItems.map(i => i.id); setSel(selRef.current);
+    saveItemsNow(norm);
+    setLibSelection([]);
+    setGridModal(false);
+  };
+
   // ── import from repo ──────────────────────────────────────────────────────
   // ── hover info ────────────────────────────────────────────────────────────
   const showPhotoInfo = (photo, status, thumbSrc, itemW = null, itemH = null) =>
@@ -2057,11 +2142,11 @@ ${rows}
         setSnapGuides({ h: [], v: [] });
         return { sdx: rawDx, sdy: rawDy };
       }
-      // ── snap to other elements ──────────────────────────────────────────────
       const allItems = itemsRef.current;
       const others = allItems.filter(i => !dragIds.includes(i.id) && !i.locked);
       const thresh = ELEM_SNAP_THRESH / zoomRef.current;
-      // Compute bounding box of dragged group after applying raw delta
+      const gapThresh = thresh * 1.5;
+      // Bounding box of dragged group after raw delta
       let bx = Infinity, by = Infinity, bx2 = -Infinity, by2 = -Infinity;
       for (const id of dragIds) {
         const it = allItems.find(i => i.id === id);
@@ -2072,40 +2157,121 @@ ${rows}
         bx2 = Math.max(bx2, nx + it.w);  by2 = Math.max(by2, ny + ih);
       }
       const bw = bx2 - bx, bh = by2 - by;
+      // ── Edge / center snap ────────────────────────────────────────────────
       let bestDx = null, bestDy = null;
       const newGuides = { h: [], v: [] };
       for (const oi of others) {
         const oh = getItemH(oi);
         const ox2 = oi.x + oi.w, oy2 = oi.y + oh;
-        // H check (snap x)
         for (const [de, ie] of [
           [bx, oi.x], [bx, ox2], [bx2, oi.x], [bx2, ox2],
           [bx + bw / 2, oi.x + oi.w / 2],
         ]) {
           const diff = de - ie;
           if (Math.abs(diff) < thresh && (bestDx === null || Math.abs(diff) < Math.abs(bestDx))) bestDx = diff;
-          if (Math.abs(diff) < thresh) {
+          if (Math.abs(diff) < thresh)
             newGuides.v.push({ pos: ie, from: Math.min(by, oi.y) - 12, to: Math.max(by2, oy2) + 12 });
-          }
         }
-        // V check (snap y)
         for (const [de, ie] of [
           [by, oi.y], [by, oy2], [by2, oi.y], [by2, oy2],
           [by + bh / 2, oi.y + oh / 2],
         ]) {
           const diff = de - ie;
           if (Math.abs(diff) < thresh && (bestDy === null || Math.abs(diff) < Math.abs(bestDy))) bestDy = diff;
-          if (Math.abs(diff) < thresh) {
+          if (Math.abs(diff) < thresh)
             newGuides.h.push({ pos: ie, from: Math.min(bx, oi.x) - 12, to: Math.max(bx2, ox2) + 12 });
+        }
+      }
+      // ── Gap equality snap ─────────────────────────────────────────────────
+      const GAP_COLOR = '#26c9d9';
+      let bestGapDx = null, bestGapDy = null;
+      const gapGuidesH = [], gapGuidesV = [];
+      for (const B of others) {
+        const Bh = getItemH(B); const Bx2 = B.x + B.w; const By2 = B.y + Bh;
+        const gR = bx  - Bx2; // positive → drag is to the right of B
+        const gL = B.x - bx2; // positive → drag is to the left of B
+        const gBel = by  - By2; // positive → drag is below B
+        const gAbo = B.y - by2; // positive → drag is above B
+        for (const C of others) {
+          if (C === B) continue;
+          const Ch = getItemH(C); const Cx2 = C.x + C.w; const Cy2 = C.y + Ch;
+          // H: drag right of B, C left of B — want gR == gap(C→B)
+          if (gR > 0) {
+            const gCB = B.x - Cx2;
+            if (gCB > 0 && Math.abs(gR - gCB) < gapThresh) {
+              const corr = gR - gCB;
+              if (bestGapDx === null || Math.abs(corr) < Math.abs(bestGapDx)) {
+                bestGapDx = corr;
+                const midY = (Math.min(B.y, C.y, by) + Math.max(By2, Cy2, by2)) / 2;
+                gapGuidesH.length = 0;
+                gapGuidesH.push(
+                  { pos: midY, from: Cx2,      to: B.x,      color: GAP_COLOR },
+                  { pos: midY, from: Bx2,       to: bx - corr, color: GAP_COLOR },
+                );
+              }
+            }
+          }
+          // H: drag left of B, C right of B — want gL == gap(B→C)
+          if (gL > 0) {
+            const gBC = C.x - Bx2;
+            if (gBC > 0 && Math.abs(gL - gBC) < gapThresh) {
+              const corr = gBC - gL;
+              if (bestGapDx === null || Math.abs(corr) < Math.abs(bestGapDx)) {
+                bestGapDx = corr;
+                const midY = (Math.min(B.y, C.y, by) + Math.max(By2, Cy2, by2)) / 2;
+                gapGuidesH.length = 0;
+                gapGuidesH.push(
+                  { pos: midY, from: Bx2,        to: C.x,       color: GAP_COLOR },
+                  { pos: midY, from: bx2 - corr,  to: B.x,       color: GAP_COLOR },
+                );
+              }
+            }
+          }
+          // V: drag below B, C above B — want gBel == gap(C→B)
+          if (gBel > 0) {
+            const gCB_v = B.y - Cy2;
+            if (gCB_v > 0 && Math.abs(gBel - gCB_v) < gapThresh) {
+              const corr = gBel - gCB_v;
+              if (bestGapDy === null || Math.abs(corr) < Math.abs(bestGapDy)) {
+                bestGapDy = corr;
+                const midX = (Math.min(B.x, C.x, bx) + Math.max(Bx2, C.x + C.w, bx2)) / 2;
+                gapGuidesV.length = 0;
+                gapGuidesV.push(
+                  { pos: midX, from: Cy2,       to: B.y,        color: GAP_COLOR },
+                  { pos: midX, from: By2,        to: by - corr,  color: GAP_COLOR },
+                );
+              }
+            }
+          }
+          // V: drag above B, C below B — want gAbo == gap(B→C)
+          if (gAbo > 0) {
+            const gBC_v = C.y - By2;
+            if (gBC_v > 0 && Math.abs(gAbo - gBC_v) < gapThresh) {
+              const corr = gBC_v - gAbo;
+              if (bestGapDy === null || Math.abs(corr) < Math.abs(bestGapDy)) {
+                bestGapDy = corr;
+                const midX = (Math.min(B.x, C.x, bx) + Math.max(Bx2, C.x + C.w, bx2)) / 2;
+                gapGuidesV.length = 0;
+                gapGuidesV.push(
+                  { pos: midX, from: By2,         to: C.y,        color: GAP_COLOR },
+                  { pos: midX, from: by2 - corr,   to: B.y,        color: GAP_COLOR },
+                );
+              }
+            }
           }
         }
       }
-      if (newGuides.h.length > 0 || newGuides.v.length > 0) {
-        setSnapGuides(newGuides);
-        return { sdx: rawDx - (bestDx ?? 0), sdy: rawDy - (bestDy ?? 0) };
+      // Combine: edge snap takes priority per axis; gap guides only on unsnapped axes
+      const finalDx = bestDx ?? bestGapDx ?? null;
+      const finalDy = bestDy ?? bestGapDy ?? null;
+      const allH = [...newGuides.h, ...(bestDx === null && bestGapDx !== null ? gapGuidesH : [])];
+      const allV = [...newGuides.v, ...(bestDy === null && bestGapDy !== null ? gapGuidesV : [])];
+      if (allH.length > 0 || allV.length > 0) {
+        setSnapGuides({ h: allH, v: allV });
+        return { sdx: rawDx - (finalDx ?? 0), sdy: rawDy - (finalDy ?? 0) };
       }
       setSnapGuides({ h: [], v: [] });
-      // ── fall back to grid snap ──────────────────────────────────────────────
+      // ── Fall back to grid snap ─────────────────────────────────────────────
       if (!showGrid || dragIds.length === 0) return { sdx: rawDx, sdy: rawDy };
       const anchor = starts[dragIds[0]];
       const snappedX = snapVal(anchor.x + rawDx, gridCellPx);
@@ -2192,6 +2358,12 @@ ${rows}
       if (i.type === 'note' || i.type === 'text') return { ...i, freeRot: ((i.freeRot || 0) + 90) % 360 };
       return { ...i, rot: ((i.rot || 0) + 90) % 360 };
     });
+    setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
+  };
+
+  const flipItem = (id, axis) => {
+    pushUndo();
+    const nit = itemsRef.current.map(i => i.id !== id ? i : { ...i, [axis]: !i[axis] });
     setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
   };
 
@@ -3047,8 +3219,8 @@ ${rows}
                 setCanvasCtx({ x: Math.min(e.clientX, window.innerWidth - 160), y: Math.min(e.clientY, window.innerHeight - 90), cx, cy });
               }}>
                 {lasso && <div className="lasso" style={{left:lasso.x1,top:lasso.y1,width:Math.max(0,lasso.x2-lasso.x1),height:Math.max(0,lasso.y2-lasso.y1)}}/>}
-                {snapGuides.v.map((g, i) => <div key={`sgv${i}`} style={{position:'absolute',left:g.pos,top:g.from,width:1/zoom,height:g.to-g.from,background:'var(--acc)',opacity:.85,pointerEvents:'none',zIndex:9999}}/>)}
-                {snapGuides.h.map((g, i) => <div key={`sgh${i}`} style={{position:'absolute',left:g.from,top:g.pos,width:g.to-g.from,height:1/zoom,background:'var(--acc)',opacity:.85,pointerEvents:'none',zIndex:9999}}/>)}
+                {snapGuides.v.map((g, i) => <div key={`sgv${i}`} style={{position:'absolute',left:g.pos,top:g.from,width:1/zoom,height:g.to-g.from,background:g.color||'var(--acc)',opacity:.85,pointerEvents:'none',zIndex:9999}}/>)}
+                {snapGuides.h.map((g, i) => <div key={`sgh${i}`} style={{position:'absolute',left:g.from,top:g.pos,width:g.to-g.from,height:1/zoom,background:g.color||'var(--acc)',opacity:.85,pointerEvents:'none',zIndex:9999}}/>)}
                 {!bid && (
                   <div className="hint">
                     <em>{t('noBoard')}</em>
@@ -3079,7 +3251,7 @@ ${rows}
                         onContextMenu={e => openCtxMenu(e, item.id)}
                       >
                         {item.locked && <div className="lock-badge"><SvgLock/></div>}
-                        <div className="bitem-bar" onPointerDown={e => e.stopPropagation()}>
+                        <div className="bitem-bar" onPointerDown={e => e.stopPropagation()} style={item.y * zoom < 40 ? {bottom:'auto',top:'100%'} : undefined}>
                           <button className="ibc rot" title={t('rotateBtn')} onPointerDown={e => { e.stopPropagation(); if (!item.locked) onFreeRotatePD(e, item.id); }} onClick={e => { e.stopPropagation(); if (rotBtnDraggedRef.current) { rotBtnDraggedRef.current = false; return; } rotateItem(item.id); }}>↻</button>
                           <button className={`ibc${tFmtOpen?' active':''}`} title={lang==='es'?'Formato':'Format'} onClick={e => { e.stopPropagation(); setTextFmtPanelId(tFmtOpen ? null : item.id); }}>T▾</button>
                           <button className="ibc" title={t(item.locked ? 'unlockBtn' : 'lockBtn')} style={{color: item.locked ? 'var(--acc)' : undefined}} onClick={e => { e.stopPropagation(); updateItemLocked(item.id, !item.locked); }}>{item.locked ? <SvgUnlock/> : <SvgLock/>}</button>
@@ -3141,7 +3313,7 @@ ${rows}
                       onClick={e => handleItemClick(e, item)}
                       onContextMenu={e => openCtxMenu(e, item.id)}
                     >
-                      <div className="bitem-bar" onPointerDown={e => e.stopPropagation()}>
+                      <div className="bitem-bar" onPointerDown={e => e.stopPropagation()} style={item.y * zoom < 40 ? {bottom:'auto',top:'100%'} : undefined}>
                         <button className="ibc" title={t('noteFontSize')}
                           style={{fontSize:9,letterSpacing:.3,fontWeight:600,color:item.fontSize?'var(--acc)':'var(--dim)'}}
                           onClick={e => { e.stopPropagation(); cycleNoteFontSize(item.id, item.fontSize ?? null); }}>
@@ -3250,7 +3422,7 @@ ${rows}
                       onMouseLeave={clearHoverInfo}
                     >
                       {item.locked && <div className="lock-badge"><SvgLock/></div>}
-                      <div className="bitem-bar" onPointerDown={e => e.stopPropagation()}>
+                      <div className="bitem-bar" onPointerDown={e => e.stopPropagation()} style={item.y * zoom < 40 ? {bottom:'auto',top:'100%'} : undefined}>
                         <button className="ibc rot" title={t('rotateBtn')}
                           onPointerDown={e => { e.stopPropagation(); if (!item.locked) onFreeRotatePD(e, item.id); }}
                           onClick={e => { e.stopPropagation(); if (rotBtnDraggedRef.current) { rotBtnDraggedRef.current = false; return; } rotateItem(item.id); }}>↻</button>
@@ -3291,7 +3463,7 @@ ${rows}
                             position: 'absolute',
                             left: offX,
                             top: offY,
-                            transform: rot ? `rotate(${rot}deg)` : undefined,
+                            transform: (rot || item.flipH || item.flipV) ? `rotate(${rot}deg) scaleX(${item.flipH ? -1 : 1}) scaleY(${item.flipV ? -1 : 1})` : undefined,
                             transformOrigin: 'center',
                           }}
                           draggable={false}
@@ -3494,6 +3666,7 @@ ${rows}
                         <button className="lib-sel-btn" title={t('libSelClearTip')} onClick={() => { setLibSelection([]); setBatchTagPop(null); }}>✕</button>
                         <button className="lib-sel-btn" title={t('batchTagBtn')} onClick={e => { const r = e.currentTarget.getBoundingClientRect(); setBatchTagPop(v => v ? null : {x: r.left, y: r.top}); setBatchTagInput(''); }}>{t('batchTagBtn')}</button>
                         {bid && <button className="lib-sel-btn" title={t('libSelAddTip')} onClick={addSelectedToCanvas}>{t('libSelAdd')}</button>}
+                        {bid && <button className="lib-sel-btn" onClick={openGridModal}>⊞ {t('gridLayoutBtn')}</button>}
                         <button className="lib-sel-btn danger" title={t('libSelDeleteTip')} onClick={deleteSelectedPhotos}>× {t('deleteBtn')}</button>
                       </div>
                     )}
@@ -3581,6 +3754,8 @@ ${rows}
             {!isNote && <><div className="ctx-sep"/>
               <button className="ctx-item" onClick={() => { setDefaultW(ctxItem.w); setCtxMenu(null); }}>⊞ {t('setDefaultSize')}</button>
               <button className="ctx-item" onClick={() => { setReplaceMode({ itemId: ctxMenu.itemId }); setCtxMenu(null); if (!libOpen) { setLibOpen(true); localStorage.setItem('libOpen','true'); } }}>⇄ {t('replacePhoto')}</button>
+              <button className="ctx-item" onClick={() => { flipItem(ctxMenu.itemId, 'flipH'); setCtxMenu(null); }}>↔ {t('flipH')}</button>
+              <button className="ctx-item" onClick={() => { flipItem(ctxMenu.itemId, 'flipV'); setCtxMenu(null); }}>↕ {t('flipV')}</button>
             </>}
             <div className="ctx-sep"/>
             <button className="ctx-item" onClick={() => { dupItem(ctxMenu.itemId); setCtxMenu(null); }}>⧉ {t('duplicateItem')}</button>
@@ -3698,6 +3873,68 @@ ${rows}
       )}
 
       {/* ── MODALS ── */}
+      {gridModal && bid && (() => {
+        const units = boardUnits;
+        const dpi = boardDpi || 300;
+        const bPx = boardPx;
+        const cols = Math.max(1, gridCols);
+        const gapPx = Math.round(physToPx(gridGap, dpi, units));
+        const selPhotos = libSel.map(id => photos.find(p => p.id === id)).filter(Boolean);
+        const N = selPhotos.length;
+        const cellW = bPx
+          ? Math.max(0, Math.round((bPx.w - gapPx * (cols + 1)) / cols))
+          : (activeBoardMeta?.defaultW || 300);
+        let fitsAll = true, fitsCount = N;
+        if (bPx && cellW > 0) {
+          let count = 0, y = gapPx;
+          const rows = Math.ceil(N / cols);
+          for (let r = 0; r < rows; r++) {
+            let maxH = 0;
+            for (let c = 0; c < cols; c++) {
+              const idx = r * cols + c;
+              if (idx >= N) break;
+              const ph = selPhotos[idx];
+              const h = Math.round(cellW * ph.h / ph.w);
+              if (h > maxH) maxH = h;
+            }
+            if (y + maxH + gapPx <= bPx.h) { count += Math.min(cols, N - r * cols); y += maxH + gapPx; }
+            else break;
+          }
+          fitsCount = count; fitsAll = count >= N;
+        }
+        const canPlace = fitsCount > 0 && cellW > 0;
+        return (
+          <div className="overlay" onClick={() => setGridModal(false)}>
+            <div className="modal" onClick={e => e.stopPropagation()} style={{minWidth:260}}>
+              <div className="modal-h">{t('gridTitle')}</div>
+              <div className="cfg-row">
+                <div>
+                  <div className="cfg-label">{t('gridColsLabel')}</div>
+                  <input type="number" className="inp" value={gridCols} min={1} max={N} autoFocus
+                    onChange={e => setGridCols(Math.max(1, parseInt(e.target.value) || 1))} />
+                </div>
+                <div>
+                  <div className="cfg-label">{t('gridGapLabel')} ({units})</div>
+                  <input type="number" className="inp" value={gridGap} min={0}
+                    step={units === 'px' ? 1 : 0.5}
+                    onChange={e => setGridGap(parseFloat(e.target.value) || 0)} />
+                </div>
+              </div>
+              {bPx && (
+                <div style={{marginTop:8, fontSize:11, color: fitsAll ? 'var(--acc)' : 'var(--danger)'}}>
+                  {t('gridFits', fitsCount, N)}
+                </div>
+              )}
+              <div className="modal-row" style={{marginTop:12}}>
+                <button className="btn" onClick={() => setGridModal(false)}>{t('cancel')}</button>
+                <button className="btn acc" disabled={!canPlace || (bPx && !fitsAll)}
+                  onClick={() => placeAsGrid(cols, gridGap)}>{t('gridPlace')}</button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {modal === 'project' && (
         <div className="overlay" onClick={() => setModal(null)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
@@ -3881,7 +4118,7 @@ ${rows}
                                   const iW = Math.round(item.w * sc); const iH = Math.round(item.displayH * sc);
                                   return (
                                     <div key={item.id} style={{ position:'absolute', left:iL, top:iT, width:iW, height:iH, overflow:'hidden', ...(freeRot?{transform:`rotate(${freeRot}deg)`,transformOrigin:'center'}:{}), ...frameStyle }}>
-                                      <img src={`/photos/${pid}/${item.photoId}/thumb`} alt="" style={{ position:'absolute', left:Math.round(item.offX*sc), top:Math.round(item.offY*sc), width:Math.round(item.naturalW*sc), height:Math.round(item.naturalH*sc), objectFit:'cover', ...(rot?{transform:`rotate(${rot}deg)`,transformOrigin:'center'}:{}) }} />
+                                      <img src={`/photos/${pid}/${item.photoId}/thumb`} alt="" style={{ position:'absolute', left:Math.round(item.offX*sc), top:Math.round(item.offY*sc), width:Math.round(item.naturalW*sc), height:Math.round(item.naturalH*sc), objectFit:'cover', ...((rot||item.flipH||item.flipV)?{transform:`rotate(${rot}deg) scaleX(${item.flipH?-1:1}) scaleY(${item.flipV?-1:1})`,transformOrigin:'center'}:{}) }} />
                                     </div>
                                   );
                                 })}

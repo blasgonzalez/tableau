@@ -7,9 +7,10 @@
     "w": 276,
     "z": 578,
     "label": "Morbi consequat dolor iaculis mi pretium, quis laoreet lectus egestas. Praesent lacinia facilisis arcu, sed laoreet dolor vehicula ac. Mauris convallis est lacus. Etiam ornare justo et libero hendrerit, a accumsan justo posuere. Vivamus aliquet lacus id pretium ultrices. Phasellus ut finibus sem. Nullam et varius orci, ac vulputate metus. Integer ornare vitae lectus at volutpat. Morbi maximus faucibus nisi, in vestibulum tortor aliquam sed. Sed vulputate, massa ut lobortis lacinia, libero urna dictum nunc, non iaculis arcu purus nec nulla. In nisi erat, eleifend at tellus a, mattis volutpat dui. Nam facilisis, libero sed feugiat tempor, felis nibh commodo ipsum, id rhoncus nunc nunc eget augue.",
-    "rot": 90,
+    "rot": 0,
     "frame": 0.4,
-    "locked": false
+    "locked": false,
+    "flipH": false
   },
   {
     "id": "moohphyqiuo",

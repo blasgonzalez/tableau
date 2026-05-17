@@ -1,6 +1,6 @@
 {
-  "version": "1.4.0",
+  "version": "1.5.0",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-05-16",
-  "notes": "Modo presentación · Navegación entre tableros · Elemento de texto · Preview persistente · Gestión de rechazados · Reemplazar foto"
+  "releaseDate": "2026-05-17",
+  "notes": "Voltear foto · Cuadrícula desde la librería · Guías de separación igual · Correcciones"
 }
