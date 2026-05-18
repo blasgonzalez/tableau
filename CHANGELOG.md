@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.6.0] — 2026-05-18
+### Añadido
+- Lectura EXIF: al importar una foto se extraen automáticamente cámara, objetivo, distancia focal, apertura, velocidad, ISO y fecha de toma; visibles en el panel de información lateral
+- Plantillas de tablero: guarda el diseño del tablero actual como plantilla (⚙ Config → Guardar como plantilla); al crear un tablero nuevo aparece un selector para empezar desde una plantilla o en blanco; las plantillas se gestionan (borrar) desde el mismo selector
+- Control de calidad en exportación JPEG: botón ▾ con tres opciones — Buena (JPEG 85), Alta (JPEG 92) y Máxima (JPEG 100 · tope 16 000 px)
+- Textos libres en la exportación JPEG: los elementos de texto del tablero se renderizan correctamente en el fichero exportado con sus fuentes exactas (Playfair Display, DM Sans, Bebas Neue, IBM Plex Mono)
+
+### Mejorado
+- Pipeline de exportación JPEG sin pérdida intermedia: los buffers de procesado por capas pasan a PNG lossless; solo el fichero de salida final se comprime como JPEG
+- Tope de resolución de exportación aumentado de 7 000 a 10 000 px (16 000 px en modo Máxima)
+
+---
+
 ## [1.5.4] — 2026-05-17
 ### Mejorado
 - Color del grid corregido en todos los temas: cada tema define su propio color de guías optimizado para contraste; en el tema Claro · Natural el grid ya es visible (antes era casi idéntico al fondo)

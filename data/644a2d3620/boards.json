@@ -13,18 +13,6 @@
     "background": "#ffffff"
   },
   {
-    "id": "bd2ca26466",
-    "name": "Tablero 2",
-    "created": 1778701681182,
-    "units": "cm",
-    "dpi": 300,
-    "fixed": false,
-    "fixedW": null,
-    "fixedH": null,
-    "defaultFrame": 0,
-    "background": ""
-  },
-  {
     "id": "f1f1d32c49",
     "name": "Tablero 3",
     "created": 1778966928404,

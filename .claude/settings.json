@@ -10,7 +10,8 @@
       "Bash(Invoke-RestMethod -Uri \"http://localhost:3000/api/projects\" -Method Get)",
       "Bash(ConvertTo-Json)",
       "PowerShell(Start-Sleep -Seconds 2; try { Invoke-RestMethod -Uri \"http://localhost:3000/api/projects\" -Method Get | ConvertTo-Json } catch { \"Server not yet ready: $_\" })",
-      "PowerShell(Invoke-RestMethod -Uri \"http://localhost:3000/api/projects/644a2d3620/boards\" -Method Get)"
+      "PowerShell(Invoke-RestMethod -Uri \"http://localhost:3000/api/projects/644a2d3620/boards\" -Method Get)",
+      "WebFetch(domain:fonts.googleapis.com)"
     ]
   }
 }

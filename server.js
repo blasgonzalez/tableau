@@ -10,6 +10,19 @@ const { version: APP_VERSION } = require('./package.json');
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
+// ── Embedded fonts for SVG export ────────────────────────────────────────────
+const FONTS_DIR = path.join(__dirname, 'fonts');
+const loadFont = name => {
+  const p = path.join(FONTS_DIR, name);
+  return fs.existsSync(p) ? fs.readFileSync(p).toString('base64') : null;
+};
+const EXPORT_FONTS = {
+  serif:   { name: 'PlayfairDisplay', b64: loadFont('PlayfairDisplay.ttf') },
+  sans:    { name: 'DMSans',          b64: loadFont('DMSans.ttf') },
+  display: { name: 'BebasNeue',       b64: loadFont('BebasNeue.ttf') },
+  mono:    { name: 'IBMPlexMono',     b64: loadFont('IBMPlexMono.ttf') },
+};
+
 // ── Config ───────────────────────────────────────────────────────────────────
 const DATA_DIR       = process.env.TABLEAU_DATA_DIR || path.join(__dirname, 'data');
 const MAX_UPLOAD_MB  = 80;    // límite de subida antes de resize
@@ -52,9 +65,65 @@ function newId(len = 10) {
   return uuidv4().replace(/-/g, '').slice(0, len);
 }
 
+// ── EXIF parser (no external deps — reads raw TIFF buffer from sharp) ─────────
+function parseExifBuffer(buf) {
+  if (!buf || buf.length < 8) return null;
+  try {
+    const le = buf[0] === 0x49;
+    const u16 = o => le ? buf.readUInt16LE(o) : buf.readUInt16BE(o);
+    const u32 = o => le ? buf.readUInt32LE(o) : buf.readUInt32BE(o);
+    const s32 = o => le ? buf.readInt32LE(o) : buf.readInt32BE(o);
+    if (u16(2) !== 42) return null;
+    const TYPE_SIZE = [0,1,1,2,4,8,1,1,2,4,8,4,8];
+    function readVal(type, off, count) {
+      if (type === 2)  return buf.slice(off, off + count).toString('latin1').replace(/\0.*$/, '').trim();
+      if (type === 3)  return u16(off);
+      if (type === 4)  return u32(off);
+      if (type === 5)  { const d = u32(off + 4); return d ? u32(off) / d : 0; }
+      if (type === 9)  return s32(off);
+      if (type === 10) { const d = s32(off + 4); return d ? s32(off) / d : 0; }
+      return null;
+    }
+    function readIFD(offset) {
+      if (offset < 8 || offset + 2 > buf.length) return {};
+      const tags = {}, n = u16(offset);
+      for (let i = 0; i < n; i++) {
+        const e = offset + 2 + i * 12;
+        if (e + 12 > buf.length) break;
+        const tag = u16(e), type = u16(e+2), count = u32(e+4);
+        if (!type || type >= TYPE_SIZE.length) continue;
+        const bytes = TYPE_SIZE[type] * count;
+        const doff = bytes <= 4 ? e + 8 : u32(e + 8);
+        if (doff + bytes > buf.length) continue;
+        try { tags[tag] = readVal(type, doff, count); } catch {}
+      }
+      return tags;
+    }
+    const ifd0 = readIFD(u32(4));
+    const out = {};
+    if (ifd0[0x010F]) out.make  = String(ifd0[0x010F]).trim();
+    if (ifd0[0x0110]) { let m = String(ifd0[0x0110]).trim(); if (out.make && m.toLowerCase().startsWith(out.make.toLowerCase())) m = m.slice(out.make.length).trim(); out.model = m; }
+    const ep = ifd0[0x8769];
+    if (ep) {
+      const ex = readIFD(ep);
+      const dto = ex[0x9003] || ex[0x9004];
+      if (dto) out.dateTaken = String(dto).trim();
+      const et = ex[0x829A]; if (et > 0) out.shutter = et < 0.5 ? `1/${Math.round(1/et)}` : `${Math.round(et*10)/10}s`;
+      const fn = ex[0x829D]; if (fn > 0) out.aperture = Math.round(fn * 10) / 10;
+      const iso = ex[0x8827]; if (iso != null) out.iso = iso;
+      const fl = ex[0x920A]; if (fl > 0) out.focalLength = Math.round(fl);
+      const lens = ex[0xA434]; if (lens) out.lens = String(lens).trim();
+    }
+    return Object.keys(out).length ? out : null;
+  } catch { return null; }
+}
+
 // ── Image processing ─────────────────────────────────────────────────────────
 async function processImage(input, pid) {
   const id = newId(12);
+
+  const origMeta = await sharp(input).metadata();
+  const exif = origMeta.exif ? parseExifBuffer(origMeta.exif) : null;
 
   const resized = await sharp(input)
     .rotate()                    // aplica rotación EXIF automáticamente
@@ -79,7 +148,7 @@ async function processImage(input, pid) {
   const ch = stats.channels;
   const brightness = Math.round((0.299 * ch[0].mean + 0.587 * ch[1].mean + 0.114 * ch[2].mean) / 255 * 100) / 100;
   const meanColor = { r: Math.round(ch[0].mean), g: Math.round(ch[1].mean), b: Math.round(ch[2].mean) };
-  return { id, w: meta.width, h: meta.height, size: resized.length, dominant: stats.dominant, brightness, meanColor };
+  return { id, w: meta.width, h: meta.height, size: resized.length, dominant: stats.dominant, brightness, meanColor, ...(exif && { exif }) };
 }
 
 // ── Middleware ───────────────────────────────────────────────────────────────
@@ -353,6 +422,39 @@ app.put('/api/projects/:pid/sections', (req, res) => {
   res.json({ ok: true });
 });
 
+// ── Templates ─────────────────────────────────────────────────────────────────
+const templatesFile = () => path.join(DATA_DIR, 'templates.json');
+
+app.get('/api/templates', (_req, res) => {
+  res.json(readJSON(templatesFile()));
+});
+
+app.post('/api/templates', (req, res) => {
+  const { name, boardMeta, items } = req.body;
+  if (!name || !Array.isArray(items)) return res.status(400).json({ error: 'name and items required' });
+  const templates = readJSON(templatesFile());
+  const tmpl = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
+    name: name.trim(), created: Date.now(),
+    boardMeta: boardMeta || {}, items,
+  };
+  templates.push(tmpl);
+  writeJSON(templatesFile(), templates);
+  res.json(tmpl);
+});
+
+app.patch('/api/templates/:tid', (req, res) => {
+  const { name } = req.body;
+  const templates = readJSON(templatesFile()).map(t => t.id === req.params.tid ? { ...t, name: name.trim() } : t);
+  writeJSON(templatesFile(), templates);
+  res.json({ ok: true });
+});
+
+app.delete('/api/templates/:tid', (req, res) => {
+  writeJSON(templatesFile(), readJSON(templatesFile()).filter(t => t.id !== req.params.tid));
+  res.json({ ok: true });
+});
+
 app.post('/api/projects/:pid/photos/analyze-colors', async (req, res) => {
   const { pid } = req.params;
   const photos = readJSON(photosMeta(pid));
@@ -434,31 +536,76 @@ app.get('/api/boards/:pid/:bid/export', async (req, res) => {
 
   // Process each item: resize + flip + rotate → get final pixel buffer + canvas position
   const layers = (await Promise.all(sorted.map(async item => {
-    if (item.type === 'note' || item.type === 'text') return null;
-    const photo = photosData.find(p => p.id === item.photoId);
-    if (!photo) return null;
-    const pFile = path.join(photoDir(pid), `${item.photoId}.jpg`);
-    if (!fs.existsSync(pFile)) return null;
+    if (item.type === 'note' || item.type === 'placeholder') return null;
 
-    const rot       = item.rot || 0;
-    const freeRot   = item.freeRot || 0;
-    const isSwapped = rot % 180 !== 0;
-    const resizeW   = isSwapped ? Math.round(item.w * photo.w / photo.h) : item.w;
-    const resizeH   = isSwapped ? item.w : Math.round(item.w * photo.h / photo.w);
-    const displayH  = isSwapped ? resizeW : resizeH;
+    if (item.type === 'text') {
+      try {
+        if (!item.text?.trim()) return null;
+        const tw = Math.round(item.w);
+        const th = Math.round(item.h || 130);
+        const fontSize = item.fontSize || 26;
+        const color = item.textColor || '#111111';
+        const fontId = item.fontFamily || 'serif';
+        const fontDef = EXPORT_FONTS[fontId] || EXPORT_FONTS.serif;
+        const fallbackMap = { serif:'serif', sans:'sans-serif', display:'sans-serif', mono:'monospace' };
+        const fontFamily = fontDef.b64 ? fontDef.name : fallbackMap[fontId] || 'sans-serif';
+        const fontFace = fontDef.b64
+          ? `<defs><style>@font-face{font-family:'${fontDef.name}';src:url('data:font/truetype;base64,${fontDef.b64}');}</style></defs>`
+          : '';
+        const textAlign = item.textAlign || 'center';
+        const textAnchor = textAlign === 'left' ? 'start' : textAlign === 'right' ? 'end' : 'middle';
+        const tx = textAlign === 'left' ? 8 : textAlign === 'right' ? tw - 8 : tw / 2;
+        const lines = item.text.split('\n');
+        const lineH = fontSize * 1.3;
+        const totalH = lines.length * lineH;
+        const startY = Math.max(fontSize, (th - totalH) / 2 + fontSize);
+        const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const textEls = lines.map((ln, i) =>
+          `<text x="${tx}" y="${startY + i * lineH}" font-family="'${fontFamily}'" font-size="${fontSize}" fill="${color}" text-anchor="${textAnchor}">${esc(ln) || ' '}</text>`
+        ).join('');
+        const svg = `<svg width="${tw}" height="${th}" xmlns="http://www.w3.org/2000/svg">${fontFace}${textEls}</svg>`;
+        let buf = await sharp(Buffer.from(svg)).ensureAlpha().png({ compressionLevel: 1 }).toBuffer();
+        const freeRot = item.freeRot || 0;
+        if (freeRot) buf = await sharp(buf).rotate(freeRot, { background: { r: 0, g: 0, b: 0, alpha: 0 } }).png({ compressionLevel: 1 }).toBuffer();
+        const { width: rw, height: rh } = await sharp(buf).metadata();
+        const cx = item.x + tw / 2;
+        const cy = item.y + th / 2;
+        return { input: buf, cl: Math.round(cx - rw / 2), ct: Math.round(cy - rh / 2), rw, rh };
+      } catch (err) {
+        console.error('Text layer render error:', err.message);
+        return null;
+      }
+    }
 
-    let sharpChain = sharp(pFile).resize(resizeW, resizeH, { fit: 'fill' });
-    if (item.flipH) sharpChain = sharpChain.flop();
-    if (item.flipV) sharpChain = sharpChain.flip();
-    sharpChain = sharpChain.rotate(rot, { background: { r: 255, g: 255, b: 255 } });
-    if (freeRot) sharpChain = sharpChain.rotate(freeRot, { background: { r: 255, g: 255, b: 255 } });
-    const imgBuf = await sharpChain.jpeg({ quality: 92 }).toBuffer();
+    try {
+      const photo = photosData.find(p => p.id === item.photoId);
+      if (!photo) return null;
+      const pFile = path.join(photoDir(pid), `${item.photoId}.jpg`);
+      if (!fs.existsSync(pFile)) return null;
 
-    const { width: rw, height: rh } = await sharp(imgBuf).metadata();
-    const cx = item.x + item.w   / 2;
-    const cy = item.y + displayH / 2;
+      const rot       = item.rot || 0;
+      const freeRot   = item.freeRot || 0;
+      const isSwapped = rot % 180 !== 0;
+      const resizeW   = isSwapped ? Math.round(item.w * photo.w / photo.h) : item.w;
+      const resizeH   = isSwapped ? item.w : Math.round(item.w * photo.h / photo.w);
+      const displayH  = isSwapped ? resizeW : resizeH;
 
-    return { input: imgBuf, cl: Math.round(cx - rw / 2), ct: Math.round(cy - rh / 2), rw, rh };
+      let sharpChain = sharp(pFile).resize(resizeW, resizeH, { fit: 'fill' });
+      if (item.flipH) sharpChain = sharpChain.flop();
+      if (item.flipV) sharpChain = sharpChain.flip();
+      sharpChain = sharpChain.rotate(rot, { background: { r: 255, g: 255, b: 255 } });
+      if (freeRot) sharpChain = sharpChain.rotate(freeRot, { background: { r: 255, g: 255, b: 255 } });
+      const imgBuf = await sharpChain.png({ compressionLevel: 1 }).toBuffer();
+
+      const { width: rw, height: rh } = await sharp(imgBuf).metadata();
+      const cx = item.x + item.w   / 2;
+      const cy = item.y + displayH / 2;
+
+      return { input: imgBuf, cl: Math.round(cx - rw / 2), ct: Math.round(cy - rh / 2), rw, rh };
+    } catch (err) {
+      console.error('Photo layer render error:', err.message);
+      return null;
+    }
   }))).filter(Boolean);
 
   if (!layers.length) return res.status(400).json({ error: 'No se pudieron procesar las imágenes' });
@@ -481,7 +628,8 @@ app.get('/api/boards/:pid/:bid/export', async (req, res) => {
     getTop  = (ct) => ct - minY + PAD;
   }
 
-  const scale = Math.min(1, 7000 / Math.max(rawW, rawH));
+  const maxPx = Math.min(20000, Math.max(1000, parseInt(req.query.maxpx) || 10000));
+  const scale = Math.min(1, maxPx / Math.max(rawW, rawH));
   const outW  = Math.max(1, Math.round(rawW * scale));
   const outH  = Math.max(1, Math.round(rawH * scale));
 
@@ -498,14 +646,15 @@ app.get('/api/boards/:pid/:bid/export', async (req, res) => {
     if (srcX > 0 || srcY > 0) img = await sharp(input).extract({ left: srcX, top: srcY, width: Math.min(srcW, rw - srcX), height: Math.min(srcH, rh - srcY) }).toBuffer();
     const scaledW = Math.max(1, Math.round(srcW * scale));
     const scaledH = Math.max(1, Math.round(srcH * scale));
-    const scaledInput = scale < 1 ? await sharp(img).resize(scaledW, scaledH).jpeg({ quality: 90 }).toBuffer() : img;
+    const scaledInput = scale < 1 ? await sharp(img).resize(scaledW, scaledH).png({ compressionLevel: 1 }).toBuffer() : img;
     return { input: scaledInput, left: dstL, top: dstT, blend: 'over' };
   }))).filter(Boolean);
 
   try {
+    const exportQ = Math.min(100, Math.max(1, parseInt(req.query.quality) || 92));
     const output = await sharp({ create: { width: outW, height: outH, channels: 3, background: { r: 255, g: 255, b: 255 } } })
       .composite(composites)
-      .jpeg({ quality: 92 })
+      .jpeg({ quality: exportQ, mozjpeg: true })
       .toBuffer();
 
     const safeName = (board?.name || 'tableau').replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '_') || 'export';

@@ -125,6 +125,21 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .info-bright-bar-fill{position:absolute;top:0;left:0;height:100%;width:2px;background:var(--acc);transform:translateX(-50%)}
 .info-tag-list{display:flex;flex-wrap:wrap;gap:2px;margin-top:3px}
 .info-tag-chip{font-size:7px;padding:1px 4px;border:1px solid var(--border2);color:var(--dim);letter-spacing:.2px}
+.info-exif{margin-top:5px;padding-top:5px;border-top:1px solid var(--border)}
+.info-exif-make{font-size:8px;color:var(--muted);letter-spacing:.4px;text-transform:uppercase}
+.info-exif-model{font-size:9px;color:var(--text);font-weight:600;letter-spacing:.2px}
+.info-exif-lens{font-size:8px;color:var(--dim);letter-spacing:.2px;margin-top:1px}
+.info-exif-cam{display:flex;flex-wrap:wrap;gap:5px;margin-top:3px}
+.info-exif-cam span{font-size:8px;color:var(--sub);letter-spacing:.2px}
+.info-exif-date{font-size:8px;color:var(--muted);margin-top:2px}
+.ph-item{width:100%;background:var(--border);border:2px dashed var(--dim);box-sizing:border-box;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:2px;transition:background .15s}
+.ph-item:hover{background:var(--border2)}
+.ph-icon{color:var(--dim);pointer-events:none;user-select:none;font-size:28px;line-height:1}
+.tmpl-pick{display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:3px;cursor:pointer;font-size:10px;color:var(--sub);border:1px solid var(--border);transition:background .12s,border-color .12s}
+.tmpl-pick:hover{background:var(--hover)}
+.tmpl-pick.sel{background:var(--acc-dim);border-color:var(--acc);color:var(--text)}
+.tmpl-pick-del{background:none;border:none;cursor:pointer;color:var(--dim);padding:0 2px;font-size:12px;line-height:1;margin-left:auto}
+.tmpl-pick-del:hover{color:var(--danger)}
 
 /* ── PRESENTATION MODE ── */
 .app.presentation .topbar,.app.presentation .update-banner,.app.presentation .sidebar,.app.presentation .lib-splitter,.app.presentation .library,.app.presentation .zoom-ctrl,.app.presentation .align-bar{display:none !important}
@@ -590,6 +605,7 @@ const api = {
 };
 
 const fmtSize = b => b > 1e6 ? (b/1e6).toFixed(1)+' MB' : Math.round(b/1024)+' KB';
+const fmtExifDate = s => { if (!s) return s; const m = s.match(/^(\d{4}):(\d{2}):(\d{2})\s(\d{2}):(\d{2})/); return m ? `${m[3]}/${m[2]}/${m[1]}  ${m[4]}:${m[5]}` : s; };
 
 const rgbToHsl = (r, g, b) => {
   r /= 255; g /= 255; b /= 255;
@@ -646,6 +662,8 @@ const I18N = {
     repoHint1:'Coloca imágenes en', repoHint2:'y pulsa ↺',
     openPanel:'Abrir panel', panelLabel:'Panel',
     infoTitle:'Información', infoEmpty1:'Pasa el ratón sobre', infoEmpty2:'una foto para ver sus datos',
+    saveAsTemplate:'Guardar como plantilla', templateNamePh:'Nombre de la plantilla', templateSaved:'Plantilla guardada', templateError:'Error al guardar', applyTemplateBtn:'Aplicar', confirmApplyTemplate:'Aplicar la plantilla reemplazará todos los elementos del tablero actual. ¿Continuar?', templateApplied:'Plantilla aplicada', noTemplates:'Sin plantillas', templatesSection:'Plantillas',
+    fillPlaceholderHint:'Haz clic en una foto de la biblioteca para asignarla al marco',
     original:'Original:', inTableau:'En tableau:', notInAnyBoard:'No está en ningún tablero',
     noBoard:'Sin tablero', createBoardHint:'Crea un tablero en el panel izquierdo',
     emptyBoard:'Tablero vacío',
@@ -764,6 +782,8 @@ const I18N = {
     repoHint1:'Place images in', repoHint2:'and click ↺',
     openPanel:'Open panel', panelLabel:'Panel',
     infoTitle:'Info', infoEmpty1:'Hover over a photo', infoEmpty2:'to see its details',
+    saveAsTemplate:'Save as template', templateNamePh:'Template name', templateSaved:'Template saved', templateError:'Save error', applyTemplateBtn:'Apply', confirmApplyTemplate:'Applying the template will replace all elements on the current board. Continue?', templateApplied:'Template applied', noTemplates:'No templates', templatesSection:'Templates',
+    fillPlaceholderHint:'Click a photo in the library to assign it to this frame',
     original:'Original:', inTableau:'In tableau:', notInAnyBoard:'Not in any board',
     noBoard:'No board', createBoardHint:'Create a board in the left panel',
     emptyBoard:'Empty board',
@@ -969,6 +989,12 @@ function App() {
   const [showLibPreview, setShowLibPreview] = useState(() => localStorage.getItem('tb-lib-preview') !== 'false');
   const [libMuted,       setLibMuted]       = useState(false);
   const [uploadDropOpen, setUploadDropOpen] = useState(false);
+  const [templates,      setTemplates]      = useState([]);
+  const [tmplNameInput,  setTmplNameInput]  = useState(null); // null = oculto, string = activo
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [fillPlaceholder,setFillPlaceholder]= useState(null); // {itemId}
+  const [exportDropOpen, setExportDropOpen] = useState(false);
+  const [exportDropPos,  setExportDropPos]  = useState({right:0,top:0});
   const [uploadDropPos,  setUploadDropPos]  = useState({right:0,top:0});
   const [gridModal,  setGridModal]  = useState(false);
   const [gridCols,   setGridCols]   = useState(2);
@@ -1080,6 +1106,7 @@ function App() {
     document.addEventListener('visibilitychange', onVisible);
     api.get('/api/version').then(d => setAppVersion(d.version || '')).catch(() => {});
     api.get('/api/update').then(d => { if (d.update) setUpdateInfo(d.update); }).catch(() => {});
+    api.get('/api/templates').then(ts => { if (Array.isArray(ts)) setTemplates(ts); }).catch(() => {});
     api.get('/api/projects').then(ps => {
       setProjects(ps);
       if (ps.length) setPid(ps[0].id);
@@ -1113,7 +1140,7 @@ function App() {
     });
   }, [pid]);
 
-  useEffect(() => { setLibSearch(''); setLibSelection([]); libSelAnchorRef.current = null; setTagFilter([]); setTagPopover(null); setBatchTagPop(null); setSectBatchPop(null); setRatingFilter(0); setSectCtxMenu(null); setLibMuted(false); setUploadDropOpen(false); }, [pid]);
+  useEffect(() => { setLibSearch(''); setLibSelection([]); libSelAnchorRef.current = null; setTagFilter([]); setTagPopover(null); setBatchTagPop(null); setSectBatchPop(null); setRatingFilter(0); setSectCtxMenu(null); setLibMuted(false); setUploadDropOpen(false); setExportDropOpen(false); }, [pid]);
 
   useEffect(() => {
     const proj = projects.find(p => p.id === pid);
@@ -1207,7 +1234,7 @@ function App() {
             ...it,
             id: pfx + idx.toString(36) + Math.random().toString(36).slice(2, 4),
             x: it.x + 20, y: it.y + 20, z: ++z,
-          })).filter(it => it.type === 'note' || it.type === 'text' || photosRef.current.some(p => p.id === it.photoId));
+          })).filter(it => it.type === 'note' || it.type === 'text' || it.type === 'placeholder' || photosRef.current.some(p => p.id === it.photoId));
           if (!copies.length) return;
           const nit = [...itemsRef.current, ...copies];
           selRef.current = copies.map(c => c.id); setSel(copies.map(c => c.id));
@@ -1688,8 +1715,15 @@ ${rows}
     const b = await api.post(`/api/projects/${pidRef.current}/boards`, { name: nameVal.trim() });
     setBoards(bs => [...bs, b]);
     setBid(b.id);
-    setAllBoardItems(prev => ({ ...prev, [b.id]: [] }));
-    setNameVal(''); setModal(null);
+    if (selectedTemplate) {
+      const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      const newItems = selectedTemplate.items.map(item => ({ ...item, id: uid() }));
+      await api.put(`/api/boards/${pidRef.current}/${b.id}/items`, newItems);
+      setAllBoardItems(prev => ({ ...prev, [b.id]: newItems }));
+    } else {
+      setAllBoardItems(prev => ({ ...prev, [b.id]: [] }));
+    }
+    setNameVal(''); setSelectedTemplate(null); setModal(null);
   };
 
   const startRename = (type, id, name, e) => {
@@ -1903,6 +1937,57 @@ ${rows}
     setSectBatchPop(null);
   };
 
+  // ── Templates ────────────────────────────────────────────────────────────────
+  const saveAsTemplate = async (name) => {
+    if (!name?.trim()) return;
+    setTmplNameInput(null);
+    const templateItems = itemsRef.current.map(item => {
+      if (item.type === 'note' || item.type === 'text' || item.type === 'placeholder') return item;
+      const photo = photosRef.current.find(p => p.id === item.photoId);
+      if (!photo) return null;
+      const isSwapped = [90, 270].includes(Math.abs((item.rot || 0) % 360));
+      const ratio = photo.h / photo.w;
+      const displayH = Math.round(isSwapped ? item.w / ratio : item.w * ratio);
+      const { photoId: _, ...rest } = item;
+      return { ...rest, type: 'placeholder', h: displayH };
+    }).filter(Boolean);
+    const boardMeta = activeBoardMeta ? { units: activeBoardMeta.units, dpi: activeBoardMeta.dpi, fixed: activeBoardMeta.fixed, fixedW: activeBoardMeta.fixedW, fixedH: activeBoardMeta.fixedH } : {};
+    try {
+      const tmpl = await api.post('/api/templates', { name: name.trim(), boardMeta, items: templateItems });
+      setTemplates(ts => [...ts, tmpl]);
+      showToast(t('templateSaved'));
+      setModal(null);
+    } catch { showToast(t('templateError'), true); }
+  };
+
+  const deleteTemplate = async (tid) => {
+    await api.del(`/api/templates/${tid}`);
+    setTemplates(ts => ts.filter(t => t.id !== tid));
+  };
+
+  const applyTemplate = async (tmpl) => {
+    if (!bidRef.current) return;
+    if (!window.confirm(t('confirmApplyTemplate'))) return;
+    const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const newItems = tmpl.items.map(item => ({ ...item, id: uid() }));
+    await api.put(`/api/boards/${pidRef.current}/${bidRef.current}/items`, newItems);
+    setItems(newItems); itemsRef.current = newItems;
+    setSel([]); selRef.current = [];
+    showToast(t('templateApplied'));
+    setModal(null);
+  };
+
+  const assignPhotoToPlaceholder = async (photoId, placeholderId) => {
+    const pl = itemsRef.current.find(i => i.id === placeholderId);
+    if (!pl) return;
+    const { type: _, h: __, ...rest } = pl;
+    const newItem = { ...rest, photoId };
+    const updated = itemsRef.current.map(i => i.id === placeholderId ? newItem : i);
+    setItems(updated); itemsRef.current = updated;
+    await api.put(`/api/boards/${pidRef.current}/${bidRef.current}/items`, updated);
+    setFillPlaceholder(null);
+  };
+
   const setRating = async (photoId, rating) => {
     await api.patch(`/api/projects/${pidRef.current}/photos/${photoId}/rating`, { rating });
     setPhotos(ps => ps.map(p => p.id === photoId ? { ...p, rating } : p));
@@ -1979,11 +2064,12 @@ ${rows}
       if (sectCtxMenu) { setSectCtxMenu(null); return; }
       if (presentation) { setPresentation(false); return; }
       if (pinnedPreview) { setPinnedPreview(null); return; }
+      if (fillPlaceholder) { setFillPlaceholder(null); return; }
       if (replaceMode) { setReplaceMode(null); return; }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [presentation, pinnedPreview, replaceMode, sectCtxMenu]);
+  }, [presentation, pinnedPreview, fillPlaceholder, replaceMode, sectCtxMenu]);
 
   const deletePhoto = async id => {
     const placedBoards = boards.filter(b =>
@@ -2825,13 +2911,22 @@ ${rows}
     setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
   };
 
-  const exportSelection = () => {
+  const buildExportUrl = (quality) => {
+    const maxpx = quality >= 100 ? 16000 : 10000;
+    const q = `quality=${quality}&maxpx=${maxpx}`;
+    return boardPx
+      ? `/api/boards/${pid}/${bid}/export?useBoard=1&${q}`
+      : `/api/boards/${pid}/${bid}/export?pad=${activeBoardMeta?.exportPad ?? 60}&${q}`;
+  };
+
+  const exportSelection = (quality = 92) => {
     const ids = selRef.current.join(',');
     const p = pidRef.current, b = bidRef.current;
     if (!p || !b || !ids) return;
     const board = boardsRef.current.find(b2 => b2.id === b);
     const pad = boardPxRef.current ? '' : `&pad=${board?.exportPad ?? 60}`;
-    window.location.href = `/api/boards/${p}/${b}/export?ids=${encodeURIComponent(ids)}${pad}`;
+    const maxpx = quality >= 98 ? 16000 : 10000;
+    window.location.href = `/api/boards/${p}/${b}/export?ids=${encodeURIComponent(ids)}${pad}&quality=${quality}&maxpx=${maxpx}`;
   };
 
   if (!ready) return (
@@ -2920,6 +3015,20 @@ ${rows}
           {tags.length > 0 && (
             <div className="info-tag-list">
               {tags.map(tag => <span key={tag} className="info-tag-chip">#{tag}</span>)}
+            </div>
+          )}
+          {photo?.exif && (
+            <div className="info-exif">
+              {photo.exif.make && <div className="info-exif-make">{photo.exif.make}</div>}
+              {photo.exif.model && <div className="info-exif-model">{photo.exif.model}</div>}
+              {photo.exif.lens && <div className="info-exif-lens">{photo.exif.lens}</div>}
+              <div className="info-exif-cam">
+                {photo.exif.focalLength && <span>{photo.exif.focalLength} mm</span>}
+                {photo.exif.aperture && <span>f/{photo.exif.aperture}</span>}
+                {photo.exif.shutter && <span>{photo.exif.shutter}</span>}
+                {photo.exif.iso && <span>ISO {photo.exif.iso}</span>}
+              </div>
+              {photo.exif.dateTaken && <div className="info-exif-date">{fmtExifDate(photo.exif.dateTaken)}</div>}
             </div>
           )}
           <div className="info-boards">
@@ -3100,13 +3209,15 @@ ${rows}
           <button className="btn" style={{fontSize:10}} onClick={openBoardConfig} title={t('boardConfig')}>
             {t('config')}
           </button>
-          <a className="btn" style={{fontSize:10,gap:5}}
-            href={boardPx
-              ? `/api/boards/${pid}/${bid}/export?useBoard=1`
-              : `/api/boards/${pid}/${bid}/export?pad=${activeBoardMeta?.exportPad ?? 60}`}
-            download title={t('exportJpeg')}>
-            <SvgExport/>{t('exportJpeg')}
-          </a>
+          <button className="btn" style={{fontSize:10,gap:5}} title={t('exportJpeg')}
+            onClick={e => {
+              if (exportDropOpen) { setExportDropOpen(false); return; }
+              const r = e.currentTarget.getBoundingClientRect();
+              setExportDropPos({ right: window.innerWidth - r.right, top: r.bottom + 4 });
+              setExportDropOpen(true);
+            }}>
+            <SvgExport/>{t('exportJpeg')} ▾
+          </button>
         </>}
         {!sbOpen && (
           <button className="btn" style={{fontSize:10}} onClick={() => setSbOpen(true)}>{t('showPanel')}</button>
@@ -3452,6 +3563,24 @@ ${rows}
                     );
                   }
 
+                  if (item.type === 'placeholder') return (
+                    <div key={item.id} className={`bitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}${item.groupId?' grouped':''}`}
+                      style={{ position:'absolute', left: item.x, top: item.y, width: item.w, zIndex: item.z||1, ...(item.freeRot ? {transform:`rotate(${item.freeRot}deg)`,transformOrigin:'center center'} : {}) }}
+                      onPointerDown={e => onItemPD(e, item.id)}
+                      onClick={e => handleItemClick(e, item)}
+                      onContextMenu={e => openCtxMenu(e, item.id)}
+                    >
+                      <div className="ph-item" style={{height: item.h || item.w}}
+                        onClick={e => { e.stopPropagation(); if (sel.length === 1 && sel[0] === item.id) { setFillPlaceholder({itemId: item.id}); if (!libOpen) { setLibOpen(true); localStorage.setItem('libOpen','true'); } } }}>
+                        <span className="ph-icon">+</span>
+                      </div>
+                      <div className="bitem-bar" onPointerDown={e => e.stopPropagation()} style={item.y * zoom < 40 ? {bottom:'auto',top:'100%'} : undefined}>
+                        <button className="ibc del" title={t('deleteBtn')} onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
+                      </div>
+                      {item.groupId && <div className="group-badge">⊓</div>}
+                    </div>
+                  );
+
                   if (item.type === 'note') return (
                     <div key={item.id} className={`nitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}${item.inMemory?' inmem':''}${item.locked?' locked':''}${item.groupId?' grouped':''}`}
                       style={{ left: item.x, top: item.y, width: item.w, height: item.h || 150, zIndex: item.z||1, ...(item.freeRot ? {transform:`rotate(${item.freeRot}deg)`,transformOrigin:'center center'} : {}) }}
@@ -3779,6 +3908,10 @@ ${rows}
                               }}
                               onMouseLeave={() => { clearHoverInfo(); hoveredThumbRef.current = null; clearTimeout(previewTimer.current); setLibPreview(null); }}
                               onClick={e => {
+                                if (fillPlaceholder) {
+                                  assignPhotoToPlaceholder(p.id, fillPlaceholder.itemId);
+                                  return;
+                                }
                                 if (replaceMode) {
                                   replacePhotoInCanvas(replaceMode.itemId, p.id);
                                   return;
@@ -3905,6 +4038,12 @@ ${rows}
         </div>
       )}
       {resizeDim && <div className="resize-tip" style={{left:resizeDim.x, top:resizeDim.y}}>{resizeDim.label}</div>}
+      {fillPlaceholder && (
+        <div className="replace-banner" style={{bottom: (libOpen ? libHeight : 30) + 4}}>
+          + {t('fillPlaceholderHint')}
+          <button className="replace-banner-close" onClick={() => setFillPlaceholder(null)}>ESC</button>
+        </div>
+      )}
       {replaceMode && (
         <div className="replace-banner" style={{bottom: (libOpen ? libHeight : 30) + 4}}>
           ⇄ {t('replaceModeHint')}
@@ -4090,6 +4229,20 @@ ${rows}
         </>
       )}
 
+      {exportDropOpen && (
+        <>
+          <div style={{position:'fixed',inset:0,zIndex:599}} onClick={() => setExportDropOpen(false)}/>
+          <div className="upload-drop" style={{position:'fixed',right:exportDropPos.right,top:exportDropPos.top,zIndex:600}}>
+            {[[85, lang==='es'?'Buena calidad':'Good quality','JPEG 85'],[92, lang==='es'?'Alta calidad':'High quality','JPEG 92'],[100, lang==='es'?'Máxima calidad':'Max quality','JPEG 100']].map(([q, label, sub]) => (
+              <a key={q} className="upload-drop-item" style={{display:'flex',justifyContent:'space-between',gap:16,textDecoration:'none'}}
+                href={buildExportUrl(q)} download onClick={() => setExportDropOpen(false)}>
+                <span>{label}</span><span style={{color:'var(--dim)'}}>{sub}</span>
+              </a>
+            ))}
+          </div>
+        </>
+      )}
+
       {sectBatchPop && sections.length > 0 && (
         <>
           <div style={{position:'fixed',inset:0,zIndex:599}} onClick={() => setSectBatchPop(null)}/>
@@ -4225,7 +4378,7 @@ ${rows}
       )}
 
       {modal === 'board' && (
-        <div className="overlay" onClick={() => setModal(null)}>
+        <div className="overlay" onClick={() => { setModal(null); setSelectedTemplate(null); }}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-h">{t('newBoardTitle')}</div>
             <input className="inp" value={nameVal} autoFocus
@@ -4233,8 +4386,24 @@ ${rows}
               onKeyDown={e => e.key==='Enter' && createBoard()}
               placeholder={t('boardNamePh')}
             />
+            {templates.length > 0 && (
+              <div style={{marginTop:10,display:'flex',flexDirection:'column',gap:3}}>
+                <div style={{fontSize:9,color:'var(--muted)',marginBottom:2,textTransform:'uppercase',letterSpacing:'.5px'}}>{t('templatesSection')}</div>
+                <div className={`tmpl-pick${!selectedTemplate?' sel':''}`} onClick={() => setSelectedTemplate(null)}>
+                  {lang==='es'?'En blanco':'Blank'}
+                </div>
+                {templates.map(tmpl => (
+                  <div key={tmpl.id} className={`tmpl-pick${selectedTemplate?.id===tmpl.id?' sel':''}`}
+                    onClick={() => setSelectedTemplate(tmpl)}>
+                    <span style={{flex:1}}>{tmpl.name}</span>
+                    <button className="tmpl-pick-del" title={t('deleteBtn')}
+                      onClick={e => { e.stopPropagation(); deleteTemplate(tmpl.id); if (selectedTemplate?.id===tmpl.id) setSelectedTemplate(null); }}>×</button>
+                  </div>
+                ))}
+              </div>
+            )}
             <div className="modal-row">
-              <button className="btn" onClick={() => setModal(null)}>{t('cancel')}</button>
+              <button className="btn" onClick={() => { setModal(null); setSelectedTemplate(null); }}>{t('cancel')}</button>
               <button className="btn acc" onClick={createBoard}>{t('create')}</button>
             </div>
           </div>
@@ -4324,6 +4493,28 @@ ${rows}
             })()}
             <div style={{fontSize:9,color:'var(--muted)',lineHeight:1.8}}>
               {t('boardConfigNote').split('\n').map((s,i,a) => <React.Fragment key={i}>{s}{i<a.length-1&&<br/>}</React.Fragment>)}
+            </div>
+            {/* ── Guardar como plantilla ── */}
+            <div style={{borderTop:'1px solid var(--border)',paddingTop:10,marginTop:4}}>
+              {tmplNameInput === null ? (
+                <button className="btn" style={{fontSize:9,width:'100%'}}
+                  onClick={() => setTmplNameInput(activeBoardMeta?.name || '')}>
+                  {t('saveAsTemplate')}
+                </button>
+              ) : (
+                <div style={{display:'flex',gap:4}}>
+                  <input autoFocus className="inp" style={{flex:1,fontSize:10,padding:'3px 6px'}}
+                    placeholder={t('templateNamePh')}
+                    value={tmplNameInput}
+                    onChange={e => setTmplNameInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') saveAsTemplate(tmplNameInput); if (e.key === 'Escape') setTmplNameInput(null); }}
+                  />
+                  <button className="btn acc" style={{fontSize:9,padding:'3px 8px'}}
+                    onClick={() => saveAsTemplate(tmplNameInput)}>✓</button>
+                  <button className="btn" style={{fontSize:9,padding:'3px 7px'}}
+                    onClick={() => setTmplNameInput(null)}>✕</button>
+                </div>
+              )}
             </div>
             <div className="modal-row">
               <button className="btn" onClick={() => setModal(null)}>{t('cancel')}</button>

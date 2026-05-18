@@ -1,6 +1,6 @@
 {
-  "version": "1.5.4",
+  "version": "1.6.0",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-05-17",
-  "notes": "Grid mejorado · Botones de barra fijos · Color de guías corregido en todos los temas"
+  "releaseDate": "2026-05-18",
+  "notes": "Lectura EXIF · Plantillas de tablero · Exportacion JPEG mejorada con control de calidad"
 }

@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.6.0] — 2026-05-18
+### Added
+- EXIF reading: camera, lens, focal length, aperture, shutter speed, ISO and date taken are extracted automatically on import and shown in the info panel
+- Board templates: save the current board layout as a template (⚙ Config → Save as template); when creating a new board a picker lets you start from a template or blank; templates can be deleted from the same picker
+- JPEG export quality control: ▾ dropdown with three options — Good (JPEG 85), High (JPEG 92) and Max (JPEG 100 · 16 000 px cap)
+- Text elements in JPEG export: free text elements are now rendered correctly in the exported file using their exact typefaces (Playfair Display, DM Sans, Bebas Neue, IBM Plex Mono)
+
+### Improved
+- Lossless intermediate pipeline for JPEG export: per-layer processing buffers are now PNG lossless; only the final output file is JPEG-compressed
+- Export resolution cap raised from 7 000 to 10 000 px (16 000 px in Max mode)
+
+---
+
 ## [1.5.4] — 2026-05-17
 ### Improved
 - Grid colour corrected across all themes: each theme now defines its own optimised grid colour; in the Light · Natural theme the grid is now visible (previously it was nearly identical to the background)
