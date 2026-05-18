@@ -10,18 +10,27 @@ const { version: APP_VERSION } = require('./package.json');
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
-// ── Embedded fonts for SVG export ────────────────────────────────────────────
+// ── Embedded fonts for SVG/text export ───────────────────────────────────────
 const FONTS_DIR = path.join(__dirname, 'fonts');
-const loadFont = name => {
-  const p = path.join(FONTS_DIR, name);
-  return fs.existsSync(p) ? fs.readFileSync(p).toString('base64') : null;
-};
+const resolveFontFile = name => { const p = path.join(FONTS_DIR, name); return fs.existsSync(p) ? p : null; };
 const EXPORT_FONTS = {
-  serif:   { name: 'PlayfairDisplay', b64: loadFont('PlayfairDisplay.ttf') },
-  sans:    { name: 'DMSans',          b64: loadFont('DMSans.ttf') },
-  display: { name: 'BebasNeue',       b64: loadFont('BebasNeue.ttf') },
-  mono:    { name: 'IBMPlexMono',     b64: loadFont('IBMPlexMono.ttf') },
+  serif:   { name: 'Playfair Display', file: resolveFontFile('PlayfairDisplay.ttf') },
+  sans:    { name: 'DM Sans',          file: resolveFontFile('DMSans.ttf') },
+  display: { name: 'Bebas Neue',       file: resolveFontFile('BebasNeue.ttf') },
+  mono:    { name: 'IBM Plex Mono',    file: resolveFontFile('IBMPlexMono.ttf') },
 };
+
+// Register fonts with fontconfig so Pango/libvips can find them by name
+try {
+  const fcCacheDir = path.join(FONTS_DIR, '.fc-cache');
+  if (!fs.existsSync(fcCacheDir)) fs.mkdirSync(fcCacheDir);
+  const fcConf = `<?xml version="1.0"?>\n<fontconfig>\n  <dir>${FONTS_DIR.replace(/\\/g, '/')}</dir>\n  <cachedir>${fcCacheDir.replace(/\\/g, '/')}</cachedir>\n</fontconfig>`;
+  const fcConfPath = path.join(FONTS_DIR, 'fontconfig.conf');
+  fs.writeFileSync(fcConfPath, fcConf);
+  process.env.FONTCONFIG_FILE = fcConfPath;
+} catch (e) {
+  console.warn('Could not configure fontconfig:', e.message);
+}
 
 // ── Config ───────────────────────────────────────────────────────────────────
 const DATA_DIR       = process.env.TABLEAU_DATA_DIR || path.join(__dirname, 'data');
@@ -547,24 +556,19 @@ app.get('/api/boards/:pid/:bid/export', async (req, res) => {
         const color = item.textColor || '#111111';
         const fontId = item.fontFamily || 'serif';
         const fontDef = EXPORT_FONTS[fontId] || EXPORT_FONTS.serif;
-        const fallbackMap = { serif:'serif', sans:'sans-serif', display:'sans-serif', mono:'monospace' };
-        const fontFamily = fontDef.b64 ? fontDef.name : fallbackMap[fontId] || 'sans-serif';
-        const fontFace = fontDef.b64
-          ? `<defs><style>@font-face{font-family:'${fontDef.name}';src:url('data:font/truetype;base64,${fontDef.b64}');}</style></defs>`
-          : '';
-        const textAlign = item.textAlign || 'center';
-        const textAnchor = textAlign === 'left' ? 'start' : textAlign === 'right' ? 'end' : 'middle';
-        const tx = textAlign === 'left' ? 8 : textAlign === 'right' ? tw - 8 : tw / 2;
-        const lines = item.text.split('\n');
-        const lineH = fontSize * 1.3;
-        const totalH = lines.length * lineH;
-        const startY = Math.max(fontSize, (th - totalH) / 2 + fontSize);
+        const alignMap = { left: 'left', center: 'centre', right: 'right' };
+        const align = alignMap[item.textAlign || 'center'] || 'centre';
         const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        const textEls = lines.map((ln, i) =>
-          `<text x="${tx}" y="${startY + i * lineH}" font-family="'${fontFamily}'" font-size="${fontSize}" fill="${color}" text-anchor="${textAnchor}">${esc(ln) || ' '}</text>`
-        ).join('');
-        const svg = `<svg width="${tw}" height="${th}" xmlns="http://www.w3.org/2000/svg">${fontFace}${textEls}</svg>`;
-        let buf = await sharp(Buffer.from(svg)).ensureAlpha().png({ compressionLevel: 1 }).toBuffer();
+        const textOpts = {
+          text: `<span foreground="${color}">${esc(item.text)}</span>`,
+          font: `${fontDef.name} ${fontSize}`,
+          width: tw,
+          align,
+          rgba: true,
+          dpi: 96,
+        };
+        if (fontDef.file) textOpts.fontfile = fontDef.file;
+        let buf = await sharp({ text: textOpts }).png({ compressionLevel: 1 }).toBuffer();
         const freeRot = item.freeRot || 0;
         if (freeRot) buf = await sharp(buf).rotate(freeRot, { background: { r: 0, g: 0, b: 0, alpha: 0 } }).png({ compressionLevel: 1 }).toBuffer();
         const { width: rw, height: rh } = await sharp(buf).metadata();

@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.6.1] — 2026-05-18
+### Añadido
+- Copiar selección a nuevo tablero: botón ⊞ en la barra de selección del canvas; escribe el nombre del nuevo tablero y los elementos seleccionados se copian con la misma posición
+
+### Corregido
+- Las fuentes de los textos libres (Playfair Display, DM Sans, Bebas Neue, IBM Plex Mono) se renderizan correctamente en la exportación JPEG; en versiones anteriores todas se exportaban con la misma fuente
+- El programa recuerda el proyecto y el tablero activos al recargar la página o reiniciar
+- El desplegable de calidad de exportación se abría fuera de pantalla; ahora se despliega hacia abajo correctamente
+- La calidad máxima de exportación JPEG sube a 100 (estaba limitada a 98)
+
+---
+
 ## [1.6.0] — 2026-05-18
 ### Añadido
 - Lectura EXIF: al importar una foto se extraen automáticamente cámara, objetivo, distancia focal, apertura, velocidad, ISO y fecha de toma; visibles en el panel de información lateral

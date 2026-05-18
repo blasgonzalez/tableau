@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.6.1] — 2026-05-18
+### Added
+- Copy selection to new board: ⊞ button in the canvas selection bar; type the new board name and the selected elements are copied at the same positions
+
+### Fixed
+- Text element typefaces (Playfair Display, DM Sans, Bebas Neue, IBM Plex Mono) now render correctly in JPEG export; previous versions exported all text in the same font
+- The app now remembers the active project and board when the page is reloaded or the app restarted
+- The export quality dropdown was appearing off-screen; it now opens downward correctly
+- Maximum JPEG export quality raised to 100 (was capped at 98)
+
+---
+
 ## [1.6.0] — 2026-05-18
 ### Added
 - EXIF reading: camera, lens, focal length, aperture, shutter speed, ISO and date taken are extracted automatically on import and shown in the info panel

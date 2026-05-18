@@ -991,7 +991,8 @@ function App() {
   const [uploadDropOpen, setUploadDropOpen] = useState(false);
   const [templates,      setTemplates]      = useState([]);
   const [tmplNameInput,  setTmplNameInput]  = useState(null); // null = oculto, string = activo
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [selectedTemplate,  setSelectedTemplate]  = useState(null);
+  const [copyBoardInput,    setCopyBoardInput]    = useState(null); // null=oculto, string=activo
   const [fillPlaceholder,setFillPlaceholder]= useState(null); // {itemId}
   const [exportDropOpen, setExportDropOpen] = useState(false);
   const [exportDropPos,  setExportDropPos]  = useState({right:0,top:0});
@@ -1109,7 +1110,10 @@ function App() {
     api.get('/api/templates').then(ts => { if (Array.isArray(ts)) setTemplates(ts); }).catch(() => {});
     api.get('/api/projects').then(ps => {
       setProjects(ps);
-      if (ps.length) setPid(ps[0].id);
+      if (ps.length) {
+        const savedPid = localStorage.getItem('tb-lastpid');
+        setPid((savedPid && ps.find(p => p.id === savedPid)) ? savedPid : ps[0].id);
+      }
       setReady(true);
     }).catch(() => setReady(true));
     return () => { clearInterval(hbInterval); document.removeEventListener('visibilitychange', onVisible); };
@@ -1149,6 +1153,7 @@ function App() {
     sectionsRef.current = sects;
   }, [pid, projects]);
   useEffect(() => { boardHistoryRef.current = {}; previousBidRef.current = null; }, [pid]);
+  useEffect(() => { if (pid) localStorage.setItem('tb-lastpid', pid); }, [pid]);
   useEffect(() => { if (pid && bid) localStorage.setItem(`tb-lastbid-${pid}`, bid); }, [bid, pid]);
 
   useEffect(() => {
@@ -1975,6 +1980,22 @@ ${rows}
     setSel([]); selRef.current = [];
     showToast(t('templateApplied'));
     setModal(null);
+  };
+
+  const copySelectionToNewBoard = async (name) => {
+    if (!name?.trim() || !pidRef.current) return;
+    const selectedItems = itemsRef.current.filter(i => selRef.current.includes(i.id));
+    if (!selectedItems.length) return;
+    const b = await api.post(`/api/projects/${pidRef.current}/boards`, { name: name.trim() });
+    setBoards(bs => [...bs, b]);
+    const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const newItems = selectedItems.map(item => ({ ...item, id: uid(), groupId: undefined }));
+    await api.put(`/api/boards/${pidRef.current}/${b.id}/items`, newItems);
+    setAllBoardItems(prev => ({ ...prev, [b.id]: newItems }));
+    setBid(b.id); bidRef.current = b.id;
+    setCopyBoardInput(null);
+    setSel([]); selRef.current = [];
+    showToast(lang === 'es' ? 'Tablero creado' : 'Board created');
   };
 
   const assignPhotoToPlaceholder = async (photoId, placeholderId) => {
@@ -3437,6 +3458,23 @@ ${rows}
                   </>}
                   <div className="align-bar-sep"/>
                   <button className="abt" title={t('exportSelJpeg')} onClick={exportSelection}><SvgExport/></button>
+                  {copyBoardInput === null ? (
+                    <button className="abt" style={{fontSize:12}} title={lang==='es'?'Copiar selección a nuevo tablero':'Copy selection to new board'}
+                      onClick={() => setCopyBoardInput('')}>⊞</button>
+                  ) : (
+                    <>
+                      <input autoFocus className="inp" style={{width:110,fontSize:9,padding:'2px 5px'}}
+                        placeholder={t('boardNamePh')}
+                        value={copyBoardInput}
+                        onChange={e => setCopyBoardInput(e.target.value)}
+                        onKeyDown={e => { if (e.key==='Enter') copySelectionToNewBoard(copyBoardInput); if (e.key==='Escape') setCopyBoardInput(null); }}
+                        onClick={e => e.stopPropagation()}
+                        onPointerDown={e => e.stopPropagation()}
+                      />
+                      <button className="abt" style={{color:'var(--acc)'}} onClick={() => copySelectionToNewBoard(copyBoardInput)}>✓</button>
+                      <button className="abt" onClick={() => setCopyBoardInput(null)}>✕</button>
+                    </>
+                  )}
                   {sel.length >= 2 && (
                     <button className="abt" title={t('groupItems')} onClick={groupItems}><SvgGroup/></button>
                   )}
@@ -3445,7 +3483,7 @@ ${rows}
                   )}
                   <div className="align-bar-sep"/>
                   <button className="abt" style={{color:'var(--dim)',fontSize:14}} title={t('clearSel')}
-                    onClick={() => { selRef.current = []; setSel([]); }}>×</button>
+                    onClick={() => { selRef.current = []; setSel([]); setCopyBoardInput(null); }}>×</button>
                 </div>
               )}
               {(() => {

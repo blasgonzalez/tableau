@@ -1,6 +1,6 @@
 {
-  "version": "1.6.0",
+  "version": "1.6.1",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-05-18",
-  "notes": "Lectura EXIF · Plantillas de tablero · Exportacion JPEG mejorada con control de calidad"
+  "notes": "Fuentes correctas en exportacion JPEG · Recuerda proyecto al recargar · Copiar seleccion a nuevo tablero"
 }
