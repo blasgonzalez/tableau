@@ -1,6 +1,6 @@
 {
-  "version": "1.6.3",
+  "version": "1.6.4",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-05-19",
-  "notes": "Deteccion de fotos duplicadas · Fuentes corregidas en instalador · Guias de snap en resize · Fix posicion texto exportacion"
+  "notes": "Zonas: divisores visuales del tablero · Redimensionado por cualquier lado · Proteccion de solapamiento"
 }

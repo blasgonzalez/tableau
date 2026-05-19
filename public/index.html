@@ -260,6 +260,25 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .nitem-title:focus{color:var(--text);border-bottom-color:var(--acc-dim)}
 .nitem-title::placeholder{color:var(--muted);font-style:italic}
 .nitem.inmem .nitem-body{border-left-color:var(--acc)}
+/* ── ZONE ITEMS ── */
+.zitem{position:absolute;cursor:grab;user-select:none}
+.zitem:hover .bitem-bar{opacity:1}
+.zitem.sel .zitem-body{outline:2px dashed var(--acc-dim);outline-offset:3px}
+.zitem.anchor .zitem-body{outline:2px solid var(--acc);outline-offset:3px}
+.zitem-body{width:100%;height:100%;box-sizing:border-box;border-radius:3px;position:relative}
+.zitem-label{position:absolute;top:8px;left:10px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;background:transparent;border:none;outline:none;cursor:text;font-family:'IBM Plex Mono',monospace;font-weight:600;max-width:calc(100% - 20px)}
+.zitem-label::placeholder{opacity:.35;font-weight:400;text-transform:none;letter-spacing:.3px}
+.zrh{position:absolute;opacity:0;transition:opacity .12s;z-index:20}
+.zitem:hover .zrh,.zitem.sel .zrh{opacity:1}
+.zrh.nw,.zrh.ne,.zrh.sw,.zrh.se{width:10px;height:10px;background:rgba(255,255,255,.75);zoom:calc(1/var(--canvas-zoom,1))}
+.zrh.nw{top:calc(-4px / var(--canvas-zoom,1));left:calc(-4px / var(--canvas-zoom,1));cursor:nw-resize}
+.zrh.ne{top:calc(-4px / var(--canvas-zoom,1));right:calc(-4px / var(--canvas-zoom,1));cursor:ne-resize}
+.zrh.sw{bottom:calc(-4px / var(--canvas-zoom,1));left:calc(-4px / var(--canvas-zoom,1));cursor:sw-resize}
+.zrh.se{bottom:calc(-4px / var(--canvas-zoom,1));right:calc(-4px / var(--canvas-zoom,1));cursor:se-resize}
+.zrh.n{top:0;left:20%;right:20%;height:8px;cursor:n-resize}
+.zrh.s{bottom:0;left:20%;right:20%;height:8px;cursor:s-resize}
+.zrh.e{right:0;top:20%;bottom:20%;width:8px;cursor:e-resize}
+.zrh.w{left:0;top:20%;bottom:20%;width:8px;cursor:w-resize}
 /* ── MEM NOTES SECTION ── */
 .mem-notes-hd{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);padding:6px 0 4px;border-top:1px solid var(--border2);margin-top:6px}
 .mem-note-item{padding:5px 0 5px 8px;border-bottom:1px solid var(--border);border-left:2px solid var(--acc-dim)}
@@ -452,6 +471,7 @@ select.inp{cursor:pointer;appearance:none;padding-right:28px;background-image:ur
 .lasso{position:absolute;pointer-events:none;border:1.5px dashed var(--acc);background:rgba(196,137,74,0.07);z-index:500}
 @keyframes replacing-pulse{0%,100%{outline-opacity:1}50%{outline-opacity:.3}}
 .group-badge{position:absolute;right:0;top:0;font-size:6px;color:var(--muted);padding:1px 3px;pointer-events:none;zoom:calc(1/var(--canvas-zoom,1));background:var(--panel);letter-spacing:.5px;border-radius:0 0 0 3px}
+.zone-badge{position:absolute;top:calc(4px / var(--canvas-zoom,1));right:calc(4px / var(--canvas-zoom,1));width:calc(7px / var(--canvas-zoom,1));height:calc(7px / var(--canvas-zoom,1));border-radius:50%;pointer-events:none;z-index:5;opacity:.85}
 /* ── THUMB COPY BUTTON ── */
 .thumb-cp{position:absolute;bottom:2px;right:22px;width:18px;height:18px;background:rgba(0,0,0,.62);color:rgba(255,255,255,.82);border:1px solid rgba(255,255,255,.18);cursor:pointer;font-size:10px;border-radius:2px;display:none;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;line-height:1;z-index:2}
 .thumb:hover .thumb-cp{display:flex}
@@ -603,6 +623,15 @@ const NOTE_COLOR_VALS = {
   purple: ['#6446a0','rgba(100,70,160,.15)'],
   orange: ['#c86e28','rgba(200,110,40,.15)'],
 };
+const ZONE_COLORS = ['blue','green','orange','purple','red','neutral'];
+const ZONE_COLOR_VALS = {
+  blue:    { fill:'rgba(80,130,255,.14)',  border:'rgba(80,150,255,.6)',   text:'#6aa0ff' },
+  green:   { fill:'rgba(70,200,100,.13)',  border:'rgba(70,210,100,.6)',   text:'#50d070' },
+  orange:  { fill:'rgba(210,150,60,.14)',  border:'rgba(220,160,60,.6)',   text:'#e0a840' },
+  purple:  { fill:'rgba(150,90,230,.13)',  border:'rgba(160,100,240,.6)',  text:'#b070f0' },
+  red:     { fill:'rgba(230,70,70,.13)',   border:'rgba(240,80,80,.6)',    text:'#f06060' },
+  neutral: { fill:'rgba(180,180,180,.10)', border:'rgba(200,200,200,.45)', text:'#c0c0c0' },
+};
 
 const BOARD_PAD = 40;
 
@@ -752,7 +781,7 @@ const I18N = {
     confirmOverflow: 'Algunas fotos quedarán fuera de las nuevas dimensiones. ¿Continuar?',
     invalidDims: 'Las dimensiones deben ser mayores que cero',
     pxPreview: (w, h) => `${w} × ${h} px`,
-    gridToggle: 'Guías', gridHiddenZoom: 'Guías activas — zoom demasiado bajo para mostrarlas', gridAuto: 'Auto', fitView: 'Ajustar', fitWidth: 'Ajustar al ancho (Ctrl+0)', snapGrid: 'Imán', addNote: '+ Nota',
+    gridToggle: 'Guías', gridHiddenZoom: 'Guías activas — zoom demasiado bajo para mostrarlas', gridAuto: 'Auto', fitView: 'Ajustar', fitWidth: 'Ajustar al ancho (Ctrl+0)', snapGrid: 'Imán', addNote: '+ Nota', addZone: '+ Zona', zoneColor: 'Color de zona', convertZoneToBoard: 'Convertir en tablero', zoneLabelPh: 'Nombre de zona…', zoneCaptureBtn: 'Capturar contenido',
     reportHeading:'Tableau — Memoria del Proyecto',
     noScaleConfigured:'sin escala configurada',
     reportDate: d => `Memoria del proyecto · ${d}`,
@@ -875,7 +904,7 @@ const I18N = {
     confirmOverflow: 'Some photos will be outside the new dimensions. Continue?',
     invalidDims: 'Dimensions must be greater than zero',
     pxPreview: (w, h) => `${w} × ${h} px`,
-    gridToggle: 'Grid', gridHiddenZoom: 'Grid active — zoom too low to display', gridAuto: 'Auto', fitView: 'Fit', fitWidth: 'Fit to width (Ctrl+0)', snapGrid: 'Snap', addNote: '+ Note',
+    gridToggle: 'Grid', gridHiddenZoom: 'Grid active — zoom too low to display', gridAuto: 'Auto', fitView: 'Fit', fitWidth: 'Fit to width (Ctrl+0)', snapGrid: 'Snap', addNote: '+ Note', addZone: '+ Zone', zoneColor: 'Zone color', convertZoneToBoard: 'Convert to board', zoneLabelPh: 'Zone name…', zoneCaptureBtn: 'Capture content',
     reportHeading:'Tableau — Project Report',
     noScaleConfigured:'no scale configured',
     reportDate: d => `Project report · ${d}`,
@@ -1061,6 +1090,7 @@ function App() {
   const [propsPanelId,  setPropsPanelId]  = useState(null);
   const [textFmtPanelId, setTextFmtPanelId] = useState(null);
   const [noteColorPanelId, setNoteColorPanelId] = useState(null);
+  const [zoneColorPanelId, setZoneColorPanelId] = useState(null);
   const [copyToMenu,    setCopyToMenu]    = useState(null); // {photoId, x, y}
   const [lasso,         setLasso]         = useState(null); // {x1,y1,x2,y2} canvas coords
 
@@ -1273,7 +1303,7 @@ function App() {
             ...it,
             id: pfx + idx.toString(36) + Math.random().toString(36).slice(2, 4),
             x: it.x + 20, y: it.y + 20, z: ++z,
-          })).filter(it => it.type === 'note' || it.type === 'text' || it.type === 'placeholder' || photosRef.current.some(p => p.id === it.photoId));
+          })).filter(it => it.type === 'note' || it.type === 'zone' || it.type === 'text' || it.type === 'placeholder' || photosRef.current.some(p => p.id === it.photoId));
           if (!copies.length) return;
           const nit = [...itemsRef.current, ...copies];
           selRef.current = copies.map(c => c.id); setSel(copies.map(c => c.id));
@@ -1411,7 +1441,7 @@ function App() {
       if (!fixedW || !fixedH || fixedW <= 0 || fixedH <= 0) return showToast(t('invalidDims'), true);
       const newBp = getBoardPx({ fixed: true, fixedW, fixedH, units: cfgUnits, dpi });
       const overflow = itemsRef.current.some(item => {
-        const h = item.type === 'note' ? (item.h || item.w) : (() => {
+        const h = (item.type === 'note' || item.type === 'zone') ? (item.h || item.w) : (() => {
           const p = photosRef.current.find(ph => ph.id === item.photoId);
           if (!p) return item.w;
           return (item.rot || 0) % 180 !== 0 ? Math.round(item.w * p.w / p.h) : Math.round(item.w * p.h / p.w);
@@ -1440,7 +1470,7 @@ function App() {
       const units = board.units || 'px';
       const hasPhys = dpi && units !== 'px';
       const bPx = getBoardPx(board);
-      const photoItemsPr = boardIt.filter(i => i.type !== 'note' && i.type !== 'text').map(item => {
+      const photoItemsPr = boardIt.filter(i => i.type !== 'note' && i.type !== 'text' && i.type !== 'zone').map(item => {
         const photo = photosRef.current.find(p => p.id === item.photoId);
         const rot = item.rot || 0; const freeRot = item.freeRot || 0;
         const isSwapped = rot % 180 !== 0;
@@ -1499,7 +1529,7 @@ function App() {
       rows += previewHtml;
       rows += `<table><thead><tr><th>${hdr[0]}</th><th></th><th>${hdr[1]}</th><th>${hdr[2]}</th><th>${hdr[4]}</th></tr></thead><tbody>`;
       boardIt.forEach((item, i) => {
-        if (item.type === 'note') return;
+        if (item.type === 'note' || item.type === 'zone' || item.type === 'text') return;
         const photo = photosRef.current.find(p => p.id === item.photoId);
         const h = photo
           ? ((item.rot || 0) % 180 !== 0
@@ -1688,10 +1718,12 @@ ${rows}
       x = Math.max(0, Math.min(x, bp.w - w));
       y = Math.max(0, Math.min(y, bp.h - h));
     }
+    const placedZone = findZoneAt(x, y, w, h);
     const item = {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
       photoId: photo.id, x, y, w, z: maxZ + 1, label: '', rot: 0,
       frame: boardsRef.current.find(b => b.id === bidRef.current)?.defaultFrame || 0,
+      ...(placedZone ? { zoneId: placedZone.id } : {}),
     };
     const nit = [...itemsRef.current, item];
     const norm = applyNormalized(nit);
@@ -2049,7 +2081,7 @@ ${rows}
     if (!name?.trim()) return;
     setTmplNameInput(null);
     const templateItems = itemsRef.current.map(item => {
-      if (item.type === 'note' || item.type === 'text' || item.type === 'placeholder') return item;
+      if (item.type === 'note' || item.type === 'zone' || item.type === 'text' || item.type === 'placeholder') return item;
       const photo = photosRef.current.find(p => p.id === item.photoId);
       if (!photo) return null;
       const isSwapped = [90, 270].includes(Math.abs((item.rot || 0) % 360));
@@ -2452,13 +2484,26 @@ ${rows}
     }
 
     const baseIds = [...selRef.current];
-    const expandedIds = [...new Set([
-      ...baseIds,
-      ...baseIds.flatMap(id => {
+    const expandedIds = (() => {
+      const result = new Set(baseIds);
+      // group expansion
+      baseIds.forEach(id => {
         const it = itemsRef.current.find(i => i.id === id);
-        return it?.groupId ? itemsRef.current.filter(i => i.groupId === it.groupId).map(i => i.id) : [];
-      }),
-    ])];
+        if (it?.groupId) itemsRef.current.filter(i => i.groupId === it.groupId).forEach(i => result.add(i.id));
+      });
+      // zone expansion — recursive so nested zones bring their members too
+      const queue = [...baseIds];
+      while (queue.length) {
+        const id = queue.shift();
+        const it = itemsRef.current.find(i => i.id === id);
+        if (it?.type === 'zone') {
+          itemsRef.current.filter(i => i.zoneId === id).forEach(i => {
+            if (!result.has(i.id)) { result.add(i.id); queue.push(i.id); }
+          });
+        }
+      }
+      return [...result];
+    })();
     // If any member of a group is locked, the whole group is immovable
     const lockedGroups = new Set(
       expandedIds
@@ -2471,9 +2516,9 @@ ${rows}
       if (it.groupId && lockedGroups.has(it.groupId)) return false;
       return true;
     });
-    // Bring to front (only unlocked items)
+    // Bring to front (only unlocked non-zone items — zones stay at their z)
     let z = Math.max(0, ...itemsRef.current.map(i => i.z || 0));
-    const fwd = itemsRef.current.map(i => dragIds.includes(i.id) ? { ...i, z: ++z } : i);
+    const fwd = itemsRef.current.map(i => (dragIds.includes(i.id) && i.type !== 'zone') ? { ...i, z: ++z } : i);
     setItems(fwd); itemsRef.current = fwd;
 
     // Record start positions
@@ -2647,13 +2692,46 @@ ${rows}
       const z = zoomRef.current;
       const { sdx, sdy } = applySnap(ldx/z, ldy/z);
       setSnapGuides({ h: [], v: [] }); // clear any guides set by applySnap above
-      const nit = itemsRef.current.map(i => {
+      let nit = itemsRef.current.map(i => {
         if (!dragIds.includes(i.id)) return i;
         let rx = starts[i.id].x + (snapGrid ? sdx : Math.round(ldx/z));
         let ry = starts[i.id].y + (snapGrid ? sdy : Math.round(ldy/z));
         const { x, y } = clampItem(i, rx, ry);
         return { ...i, x, y };
       });
+      // Prevent zones from being dropped inside other zones — snap all back
+      const movedZones = dragIds.filter(id => nit.find(i => i.id === id)?.type === 'zone');
+      if (movedZones.length > 0) {
+        const otherZones = nit.filter(i => i.type === 'zone' && !movedZones.includes(i.id));
+        const hasConflict = movedZones.some(zid => {
+          const z = nit.find(i => i.id === zid);
+          const zcx = z.x + z.w / 2, zcy = z.y + (z.h || 320) / 2;
+          return otherZones.some(oz => zcx >= oz.x && zcx <= oz.x + oz.w && zcy >= oz.y && zcy <= oz.y + (oz.h || 320));
+        });
+        if (hasConflict) {
+          nit = nit.map(i => dragIds.includes(i.id) ? { ...i, x: starts[i.id].x, y: starts[i.id].y } : i);
+          setItems(nit); itemsRef.current = nit;
+          return;
+        }
+      }
+      // Update zone membership for moved non-zone items
+      const movedNonZone = dragIds.filter(id => nit.find(i => i.id === id)?.type !== 'zone');
+      if (movedNonZone.length > 0) {
+        const zones = nit.filter(i => i.type === 'zone');
+        nit = nit.map(i => {
+          if (!movedNonZone.includes(i.id)) return i;
+          const cx = i.x + i.w / 2, cy = i.y + getItemH(i) / 2;
+          const oldZid = i.zoneId ?? null;
+          // prefer current zone if the item is still inside it
+          const currentZone = oldZid ? zones.find(zz => zz.id === oldZid) : null;
+          const stillInCurrent = currentZone && cx >= currentZone.x && cx <= currentZone.x + currentZone.w && cy >= currentZone.y && cy <= currentZone.y + (currentZone.h || 320);
+          const match = stillInCurrent ? currentZone : zones.find(zz => cx >= zz.x && cx <= zz.x + zz.w && cy >= zz.y && cy <= zz.y + (zz.h || 320));
+          const newZid = match?.id ?? null;
+          if (newZid === oldZid) return i;
+          if (newZid) return { ...i, zoneId: newZid };
+          const { zoneId: _zid, ...rest } = i; return rest;
+        });
+      }
       if (ldx !== 0 || ldy !== 0) {
         wasDragged.current = true;
         undoStack.current = [...undoStack.current.slice(-49), beforeDrag];
@@ -2863,7 +2941,14 @@ ${rows}
   };
   const deleteItem = id => {
     pushUndo();
-    const nit = itemsRef.current.filter(i => i.id !== id);
+    const item = itemsRef.current.find(i => i.id === id);
+    let nit = itemsRef.current.filter(i => i.id !== id);
+    if (item?.type === 'zone') {
+      nit = nit.map(i => {
+        if (i.zoneId !== id) return i;
+        const { zoneId: _zid, ...rest } = i; return rest;
+      });
+    }
     setItems(nit); itemsRef.current = nit;
     selRef.current = []; setSel([]);
     saveItemsNow(nit);
@@ -2928,7 +3013,8 @@ ${rows}
       x = Math.round(cx - w / 2); y = Math.round(cy - h / 2);
     }
     if (bp) { x = Math.max(0, Math.min(x, bp.w - w)); y = Math.max(0, Math.min(y, bp.h - h)); }
-    const item = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), type: 'note', text: '', x, y, w, h, z: maxZ + 1 };
+    const noteZone = findZoneAt(x, y, w, h);
+    const item = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), type: 'note', text: '', x, y, w, h, z: maxZ + 1, ...(noteZone ? { zoneId: noteZone.id } : {}) };
     const nit = [...itemsRef.current, item];
     selRef.current = [item.id]; setSel([item.id]);
     saveItemsNow(applyNormalized(nit));
@@ -2953,6 +3039,7 @@ ${rows}
     if (bp) { x = Math.max(0, Math.min(x, bp.w - w)); y = Math.max(0, Math.min(y, bp.h - h)); }
     const lastText = itemsRef.current.filter(i => i.type === 'text').slice(-1)[0];
     const autoColor = boardPxRef.current ? bgContrast('#ffffff') : '';
+    const textZone = findZoneAt(x, y, w, h);
     const item = {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
       type: 'text', text: '', x, y, w, h, z: maxZ + 1,
@@ -2960,12 +3047,120 @@ ${rows}
       textAlign:  lastText?.textAlign  ?? 'center',
       fontFamily: lastText?.fontFamily ?? 'serif',
       textColor:  lastText?.textColor  || autoColor,
+      ...(textZone ? { zoneId: textZone.id } : {}),
     };
     const nit = [...itemsRef.current, item];
     selRef.current = [item.id]; setSel([item.id]);
     saveItemsNow(applyNormalized(nit));
   };
 
+
+  const addZone = (pos = null) => {
+    if (!bid) return;
+    pushUndo();
+    const nonZones = itemsRef.current.filter(i => i.type !== 'zone');
+    const minZ = nonZones.length ? Math.min(...nonZones.map(i => i.z || 0)) - 1 : -1;
+    const z = zoomRef.current;
+    const wrapEl = wrapRef.current;
+    const w = 440, h = 320;
+    const bp = boardPxRef.current;
+    let x, y;
+    if (pos) {
+      x = Math.round(pos.cx - w / 2); y = Math.round(pos.cy - h / 2);
+    } else {
+      const cx = wrapEl ? Math.round(wrapEl.scrollLeft / z + wrapEl.clientWidth  / z / 2) : 200;
+      const cy = wrapEl ? Math.round(wrapEl.scrollTop  / z + wrapEl.clientHeight / z / 2) : 200;
+      x = Math.round(cx - w / 2); y = Math.round(cy - h / 2);
+    }
+    if (bp) { x = Math.max(0, Math.min(x, bp.w - w)); y = Math.max(0, Math.min(y, bp.h - h)); }
+    const item = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), type: 'zone', label: '', color: 'blue', x, y, w, h, z: minZ };
+    let nit = [...itemsRef.current, item];
+    // auto-capture items inside the new zone (only unclaimed items)
+    nit = nit.map(i => {
+      if (i.type === 'zone') return i;
+      if (i.zoneId) return i;
+      const cx = i.x + i.w / 2, cy = i.y + getItemH(i) / 2;
+      if (cx >= x && cx <= x + w && cy >= y && cy <= y + h) return { ...i, zoneId: item.id };
+      return i;
+    });
+    selRef.current = [item.id]; setSel([item.id]);
+    saveItemsNow(applyNormalized(nit));
+  };
+
+  const updateZoneColor = (id, color) => {
+    setZoneColorPanelId(null);
+    const nit = itemsRef.current.map(i => i.id === id ? { ...i, color } : i);
+    setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
+  };
+
+  const convertZoneToBoard = async (zoneId) => {
+    const zone = itemsRef.current.find(i => i.id === zoneId);
+    if (!zone || !pidRef.current) return;
+    const name = zone.label?.trim() || (lang === 'es' ? 'Zona' : 'Zone');
+    const inside = itemsRef.current.filter(i => {
+      if (i.type === 'zone') return false;
+      const iH = getItemH(i);
+      return i.x < zone.x + zone.w && i.x + i.w > zone.x && i.y < zone.y + zone.h && i.y + iH > zone.y;
+    });
+    if (!inside.length) { showToast(lang === 'es' ? 'La zona está vacía' : 'Zone is empty', true); return; }
+    const b = await api.post(`/api/projects/${pidRef.current}/boards`, { name });
+    setBoards(bs => [...bs, b]);
+    const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const newItems = inside.map(item => ({ ...item, id: uid(), groupId: undefined }));
+    await api.put(`/api/boards/${pidRef.current}/${b.id}/items`, newItems);
+    setAllBoardItems(prev => ({ ...prev, [b.id]: newItems }));
+    setBid(b.id); bidRef.current = b.id;
+    showToast(lang === 'es' ? `Tablero "${name}" creado` : `Board "${name}" created`);
+  };
+
+  const onResizeZonePD = (e, itemId, mode) => {
+    e.stopPropagation(); e.preventDefault();
+    const before = itemsRef.current.map(i => ({ ...i }));
+    const it = itemsRef.current.find(i => i.id === itemId);
+    const ox = it.x, oy = it.y, ow = it.w, oh = it.h || 320;
+    const sx = e.clientX, sy = e.clientY;
+    let cx = ox, cy = oy, cw = ow, ch = oh;
+    const onMM = e => {
+      const z = zoomRef.current;
+      const dx = (e.clientX - sx) / z, dy = (e.clientY - sy) / z;
+      const bp = boardPxRef.current;
+      let nx = ox, ny = oy, nw = ow, nh = oh;
+      if (mode.includes('e')) nw = Math.max(80, ow + dx);
+      if (mode.includes('w')) { nw = Math.max(80, ow - dx); nx = ox + ow - nw; }
+      if (mode.includes('s')) nh = Math.max(60, oh + dy);
+      if (mode.includes('n')) { nh = Math.max(60, oh - dy); ny = oy + oh - nh; }
+      if (bp) { nw = Math.min(nw, bp.w - nx); nh = Math.min(nh, bp.h - ny); nx = Math.max(0, nx); ny = Math.max(0, ny); }
+      cx = nx; cy = ny; cw = nw; ch = nh;
+      setItems(its => its.map(i => i.id === itemId ? { ...i, x: nx, y: ny, w: nw, h: nh } : i));
+    };
+    const onMU = () => {
+      window.removeEventListener('pointermove', onMM);
+      window.removeEventListener('pointerup', onMU);
+      const rx = Math.round(cx), ry = Math.round(cy), rw = Math.round(cw), rh = Math.round(ch);
+      if (rx !== ox || ry !== oy || rw !== ow || rh !== oh) {
+        undoStack.current = [...undoStack.current.slice(-49), before];
+        redoStack.current = [];
+      }
+      let nit = itemsRef.current.map(i => i.id === itemId ? { ...i, x: rx, y: ry, w: rw, h: rh } : i);
+      // recompute membership, never steal from other zones
+      nit = nit.map(i => {
+        if (i.type === 'zone') return i;
+        const icx = i.x + i.w / 2, icy = i.y + getItemH(i) / 2;
+        const inside = icx >= rx && icx <= rx + rw && icy >= ry && icy <= ry + rh;
+        const oldZid = i.zoneId ?? null;
+        let newZid;
+        if (inside && (oldZid === null || oldZid === itemId)) newZid = itemId;
+        else if (!inside && oldZid === itemId) newZid = null;
+        else newZid = oldZid;
+        if (newZid === oldZid) return i;
+        if (newZid) return { ...i, zoneId: newZid };
+        const { zoneId: _z, ...rest } = i; return rest;
+      });
+      setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
+    };
+    window.addEventListener('pointermove', onMM);
+    window.addEventListener('pointerup', onMU);
+  };
 
   const onResizeNotePD = (e, itemId) => {
     e.stopPropagation(); e.preventDefault();
@@ -2991,15 +3186,58 @@ ${rows}
         undoStack.current = [...undoStack.current.slice(-49), beforeResizeNote];
         redoStack.current = [];
       }
-      setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
+      let finalNit = nit;
+      // if resized item is a zone, recompute membership
+      const resizedItem = nit.find(i => i.id === itemId);
+      if (resizedItem?.type === 'zone') {
+        const zx = resizedItem.x, zy = resizedItem.y, zw = Math.round(cw), zh = Math.round(ch);
+        finalNit = nit.map(i => {
+          if (i.type === 'zone') return i;
+          const cx = i.x + i.w / 2, cy = i.y + getItemH(i) / 2;
+          const inside = cx >= zx && cx <= zx + zw && cy >= zy && cy <= zy + zh;
+          const oldZid = i.zoneId ?? null;
+          let newZid;
+          if (inside && (oldZid === null || oldZid === itemId)) newZid = itemId;
+          else if (!inside && oldZid === itemId) newZid = null;
+          else newZid = oldZid;
+          if (newZid === oldZid) return i;
+          if (newZid) return { ...i, zoneId: newZid };
+          const { zoneId: _zid, ...rest } = i; return rest;
+        });
+      }
+      setItems(finalNit); itemsRef.current = finalNit; saveItemsNow(finalNit);
     };
     window.addEventListener('pointermove', onMM);
     window.addEventListener('pointerup',   onMU);
   };
 
   // ── alignment ────────────────────────────────────────────────���────────────
+  const findZoneAt = (x, y, w, h) => {
+    const zones = itemsRef.current.filter(i => i.type === 'zone');
+    const cx = x + w / 2, cy = y + h / 2;
+    return zones.find(z => cx >= z.x && cx <= z.x + z.w && cy >= z.y && cy <= z.y + (z.h || 320)) || null;
+  };
+
+  const captureZoneContent = (zoneId) => {
+    const zone = itemsRef.current.find(i => i.id === zoneId);
+    if (!zone) return;
+    pushUndo();
+    const nit = itemsRef.current.map(i => {
+      if (i.type === 'zone') return i;
+      const cx = i.x + i.w / 2, cy = i.y + getItemH(i) / 2;
+      const inside = cx >= zone.x && cx <= zone.x + zone.w && cy >= zone.y && cy <= zone.y + (zone.h || 320);
+      const oldZid = i.zoneId ?? null;
+      const newZid = inside ? zoneId : (oldZid === zoneId ? null : oldZid);
+      if (newZid === oldZid) return i;
+      if (newZid) return { ...i, zoneId: newZid };
+      const { zoneId: _z, ...rest } = i; return rest;
+    });
+    setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
+    showToast(lang === 'es' ? 'Contenido capturado' : 'Content captured');
+  };
+
   const getItemH = item => {
-    if (item.type === 'note') return item.h || item.w;
+    if (item.type === 'note' || item.type === 'zone') return item.h || item.w;
     const p = photosRef.current.find(ph => ph.id === item.photoId);
     if (!p) return item.w;
     return (item.rot || 0) % 180 !== 0
@@ -3674,6 +3912,41 @@ ${rows}
                 )}
 
                 {[...items].sort((a, b) => (a.z||0)-(b.z||0)).map(item => {
+                  if (item.type === 'zone') {
+                    const zClr = ZONE_COLOR_VALS[item.color] || ZONE_COLOR_VALS.blue;
+                    return (
+                      <div key={item.id} className={`zitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}`}
+                        style={{ position:'absolute', left: item.x, top: item.y, width: item.w, height: item.h || 320, zIndex: item.z || -1 }}
+                        onPointerDown={e => onItemPD(e, item.id)}
+                        onClick={e => handleItemClick(e, item)}
+                        onContextMenu={e => openCtxMenu(e, item.id)}
+                      >
+                        <div className="bitem-bar" onPointerDown={e => e.stopPropagation()} style={item.y * zoom < 40 ? {bottom:'auto',top:'100%'} : undefined}>
+                          <button className="ibc" title={t('convertZoneToBoard')} style={{fontSize:11}}
+                            onClick={e => { e.stopPropagation(); convertZoneToBoard(item.id); }}>⊞</button>
+                          <button className="ibc del" title={t('deleteBtn')} onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
+                        </div>
+                        <div className="zitem-body" style={{background: zClr.fill, border:`2px dashed ${zClr.border}`}}>
+                          <input className="zitem-label" value={item.label||''} placeholder={t('zoneLabelPh')}
+                            style={{color: zClr.text}}
+                            onChange={e => { const nit = itemsRef.current.map(i => i.id === item.id ? {...i, label: e.target.value} : i); setItems(nit); itemsRef.current = nit; }}
+                            onFocus={pushUndo}
+                            onBlur={() => saveItemsNow(itemsRef.current)}
+                            onPointerDown={e => e.stopPropagation()}
+                            onClick={e => e.stopPropagation()}
+                          />
+                        </div>
+                        <div className="zrh nw" onPointerDown={e => onResizeZonePD(e, item.id, 'nw')}/>
+                        <div className="zrh ne" onPointerDown={e => onResizeZonePD(e, item.id, 'ne')}/>
+                        <div className="zrh sw" onPointerDown={e => onResizeZonePD(e, item.id, 'sw')}/>
+                        <div className="zrh se" onPointerDown={e => onResizeZonePD(e, item.id, 'se')}/>
+                        <div className="zrh n" onPointerDown={e => onResizeZonePD(e, item.id, 'n')}/>
+                        <div className="zrh s" onPointerDown={e => onResizeZonePD(e, item.id, 's')}/>
+                        <div className="zrh e" onPointerDown={e => onResizeZonePD(e, item.id, 'e')}/>
+                        <div className="zrh w" onPointerDown={e => onResizeZonePD(e, item.id, 'w')}/>
+                      </div>
+                    );
+                  }
                   if (item.type === 'text') {
                     const tFont = TEXT_FONTS.find(f => f.id === (item.fontFamily || 'serif')) || TEXT_FONTS[0];
                     const tFmtOpen = textFmtPanelId === item.id;
@@ -3758,6 +4031,7 @@ ${rows}
                         <button className="ibc del" title={t('deleteBtn')} onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
                       </div>
                       {item.groupId && <div className="group-badge">⊓</div>}
+                      {item.zoneId && (() => { const oz = itemsRef.current.find(i => i.id === item.zoneId); const zc = oz ? (ZONE_COLOR_VALS[oz.color] || ZONE_COLOR_VALS.blue) : ZONE_COLOR_VALS.blue; return <div className="zone-badge" style={{background: zc.border}} title={oz?.label || (lang==='es'?'Zona':'Zone')}/>; })()}
                     </div>
                   );
 
@@ -3850,6 +4124,7 @@ ${rows}
                       </div>
                       <div className="nitem-rc" onPointerDown={e => onResizeNotePD(e, item.id)}/>
                       {item.groupId && <div className="group-badge">⊓</div>}
+                      {item.zoneId && (() => { const oz = itemsRef.current.find(i => i.id === item.zoneId); const zc = oz ? (ZONE_COLOR_VALS[oz.color] || ZONE_COLOR_VALS.blue) : ZONE_COLOR_VALS.blue; return <div className="zone-badge" style={{background: zc.border}} title={oz?.label || (lang==='es'?'Zona':'Zone')}/>; })()}
                     </div>
                   );
                   const photo = photos.find(p => p.id === item.photoId);
@@ -3928,6 +4203,7 @@ ${rows}
                         );
                       })()}
                       {item.groupId && <div className="group-badge">⊓</div>}
+                      {item.zoneId && (() => { const oz = itemsRef.current.find(i => i.id === item.zoneId); const zc = oz ? (ZONE_COLOR_VALS[oz.color] || ZONE_COLOR_VALS.blue) : ZONE_COLOR_VALS.blue; return <div className="zone-badge" style={{background: zc.border}} title={oz?.label || (lang==='es'?'Zona':'Zone')}/>; })()}
                       <div className="dim-tag">{dimLabel(item.w, displayH, boardDpi, boardUnits, item.frame)}</div>
                       <div className="lbl"
                         style={{ top: displayH + (item.frame ? physToPx(item.frame, boardDpi, boardUnits) : 0) }}
@@ -4308,6 +4584,7 @@ ${rows}
           <div className="ctx-menu" style={{left: canvasCtx.x, top: canvasCtx.y}}>
             <button className="ctx-item" onClick={() => { setCanvasCtx(null); addNote(canvasCtx); }}>{t('addNote')}</button>
             <button className="ctx-item" onClick={() => { setCanvasCtx(null); addText(canvasCtx); }}>{t('addText')}</button>
+            <button className="ctx-item" onClick={() => { setCanvasCtx(null); addZone(canvasCtx); }}>{t('addZone')}</button>
           </div>
         </>
       )}
@@ -4315,6 +4592,21 @@ ${rows}
       {ctxMenu && (() => {
         const ctxItem = items.find(i => i.id === ctxMenu.itemId);
         if (!ctxItem) return null;
+        if (ctxItem.type === 'zone') return (
+          <div className="ctx-menu" style={{left: ctxMenu.x, top: ctxMenu.y}}
+            onPointerDown={e => e.stopPropagation()} onContextMenu={e => e.preventDefault()}>
+            <div style={{padding:'6px 12px 3px',fontSize:8,color:'var(--dim)',letterSpacing:1.5,textTransform:'uppercase'}}>{t('zoneColor')}</div>
+            <div style={{display:'flex',gap:6,padding:'4px 12px 8px',alignItems:'center'}}>
+              {ZONE_COLORS.map(c => (
+                <div key={c} onClick={() => { updateZoneColor(ctxItem.id, c); setCtxMenu(null); }}
+                  style={{width:16,height:16,borderRadius:'50%',cursor:'pointer',background:ZONE_COLOR_VALS[c].border,border:`2px solid ${ctxItem.color===c?'var(--acc)':'transparent'}`}}/>
+              ))}
+            </div>
+            <div className="ctx-sep"/>
+            <button className="ctx-item" onClick={() => { convertZoneToBoard(ctxMenu.itemId); setCtxMenu(null); }}>⊞ {t('convertZoneToBoard')}</button>
+            <button className="ctx-item ctx-danger" onClick={() => { deleteItem(ctxMenu.itemId); setCtxMenu(null); }}>× {t('deleteBtn')}</button>
+          </div>
+        );
         const isNote = ctxItem.type === 'note' || ctxItem.type === 'text';
         return (
           <div className="ctx-menu" style={{left: ctxMenu.x, top: ctxMenu.y}}

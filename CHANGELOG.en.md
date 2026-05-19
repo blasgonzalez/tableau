@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.6.4] — 2026-05-19
+### Added
+- Zones: visual board dividers that group photos, notes and text. A zone drags all its contents when moved. Created via right-click on the canvas; resizable from any side or corner
+- Six zone colours available (blue, green, orange, purple, red, neutral), configurable via right-click on the zone
+- Convert zone to board: the ⊞ button on the zone creates a new board containing all the zone's items
+
+### Fixed
+- Zones cannot be dropped inside another zone; if attempted, they snap back to their original position
+- Moving a photo that belongs to a zone no longer loses its membership if it is still within that zone's bounds
+- Resizing a zone no longer steals content from overlapping zones
+
+---
+
 ## [1.6.3] — 2026-05-19
 ### Added
 - Duplicate photo detection on upload: if any filename matches an existing photo a dialog appears with three options — skip duplicates, add them anyway, or replace the existing ones keeping the same ID (board items are unaffected)

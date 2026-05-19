@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.6.4] — 2026-05-19
+### Añadido
+- Zonas: divisores visuales del tablero que agrupan fotos, notas y textos. Una zona arrastra todo su contenido al moverse. Se crean con clic derecho en el canvas y se pueden redimensionar desde cualquier lado o esquina
+- Seis colores de zona disponibles (azul, verde, naranja, morado, rojo, neutro), configurables con clic derecho sobre la zona
+- Convertir zona en tablero: el botón ⊞ de la zona crea un tablero nuevo con todo el contenido que contiene
+
+### Corregido
+- Las zonas no pueden soltarse dentro de otra zona; si se intenta, vuelven a su posición original
+- Al mover una foto que pertenece a una zona, no pierde su membresía si sigue dentro de los límites de esa zona
+- El redimensionado de zonas ya no roba el contenido de otras zonas que se solapen
+
+---
+
 ## [1.6.3] — 2026-05-19
 ### Añadido
 - Detección de fotos duplicadas al subir: si algún nombre coincide con una foto ya existente aparece un aviso con tres opciones — omitir los duplicados, añadirlos de todas formas o reemplazar los existentes conservando el mismo ID (los tableros no se ven afectados)

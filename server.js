@@ -609,7 +609,7 @@ app.get('/api/boards/:pid/:bid/export', async (req, res) => {
 
   // Process each item: resize + flip + rotate → get final pixel buffer + canvas position
   const layers = (await Promise.all(sorted.map(async item => {
-    if (item.type === 'note' || item.type === 'placeholder') return null;
+    if (item.type === 'note' || item.type === 'placeholder' || item.type === 'zone') return null;
 
     if (item.type === 'text') {
       try {
