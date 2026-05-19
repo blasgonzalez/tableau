@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.6.3] — 2026-05-19
+### Added
+- Duplicate photo detection on upload: if any filename matches an existing photo a dialog appears with three options — skip duplicates, add them anyway, or replace the existing ones keeping the same ID (board items are unaffected)
+- Snap guides during resize: dragging the corner handle shows guides when the right edge or width matches another photo on the board
+- Size inheritance when placing photos: if the photo being added has the same aspect ratio as the last placed one (difference < 3 %), it inherits its width automatically
+
+### Fixed
+- Correct typefaces in installed version: `.ttf` files are now bundled in the installer; previously only Impact worked in the installed build
+- Text element position in JPEG export: the text buffer is extended to the exact element dimensions before rotation, fixing the offset that appeared on export
+- Resize handle no longer drifts from the cursor: `movementX` is now accumulated incrementally instead of using absolute coordinates, preventing drift when the canvas scrolls during resize
+
+---
+
 ## [1.6.2] — 2026-05-19
 ### Added
 - Fullscreen viewer: double-click a library thumbnail to open the photo fullscreen; navigate with ← →, close with ESC or click outside

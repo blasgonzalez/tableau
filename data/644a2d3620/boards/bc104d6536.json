@@ -1,40 +1,5 @@
 [
   {
-    "id": "mooh5sexjm8",
-    "photoId": "5d43c345bf0b",
-    "x": 634.3311237373738,
-    "y": 117.33333333333341,
-    "w": 276,
-    "z": 578,
-    "label": "Morbi consequat dolor iaculis mi pretium, quis laoreet lectus egestas. Praesent lacinia facilisis arcu, sed laoreet dolor vehicula ac. Mauris convallis est lacus. Etiam ornare justo et libero hendrerit, a accumsan justo posuere. Vivamus aliquet lacus id pretium ultrices. Phasellus ut finibus sem. Nullam et varius orci, ac vulputate metus. Integer ornare vitae lectus at volutpat. Morbi maximus faucibus nisi, in vestibulum tortor aliquam sed. Sed vulputate, massa ut lobortis lacinia, libero urna dictum nunc, non iaculis arcu purus nec nulla. In nisi erat, eleifend at tellus a, mattis volutpat dui. Nam facilisis, libero sed feugiat tempor, felis nibh commodo ipsum, id rhoncus nunc nunc eget augue.",
-    "rot": 0,
-    "frame": 0.4,
-    "locked": false,
-    "flipH": false
-  },
-  {
-    "id": "moohphyqiuo",
-    "photoId": "ca790c30f072",
-    "x": 395.9977904040404,
-    "y": 112.66666666666683,
-    "w": 194,
-    "z": 575,
-    "label": "",
-    "rot": 0,
-    "locked": false
-  },
-  {
-    "id": "mopn58v2imh",
-    "photoId": "9b76c48154ec",
-    "x": 100,
-    "y": 216.6666666666668,
-    "w": 260,
-    "z": 576,
-    "label": "Brobdingnag: KM0",
-    "rot": 0,
-    "locked": false
-  },
-  {
     "id": "mou35og1zyj",
     "type": "note",
     "text": "Ahora se pueden añadir notas en el tablero.\nEn estas notas se puede añadir también un enlace web:\n",
@@ -108,14 +73,14 @@
     "id": "mp7a4xi9u44",
     "type": "text",
     "text": "Este es un texto\nlibre con una eñe",
-    "x": 741.3120567375888,
-    "y": 377.66666666666674,
+    "x": 775,
+    "y": 300,
     "w": 593,
     "h": 260,
-    "z": 613,
+    "z": 619,
     "fontSize": 40,
     "textAlign": "left",
-    "fontFamily": "display",
+    "fontFamily": "sans",
     "textColor": "",
     "locked": false,
     "rot": 90,
@@ -148,5 +113,38 @@
     "textAlign": "center",
     "fontFamily": "display",
     "textColor": "#329717"
+  },
+  {
+    "id": "mpcn7i0lii9",
+    "photoId": "9b76c48154ec",
+    "x": 50,
+    "y": 100,
+    "w": 202,
+    "z": 621,
+    "label": "",
+    "rot": 0,
+    "frame": 0
+  },
+  {
+    "id": "mpcn7t7cytf",
+    "photoId": "8febc52d726d",
+    "x": 277,
+    "y": 100,
+    "w": 202,
+    "z": 623,
+    "label": "",
+    "rot": 0,
+    "frame": 0
+  },
+  {
+    "id": "mpcn7xu0cvh",
+    "photoId": "ca790c30f072",
+    "x": 504,
+    "y": 100,
+    "w": 202,
+    "z": 625,
+    "label": "",
+    "rot": 0,
+    "frame": 0
   }
 ]

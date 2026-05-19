@@ -128,8 +128,8 @@ function parseExifBuffer(buf) {
 }
 
 // ── Image processing ─────────────────────────────────────────────────────────
-async function processImage(input, pid) {
-  const id = newId(12);
+async function processImage(input, pid, existingId = null) {
+  const id = existingId || newId(12);
 
   const origMeta = await sharp(input).metadata();
   const exif = origMeta.exif ? parseExifBuffer(origMeta.exif) : null;
@@ -363,6 +363,24 @@ app.post('/api/projects/:pid/photos', upload.single('photo'), async (req, res) =
     res.json(p);
   } catch (e) {
     console.error('Upload error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.put('/api/projects/:pid/photos/:id/file', upload.single('photo'), async (req, res) => {
+  const { pid, id } = req.params;
+  if (!req.file) return res.status(400).json({ error: 'No se recibió ningún fichero' });
+  const photos = readJSON(photosMeta(pid));
+  const idx = photos.findIndex(p => p.id === id);
+  if (idx === -1) return res.status(404).json({ error: 'Foto no encontrada' });
+  try {
+    const { w, h, size, dominant, brightness, meanColor, exif } = await processImage(req.file.buffer, pid, id);
+    const updated = { ...photos[idx], w, h, size, dominant, brightness, meanColor, ...(exif ? { exif } : {}) };
+    photos[idx] = updated;
+    writeJSON(photosMeta(pid), photos);
+    res.json(updated);
+  } catch (e) {
+    console.error('Replace error:', e.message);
     res.status(500).json({ error: e.message });
   }
 });
@@ -615,6 +633,14 @@ app.get('/api/boards/:pid/:bid/export', async (req, res) => {
         };
         if (fontDef.file) textOpts.fontfile = fontDef.file;
         let buf = await sharp({ text: textOpts }).png({ compressionLevel: 1 }).toBuffer();
+        // Extend rendered text to exactly tw×th so rotation center matches canvas
+        const { width: txtW, height: txtH } = await sharp(buf).metadata();
+        const padL = item.textAlign === 'right' ? Math.max(0, tw - txtW) : item.textAlign === 'left' ? 0 : Math.max(0, Math.floor((tw - txtW) / 2));
+        const padR = Math.max(0, tw - txtW - padL);
+        const padB = Math.max(0, th - txtH);
+        if (padL > 0 || padR > 0 || padB > 0) {
+          buf = await sharp(buf).extend({ left: padL, right: padR, top: 0, bottom: padB, background: { r: 0, g: 0, b: 0, alpha: 0 } }).png({ compressionLevel: 1 }).toBuffer();
+        }
         const freeRot = item.freeRot || 0;
         if (freeRot) buf = await sharp(buf).rotate(freeRot, { background: { r: 0, g: 0, b: 0, alpha: 0 } }).png({ compressionLevel: 1 }).toBuffer();
         const { width: rw, height: rh } = await sharp(buf).metadata();

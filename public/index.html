@@ -620,7 +620,8 @@ const api = {
   put:    (url, body) => fetch(url, {method:'PUT',  headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)}).then(r => r.json()),
   patch:  (url, body) => fetch(url, {method:'PATCH',headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)}).then(r => r.json()),
   del:    url         => fetch(url, {method:'DELETE'}).then(r => r.json()),
-  upload: (url, file) => { const fd = new FormData(); fd.append('photo', file); return fetch(url, {method:'POST', body:fd}).then(r => r.json()); },
+  upload:        (url, file) => { const fd = new FormData(); fd.append('photo', file); return fetch(url, {method:'POST', body:fd}).then(r => r.json()); },
+  uploadReplace: (url, file) => { const fd = new FormData(); fd.append('photo', file); return fetch(url, {method:'PUT',  body:fd}).then(r => r.json()); },
 };
 
 const fmtSize = b => b > 1e6 ? (b/1e6).toFixed(1)+' MB' : Math.round(b/1024)+' KB';
@@ -725,6 +726,8 @@ const I18N = {
     saveError:'Error al guardar',
     photosAdded: n => `${n} foto${n>1?'s':''} añadida${n>1?'s':''}`,
     uploadError: name => `Error subiendo ${name}`,
+    dupTitle: 'Fotos duplicadas', dupDesc: n => `${n} foto${n>1?'s ya existen':' ya existe'} en la biblioteca:`,
+    dupSkip: 'Omitir duplicadas', dupAdd: 'Añadir igualmente', dupReplace: 'Reemplazar existentes',
     imported: name => `"${name}" importada`,
     importError:'Error al importar', configSaved:'Configuración guardada',
     allowPopups:'Permite ventanas emergentes para imprimir',
@@ -846,6 +849,8 @@ const I18N = {
     saveError:'Save error',
     photosAdded: n => `${n} photo${n>1?'s':''} added`,
     uploadError: name => `Error uploading ${name}`,
+    dupTitle: 'Duplicate photos', dupDesc: n => `${n} photo${n>1?'s already exist':' already exists'} in the library:`,
+    dupSkip: 'Skip duplicates', dupAdd: 'Add anyway', dupReplace: 'Replace existing',
     imported: name => `"${name}" imported`,
     importError:'Import error', configSaved:'Settings saved',
     allowPopups:'Allow pop-ups to print',
@@ -1016,6 +1021,7 @@ function App() {
   const [selectedTemplate,  setSelectedTemplate]  = useState(null);
   const [copyBoardInput,    setCopyBoardInput]    = useState(null); // null=oculto, string=activo
   const [fillPlaceholder,setFillPlaceholder]= useState(null); // {itemId}
+  const [dupModal,       setDupModal]       = useState(null); // {imageFiles, duplicates, dropPos, sectionId}
   const [exportDropOpen, setExportDropOpen] = useState(false);
   const [gridDropOpen,   setGridDropOpen]   = useState(false);
   const [gridDropPos,    setGridDropPos]    = useState({left:0,top:0});
@@ -1659,7 +1665,20 @@ ${rows}
   // ── place photo ───────────────────────────────────────────────────────────
   const placePhoto = (photo, cx, cy) => {
     pushUndo();
-    const w = boardsRef.current.find(b => b.id === bidRef.current)?.defaultW || 320;
+    const board = boardsRef.current.find(b => b.id === bidRef.current);
+    let w = board?.defaultW || 320;
+    // Inherit width from last placed photo if same aspect ratio (within 3%)
+    const photoItems = itemsRef.current.filter(i => i.photoId);
+    if (photoItems.length > 0) {
+      const lastItem = photoItems.reduce((a, b) => ((a.z||0) > (b.z||0) ? a : b));
+      const lastPhoto = photosRef.current.find(p => p.id === lastItem.photoId);
+      if (lastPhoto) {
+        const norm = (pw, ph) => pw > ph ? pw / ph : ph / pw;
+        if (Math.abs(norm(lastPhoto.w, lastPhoto.h) - norm(photo.w, photo.h)) / norm(lastPhoto.w, lastPhoto.h) < 0.03) {
+          w = lastItem.w;
+        }
+      }
+    }
     const bp = boardPxRef.current;
     const maxZ = itemsRef.current.length ? Math.max(...itemsRef.current.map(i => i.z || 0)) : 0;
     const h = Math.round(w * photo.h / photo.w);
@@ -1867,17 +1886,23 @@ ${rows}
   };
 
   // ── upload ────────────────────────────────────────────────────────────────
-  const uploadFiles = async (files, dropPos = null, sectionId = null) => {
+  const doUpload = async (imageFiles, dupAction, dropPos, sectionId) => {
     const p = pidRef.current;
-    if (!p) return showToast(t('selectProjectFirst'), true);
-    const imageFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
-    if (!imageFiles.length) return;
     const total = imageFiles.length;
     let ok = 0;
     for (let i = 0; i < imageFiles.length; i++) {
       const file = imageFiles[i];
+      const existing = photosRef.current.find(ph => ph.name === file.name);
       setUploadProgress({ done: i, total, name: file.name });
       try {
+        if (existing && dupAction === 'skip') continue;
+        if (existing && dupAction === 'replace') {
+          const photo = await api.uploadReplace(`/api/projects/${p}/photos/${existing.id}/file`, file);
+          if (photo.error) { showToast(photo.error, true); continue; }
+          setPhotos(ps => ps.map(ph => ph.id === existing.id ? photo : ph));
+          ok++;
+          continue;
+        }
         const photo = await api.upload(`/api/projects/${p}/photos`, file);
         if (photo.error) { showToast(photo.error, true); continue; }
         if (sectionId) {
@@ -1892,6 +1917,19 @@ ${rows}
     setUploadProgress(null);
     if (libSelRef.current.length) { setLibSelection([]); libSelAnchorRef.current = null; }
     if (ok) showToast(t('photosAdded', ok));
+  };
+
+  const uploadFiles = async (files, dropPos = null, sectionId = null) => {
+    const p = pidRef.current;
+    if (!p) return showToast(t('selectProjectFirst'), true);
+    const imageFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+    if (!imageFiles.length) return;
+    const duplicates = imageFiles.filter(f => photosRef.current.some(ph => ph.name === f.name));
+    if (duplicates.length > 0) {
+      setDupModal({ imageFiles, duplicates, dropPos, sectionId });
+      return;
+    }
+    await doUpload(imageFiles, 'add', dropPos, sectionId);
   };
 
   const setLibSelection = ids => { libSelRef.current = ids; setLibSel(ids); };
@@ -2633,7 +2671,8 @@ ${rows}
     const it = itemsRef.current.find(i => i.id === itemId);
     if (it?.locked) return;
     const beforeResize = itemsRef.current.map(i => ({ ...i }));
-    const sx = e.clientX, ow = it.w;
+    const ow = it.w;
+    let rawCw = ow; // accumulates movementX — immune to canvas scroll drift
     let cw = ow;
     const photo = photosRef.current.find(p => p.id === it.photoId);
     const isSwapped = (it.rot || 0) % 180 !== 0;
@@ -2644,7 +2683,38 @@ ${rows}
     const onMM = e => {
       const bp = boardPxRef.current;
       const maxW = bp ? bp.w - it.x : Infinity;
-      cw = Math.max(80, Math.min(ow + (e.clientX - sx) / zoomRef.current, maxW));
+      rawCw = Math.max(80, Math.min(rawCw + e.movementX / zoomRef.current, maxW));
+      cw = rawCw;
+
+      // Snap guides during resize (only when snap is on)
+      if (snapGrid) {
+        const THRESH = 8 / zoomRef.current;
+        const others = itemsRef.current.filter(i => i.id !== itemId && i.w);
+        const guides = { h: [], v: [] };
+        const displayH = photo ? (isSwapped ? Math.round(cw * photo.w / photo.h) : Math.round(cw * photo.h / photo.w)) : cw;
+        let snapped = false;
+        for (const o of others) {
+          const op = photosRef.current.find(p => p.id === o.photoId);
+          const oh = op ? (((o.rot||0) % 180 !== 0) ? Math.round(o.w * op.w / op.h) : Math.round(o.w * op.h / op.w)) : o.w;
+          // Right-edge alignment: it.x + cw vs o.x or o.x + o.w
+          for (const edge of [o.x, o.x + o.w]) {
+            if (!snapped && Math.abs(it.x + cw - edge) < THRESH) {
+              cw = edge - it.x;
+              guides.v.push({ pos: edge, from: Math.min(it.y, o.y), to: Math.max(it.y + displayH, o.y + oh) });
+              snapped = true;
+            }
+          }
+          // Width match: cw vs o.w
+          if (!snapped && Math.abs(cw - o.w) < THRESH) {
+            cw = o.w;
+            const bottom = Math.max(it.y + displayH, o.y + oh);
+            guides.h.push({ pos: bottom, from: Math.min(it.x, o.x), to: Math.max(it.x + cw, o.x + o.w) });
+            snapped = true;
+          }
+        }
+        setSnapGuides(guides);
+      }
+
       setItems(its => its.map(i => i.id === itemId ? { ...i, w: cw } : i));
       const rw = Math.round(cw);
       const rh = photo ? (isSwapped ? Math.round(cw * photo.w / photo.h) : Math.round(cw * photo.h / photo.w)) : rw;
@@ -2653,6 +2723,7 @@ ${rows}
     const onMU = () => {
       window.removeEventListener('pointermove', onMM);
       window.removeEventListener('pointerup',   onMU);
+      setSnapGuides({ h: [], v: [] });
       setResizeDim(null);
       const nit = itemsRef.current.map(i => i.id === itemId ? { ...i, w: Math.round(cw) } : i);
       if (Math.round(cw) !== ow) {
@@ -4690,6 +4761,34 @@ ${rows}
           </div>
         </div>
       )}
+      {dupModal && (
+        <div className="overlay" onClick={() => setDupModal(null)}>
+          <div className="modal" style={{maxWidth:360}} onClick={e => e.stopPropagation()}>
+            <div className="modal-h">{t('dupTitle')}</div>
+            <div className="modal-sub">{t('dupDesc', dupModal.duplicates.length)}</div>
+            <div style={{maxHeight:180,overflowY:'auto',margin:'8px 0',display:'flex',flexDirection:'column',gap:3}}>
+              {dupModal.duplicates.map(f => (
+                <div key={f.name} style={{fontSize:10,color:'var(--text)',fontFamily:"'IBM Plex Mono',monospace",padding:'3px 8px',background:'var(--surf)',letterSpacing:'.2px'}}>{f.name}</div>
+              ))}
+            </div>
+            <div style={{display:'flex',flexDirection:'column',gap:6,marginTop:4}}>
+              <button className="btn acc" style={{fontSize:10,padding:'8px 0'}}
+                onClick={() => { const m=dupModal; setDupModal(null); doUpload(m.imageFiles,'replace',m.dropPos,m.sectionId); }}>
+                {t('dupReplace')}
+              </button>
+              <button className="btn" style={{fontSize:10,padding:'8px 0'}}
+                onClick={() => { const m=dupModal; setDupModal(null); doUpload(m.imageFiles,'skip',m.dropPos,m.sectionId); }}>
+                {t('dupSkip')}
+              </button>
+              <button className="btn" style={{fontSize:10,padding:'8px 0'}}
+                onClick={() => { const m=dupModal; setDupModal(null); doUpload(m.imageFiles,'add',m.dropPos,m.sectionId); }}>
+                {t('dupAdd')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {modal === 'versions' && (
         <div className="overlay" onClick={() => setModal(null)}>
           <div className="modal" style={{minWidth:340,maxWidth:440}} onClick={e => e.stopPropagation()}>

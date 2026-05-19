@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.6.3] — 2026-05-19
+### Añadido
+- Detección de fotos duplicadas al subir: si algún nombre coincide con una foto ya existente aparece un aviso con tres opciones — omitir los duplicados, añadirlos de todas formas o reemplazar los existentes conservando el mismo ID (los tableros no se ven afectados)
+- Guías de snap durante el redimensionado: al arrastrar el handle de esquina se muestran guías cuando el borde derecho o la anchura coinciden con los de otras fotos en el tablero
+- Herencia de tamaño al colocar fotos: si la foto que se añade al tablero tiene la misma proporción que la última colocada (diferencia < 3 %), hereda su anchura automáticamente
+
+### Corregido
+- Fuentes de texto libre correctas en la versión instalada: los archivos `.ttf` ahora se incluyen en el instalador; en versiones anteriores solo funcionaba Impact
+- Posición del texto libre en exportación JPEG: el buffer de texto se extiende a las dimensiones exactas del elemento antes de rotar, corrigiendo el desplazamiento que aparecía al exportar
+- El handle de redimensionado ya no se desplaza del cursor: se usa `movementX` incremental en lugar de coordenadas absolutas, evitando la deriva al hacer scroll en el canvas
+
+---
+
 ## [1.6.2] — 2026-05-19
 ### Añadido
 - Visor fullscreen: doble clic en una miniatura de la biblioteca abre la foto a pantalla completa; navega entre fotos con ← →, cierra con ESC o clic fuera
