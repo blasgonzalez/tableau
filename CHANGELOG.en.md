@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.6.2] — 2026-05-19
+### Added
+- Fullscreen viewer: double-click a library thumbnail to open the photo fullscreen; navigate with ← →, close with ESC or click outside
+- Board versions: ⏱ button in the top bar saves snapshots of the board state; list with date, item count and restore/delete buttons per version
+- Grid controls as dropdown: the "Grid" button opens a menu grouping the on/off toggle, density selector and snap toggle; the top bar is cleaner
+
+### Fixed
+- Double-clicking a thumbnail no longer adds the photo to the board before opening fullscreen
+
+---
+
 ## [1.6.1] — 2026-05-18
 ### Added
 - Copy selection to new board: ⊞ button in the canvas selection bar; type the new board name and the selected elements are copied at the same positions

@@ -1,6 +1,6 @@
 {
-  "version": "1.6.1",
+  "version": "1.6.2",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-05-18",
-  "notes": "Fuentes correctas en exportacion JPEG · Recuerda proyecto al recargar · Copiar seleccion a nuevo tablero"
+  "releaseDate": "2026-05-19",
+  "notes": "Visor fullscreen de fotos · Versiones de tablero · Guias como desplegable"
 }

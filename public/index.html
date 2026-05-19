@@ -404,6 +404,13 @@ select.inp{cursor:pointer;appearance:none;padding-right:28px;background-image:ur
 .pref-about-link{font-size:8px;color:var(--acc-dim);letter-spacing:.2px;text-decoration:none;transition:color .12s}
 .pref-about-link:hover{color:var(--acc)}
 
+/* ── VERSIONES ── */
+.ver-list{display:flex;flex-direction:column;gap:6px;max-height:52vh;overflow-y:auto;padding-right:4px}
+.ver-list::-webkit-scrollbar{width:3px}
+.ver-list::-webkit-scrollbar-thumb{background:var(--border2)}
+.ver-row{display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--surf);border:1px solid var(--border)}
+.ver-ts{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text);flex:1;letter-spacing:.3px}
+.ver-count{font-size:9px;color:var(--muted)}
 /* ── MEMORIA MODAL ── */
 .mem-modal{min-width:520px;max-width:680px;max-height:82vh;display:flex;flex-direction:column;gap:14px}
 .mem-scroll{overflow-y:auto;flex:1;max-height:58vh;padding-right:4px}
@@ -470,6 +477,18 @@ select.inp{cursor:pointer;appearance:none;padding-right:28px;background-image:ur
 .tag-filter-badge{background:var(--bg);color:var(--acc);border-radius:8px;min-width:12px;height:12px;font-size:7px;display:inline-flex;align-items:center;justify-content:center;padding:0 2px;font-weight:700}
 .thumb-stars{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.55);color:#e0a838;font-size:7px;text-align:center;padding:1px 0;letter-spacing:1px;pointer-events:none;z-index:2;display:flex;align-items:center;justify-content:center;gap:0}
 .thumb-star-empty{color:rgba(255,255,255,.35);opacity:1}
+.fullscreen-overlay{position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;flex-direction:column}
+.fullscreen-img{max-width:calc(100vw - 120px);max-height:calc(100vh - 100px);object-fit:contain;display:block;user-select:none}
+.fullscreen-nav{position:fixed;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.08);border:none;color:rgba(255,255,255,.5);font-size:28px;padding:12px 16px;cursor:pointer;line-height:1;transition:background .15s,color .15s}
+.fullscreen-nav:hover{background:rgba(255,255,255,.15);color:#fff}
+.fullscreen-nav.prev{left:0}
+.fullscreen-nav.next{right:0}
+.fullscreen-close{position:fixed;top:12px;right:16px;background:none;border:none;color:rgba(255,255,255,.4);font-size:22px;cursor:pointer;line-height:1;padding:4px 8px}
+.fullscreen-close:hover{color:#fff}
+.fullscreen-meta{position:fixed;bottom:0;left:0;right:0;padding:10px 20px;background:linear-gradient(transparent,rgba(0,0,0,.7));display:flex;align-items:flex-end;justify-content:space-between;pointer-events:none}
+.fullscreen-name{font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.6);letter-spacing:.3px}
+.fullscreen-exif{font-size:10px;color:rgba(255,255,255,.4);letter-spacing:.2px;text-align:right;line-height:1.7}
+.fullscreen-counter{position:fixed;top:14px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,.3);font-family:'IBM Plex Mono',monospace;letter-spacing:.5px;pointer-events:none}
 .lib-preview{position:fixed;background:var(--panel);border:1px solid var(--border2);z-index:700;box-shadow:0 6px 24px rgba(0,0,0,.6);pointer-events:none;padding:4px}
 .lib-preview.pinned{z-index:710;border-color:var(--acc-dim);box-shadow:0 8px 32px rgba(0,0,0,.75);position:fixed;padding-top:4px}
 .lib-preview img{display:block;max-width:280px;max-height:280px;object-fit:contain;background:#111}
@@ -606,6 +625,7 @@ const api = {
 
 const fmtSize = b => b > 1e6 ? (b/1e6).toFixed(1)+' MB' : Math.round(b/1024)+' KB';
 const fmtExifDate = s => { if (!s) return s; const m = s.match(/^(\d{4}):(\d{2}):(\d{2})\s(\d{2}):(\d{2})/); return m ? `${m[3]}/${m[2]}/${m[1]}  ${m[4]}:${m[5]}` : s; };
+const fmtTs = ts => { const d = new Date(ts); return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`; };
 
 const rgbToHsl = (r, g, b) => {
   r /= 255; g /= 255; b /= 255;
@@ -663,6 +683,7 @@ const I18N = {
     openPanel:'Abrir panel', panelLabel:'Panel',
     infoTitle:'Información', infoEmpty1:'Pasa el ratón sobre', infoEmpty2:'una foto para ver sus datos',
     saveAsTemplate:'Guardar como plantilla', templateNamePh:'Nombre de la plantilla', templateSaved:'Plantilla guardada', templateError:'Error al guardar', applyTemplateBtn:'Aplicar', confirmApplyTemplate:'Aplicar la plantilla reemplazará todos los elementos del tablero actual. ¿Continuar?', templateApplied:'Plantilla aplicada', noTemplates:'Sin plantillas', templatesSection:'Plantillas',
+    versionsTitle:'Versiones del tablero', saveVersion:'Guardar versión', versionSaved:'Versión guardada', versionRestored:'Versión restaurada', versionDeleted:'Versión eliminada', restoreVersion:'Restaurar', confirmRestore:'¿Restaurar esta versión? El estado actual se perderá.', noVersions:'Sin versiones guardadas', versionItems:(n) => `${n} elemento${n!==1?'s':''}`,
     fillPlaceholderHint:'Haz clic en una foto de la biblioteca para asignarla al marco',
     original:'Original:', inTableau:'En tableau:', notInAnyBoard:'No está en ningún tablero',
     noBoard:'Sin tablero', createBoardHint:'Crea un tablero en el panel izquierdo',
@@ -783,6 +804,7 @@ const I18N = {
     openPanel:'Open panel', panelLabel:'Panel',
     infoTitle:'Info', infoEmpty1:'Hover over a photo', infoEmpty2:'to see its details',
     saveAsTemplate:'Save as template', templateNamePh:'Template name', templateSaved:'Template saved', templateError:'Save error', applyTemplateBtn:'Apply', confirmApplyTemplate:'Applying the template will replace all elements on the current board. Continue?', templateApplied:'Template applied', noTemplates:'No templates', templatesSection:'Templates',
+    versionsTitle:'Board versions', saveVersion:'Save version', versionSaved:'Version saved', versionRestored:'Version restored', versionDeleted:'Version deleted', restoreVersion:'Restore', confirmRestore:'Restore this version? Current state will be lost.', noVersions:'No saved versions', versionItems:(n) => `${n} item${n!==1?'s':''}`,
     fillPlaceholderHint:'Click a photo in the library to assign it to this frame',
     original:'Original:', inTableau:'In tableau:', notInAnyBoard:'Not in any board',
     noBoard:'No board', createBoardHint:'Create a board in the left panel',
@@ -995,16 +1017,22 @@ function App() {
   const [copyBoardInput,    setCopyBoardInput]    = useState(null); // null=oculto, string=activo
   const [fillPlaceholder,setFillPlaceholder]= useState(null); // {itemId}
   const [exportDropOpen, setExportDropOpen] = useState(false);
+  const [gridDropOpen,   setGridDropOpen]   = useState(false);
+  const [gridDropPos,    setGridDropPos]    = useState({left:0,top:0});
+  const [versions,       setVersions]       = useState([]); // [{ts, itemCount}]
   const [exportDropPos,  setExportDropPos]  = useState({right:0,top:0});
   const [uploadDropPos,  setUploadDropPos]  = useState({right:0,top:0});
   const [gridModal,  setGridModal]  = useState(false);
   const [gridCols,   setGridCols]   = useState(2);
   const [gridGap,    setGridGap]    = useState(20);
   const showLibPreviewRef = useRef(localStorage.getItem('tb-lib-preview') !== 'false');
-  const [libPreview,    setLibPreview]    = useState(null); // {photo, x, y}
-  const [pinnedPreview, setPinnedPreview] = useState(null); // {photo, x, y} — click-pinned
+  const [libPreview,      setLibPreview]      = useState(null); // {photo, x, y}
+  const [pinnedPreview,   setPinnedPreview]   = useState(null); // {photo, x, y} — click-pinned
+  const [fullscreenPhoto, setFullscreenPhoto] = useState(null); // {photo, index}
   const previewTimer    = useRef(null);
+  const thumbClickTimer = useRef(null);
   const hoveredThumbRef = useRef(null);
+  const displayedPhotosRef = useRef([]);
   const [presentation,  setPresentation]  = useState(false);
   const [rejectedFilter, setRejectedFilter] = useState(false); // false=ocultar rechazadas, true=solo rechazadas, null=todas
   const [replaceMode,   setReplaceMode]   = useState(null); // {itemId} when active
@@ -1942,6 +1970,42 @@ ${rows}
     setSectBatchPop(null);
   };
 
+  // ── Versions ─────────────────────────────────────────────────────────────────
+  const loadVersions = async () => {
+    if (!pid || !bid) return;
+    try {
+      const vs = await api.get(`/api/boards/${pid}/${bid}/versions`);
+      setVersions(Array.isArray(vs) ? vs : []);
+    } catch { setVersions([]); }
+  };
+
+  const saveVersion = async () => {
+    if (!pid || !bid) return;
+    try {
+      const v = await api.post(`/api/boards/${pid}/${bid}/versions`, {});
+      setVersions(vs => [v, ...vs]);
+      showToast(t('versionSaved'));
+    } catch (e) { showToast('Error: ' + e.message, true); }
+  };
+
+  const restoreVersion = async (ts) => {
+    if (!window.confirm(t('confirmRestore'))) return;
+    try {
+      const newItems = await api.post(`/api/boards/${pid}/${bid}/versions/${ts}/restore`, {});
+      setItems(newItems); itemsRef.current = newItems;
+      setSel([]); selRef.current = [];
+      setModal(null);
+      showToast(t('versionRestored'));
+    } catch (e) { showToast('Error: ' + e.message, true); }
+  };
+
+  const deleteVersion = async (ts) => {
+    try {
+      await api.del(`/api/boards/${pid}/${bid}/versions/${ts}`);
+      setVersions(vs => vs.filter(v => v.ts !== ts));
+    } catch (e) { showToast('Error: ' + e.message, true); }
+  };
+
   // ── Templates ────────────────────────────────────────────────────────────────
   const saveAsTemplate = async (name) => {
     if (!name?.trim()) return;
@@ -2074,6 +2138,20 @@ ${rows}
 
   useEffect(() => {
     const handler = e => {
+      if (fullscreenPhoto) {
+        if (e.key === 'Escape') { setFullscreenPhoto(null); return; }
+        if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+          setFullscreenPhoto(prev => {
+            if (!prev) return null;
+            const photos = displayedPhotosRef.current;
+            const next = e.key === 'ArrowRight' ? prev.index + 1 : prev.index - 1;
+            if (next < 0 || next >= photos.length) return prev;
+            return { photo: photos[next], index: next };
+          });
+          return;
+        }
+        return;
+      }
       if (presentation && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) {
         const bs = boardsRef.current;
         const idx = bs.findIndex(b => b.id === bidRef.current);
@@ -2090,7 +2168,7 @@ ${rows}
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [presentation, pinnedPreview, fillPlaceholder, replaceMode, sectCtxMenu]);
+  }, [fullscreenPhoto, presentation, pinnedPreview, fillPlaceholder, replaceMode, sectCtxMenu]);
 
   const deletePhoto = async id => {
     const placedBoards = boards.filter(b =>
@@ -3212,27 +3290,20 @@ ${rows}
         {bid && <>
           <button className={`btn${showGrid?' acc':''}`}
             style={{fontSize:9,letterSpacing:.3,opacity:(showGrid && gridCellPx*zoom<4)?0.45:1}}
-            onClick={toggleGrid}
+            onClick={e => { if (gridDropOpen) { setGridDropOpen(false); return; } const r = e.currentTarget.getBoundingClientRect(); setGridDropPos({ left: r.left, top: r.bottom + 4 }); setGridDropOpen(true); }}
             title={showGrid && gridCellPx*zoom<4 ? t('gridHiddenZoom') : t('gridToggle')}>
-            {t('gridToggle')}
+            {t('gridToggle')}{showGrid && snapGrid ? ' ·' : ''}
           </button>
-          <div style={{display:'flex',gap:6,visibility:showGrid?'visible':'hidden',pointerEvents:showGrid?'auto':'none'}}>
-            <select className="btn" style={{fontSize:9,padding:'5px 8px',cursor:'pointer'}}
-              value={gridStep}
-              onChange={e => changeGridStep(Number(e.target.value))}>
-              {gridOptions.map(o => <option key={o.v} value={o.v}>{o.label}</option>)}
-            </select>
-            <button className={`btn${snapGrid?' acc':''}`} style={{fontSize:9}} title={t('snapGrid')}
-              onClick={() => { const n=!snapGrid; setSnapGrid(n); localStorage.setItem('tb-snap',n?'on':'off'); }}>
-              {t('snapGrid')}
-            </button>
-          </div>
+          <button className="btn" style={{fontSize:10}} onClick={() => { loadVersions(); setModal('versions'); }} title={t('versionsTitle')}>
+            ⏱
+          </button>
           <button className="btn" style={{fontSize:10}} onClick={openBoardConfig} title={t('boardConfig')}>
             {t('config')}
           </button>
           <button className="btn" style={{fontSize:10,gap:5}} title={t('exportJpeg')}
             onClick={e => {
               if (exportDropOpen) { setExportDropOpen(false); return; }
+              setGridDropOpen(false);
               const r = e.currentTarget.getBoundingClientRect();
               setExportDropPos({ right: window.innerWidth - r.right, top: r.bottom + 4 });
               setExportDropOpen(true);
@@ -3841,6 +3912,7 @@ ${rows}
                 .filter(p => tagFilter.length === 0 || tagFilter.some(t => (p.tags || []).includes(t)))
                 .filter(p => ratingFilter === 0 || (p.rating || 0) >= ratingFilter)
                 .filter(p => !libSearch || p.name.toLowerCase().includes(libSearch.toLowerCase()));
+              displayedPhotosRef.current = displayedPhotos;
               const toggleLib = () => { const v = !libOpen; setLibOpen(v); localStorage.setItem('libOpen', v); };
               const toggleFilter = (e) => { e.stopPropagation(); const v = photoFilter === 'pending' ? 'all' : 'pending'; setPhotoFilter(v); localStorage.setItem('photoFilter', v); };
               const toggleStarFilter = (n, e) => { e.stopPropagation(); setRatingFilter(f => f === n ? 0 : n); };
@@ -3972,11 +4044,15 @@ ${rows}
                                 } else {
                                   libSelAnchorRef.current = p.id;
                                   setLibSelection([]);
-                                  if (!bid) return showToast(t('createBoardFirst'), true);
-                                  addToCenter(p.id);
+                                  clearTimeout(thumbClickTimer.current);
+                                  thumbClickTimer.current = setTimeout(() => {
+                                    if (!bid) return showToast(t('createBoardFirst'), true);
+                                    addToCenter(p.id);
+                                  }, 250);
                                 }
                               }}
                               title={`${p.name}${inBoard?' · '+t('alreadyInTableau'):''}`}
+                              onDoubleClick={e => { e.stopPropagation(); clearTimeout(thumbClickTimer.current); const idx = displayedPhotos.indexOf(p); setFullscreenPhoto({ photo: p, index: idx >= 0 ? idx : 0 }); }}
                             >
                               <img src={`/photos/${pid}/${p.id}/thumb`} alt={p.name}/>
                               {p.rejected && <div className="thumb-rejected"><span className="thumb-rejected-label">{t('rejectedLabel')}</span></div>}
@@ -4132,6 +4208,29 @@ ${rows}
         </div>
       )}
 
+      {fullscreenPhoto && (() => {
+        const { photo, index } = fullscreenPhoto;
+        const total = displayedPhotosRef.current.length;
+        const photos_ = displayedPhotosRef.current;
+        return (
+          <div className="fullscreen-overlay" onClick={() => setFullscreenPhoto(null)}>
+            <button className="fullscreen-close" onClick={() => setFullscreenPhoto(null)}>×</button>
+            <div className="fullscreen-counter">{index + 1} / {total}</div>
+            <img className="fullscreen-img" src={`/photos/${pid}/${photo.id}`} alt={photo.name} onClick={e => e.stopPropagation()}/>
+            {index > 0 && <button className="fullscreen-nav prev" onClick={e => { e.stopPropagation(); setFullscreenPhoto({ photo: photos_[index-1], index: index-1 }); }}>‹</button>}
+            {index < total-1 && <button className="fullscreen-nav next" onClick={e => { e.stopPropagation(); setFullscreenPhoto({ photo: photos_[index+1], index: index+1 }); }}>›</button>}
+            <div className="fullscreen-meta">
+              <div className="fullscreen-name">{photo.name}</div>
+              {photo.exif && <div className="fullscreen-exif">
+                {photo.exif.model && <div>{photo.exif.model}</div>}
+                <div>{[photo.exif.focalLength && `${photo.exif.focalLength}mm`, photo.exif.aperture && `f/${photo.exif.aperture}`, photo.exif.shutter, photo.exif.iso && `ISO ${photo.exif.iso}`].filter(Boolean).join('  ·  ')}</div>
+                {photo.exif.dateTaken && <div>{fmtExifDate(photo.exif.dateTaken)}</div>}
+              </div>}
+            </div>
+          </div>
+        );
+      })()}
+
       {canvasCtx && (
         <>
           <div style={{position:'fixed',inset:0,zIndex:949}} onClick={() => setCanvasCtx(null)}/>
@@ -4263,6 +4362,36 @@ ${rows}
           <div className="upload-drop" style={{position:'fixed',right:uploadDropPos.right,top:uploadDropPos.top,transform:'translateY(-100%)',zIndex:600}}>
             <label htmlFor="tb-upload" className="upload-drop-item" onClick={() => setUploadDropOpen(false)}>{t('uploadPhotos')}</label>
             <label htmlFor="tb-upload-folder" className="upload-drop-item" onClick={() => setUploadDropOpen(false)}>{t('uploadFolder')}</label>
+          </div>
+        </>
+      )}
+
+      {gridDropOpen && (
+        <>
+          <div style={{position:'fixed',inset:0,zIndex:599}} onClick={() => setGridDropOpen(false)}/>
+          <div className="upload-drop" style={{position:'fixed',left:gridDropPos.left,top:gridDropPos.top,zIndex:600,minWidth:160,padding:'6px 0'}}>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'4px 12px 6px',borderBottom:'1px solid var(--border)'}}>
+              <span style={{fontSize:9,letterSpacing:.4,color:'var(--dim)'}}>{t('gridToggle')}</span>
+              <button className={`btn${showGrid?' acc':''}`} style={{fontSize:9,padding:'3px 10px'}}
+                onClick={toggleGrid}>
+                {showGrid ? 'ON' : 'OFF'}
+              </button>
+            </div>
+            <div style={{padding:'6px 12px 4px',borderBottom:'1px solid var(--border)',opacity:showGrid?1:0.4,pointerEvents:showGrid?'auto':'none'}}>
+              <div style={{fontSize:8,color:'var(--muted)',letterSpacing:.4,marginBottom:4}}>{t('gridAuto')}</div>
+              <select className="btn" style={{fontSize:9,padding:'4px 6px',cursor:'pointer',width:'100%'}}
+                value={gridStep}
+                onChange={e => changeGridStep(Number(e.target.value))}>
+                {gridOptions.map(o => <option key={o.v} value={o.v}>{o.label}</option>)}
+              </select>
+            </div>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'6px 12px 4px',opacity:showGrid?1:0.4,pointerEvents:showGrid?'auto':'none'}}>
+              <span style={{fontSize:9,letterSpacing:.4,color:'var(--dim)'}}>{t('snapGrid')}</span>
+              <button className={`btn${snapGrid?' acc':''}`} style={{fontSize:9,padding:'3px 10px'}}
+                onClick={() => { const n=!snapGrid; setSnapGrid(n); localStorage.setItem('tb-snap',n?'on':'off'); }}>
+                {snapGrid ? 'ON' : 'OFF'}
+              </button>
+            </div>
           </div>
         </>
       )}
@@ -4561,6 +4690,37 @@ ${rows}
           </div>
         </div>
       )}
+      {modal === 'versions' && (
+        <div className="overlay" onClick={() => setModal(null)}>
+          <div className="modal" style={{minWidth:340,maxWidth:440}} onClick={e => e.stopPropagation()}>
+            <div className="modal-h">{t('versionsTitle')}</div>
+            <div className="modal-sub">{activeBoardMeta?.name}</div>
+            <button className="btn acc" style={{fontSize:10,width:'100%',padding:'8px 0'}} onClick={saveVersion}>
+              + {t('saveVersion')}
+            </button>
+            {versions.length === 0 ? (
+              <div style={{fontSize:9,color:'var(--muted)',textAlign:'center',padding:'16px 0'}}>{t('noVersions')}</div>
+            ) : (
+              <div className="ver-list">
+                {versions.map(v => (
+                  <div key={v.ts} className="ver-row">
+                    <div style={{flex:1}}>
+                      <div className="ver-ts">{fmtTs(v.ts)}</div>
+                      <div className="ver-count">{t('versionItems', v.itemCount)}</div>
+                    </div>
+                    <button className="btn" style={{fontSize:9,padding:'3px 8px'}} onClick={() => restoreVersion(v.ts)}>{t('restoreVersion')}</button>
+                    <button className="btn" style={{fontSize:9,padding:'3px 7px',color:'var(--danger,#e05)'}} onClick={() => deleteVersion(v.ts)}>×</button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="modal-row">
+              <button className="btn" onClick={() => setModal(null)}>{t('close')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {modal === 'memoria' && (
         <div className="overlay" onClick={() => setModal(null)}>
           <div className="modal mem-modal" onClick={e => e.stopPropagation()}>

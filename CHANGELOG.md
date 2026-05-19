@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.6.2] — 2026-05-19
+### Añadido
+- Visor fullscreen: doble clic en una miniatura de la biblioteca abre la foto a pantalla completa; navega entre fotos con ← →, cierra con ESC o clic fuera
+- Versiones de tablero: botón ⏱ en la barra superior guarda snapshots del estado del tablero; lista con fecha, número de elementos y botones para restaurar o eliminar cada versión
+- Control de cuadrícula como desplegable: el botón "Guías" abre un menú con el toggle on/off, el selector de densidad y el imán (snap) agrupados; la barra superior queda más limpia
+
+### Corregido
+- Doble clic en miniatura ya no añade la foto al tablero antes de abrir el fullscreen
+
+---
+
 ## [1.6.1] — 2026-05-18
 ### Añadido
 - Copiar selección a nuevo tablero: botón ⊞ en la barra de selección del canvas; escribe el nombre del nuevo tablero y los elementos seleccionados se copian con la misma posición

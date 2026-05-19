@@ -315,6 +315,8 @@ app.delete('/api/projects/:pid/boards/:bid', (req, res) => {
   writeJSON(boardsMeta(pid), boards);
   const bf = boardFile(pid, bid);
   if (fs.existsSync(bf)) fs.unlinkSync(bf);
+  const vdir = boardVersionsDir(pid, bid);
+  if (fs.existsSync(vdir)) fs.rmSync(vdir, { recursive: true, force: true });
   res.json({ ok: true });
 });
 
@@ -525,6 +527,50 @@ app.put('/api/boards/:pid/:bid/items', (req, res) => {
   const { pid, bid } = req.params;
   if (!Array.isArray(req.body)) return res.status(400).json({ error: 'Array esperado' });
   writeJSON(boardFile(pid, bid), req.body);
+  res.json({ ok: true });
+});
+
+// ── Board versions ────────────────────────────────────────────────────────────
+const boardVersionsDir = (pid, bid) => path.join(boardDir(pid), `${bid}.versions`);
+
+app.get('/api/boards/:pid/:bid/versions', (req, res) => {
+  const { pid, bid } = req.params;
+  const dir = boardVersionsDir(pid, bid);
+  if (!fs.existsSync(dir)) return res.json([]);
+  const versions = fs.readdirSync(dir)
+    .filter(f => f.endsWith('.json'))
+    .map(f => {
+      const ts = parseInt(f.replace('.json', ''));
+      const items = readJSON(path.join(dir, f), []);
+      return { ts, itemCount: items.length };
+    })
+    .sort((a, b) => b.ts - a.ts);
+  res.json(versions);
+});
+
+app.post('/api/boards/:pid/:bid/versions', (req, res) => {
+  const { pid, bid } = req.params;
+  const dir = boardVersionsDir(pid, bid);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  const items = readJSON(boardFile(pid, bid), []);
+  const ts = Date.now();
+  writeJSON(path.join(dir, `${ts}.json`), items);
+  res.json({ ts, itemCount: items.length });
+});
+
+app.post('/api/boards/:pid/:bid/versions/:ts/restore', (req, res) => {
+  const { pid, bid, ts } = req.params;
+  const file = path.join(boardVersionsDir(pid, bid), `${ts}.json`);
+  if (!fs.existsSync(file)) return res.status(404).json({ error: 'Versión no encontrada' });
+  const items = readJSON(file, []);
+  writeJSON(boardFile(pid, bid), items);
+  res.json(items);
+});
+
+app.delete('/api/boards/:pid/:bid/versions/:ts', (req, res) => {
+  const { pid, bid, ts } = req.params;
+  const file = path.join(boardVersionsDir(pid, bid), `${ts}.json`);
+  if (fs.existsSync(file)) fs.unlinkSync(file);
   res.json({ ok: true });
 });
 
