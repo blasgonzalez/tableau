@@ -156,13 +156,15 @@ Right-click any photo or note on the canvas to open a context menu with secondar
 
 | Option | Action |
 |---|---|
-| **↑ Bring forward** | Raise the element in the stacking order |
+| **↑ Bring forward** | Raise the element in the stacking order (see note below) |
 | **▣ Frame** | Set frame thickness (photos only) |
 | **⊞ Set as default size** | All photos placed afterwards arrive at this width (photos only) |
 | **↔ Flip horizontal** | Mirror the photo left to right (photos only) |
 | **↕ Flip vertical** | Mirror the photo top to bottom (photos only) |
 | **⧉ Duplicate** | Create a copy offset by 20 px |
 | **× Delete** | Remove from board |
+
+> **Stacking order:** selecting or dragging an element does not change its position in the stack. Z-order only changes via **↑ Bring forward** in the context menu, or when creating / duplicating an element (which always arrives on top).
 
 ### Labels
 
@@ -230,6 +232,43 @@ Click the **T▾** button on the element's floating bar to open the format panel
 | **×** | Delete from board |
 
 Text elements can be moved, resized, and grouped like all other canvas elements.
+
+---
+
+## Zones
+
+Zones are visual containers that group photos, notes and text elements on a board. Moving a zone moves all its contents with it.
+
+### Creating a zone
+
+Right-click on empty canvas space and select **+ Zone**. The zone appears centred on the current view and is immediately selected.
+
+### Resizing a zone
+
+Drag any of the **eight handles** (corners and mid-edges) to resize. Photos and notes inside the zone are not moved when you resize it.
+
+### Moving a zone
+
+Drag anywhere inside the zone body. All items belonging to it move with it. Zones cannot be dropped inside another zone — if you try, they snap back to their original position.
+
+### Label and colour
+
+- **Label** — click the text field inside the zone to type a name
+- **Colour** — right-click the zone and pick one of the six available colours (blue, green, orange, purple, red, neutral)
+
+### Zone context menu
+
+Right-click a zone to see its options:
+
+| Option | When shown | Action |
+|---|---|---|
+| **⊞ Copy to new board** | Zone has items | Creates a new board from the zone contents; prompts for a name (pre-filled with the zone label or "Board N") |
+| **⊞ Move to new board** | Zone has items | Same as Copy, but also removes the zone and its contents from the current board |
+| **× Delete** | Always | Asks for confirmation before deleting if the zone has contents |
+
+### Automatic membership
+
+When you place or move a photo or note so that its centre falls inside a zone, it automatically joins that zone. A small coloured dot on the element's corner indicates which zone it belongs to. Moving the element outside the zone boundary releases it.
 
 ---
 
@@ -323,16 +362,34 @@ Up to 50 undo steps are kept per board. History resets when you switch to a diff
 
 ---
 
-## Project report
+## Project memory report
 
-Click **≡ Report** in the top bar to open the project report. It shows:
+Click **≡ Memory** in the top bar to open the project memory panel. It has two parts: an editing form and a printable report.
 
-- A preview of each board with photos in their actual positions (including rotated photos and text elements)
-- A table of all photos with dimensions, physical size (if DPI is configured), and label
-- Notes that are marked for inclusion (📄 icon)
-- Note links as clickable hyperlinks
+### Information form
 
-Click **⎙ Print / Save PDF** to print or export as a PDF file.
+| Field | Description |
+|---|---|
+| **Title** | Presentation title of the project |
+| **Short description** | Subtitle or brief description |
+| **+ Section** | Adds a free-form section with a heading and body text; add as many sections as needed; remove with **×** |
+
+Changes are saved automatically when you leave each field.
+
+### Boards and items
+
+Below the form, each board in the project appears with a scaled preview and a photo table.
+
+- The **Include in report / Exclude from report** button on each board controls whether that board appears in the printable output. Excluded boards appear dimmed.
+
+### Printing the report
+
+Click **⎙ Print / Save PDF** to open the browser print dialog. The report is paginated as follows:
+
+- **First page** — project information (title, description and custom sections), if the *Include project information in report* checkbox is ticked
+- **One page per board** — scaled preview + photo table with dimensions and labels
+
+The report also includes notes marked with the 📄 icon and their links as clickable hyperlinks.
 
 ---
 

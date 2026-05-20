@@ -254,10 +254,11 @@ app.post('/api/projects', (req, res) => {
 
 app.patch('/api/projects/:pid', (req, res) => {
   const { pid } = req.params;
-  const { name } = req.body;
-  const projects = readJSON(projsFile()).map(p =>
-    p.id === pid ? { ...p, name: name.trim() } : p
-  );
+  const allowed = ['name','exTitle','subtitle','memSections'];
+  const patch = {};
+  for (const k of allowed) if (req.body[k] !== undefined) patch[k] = req.body[k];
+  if (patch.name) patch.name = patch.name.trim();
+  const projects = readJSON(projsFile()).map(p => p.id === pid ? { ...p, ...patch } : p);
   writeJSON(projsFile(), projects);
   res.json({ ok: true });
 });
@@ -303,6 +304,7 @@ app.patch('/api/projects/:pid/boards/:bid', (req, res) => {
     if (background   !== undefined) u.background   = background;
     if (defaultW     !== undefined) u.defaultW     = defaultW;
     if (exportPad    !== undefined) u.exportPad    = exportPad == null ? undefined : Math.max(0, Number(exportPad) || 0);
+    if (req.body.inMemory !== undefined) u.inMemory = req.body.inMemory;
     return u;
   });
   writeJSON(boardsMeta(pid), boards);

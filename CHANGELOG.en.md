@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.6.5] — 2026-05-20
+### Added
+- When converting a zone to a board (Copy or Move), a dialog now prompts for the board name; pre-filled with the zone label or "Board N" if the zone has no name
+
+### Fixed
+- Black screen when opening the project memory report (React error #310): the form initialisation effect was placed after a conditional return, violating the Rules of Hooks
+- Zones no longer show a broken image icon in the memory report preview; only photos and text elements are rendered
+- Selecting or dragging an item no longer automatically brings it to the front; z-order only changes with the explicit "Bring forward" option in the context menu
+- Free text elements inside zones now respect z-order and can appear above photos using "Bring forward"
+
+---
+
 ## [1.6.4] — 2026-05-19
 ### Added
 - Zones: visual board dividers that group photos, notes and text. A zone drags all its contents when moved. Created via right-click on the canvas; resizable from any side or corner

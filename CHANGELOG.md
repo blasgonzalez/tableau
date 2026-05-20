@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.6.5] — 2026-05-20
+### Añadido
+- Al convertir una zona en tablero (Copiar o Mover), se abre un diálogo para escribir el nombre del tablero; viene pre-rellenado con la etiqueta de la zona o con "Tablero N" si no tiene nombre
+
+### Corregido
+- Pantalla negra al abrir la memoria del proyecto (error React #310): el efecto de inicialización del formulario estaba situado después de un retorno condicional, violando las reglas de hooks
+- Las zonas ya no muestran el icono de imagen rota en la vista previa de la memoria; se renderizan solo las fotos y los textos
+- Seleccionar o arrastrar un elemento ya no lo eleva automáticamente al frente; el orden z solo cambia con la opción explícita "Al frente" del menú contextual
+- Los textos libres dentro de zonas ahora respetan el orden z y pueden situarse encima de las fotos con "Al frente"
+
+---
+
 ## [1.6.4] — 2026-05-19
 ### Añadido
 - Zonas: divisores visuales del tablero que agrupan fotos, notas y textos. Una zona arrastra todo su contenido al moverse. Se crean con clic derecho en el canvas y se pueden redimensionar desde cualquier lado o esquina

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "mpdz59p4vf5a",
+    "type": "text",
+    "text": "Este es un texto\nlibre con una eñe",
+    "x": 214.9,
+    "y": 212.3666666666668,
+    "w": 593,
+    "h": 260,
+    "z": 657,
+    "fontSize": 40,
+    "textAlign": "left",
+    "fontFamily": "sans",
+    "textColor": "",
+    "locked": false,
+    "rot": 90,
+    "freeRot": -31
+  },
+  {
+    "id": "mpdz59p47o7q",
+    "photoId": "9b76c48154ec",
+    "x": 166.812562458681,
+    "y": 51.1666666666668,
+    "w": 202,
+    "z": 653,
+    "label": "",
+    "rot": 0,
+    "frame": 0
+  },
+  {
+    "id": "mpdz59p4vtw1",
+    "photoId": "8febc52d726d",
+    "x": 393.812562458681,
+    "y": 51.1666666666668,
+    "w": 202,
+    "z": 654,
+    "label": "",
+    "rot": 0,
+    "frame": 0
+  },
+  {
+    "id": "mpdz59p4ax25",
+    "photoId": "ca790c30f072",
+    "x": 623.312562458681,
+    "y": 51.1666666666668,
+    "w": 202,
+    "z": 655,
+    "label": "",
+    "rot": 0,
+    "frame": 0
+  }
+]

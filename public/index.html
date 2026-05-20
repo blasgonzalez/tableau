@@ -279,6 +279,28 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .zrh.s{bottom:0;left:20%;right:20%;height:8px;cursor:s-resize}
 .zrh.e{right:0;top:20%;bottom:20%;width:8px;cursor:e-resize}
 .zrh.w{left:0;top:20%;bottom:20%;width:8px;cursor:w-resize}
+/* ── MEM INFO BLOCK ── */
+.mem-info-block{display:flex;flex-direction:column;gap:7px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border2)}
+.mem-info-hd{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-bottom:1px}
+.mem-info-row{display:flex;gap:7px}
+.mem-info-input{background:var(--surf);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12px;padding:6px 8px;outline:none;width:100%;letter-spacing:.3px;box-sizing:border-box;transition:border-color .12s}
+.mem-info-input:focus{border-color:var(--acc-dim)}
+.mem-info-input::placeholder,.mem-info-ta::placeholder{color:var(--muted)}
+.mem-info-ta{background:var(--surf);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px;padding:7px 8px;outline:none;width:100%;letter-spacing:.2px;box-sizing:border-box;resize:vertical;min-height:58px;line-height:1.65;transition:border-color .12s}
+.mem-info-ta:focus{border-color:var(--acc-dim)}
+/* ── MEM FREE SECTIONS ── */
+.mem-free-section{margin-bottom:10px;padding-left:9px;border-left:2px solid var(--border2)}
+.mem-free-hd{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.mem-free-title{background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-size:10px;font-family:'IBM Plex Mono',monospace;letter-spacing:.8px;text-transform:uppercase;padding:2px 3px;outline:none;flex:1;transition:border-color .12s}
+.mem-free-title:focus{border-bottom-color:var(--acc-dim)}
+.mem-free-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;padding:0 2px;font-family:inherit;transition:color .1s}
+.mem-free-del:hover{color:var(--danger)}
+.mem-free-body{background:var(--surf);border:1px solid var(--border);color:var(--sub);font-family:'IBM Plex Mono',monospace;font-size:11px;padding:6px 8px;outline:none;width:100%;letter-spacing:.2px;box-sizing:border-box;resize:vertical;min-height:48px;line-height:1.65;transition:border-color .12s}
+.mem-free-body:focus{border-color:var(--acc-dim)}
+.mem-add-section-btn{background:none;border:1px dashed var(--border2);color:var(--dim);cursor:pointer;font-size:9px;padding:4px 10px;font-family:'IBM Plex Mono',monospace;letter-spacing:.8px;text-transform:uppercase;margin-bottom:14px;transition:all .12s;display:block}
+.mem-add-section-btn:hover{border-color:var(--acc-dim);color:var(--acc)}
+.mem-boards-sep{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);padding:10px 0 8px;border-top:1px solid var(--border2);margin-top:4px}
+
 /* ── MEM NOTES SECTION ── */
 .mem-notes-hd{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);padding:6px 0 4px;border-top:1px solid var(--border2);margin-top:6px}
 .mem-note-item{padding:5px 0 5px 8px;border-bottom:1px solid var(--border);border-left:2px solid var(--acc-dim)}
@@ -401,6 +423,12 @@ select.inp{cursor:pointer;appearance:none;padding-right:28px;background-image:ur
 .cfg-label{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-bottom:6px}
 .cfg-hint{font-size:9px;color:var(--muted);letter-spacing:.3px;padding:8px 12px;background:var(--deep);border:1px solid var(--border)}
 .modal-row{display:flex;gap:8px;justify-content:flex-end}
+
+/* ── CONFIRM DIALOG ── */
+.confirm-dialog{background:var(--panel);border:1px solid var(--border2);padding:24px 28px;min-width:300px;max-width:460px;display:flex;flex-direction:column;gap:20px}
+.confirm-msg{font-size:13px;color:var(--text);line-height:1.65;letter-spacing:.2px;white-space:pre-wrap}
+.confirm-row{display:flex;gap:8px;justify-content:flex-end}
+.btn.danger{border-color:var(--danger);color:var(--danger)}.btn.danger:hover{background:rgba(196,80,80,.1)}
 
 /* ── THEME PICKER ── */
 .theme-picker{position:relative;flex-shrink:0}
@@ -593,6 +621,17 @@ const THEMES = {
       '--grid':'rgba(255,255,255,0.10)',
     }
   },
+  'light-cool': {
+    label: 'Claro · Frío',
+    bg: '#f0f2f6', acc: '#4d6fa8',
+    vars: {
+      '--bg':'#f0f2f6','--surf':'#e8ebf2','--panel':'#dfe3ee','--deep':'#f5f7fa',
+      '--border':'#c4cad8','--border2':'#a8b0c8',
+      '--acc':'#4d6fa8','--acc-dim':'#3a5590','--acc-faint':'rgba(77,111,168,0.1)',
+      '--text':'#0e1220','--sub':'#2a3858','--dim':'#505e90','--muted':'#8898b8','--danger':'#c04040',
+      '--grid':'rgba(0,0,0,0.08)',
+    }
+  },
 };
 
 const ZOOM_STEPS = [0.25, 0.33, 0.5, 0.67, 0.75, 1.0, 1.25, 1.5, 2.0];
@@ -744,6 +783,9 @@ const I18N = {
     boardConfigNote:'Las dimensiones físicas aparecen sobre cada foto al pasar el ratón\ny en el panel de información lateral.',
     save:'Guardar', close:'Cerrar',
     reportTitle:'Memoria del proyecto', noBoardsInProject:'Sin tableros en este proyecto',
+    exInfoHd:'Información del proyecto', exTitlePh:'Título…', exSubtitlePh:'Descripción breve…',
+    customSectionsHd:'Secciones', addSection:'+ Añadir sección', sectionTitlePh:'Epígrafe…', sectionBodyPh:'Contenido…', boardsSectionHd:'Tableros y piezas',
+    boardInMemory:'Incluir en memoria', boardExMemory:'Excluir de memoria', memIncludeInfo:'Incluir información del proyecto en el informe',
     noPhysScale:'sin escala física', emptyBoardMem:'Tablero vacío',
     reportConfigNote:'Configura DPI y unidades en cada tablero (⚙ Config) para ver las dimensiones físicas.',
     printPdf:'⎙ Imprimir / Guardar PDF',
@@ -781,7 +823,7 @@ const I18N = {
     confirmOverflow: 'Algunas fotos quedarán fuera de las nuevas dimensiones. ¿Continuar?',
     invalidDims: 'Las dimensiones deben ser mayores que cero',
     pxPreview: (w, h) => `${w} × ${h} px`,
-    gridToggle: 'Guías', gridHiddenZoom: 'Guías activas — zoom demasiado bajo para mostrarlas', gridAuto: 'Auto', fitView: 'Ajustar', fitWidth: 'Ajustar al ancho (Ctrl+0)', snapGrid: 'Imán', addNote: '+ Nota', addZone: '+ Zona', zoneColor: 'Color de zona', convertZoneToBoard: 'Convertir en tablero', zoneLabelPh: 'Nombre de zona…', zoneCaptureBtn: 'Capturar contenido',
+    gridToggle: 'Guías', gridHiddenZoom: 'Guías activas — zoom demasiado bajo para mostrarlas', gridAuto: 'Auto', fitView: 'Ajustar', fitWidth: 'Ajustar al ancho (Ctrl+0)', snapGrid: 'Imán', addNote: '+ Nota', addZone: '+ Zona', zoneColor: 'Color de zona', copyZoneToBoard: 'Copiar a nuevo tablero', moveZoneToBoard: 'Mover a nuevo tablero', zoneLabelPh: 'Nombre de zona…', zoneCaptureBtn: 'Capturar contenido',
     reportHeading:'Tableau — Memoria del Proyecto',
     noScaleConfigured:'sin escala configurada',
     reportDate: d => `Memoria del proyecto · ${d}`,
@@ -867,6 +909,9 @@ const I18N = {
     boardConfigNote:'Physical dimensions appear on each photo on hover\nand in the side info panel.',
     save:'Save', close:'Close',
     reportTitle:'Project report', noBoardsInProject:'No boards in this project',
+    exInfoHd:'Project info', exTitlePh:'Title…', exSubtitlePh:'Short description…',
+    customSectionsHd:'Sections', addSection:'+ Add section', sectionTitlePh:'Heading…', sectionBodyPh:'Content…', boardsSectionHd:'Boards & pieces',
+    boardInMemory:'Include in report', boardExMemory:'Exclude from report', memIncludeInfo:'Include project info in printed report',
     noPhysScale:'no physical scale', emptyBoardMem:'Empty board',
     reportConfigNote:'Configure DPI and units in each board (⚙ Config) to see physical dimensions.',
     printPdf:'⎙ Print / Save PDF',
@@ -904,7 +949,7 @@ const I18N = {
     confirmOverflow: 'Some photos will be outside the new dimensions. Continue?',
     invalidDims: 'Dimensions must be greater than zero',
     pxPreview: (w, h) => `${w} × ${h} px`,
-    gridToggle: 'Grid', gridHiddenZoom: 'Grid active — zoom too low to display', gridAuto: 'Auto', fitView: 'Fit', fitWidth: 'Fit to width (Ctrl+0)', snapGrid: 'Snap', addNote: '+ Note', addZone: '+ Zone', zoneColor: 'Zone color', convertZoneToBoard: 'Convert to board', zoneLabelPh: 'Zone name…', zoneCaptureBtn: 'Capture content',
+    gridToggle: 'Grid', gridHiddenZoom: 'Grid active — zoom too low to display', gridAuto: 'Auto', fitView: 'Fit', fitWidth: 'Fit to width (Ctrl+0)', snapGrid: 'Snap', addNote: '+ Note', addZone: '+ Zone', zoneColor: 'Zone color', copyZoneToBoard: 'Copy to new board', moveZoneToBoard: 'Move to new board', zoneLabelPh: 'Zone name…', zoneCaptureBtn: 'Capture content',
     reportHeading:'Tableau — Project Report',
     noScaleConfigured:'no scale configured',
     reportDate: d => `Project report · ${d}`,
@@ -1005,6 +1050,10 @@ function App() {
   const [uploadProgress, setUploadProgress] = useState(null); // null | {done,total,name}
   const [toast,         setToast]         = useState(null);
   const [modal,         setModal]         = useState(null); // 'project'|'board'|'boardcfg'
+  const [confirmModal,  setConfirmModal]  = useState(null); // {message, onConfirm, danger}
+  const [memDraft,      setMemDraft]      = useState({ exTitle:'', subtitle:'', memSections:[] });
+  const [memIncludeHeader, setMemIncludeHeader] = useState(true);
+  const [zoneConvertPending, setZoneConvertPending] = useState(null); // {zoneId, move}
   const [nameVal,       setNameVal]       = useState('');
   const [dragOver,      setDragOver]      = useState(false);
   const [libDragOver,   setLibDragOver]   = useState(false);
@@ -1094,7 +1143,7 @@ function App() {
   const [copyToMenu,    setCopyToMenu]    = useState(null); // {photoId, x, y}
   const [lasso,         setLasso]         = useState(null); // {x1,y1,x2,y2} canvas coords
 
-  const [theme,         setTheme]         = useState(() => localStorage.getItem('tb-theme') || 'dark-amber');
+  const [theme,         setTheme]         = useState(() => { const s = localStorage.getItem('tb-theme'); return (s && THEMES[s]) ? s : 'dark-amber'; });
   const [themeOpen,     setThemeOpen]     = useState(false);
   const [appVersion,    setAppVersion]    = useState('');
   const [updateInfo,    setUpdateInfo]    = useState(null);
@@ -1221,6 +1270,19 @@ function App() {
   useEffect(() => { if (pid && bid) localStorage.setItem(`tb-lastbid-${pid}`, bid); }, [bid, pid]);
 
   useEffect(() => {
+    if (modal === 'memoria') {
+      const proj = projects.find(p => p.id === pid);
+      if (proj) {
+        setMemDraft({
+          exTitle: proj.exTitle || '',
+          subtitle: proj.subtitle || '',
+          memSections: proj.memSections || [],
+        });
+      }
+    }
+  }, [modal, pid]);
+
+  useEffect(() => {
     // Save undo/redo for previous board before switching
     const prevBid = previousBidRef.current;
     if (prevBid) {
@@ -1237,6 +1299,8 @@ function App() {
     });
     selRef.current = []; setSel([]);
   }, [bid, pid]);
+
+  const showConfirm = (message, onConfirm, danger = true) => setConfirmModal({ message, onConfirm, danger });
 
   const showToast = (msg, err = false) => {
     setToast({ msg, err });
@@ -1435,6 +1499,13 @@ function App() {
   const saveBoardConfig = async () => {
     const dpi = parseInt(cfgDpi) || 300;
     let fixedW = null, fixedH = null;
+    const doSave = async () => {
+      const patch = { units: cfgUnits, dpi, fixed: cfgFixed, fixedW: cfgFixed ? fixedW : null, fixedH: cfgFixed ? fixedH : null, defaultFrame: parseFloat(cfgDefaultFrame) || 0, exportPad: cfgFixed ? null : Math.max(0, parseInt(cfgExportPad) || 0) };
+      await api.patch(`/api/projects/${pid}/boards/${bid}`, patch);
+      setBoards(bs => bs.map(b => b.id === bid ? { ...b, ...patch } : b));
+      setModal(null);
+      showToast(t('configSaved'));
+    };
     if (cfgFixed) {
       fixedW = parseFloat(cfgBoardW);
       fixedH = parseFloat(cfgBoardH);
@@ -1448,23 +1519,45 @@ function App() {
         })();
         return item.x + item.w > newBp.w || item.y + h > newBp.h;
       });
-      if (overflow && !confirm(t('confirmOverflow'))) return;
+      if (overflow) { showConfirm(t('confirmOverflow'), doSave, false); return; }
     }
-    const patch = { units: cfgUnits, dpi, fixed: cfgFixed, fixedW: cfgFixed ? fixedW : null, fixedH: cfgFixed ? fixedH : null, defaultFrame: parseFloat(cfgDefaultFrame) || 0, exportPad: cfgFixed ? null : Math.max(0, parseInt(cfgExportPad) || 0) };
-    await api.patch(`/api/projects/${pid}/boards/${bid}`, patch);
-    setBoards(bs => bs.map(b => b.id === bid ? { ...b, ...patch } : b));
-    setModal(null);
-    showToast(t('configSaved'));
+    await doSave();
+  };
+
+  // ── project info (memory metadata) ───────────────────────────────────────
+  const saveProjectInfo = (patch) => {
+    api.patch(`/api/projects/${pid}`, patch);
+    setProjects(ps => ps.map(p => p.id === pid ? { ...p, ...patch } : p));
+  };
+  const addMemSection = () => {
+    const sec = { id: Date.now().toString(36) + Math.random().toString(36).slice(2,5), title: '', body: '' };
+    const memSections = [...memDraft.memSections, sec];
+    setMemDraft(d => ({ ...d, memSections }));
+    saveProjectInfo({ memSections });
+  };
+  const removeMemSection = (secId) => {
+    const memSections = memDraft.memSections.filter(s => s.id !== secId);
+    setMemDraft(d => ({ ...d, memSections }));
+    saveProjectInfo({ memSections });
+  };
+  const updateMemSection = (secId, field, value) => {
+    setMemDraft(d => ({ ...d, memSections: d.memSections.map(s => s.id === secId ? { ...s, [field]: value } : s) }));
+  };
+  const toggleBoardInMemory = (boardId, current) => {
+    const inMemory = current === false ? true : false;
+    api.patch(`/api/projects/${pidRef.current}/boards/${boardId}`, { inMemory });
+    setBoards(bs => bs.map(b => b.id === boardId ? { ...b, inMemory } : b));
   };
 
   // ── print memoria ─────────────────────────────────────────────────────────
   const printMemoria = () => {
     const proj = projects.find(p => p.id === pid);
+    const includeHeader = memIncludeHeader;
     const locale = lang === 'en' ? 'en-GB' : 'es-ES';
     const date = new Date().toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });
     const hdr = t('colHdr');
     let rows = '';
-    boardsRef.current.forEach(board => {
+    boardsRef.current.filter(b => b.inMemory !== false).forEach(board => {
       const boardIt = allBoardItemsRef.current[board.id] || [];
       const dpi = board.dpi || null;
       const units = board.units || 'px';
@@ -1592,7 +1685,15 @@ function App() {
   .note-link-domain{color:#888;font-size:9px;margin-left:4px}
   @media print{@page{margin:12mm 14mm} body{padding:0;margin:0;max-width:none} section+section{page-break-before:always} .preview-wrap{page-break-inside:avoid}}
 </style></head><body>
-<header><h1>${proj?.name || ''}</h1><p>${t('reportHeading')} · ${date}</p></header>
+${includeHeader ? `<section style="margin-bottom:0">
+  <header>
+    <h1>${proj?.exTitle || proj?.name || ''}</h1>
+    ${proj?.exTitle && proj?.name !== proj?.exTitle ? `<p style="font-size:11px;color:#888;margin:0 0 6px">${proj.name}</p>` : ''}
+    <p>${t('reportHeading')} · ${date}</p>
+    ${proj?.subtitle ? `<p style="font-size:11px;color:#555;margin:4px 0 0">${proj.subtitle}</p>` : ''}
+  </header>
+  ${(proj?.memSections||[]).filter(s=>s.body||s.title).map(s=>`<div style="margin-top:18px">${s.title?`<h3 style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#888;margin:0 0 6px">${s.title}</h3>`:''}<p style="font-size:11px;line-height:1.7;white-space:pre-wrap;color:#333;margin:0">${s.body}</p></div>`).join('')}
+</section>` : ''}
 ${rows}
 </body></html>`;
     const w = window.open('', '_blank', 'width=780,height=740');
@@ -1830,13 +1931,14 @@ ${rows}
     }
   };
 
-  const deleteProject = async (id, e) => {
+  const deleteProject = (id, e) => {
     e?.stopPropagation();
-    if (!confirm(t('confirmDeleteProject'))) return;
-    await api.del(`/api/projects/${id}`);
-    const nps = projects.filter(p => p.id !== id);
-    setProjects(nps);
-    if (pidRef.current === id) setPid(nps[0]?.id || null);
+    showConfirm(t('confirmDeleteProject'), async () => {
+      await api.del(`/api/projects/${id}`);
+      const nps = projects.filter(p => p.id !== id);
+      setProjects(nps);
+      if (pidRef.current === id) setPid(nps[0]?.id || null);
+    });
   };
 
   const exportProject = (projId, e) => {
@@ -1882,14 +1984,15 @@ ${rows}
     }
   };
 
-  const deleteBoard = async (id, e) => {
+  const deleteBoard = (id, e) => {
     e?.stopPropagation();
-    if (!confirm(t('confirmDeleteBoard'))) return;
-    await api.del(`/api/projects/${pidRef.current}/boards/${id}`);
-    const nbs = boards.filter(b => b.id !== id);
-    setBoards(nbs);
-    setAllBoardItems(prev => { const n = {...prev}; delete n[id]; return n; });
-    if (bidRef.current === id) setBid(nbs[0]?.id || null);
+    showConfirm(t('confirmDeleteBoard'), async () => {
+      await api.del(`/api/projects/${pidRef.current}/boards/${id}`);
+      const nbs = boards.filter(b => b.id !== id);
+      setBoards(nbs);
+      setAllBoardItems(prev => { const n = {...prev}; delete n[id]; return n; });
+      if (bidRef.current === id) setBid(nbs[0]?.id || null);
+    });
   };
 
   const duplicateBoard = async (id, e) => {
@@ -2058,15 +2161,16 @@ ${rows}
     } catch (e) { showToast('Error: ' + e.message, true); }
   };
 
-  const restoreVersion = async (ts) => {
-    if (!window.confirm(t('confirmRestore'))) return;
-    try {
-      const newItems = await api.post(`/api/boards/${pid}/${bid}/versions/${ts}/restore`, {});
-      setItems(newItems); itemsRef.current = newItems;
-      setSel([]); selRef.current = [];
-      setModal(null);
-      showToast(t('versionRestored'));
-    } catch (e) { showToast('Error: ' + e.message, true); }
+  const restoreVersion = (ts) => {
+    showConfirm(t('confirmRestore'), async () => {
+      try {
+        const newItems = await api.post(`/api/boards/${pid}/${bid}/versions/${ts}/restore`, {});
+        setItems(newItems); itemsRef.current = newItems;
+        setSel([]); selRef.current = [];
+        setModal(null);
+        showToast(t('versionRestored'));
+      } catch (e) { showToast('Error: ' + e.message, true); }
+    }, false);
   };
 
   const deleteVersion = async (ts) => {
@@ -2104,16 +2208,17 @@ ${rows}
     setTemplates(ts => ts.filter(t => t.id !== tid));
   };
 
-  const applyTemplate = async (tmpl) => {
+  const applyTemplate = (tmpl) => {
     if (!bidRef.current) return;
-    if (!window.confirm(t('confirmApplyTemplate'))) return;
-    const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-    const newItems = tmpl.items.map(item => ({ ...item, id: uid() }));
-    await api.put(`/api/boards/${pidRef.current}/${bidRef.current}/items`, newItems);
-    setItems(newItems); itemsRef.current = newItems;
-    setSel([]); selRef.current = [];
-    showToast(t('templateApplied'));
-    setModal(null);
+    showConfirm(t('confirmApplyTemplate'), async () => {
+      const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      const newItems = tmpl.items.map(item => ({ ...item, id: uid() }));
+      await api.put(`/api/boards/${pidRef.current}/${bidRef.current}/items`, newItems);
+      setItems(newItems); itemsRef.current = newItems;
+      setSel([]); selRef.current = [];
+      showToast(t('templateApplied'));
+      setModal(null);
+    }, false);
   };
 
   const copySelectionToNewBoard = async (name) => {
@@ -2240,24 +2345,25 @@ ${rows}
     return () => window.removeEventListener('keydown', handler);
   }, [fullscreenPhoto, presentation, pinnedPreview, fillPlaceholder, replaceMode, sectCtxMenu]);
 
-  const deletePhoto = async id => {
+  const deletePhoto = id => {
     const placedBoards = boards.filter(b =>
       (allBoardItemsRef.current[b.id] || []).some(i => i.photoId === id)
     );
     const msg = placedBoards.length > 0
       ? t('confirmDeletePhotoPlaced', placedBoards.map(b => b.name).join(', '))
       : t('confirmDeletePhoto');
-    if (!confirm(msg)) return;
-    await api.del(`/api/projects/${pidRef.current}/photos/${id}`);
-    setPhotos(ps => ps.filter(p => p.id !== id));
-    const nit = itemsRef.current.filter(i => i.photoId !== id);
-    setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
-    setAllBoardItems(prev => Object.fromEntries(
-      Object.entries(prev).map(([bid, its]) => [bid, its.filter(i => i.photoId !== id)])
-    ));
+    showConfirm(msg, async () => {
+      await api.del(`/api/projects/${pidRef.current}/photos/${id}`);
+      setPhotos(ps => ps.filter(p => p.id !== id));
+      const nit = itemsRef.current.filter(i => i.photoId !== id);
+      setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
+      setAllBoardItems(prev => Object.fromEntries(
+        Object.entries(prev).map(([bid, its]) => [bid, its.filter(i => i.photoId !== id)])
+      ));
+    });
   };
 
-  const deleteSelectedPhotos = async () => {
+  const deleteSelectedPhotos = () => {
     const ids = libSelRef.current;
     if (!ids.length) return;
     const placedCount = ids.filter(id =>
@@ -2265,16 +2371,17 @@ ${rows}
     ).length;
     const msg = t('confirmDeletePhotos', ids.length) +
       (placedCount > 0 ? t('confirmDeletePhotosPlaced', placedCount) : '');
-    if (!confirm(msg)) return;
-    for (const id of ids) await api.del(`/api/projects/${pidRef.current}/photos/${id}`);
-    setPhotos(ps => ps.filter(p => !ids.includes(p.id)));
-    const nit = itemsRef.current.filter(i => !ids.includes(i.photoId));
-    setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
-    setAllBoardItems(prev => Object.fromEntries(
-      Object.entries(prev).map(([bid, its]) => [bid, its.filter(i => !ids.includes(i.photoId))])
-    ));
-    setLibSelection([]);
-    setBatchTagPop(null);
+    showConfirm(msg, async () => {
+      for (const id of ids) await api.del(`/api/projects/${pidRef.current}/photos/${id}`);
+      setPhotos(ps => ps.filter(p => !ids.includes(p.id)));
+      const nit = itemsRef.current.filter(i => !ids.includes(i.photoId));
+      setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
+      setAllBoardItems(prev => Object.fromEntries(
+        Object.entries(prev).map(([bid, its]) => [bid, its.filter(i => !ids.includes(i.photoId))])
+      ));
+      setLibSelection([]);
+      setBatchTagPop(null);
+    });
   };
 
   const addSelectedToCanvas = () => {
@@ -2516,14 +2623,9 @@ ${rows}
       if (it.groupId && lockedGroups.has(it.groupId)) return false;
       return true;
     });
-    // Bring to front (only unlocked non-zone items — zones stay at their z)
-    let z = Math.max(0, ...itemsRef.current.map(i => i.z || 0));
-    const fwd = itemsRef.current.map(i => (dragIds.includes(i.id) && i.type !== 'zone') ? { ...i, z: ++z } : i);
-    setItems(fwd); itemsRef.current = fwd;
-
     // Record start positions
     const starts = {};
-    dragIds.forEach(id => { const it = fwd.find(i => i.id === id); if (it) starts[id] = { x: it.x, y: it.y }; });
+    dragIds.forEach(id => { const it = itemsRef.current.find(i => i.id === id); if (it) starts[id] = { x: it.x, y: it.y }; });
     const sx = e.clientX, sy = e.clientY;
     let ldx = 0, ldy = 0;
 
@@ -3093,22 +3195,34 @@ ${rows}
     setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
   };
 
-  const convertZoneToBoard = async (zoneId) => {
+  const convertZoneToBoard = (zoneId, move = false) => {
     const zone = itemsRef.current.find(i => i.id === zoneId);
     if (!zone || !pidRef.current) return;
-    const name = zone.label?.trim() || (lang === 'es' ? 'Zona' : 'Zone');
-    const inside = itemsRef.current.filter(i => {
-      if (i.type === 'zone') return false;
-      const iH = getItemH(i);
-      return i.x < zone.x + zone.w && i.x + i.w > zone.x && i.y < zone.y + zone.h && i.y + iH > zone.y;
-    });
-    if (!inside.length) { showToast(lang === 'es' ? 'La zona está vacía' : 'Zone is empty', true); return; }
+    const members = itemsRef.current.filter(i => i.type !== 'zone' && i.zoneId === zoneId);
+    if (!members.length) { showToast(lang === 'es' ? 'La zona está vacía' : 'Zone is empty', true); return; }
+    const defaultName = zone.label?.trim() || (lang === 'es' ? `Tablero ${boardsRef.current.length + 1}` : `Board ${boardsRef.current.length + 1}`);
+    setNameVal(defaultName);
+    setZoneConvertPending({ zoneId, move });
+    setModal('convertzone');
+  };
+
+  const doConvertZone = async () => {
+    if (!nameVal.trim() || !zoneConvertPending) return;
+    const { zoneId, move } = zoneConvertPending;
+    const name = nameVal.trim();
+    setModal(null); setZoneConvertPending(null);
+    const members = itemsRef.current.filter(i => i.type !== 'zone' && i.zoneId === zoneId);
     const b = await api.post(`/api/projects/${pidRef.current}/boards`, { name });
     setBoards(bs => [...bs, b]);
     const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-    const newItems = inside.map(item => ({ ...item, id: uid(), groupId: undefined }));
+    const newItems = members.map(({ zoneId: _z, groupId: _g, ...rest }) => ({ ...rest, id: uid() }));
     await api.put(`/api/boards/${pidRef.current}/${b.id}/items`, newItems);
     setAllBoardItems(prev => ({ ...prev, [b.id]: newItems }));
+    if (move) {
+      const memberIds = new Set(members.map(i => i.id));
+      const nit = itemsRef.current.filter(i => i.id !== zoneId && !memberIds.has(i.id));
+      setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
+    }
     setBid(b.id); bidRef.current = b.id;
     showToast(lang === 'es' ? `Tablero "${name}" creado` : `Board "${name}" created`);
   };
@@ -3922,8 +4036,6 @@ ${rows}
                         onContextMenu={e => openCtxMenu(e, item.id)}
                       >
                         <div className="bitem-bar" onPointerDown={e => e.stopPropagation()} style={item.y * zoom < 40 ? {bottom:'auto',top:'100%'} : undefined}>
-                          <button className="ibc" title={t('convertZoneToBoard')} style={{fontSize:11}}
-                            onClick={e => { e.stopPropagation(); convertZoneToBoard(item.id); }}>⊞</button>
                           <button className="ibc del" title={t('deleteBtn')} onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
                         </div>
                         <div className="zitem-body" style={{background: zClr.fill, border:`2px dashed ${zClr.border}`}}>
@@ -4449,9 +4561,7 @@ ${rows}
                                   <div className="sect-actions" onClick={e => e.stopPropagation()}>
                                     <button className="sect-btn" title={t('uploadToSection')} onClick={e => { e.stopPropagation(); uploadSectRef.current = s.id; uploadSectInput.current?.click(); }}>↑</button>
                                     <button className="sect-btn" title={t('sectRename')} onClick={() => setRenamingSect(s.id)}>✎</button>
-                                    <button className="sect-btn danger" title={t('sectDelete')} onClick={() => {
-                                      if (window.confirm(t('confirmDeleteSection', cnt))) deleteSection(s.id);
-                                    }}>×</button>
+                                    <button className="sect-btn danger" title={t('sectDelete')} onClick={() => showConfirm(t('confirmDeleteSection', cnt), () => deleteSection(s.id))}>×</button>
                                   </div>
                                 </div>
                                 {!collapsed && <div className="lib-photo-row">{(bySection[s.id] || []).map(renderThumb)}</div>}
@@ -4524,6 +4634,21 @@ ${rows}
       )}
       {toast && <div className={`toast${toast.err?' err':''}`} style={{bottom: (libOpen ? libHeight : 30) + 8}}>{toast.msg}</div>}
 
+      {confirmModal && (
+        <div className="overlay" onClick={() => setConfirmModal(null)}>
+          <div className="confirm-dialog" onClick={e => e.stopPropagation()}>
+            <div className="confirm-msg">{confirmModal.message}</div>
+            <div className="confirm-row">
+              <button className="btn" onClick={() => setConfirmModal(null)}>{lang === 'es' ? 'Cancelar' : 'Cancel'}</button>
+              <button className={`btn${confirmModal.danger ? ' danger' : ' acc'}`}
+                onClick={() => { setConfirmModal(null); confirmModal.onConfirm(); }}>
+                {lang === 'es' ? 'Confirmar' : 'Confirm'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {presentation && (() => {
         const presIdx = boards.findIndex(b => b.id === bid);
         const hasPrev = presIdx > 0;
@@ -4592,21 +4717,39 @@ ${rows}
       {ctxMenu && (() => {
         const ctxItem = items.find(i => i.id === ctxMenu.itemId);
         if (!ctxItem) return null;
-        if (ctxItem.type === 'zone') return (
-          <div className="ctx-menu" style={{left: ctxMenu.x, top: ctxMenu.y}}
-            onPointerDown={e => e.stopPropagation()} onContextMenu={e => e.preventDefault()}>
-            <div style={{padding:'6px 12px 3px',fontSize:8,color:'var(--dim)',letterSpacing:1.5,textTransform:'uppercase'}}>{t('zoneColor')}</div>
-            <div style={{display:'flex',gap:6,padding:'4px 12px 8px',alignItems:'center'}}>
-              {ZONE_COLORS.map(c => (
-                <div key={c} onClick={() => { updateZoneColor(ctxItem.id, c); setCtxMenu(null); }}
-                  style={{width:16,height:16,borderRadius:'50%',cursor:'pointer',background:ZONE_COLOR_VALS[c].border,border:`2px solid ${ctxItem.color===c?'var(--acc)':'transparent'}`}}/>
-              ))}
+        if (ctxItem.type === 'zone') {
+          const zoneMembers = items.filter(i => i.zoneId === ctxItem.id);
+          const hasMembers = zoneMembers.length > 0;
+          return (
+            <div className="ctx-menu" style={{left: ctxMenu.x, top: ctxMenu.y}}
+              onPointerDown={e => e.stopPropagation()} onContextMenu={e => e.preventDefault()}>
+              <div style={{padding:'6px 12px 3px',fontSize:8,color:'var(--dim)',letterSpacing:1.5,textTransform:'uppercase'}}>{t('zoneColor')}</div>
+              <div style={{display:'flex',gap:6,padding:'4px 12px 8px',alignItems:'center'}}>
+                {ZONE_COLORS.map(c => (
+                  <div key={c} onClick={() => { updateZoneColor(ctxItem.id, c); setCtxMenu(null); }}
+                    style={{width:16,height:16,borderRadius:'50%',cursor:'pointer',background:ZONE_COLOR_VALS[c].border,border:`2px solid ${ctxItem.color===c?'var(--acc)':'transparent'}`}}/>
+                ))}
+              </div>
+              {hasMembers && <>
+                <div className="ctx-sep"/>
+                <button className="ctx-item" onClick={() => { convertZoneToBoard(ctxMenu.itemId, false); setCtxMenu(null); }}>⊞ {t('copyZoneToBoard')}</button>
+                <button className="ctx-item" onClick={() => { convertZoneToBoard(ctxMenu.itemId, true); setCtxMenu(null); }}>⊞ {t('moveZoneToBoard')}</button>
+              </>}
+              <div className="ctx-sep"/>
+              <button className="ctx-item ctx-danger" onClick={() => {
+                setCtxMenu(null);
+                if (hasMembers) {
+                  const msg = lang === 'es'
+                    ? `La zona contiene ${zoneMembers.length} elemento${zoneMembers.length === 1 ? '' : 's'}. ¿Eliminar la zona?`
+                    : `The zone contains ${zoneMembers.length} item${zoneMembers.length === 1 ? '' : 's'}. Delete the zone?`;
+                  showConfirm(msg, () => deleteItem(ctxItem.id));
+                } else {
+                  deleteItem(ctxItem.id);
+                }
+              }}>× {t('deleteBtn')}</button>
             </div>
-            <div className="ctx-sep"/>
-            <button className="ctx-item" onClick={() => { convertZoneToBoard(ctxMenu.itemId); setCtxMenu(null); }}>⊞ {t('convertZoneToBoard')}</button>
-            <button className="ctx-item ctx-danger" onClick={() => { deleteItem(ctxMenu.itemId); setCtxMenu(null); }}>× {t('deleteBtn')}</button>
-          </div>
-        );
+          );
+        }
         const isNote = ctxItem.type === 'note' || ctxItem.type === 'text';
         return (
           <div className="ctx-menu" style={{left: ctxMenu.x, top: ctxMenu.y}}
@@ -4940,6 +5083,23 @@ ${rows}
         </div>
       )}
 
+      {modal === 'convertzone' && (
+        <div className="overlay" onClick={() => { setModal(null); setZoneConvertPending(null); }}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-h">{t(zoneConvertPending?.move ? 'moveZoneToBoard' : 'copyZoneToBoard')}</div>
+            <input className="inp" value={nameVal} autoFocus
+              onChange={e => setNameVal(e.target.value)}
+              onKeyDown={e => e.key==='Enter' && doConvertZone()}
+              placeholder={t('boardNamePh')}
+            />
+            <div className="modal-row">
+              <button className="btn" onClick={() => { setModal(null); setZoneConvertPending(null); }}>{t('cancel')}</button>
+              <button className="btn acc" onClick={doConvertZone}>{t('create')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {modal === 'boardcfg' && (
         <div className="overlay" onClick={() => setModal(null)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
@@ -5118,6 +5278,40 @@ ${rows}
             <div className="modal-h">{t('reportTitle')}</div>
             <div className="modal-sub">{activeProject?.name}</div>
             <div className="mem-scroll">
+              {/* ── Información del proyecto ── */}
+              <div className="mem-info-block">
+                <div className="mem-info-hd">{t('exInfoHd')}</div>
+                <input className="mem-info-input" placeholder={t('exTitlePh')}
+                  value={memDraft.exTitle}
+                  onChange={e => setMemDraft(d => ({ ...d, exTitle: e.target.value }))}
+                  onBlur={e => saveProjectInfo({ exTitle: e.target.value })}/>
+                <input className="mem-info-input" placeholder={t('exSubtitlePh')}
+                  value={memDraft.subtitle}
+                  onChange={e => setMemDraft(d => ({ ...d, subtitle: e.target.value }))}
+                  onBlur={e => saveProjectInfo({ subtitle: e.target.value })}/>
+              </div>
+
+              {/* ── Secciones libres ── */}
+              <div className="mem-info-hd" style={{marginBottom:8}}>{t('customSectionsHd')}</div>
+              {memDraft.memSections.map(sec => (
+                <div key={sec.id} className="mem-free-section">
+                  <div className="mem-free-hd">
+                    <input className="mem-free-title" placeholder={t('sectionTitlePh')}
+                      value={sec.title}
+                      onChange={e => updateMemSection(sec.id, 'title', e.target.value)}
+                      onBlur={() => saveProjectInfo({ memSections: memDraft.memSections })}/>
+                    <button className="mem-free-del" onClick={() => removeMemSection(sec.id)}>×</button>
+                  </div>
+                  <textarea className="mem-free-body" placeholder={t('sectionBodyPh')}
+                    value={sec.body}
+                    onChange={e => updateMemSection(sec.id, 'body', e.target.value)}
+                    onBlur={() => saveProjectInfo({ memSections: memDraft.memSections })}/>
+                </div>
+              ))}
+              <button className="mem-add-section-btn" onClick={addMemSection}>{t('addSection')}</button>
+
+              {/* ── Tableros y piezas ── */}
+              <div className="mem-boards-sep">{t('boardsSectionHd')}</div>
               {boards.length === 0 ? (
                 <div style={{color:'var(--muted)',fontSize:10,padding:'8px 0'}}>{t('noBoardsInProject')}</div>
               ) : boards.map(board => {
@@ -5126,11 +5320,17 @@ ${rows}
                 const units = board.units || 'px';
                 const hasPhys = dpi && units !== 'px';
                 return (
-                  <div key={board.id} className="mem-board">
+                  <div key={board.id} className="mem-board" style={board.inMemory === false ? {opacity:.4} : undefined}>
                     <div className="mem-board-hd">
                       <span className="mem-board-name">{board.name}</span>
                       <span className="mem-board-cfg" style={hasPhys ? {} : {color:'var(--muted)'}}>
                         {hasPhys ? `${dpi} dpi · ${units}` : t('noPhysScale')}
+                      </span>
+                      <span style={{marginLeft:'auto'}}>
+                        <button className="btn" style={{fontSize:8,padding:'2px 7px',color: board.inMemory===false?'var(--muted)':'var(--acc)',borderColor: board.inMemory===false?'var(--border)':'var(--acc-dim)'}}
+                          onClick={() => toggleBoardInMemory(board.id, board.inMemory)}>
+                          {board.inMemory === false ? t('boardExMemory') : t('boardInMemory')}
+                        </button>
                       </span>
                     </div>
                     {boardIt.length === 0 ? (
@@ -5138,7 +5338,7 @@ ${rows}
                     ) : (() => {
                       const bPx = getBoardPx(board);
                       const textItems = boardIt.filter(i => i.type === 'text');
-                      const photoItems = boardIt.filter(i => i.type !== 'note' && i.type !== 'text').map(item => {
+                      const photoItems = boardIt.filter(i => i.type !== 'note' && i.type !== 'text' && i.type !== 'zone').map(item => {
                         const photo = photos.find(p => p.id === item.photoId);
                         const rot = item.rot || 0; const freeRot = item.freeRot || 0;
                         const isSwapped = rot % 180 !== 0;
@@ -5248,6 +5448,12 @@ ${rows}
             </div>
             <div style={{fontSize:9,color:'var(--muted)',lineHeight:1.8}}>
               {t('reportConfigNote')}
+            </div>
+            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:2}}>
+              <input type="checkbox" id="mem-inc-hdr" checked={memIncludeHeader}
+                onChange={e => setMemIncludeHeader(e.target.checked)}
+                style={{accentColor:'var(--acc)',cursor:'pointer'}}/>
+              <label htmlFor="mem-inc-hdr" style={{fontSize:9,color:'var(--dim)',cursor:'pointer',letterSpacing:.3}}>{t('memIncludeInfo')}</label>
             </div>
             <div className="modal-row">
               <button className="btn" onClick={() => setModal(null)}>{t('close')}</button>

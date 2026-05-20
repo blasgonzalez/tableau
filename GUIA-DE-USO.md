@@ -156,13 +156,15 @@ Haz clic derecho sobre cualquier foto o nota del canvas para abrir un menú con 
 
 | Opción | Acción |
 |---|---|
-| **↑ Traer al frente** | Sube el elemento en el orden Z |
+| **↑ Al frente** | Sube el elemento en el orden Z (ver nota abajo) |
 | **▣ Marco** | Ajusta el grosor del marco (solo fotos) |
 | **⊞ Usar como tamaño de referencia** | Las fotos que añadas después llegarán a ese ancho (solo fotos) |
 | **↔ Voltear horizontal** | Voltea la foto de izquierda a derecha (solo fotos) |
 | **↕ Voltear vertical** | Voltea la foto de arriba a abajo (solo fotos) |
 | **⧉ Duplicar** | Crea una copia desplazada 20 px |
 | **× Eliminar** | Elimina del tablero |
+
+> **Orden Z:** seleccionar o arrastrar un elemento no cambia su posición en la pila. El orden Z solo se modifica con **↑ Al frente** del menú contextual, o al crear / duplicar un elemento (que siempre llega encima de todo).
 
 ### Etiquetas
 
@@ -230,6 +232,43 @@ Usa la barra de arrastre superior del elemento para moverlo. Haz clic en el bot�
 | **×** | Eliminar del tablero |
 
 Los elementos de texto se pueden mover, redimensionar y agrupar igual que el resto de elementos del canvas.
+
+---
+
+## Zonas
+
+Las zonas son contenedores visuales que agrupan fotos, notas y textos dentro de un tablero. Al mover una zona, todo su contenido se desplaza con ella.
+
+### Crear una zona
+
+Haz clic derecho sobre el canvas vacío y selecciona **+ Zona**. La zona aparece centrada en la vista con un tamaño por defecto y queda seleccionada.
+
+### Redimensionar una zona
+
+Arrastra cualquiera de los **ocho handles** (esquinas y centros de cada lado) para cambiar el tamaño. Las fotos y notas que están dentro de la zona no se mueven al redimensionarla.
+
+### Mover una zona
+
+Arrastra el interior de la zona. Todo el contenido que tiene dentro se mueve con ella. Las zonas no pueden soltarse dentro de otra zona — si lo intentas, vuelven a su posición original.
+
+### Etiqueta y color
+
+- **Etiqueta** — haz clic en el campo de texto interior de la zona para escribir un nombre
+- **Color** — haz clic derecho sobre la zona y selecciona uno de los seis colores disponibles (azul, verde, naranja, morado, rojo, neutro)
+
+### Menú contextual de zona
+
+Haz clic derecho sobre una zona para ver sus opciones:
+
+| Opción | Cuándo aparece | Acción |
+|---|---|---|
+| **⊞ Copiar a nuevo tablero** | Solo si la zona tiene contenido | Crea un tablero nuevo con el contenido de la zona; pide nombre (pre-rellenado con la etiqueta de la zona o "Tablero N") |
+| **⊞ Mover a nuevo tablero** | Solo si la zona tiene contenido | Igual que Copiar, pero además elimina la zona y su contenido del tablero actual |
+| **× Eliminar** | Siempre | Si la zona tiene contenido pide confirmación antes de eliminar |
+
+### Membresía automática
+
+Cuando colocas o mueves una foto o nota de forma que su centro queda dentro de una zona, el elemento pasa a pertenecer a esa zona automáticamente. Un pequeño punto de color en la esquina del elemento indica a qué zona pertenece. Si mueves el elemento fuera de los límites de la zona, pierde la membresía.
 
 ---
 
@@ -323,16 +362,34 @@ Se guardan hasta 50 pasos por tablero. El historial se reinicia al cambiar de ta
 
 ---
 
-## Informe del proyecto
+## Memoria del proyecto
 
-Haz clic en **≡ Informe** en la barra superior para abrir el informe del proyecto. Incluye:
+Haz clic en **≡ Memoria** en la barra superior para abrir el panel de memoria del proyecto. Tiene dos partes: el formulario de edición (izquierda) y el informe imprimible (al imprimir).
 
-- Una vista previa de cada tablero con las fotos en sus posiciones reales, incluidas las fotos rotadas y los elementos de texto
-- Una tabla de todas las fotos con dimensiones, tamaño físico (si hay DPI configurado) y etiqueta
-- Notas marcadas para inclusión (icono 📄)
-- Enlaces de las notas como hipervínculos clicables
+### Formulario de información
 
-Haz clic en **⎙ Imprimir / Guardar PDF** para imprimir o exportar como PDF.
+| Campo | Descripción |
+|---|---|
+| **Título** | Título de presentación del proyecto |
+| **Descripción breve** | Subtítulo o descripción corta |
+| **+ Sección** | Añade un epígrafe libre con título y cuerpo de texto; puedes añadir tantas secciones como necesites y eliminarlas con **×** |
+
+Los cambios en los campos de texto se guardan automáticamente al salir del campo.
+
+### Tableros y piezas
+
+Debajo del formulario aparece la lista de tableros del proyecto con una vista previa a escala de cada uno y la tabla de fotos que contiene.
+
+- El botón **Incluir en memoria / Excluir de memoria** de cada tablero controla si ese tablero aparece en el informe imprimible. Los tableros excluidos se muestran atenuados.
+
+### Imprimir el informe
+
+Haz clic en **⎙ Imprimir / Guardar PDF** para abrir el diálogo de impresión del navegador. El informe se pagina así:
+
+- **Primera página** — información del proyecto (título, descripción y secciones), si la casilla *Incluir información del proyecto en el informe* está marcada
+- **Una página por tablero** — vista previa a escala + tabla de fotos con dimensiones y etiquetas
+
+El informe también incluye las notas marcadas con el icono 📄 y sus enlaces como hipervínculos clicables.
 
 ---
 

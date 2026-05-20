@@ -1,6 +1,6 @@
 {
-  "version": "1.6.4",
+  "version": "1.6.5",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-05-19",
-  "notes": "Zonas: divisores visuales del tablero · Redimensionado por cualquier lado · Proteccion de solapamiento"
+  "releaseDate": "2026-05-20",
+  "notes": "Memoria: correcciones de estabilidad · Zonas a tablero con nombre personalizado · Orden z-index explícito"
 }

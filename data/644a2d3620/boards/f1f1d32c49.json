@@ -8,31 +8,7 @@
     "z": 202,
     "label": "",
     "rot": 0,
-    "frame": 0,
-    "zoneId": "mpctn2qgi5p"
-  },
-  {
-    "id": "mp8v59a6nno2",
-    "photoId": "175037ef4e80",
-    "x": 1298.2754994742365,
-    "y": 169.8333333333336,
-    "w": 300,
-    "z": 203,
-    "label": "",
-    "rot": 0,
-    "frame": 0,
-    "zoneId": "mpctn2qgi5p"
-  },
-  {
-    "id": "mpctn2qgi5p",
-    "type": "zone",
-    "label": "",
-    "color": "red",
-    "x": 1128.137749737118,
-    "y": 42.83333333333337,
-    "w": 1639,
-    "h": 1125,
-    "z": 70
+    "frame": 0
   },
   {
     "id": "mpctngpcd51",
@@ -43,42 +19,6 @@
     "z": 204,
     "label": "",
     "rot": 0,
-    "frame": 0,
-    "zoneId": "mpctn2qgi5p"
-  },
-  {
-    "id": "mpcubsmm7kh",
-    "type": "zone",
-    "label": "",
-    "color": "blue",
-    "x": 168.68874868559215,
-    "y": 399.33333333333337,
-    "w": 490,
-    "h": 412,
-    "z": 162
-  },
-  {
-    "id": "mpcubuk6rp5",
-    "photoId": "a291a63819ee",
-    "x": 1278.2754994742365,
-    "y": 885.1666666666667,
-    "w": 320,
-    "z": 205,
-    "label": "",
-    "rot": 0,
-    "frame": 0,
-    "zoneId": "mpctn2qgi5p"
-  },
-  {
-    "id": "mpcux9zbzuy",
-    "photoId": "9c91e91d34e1",
-    "x": 211,
-    "y": 485.33333333333337,
-    "w": 320,
-    "z": 207,
-    "label": "",
-    "rot": 0,
-    "frame": 0,
-    "zoneId": "mpcubsmm7kh"
+    "frame": 0
   }
 ]
