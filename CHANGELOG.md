@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.7.0] — 2026-05-21
+### Añadido
+- Vista 3D: botón "Capturar" que guarda la vista actual como foto en la librería del proyecto
+- Sala: aviso de desincronización pared/tablero — aparece cuando la longitud real de la pared difiere del ancho configurado en el tablero (en ambas direcciones)
+- Sala: botón "Sincronizar" en la fila de pared afectada; actualiza el ancho del tablero para que coincida con la pared; bloquea la sincronización si hay fotos que quedarían fuera del nuevo ancho
+
+### Corregido
+- El handle de redimensionado de fotos aparecía lejos de la esquina inferior derecha al hacer zoom en el canvas (interacción incorrecta entre `calc(X/zoom)` y el CSS `zoom` del elemento)
+- Arrastrar vértices en el plano de sala producía deriva progresiva del cursor; ahora usa `getScreenCTM().inverse()` para convertir coordenadas de pantalla a SVG con precisión
+- Los botones de la barra de herramientas 3D eran invisibles con el tema claro de la aplicación
+
+---
+
 ## [1.6.5] — 2026-05-20
 ### Añadido
 - Al convertir una zona en tablero (Copiar o Mover), se abre un diálogo para escribir el nombre del tablero; viene pre-rellenado con la etiqueta de la zona o con "Tablero N" si no tiene nombre

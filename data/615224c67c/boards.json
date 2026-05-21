@@ -1,1 +1,46 @@
-[]
+[
+  {
+    "id": "e0fc996aa2",
+    "name": "Pared 1",
+    "created": 1779354816734,
+    "units": "cm",
+    "dpi": 19.3,
+    "fixed": true,
+    "fixedW": 709.7,
+    "fixedH": 280,
+    "defaultW": 456
+  },
+  {
+    "id": "18fd5dc071",
+    "name": "Pared 7",
+    "created": 1779360446711,
+    "units": "cm",
+    "dpi": 27.2,
+    "fixed": true,
+    "fixedW": 358.1,
+    "fixedH": 280,
+    "defaultW": 643
+  },
+  {
+    "id": "517c21b5a5",
+    "name": "Pared 5",
+    "created": 1779368322855,
+    "units": "cm",
+    "dpi": 236.3,
+    "fixed": true,
+    "fixedW": 43,
+    "fixedH": 280,
+    "defaultW": 5582
+  },
+  {
+    "id": "772eeadecc",
+    "name": "Pared 8",
+    "created": 1779369868681,
+    "units": "cm",
+    "dpi": 39.1,
+    "fixed": true,
+    "fixedW": 316.7,
+    "fixedH": 280,
+    "defaultW": 924
+  }
+]

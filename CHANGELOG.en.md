@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.7.0] — 2026-05-21
+### Added
+- 3D view: "Snapshot" button that saves the current view as a photo in the project library
+- Room: wall/board desync warning — appears when the real wall length differs from the board's configured width (in either direction)
+- Room: "Sync" button on the affected wall row; updates the board width to match the wall; blocks sync if photos would overflow the new width
+
+### Fixed
+- The photo resize handle appeared far from the bottom-right corner when the canvas was zoomed (incorrect interaction between `calc(X/zoom)` and the element's CSS `zoom`)
+- Dragging vertices in the floor plan caused progressive cursor drift; now uses `getScreenCTM().inverse()` for accurate screen-to-SVG coordinate conversion
+- 3D toolbar buttons were invisible when using the app's light theme
+
+---
+
 ## [1.6.5] — 2026-05-20
 ### Added
 - When converting a zone to a board (Copy or Move), a dialog now prompts for the board name; pre-filled with the zone label or "Board N" if the zone has no name

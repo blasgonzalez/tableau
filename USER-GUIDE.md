@@ -409,6 +409,58 @@ In presentation mode: the alignment grid is hidden, internal notes and photo lab
 
 ---
 
+## Room and 3D view
+
+The room feature lets you draw the floor plan of the exhibition space and preview how photos look on each wall in 3D.
+
+### Opening the room
+
+Click the **🏛 Room** button in the left panel navigation bar. If the project has no room yet, an empty screen appears with the **Create room** button.
+
+### Drawing the floor plan
+
+1. Click **Draw floor plan** to enter drawing mode.
+2. Click on the canvas to place vertices one by one. The system snaps automatically to 45° and 90° angles.
+3. To close the polygon, click the first vertex again. To leave it open (corridor, irregular space), click **Finish open**.
+4. Press **⌫** to undo the last vertex, or **Cancel** to exit without saving.
+
+Once drawn, click **Edit floor plan** to make changes:
+- Drag any vertex to reposition it.
+- Drag a column to move it within the space.
+
+### Walls and linked boards
+
+The right panel lists all walls detected in the floor plan. For each wall you can:
+
+| Action | How |
+|---|---|
+| Rename | Double-click the wall name |
+| Change colour | Click the colour picker |
+| Flip photo side | Click **▷ / ◁** (front or back of wall) |
+| Create a board | Click **+ Board** — creates a fixed board sized to match the wall width and ceiling height |
+| Open the board | Click **Go to board →** |
+
+#### Desync warning ⚠
+
+If you move a vertex after creating a board, the real wall length may no longer match the board's configured width. When this happens, a **⚠** badge and a **Sync** button appear on that wall row.
+
+- **Sync** updates the board width to match the current wall length.
+- If any photos on the board would overflow the new (smaller) width, sync is blocked and a warning is shown. Go to the board first, adjust or remove those photos, then sync again.
+
+### 3D view
+
+Click **3D view** to see a three-dimensional rendering of the room with photos placed on each wall. Use the mouse to orbit (click + drag), zoom (scroll wheel) and pan (right-click + drag).
+
+| Button | Action |
+|---|---|
+| **← Floor plan** | Return to the floor plan view |
+| **Reset view** | Restore the camera to its initial position |
+| **Snapshot** | Save the current view as a photo in the project library |
+
+The snapshot is saved automatically to the library with the filename `room_DATE-TIME.jpg` and the tag `sala`.
+
+---
+
 ## Rejected photos
 
 The **✕** button that appears when hovering over a library thumbnail marks the photo as rejected. Rejected photos:

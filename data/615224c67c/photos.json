@@ -1,1 +1,159 @@
-[]
+[
+  {
+    "id": "48a2896d0241",
+    "name": "L1000053.jpg",
+    "w": 1350,
+    "h": 1800,
+    "size": 274035,
+    "dominant": {
+      "r": 8,
+      "g": 8,
+      "b": 8
+    },
+    "brightness": 0.56,
+    "meanColor": {
+      "r": 142,
+      "g": 142,
+      "b": 145
+    },
+    "created": 1779346716054
+  },
+  {
+    "id": "df2e695951d5",
+    "name": "L1000046.jpg",
+    "w": 1350,
+    "h": 1800,
+    "size": 328660,
+    "dominant": {
+      "r": 8,
+      "g": 8,
+      "b": 8
+    },
+    "brightness": 0.27,
+    "meanColor": {
+      "r": 68,
+      "g": 70,
+      "b": 72
+    },
+    "created": 1779347711416
+  },
+  {
+    "id": "5949458273f0",
+    "name": "L1000805.jpg",
+    "w": 1350,
+    "h": 1800,
+    "size": 243998,
+    "dominant": {
+      "r": 8,
+      "g": 8,
+      "b": 8
+    },
+    "brightness": 0.1,
+    "meanColor": {
+      "r": 35,
+      "g": 21,
+      "b": 18
+    },
+    "created": 1779354744498,
+    "rejected": false
+  },
+  {
+    "id": "d89b7889a5e0",
+    "name": "Brobdingnag_01.jpg",
+    "w": 1350,
+    "h": 1800,
+    "size": 469996,
+    "dominant": {
+      "r": 8,
+      "g": 8,
+      "b": 8
+    },
+    "brightness": 0.12,
+    "meanColor": {
+      "r": 30,
+      "g": 32,
+      "b": 36
+    },
+    "created": 1779368355221
+  },
+  {
+    "id": "8f0be225fd96",
+    "name": "L1000821.jpg",
+    "w": 1350,
+    "h": 1800,
+    "size": 289614,
+    "dominant": {
+      "r": 56,
+      "g": 56,
+      "b": 56
+    },
+    "brightness": 0.38,
+    "meanColor": {
+      "r": 99,
+      "g": 96,
+      "b": 91
+    },
+    "created": 1779369879049
+  },
+  {
+    "id": "4e0d310711fe",
+    "name": "L1000846.jpg",
+    "w": 1350,
+    "h": 1800,
+    "size": 748409,
+    "dominant": {
+      "r": 232,
+      "g": 232,
+      "b": 232
+    },
+    "brightness": 0.56,
+    "meanColor": {
+      "r": 143,
+      "g": 141,
+      "b": 141
+    },
+    "created": 1779372342302
+  },
+  {
+    "id": "f47687df6125",
+    "name": "L1000815.jpg",
+    "w": 1350,
+    "h": 1800,
+    "size": 354842,
+    "dominant": {
+      "r": 8,
+      "g": 8,
+      "b": 8
+    },
+    "brightness": 0.24,
+    "meanColor": {
+      "r": 59,
+      "g": 63,
+      "b": 63
+    },
+    "created": 1779372342998
+  },
+  {
+    "id": "dc24d7673f51",
+    "name": "sala_2026-05-21T14-25-26.jpg",
+    "w": 1800,
+    "h": 1175,
+    "size": 63492,
+    "dominant": {
+      "r": 24,
+      "g": 24,
+      "b": 24
+    },
+    "brightness": 0.31,
+    "meanColor": {
+      "r": 81,
+      "g": 79,
+      "b": 76
+    },
+    "created": 1779373527349,
+    "tags": [
+      "sala"
+    ],
+    "sectionId": "mpfl5di3z5d"
+  }
+]

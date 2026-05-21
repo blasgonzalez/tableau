@@ -190,6 +190,33 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .canvas{position:relative;min-width:3000px;min-height:2200px;z-index:1}
 .canvas-drop-hint{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(196,137,74,.06);border:3px dashed var(--acc-dim);font-size:14px;letter-spacing:3px;color:var(--acc);pointer-events:none;z-index:500}
 
+/* ── ROOM VIEW ── */
+.room-view{display:flex;flex:1;overflow:hidden}
+.room-svg-wrap{flex:1;position:relative;overflow:hidden;background:var(--deep)}
+.room-svg-wrap svg{width:100%;height:100%}
+.room-toolbar{position:absolute;top:10px;left:10px;display:flex;gap:6px;align-items:center;z-index:2}
+.room-toolbar-3d .btn{background:rgba(0,0,0,.55);color:rgba(255,255,255,.78);border-color:rgba(255,255,255,.18);backdrop-filter:blur(4px)}
+.room-toolbar-3d .btn:hover{color:#fff;border-color:rgba(255,255,255,.4);background:rgba(0,0,0,.72)}
+.room-hint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);font-size:9px;letter-spacing:.5px;color:var(--muted);background:var(--panel);border:1px solid var(--border);padding:4px 12px;border-radius:3px;pointer-events:none;white-space:nowrap}
+.room-panel{width:260px;flex-shrink:0;background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.room-panel-hd{padding:12px 14px 8px;font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border);flex-shrink:0}
+.room-cfg{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.room-cfg label{font-size:9px;color:var(--dim);letter-spacing:.5px;flex:1}
+.room-cfg input[type=number]{width:58px;background:var(--input);border:1px solid var(--border);color:var(--text);font-size:10px;padding:3px 6px;border-radius:3px;font-family:inherit}
+.room-cfg span{font-size:9px;color:var(--muted)}
+.room-walls{flex:1;overflow-y:auto}
+.room-wall-row{display:flex;align-items:center;gap:6px;padding:7px 14px;border-bottom:1px solid var(--border2);transition:background .1s}
+.room-wall-row.hov{background:var(--acc-faint)}
+.room-wall-row.hov .room-wall-name{color:var(--acc)}
+.room-wall-name{font-size:10px;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;cursor:text}
+.room-wall-len{font-size:9px;color:var(--muted);flex-shrink:0;font-variant-numeric:tabular-nums}
+.room-wall-warn{font-size:10px;color:#e87528;flex-shrink:0;cursor:default;line-height:1;user-select:none}
+.room-wall-rename{font-size:10px;background:var(--input);border:1px solid var(--acc);color:var(--text);padding:1px 5px;border-radius:2px;font-family:inherit;width:80px}
+.room-empty{padding:24px 16px;color:var(--dim);font-size:10px;line-height:1.8;text-align:center}
+.room-no-sala{display:flex;flex:1;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:var(--dim);font-size:10px}
+.nsala-row{display:flex;align-items:center;padding:5px 8px 5px 14px;cursor:pointer;color:var(--dim);font-size:9px;letter-spacing:.5px;transition:color .12s;border-left:2px solid transparent}
+.nsala-row:hover{color:var(--acc)}.nsala-row.active{color:var(--acc);border-left-color:var(--acc);background:var(--acc-faint)}
+
 /* ── BOARD ITEMS ── */
 .bitem{position:absolute;cursor:grab;user-select:none}
 .bitem:active{cursor:grabbing}
@@ -214,7 +241,7 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .ibc.del:hover{color:#fff}
 .ibc.fwd,.ibc.rot{background:var(--border2);color:var(--sub)}
 .ibc.fwd:hover,.ibc.rot:hover{color:var(--text)}
-.rh{position:absolute;bottom:calc(-6px / var(--canvas-zoom,1));right:calc(-6px / var(--canvas-zoom,1));width:14px;height:14px;background:var(--acc);cursor:se-resize;opacity:0;transition:opacity .12s;zoom:calc(1 / var(--canvas-zoom,1))}
+.rh{position:absolute;bottom:0;right:0;width:14px;height:14px;background:var(--acc);cursor:se-resize;opacity:0;transition:opacity .12s;zoom:calc(1 / var(--canvas-zoom,1))}
 .bitem:hover .rh{opacity:1}
 .lbl{position:absolute;left:0;right:0;box-sizing:border-box;font-size:calc(10px / var(--canvas-zoom,1));font-family:'IBM Plex Mono',monospace;color:var(--text);background:var(--panel2);border:none;border-top:1px solid var(--border2);padding:0 calc(6px / var(--canvas-zoom,1));letter-spacing:.3px;z-index:10;cursor:pointer;height:calc(26px / var(--canvas-zoom,1));display:flex;align-items:center;overflow:hidden;white-space:nowrap;user-select:none}
 .lbl:hover{border-top-color:var(--acc-dim)}
@@ -824,6 +851,7 @@ const I18N = {
     invalidDims: 'Las dimensiones deben ser mayores que cero',
     pxPreview: (w, h) => `${w} × ${h} px`,
     gridToggle: 'Guías', gridHiddenZoom: 'Guías activas — zoom demasiado bajo para mostrarlas', gridAuto: 'Auto', fitView: 'Ajustar', fitWidth: 'Ajustar al ancho (Ctrl+0)', snapGrid: 'Imán', addNote: '+ Nota', addZone: '+ Zona', zoneColor: 'Color de zona', copyZoneToBoard: 'Copiar a nuevo tablero', moveZoneToBoard: 'Mover a nuevo tablero', zoneLabelPh: 'Nombre de zona…', zoneCaptureBtn: 'Capturar contenido',
+    salaBtn:'🏛 Sala', salaCreate:'Crear sala', salaDelete:'Eliminar sala', salaDraw:'Dibujar planta', salaEdit:'Editar planta', salaAddSection:'+ Añadir segmento', salaCancel:'Cancelar dibujo', salaFinish:'Finalizar abierta', salaCeilLbl:'Altura del techo', salaCeilUnit:'cm', salaWallsHd:'PAREDES', salaNoWalls:'Dibuja la planta para ver las paredes aquí', salaCreateBoard:'+ Tablero', salaWallBoard:'Ver tablero →', salaDrawHint:'Clic → vértice · 1er punto → cerrar · Finalizar → abierto · ⌫ → deshacer · se engancha en 45°/90°', salaSnapHint:'⊾ enganchado', salaDeleteWall:'Desvincular tablero', salaWallRename:'Renombrar pared', salaAddCol:'+ Columna', salaWallMismatch:'El tablero es más ancho que la pared', salaWallSync:'Sincronizar', salaWallSyncOk:'Tablero sincronizado con la pared', salaWallSyncOverflow:'Hay fotos fuera del nuevo ancho. Mueve o elimina las fotos en el tablero primero.',
     reportHeading:'Tableau — Memoria del Proyecto',
     noScaleConfigured:'sin escala configurada',
     reportDate: d => `Memoria del proyecto · ${d}`,
@@ -950,6 +978,7 @@ const I18N = {
     invalidDims: 'Dimensions must be greater than zero',
     pxPreview: (w, h) => `${w} × ${h} px`,
     gridToggle: 'Grid', gridHiddenZoom: 'Grid active — zoom too low to display', gridAuto: 'Auto', fitView: 'Fit', fitWidth: 'Fit to width (Ctrl+0)', snapGrid: 'Snap', addNote: '+ Note', addZone: '+ Zone', zoneColor: 'Zone color', copyZoneToBoard: 'Copy to new board', moveZoneToBoard: 'Move to new board', zoneLabelPh: 'Zone name…', zoneCaptureBtn: 'Capture content',
+    salaBtn:'🏛 Room', salaCreate:'Create room', salaDelete:'Delete room', salaDraw:'Draw floor plan', salaEdit:'Edit floor plan', salaAddSection:'+ Add section', salaCancel:'Cancel drawing', salaFinish:'Finish open', salaCeilLbl:'Ceiling height', salaCeilUnit:'cm', salaWallsHd:'WALLS', salaNoWalls:'Draw the floor plan to see walls here', salaCreateBoard:'+ Board', salaWallBoard:'Go to board →', salaDrawHint:'Click → vertex · 1st point → close · Finish → end open · ⌫ → undo · snaps at 45°/90°', salaSnapHint:'⊾ snapped', salaDeleteWall:'Unlink board', salaWallRename:'Rename wall', salaAddCol:'+ Column', salaWallMismatch:'Board is wider than the wall', salaWallSync:'Sync', salaWallSyncOk:'Board synced to wall', salaWallSyncOverflow:'Photos would overflow the new width. Move or remove them in the board editor first.',
     reportHeading:'Tableau — Project Report',
     noScaleConfigured:'no scale configured',
     reportDate: d => `Project report · ${d}`,
@@ -1054,6 +1083,23 @@ function App() {
   const [memDraft,      setMemDraft]      = useState({ exTitle:'', subtitle:'', memSections:[] });
   const [memIncludeHeader, setMemIncludeHeader] = useState(true);
   const [zoneConvertPending, setZoneConvertPending] = useState(null); // {zoneId, move}
+  const [room,           setRoom]          = useState(null);     // {ceilingHeight, vertices, walls} | null
+  const [roomView,       setRoomView]      = useState('board');  // 'board' | 'room'
+  const [roomDrawing,    setRoomDrawing]   = useState(false);
+  const [roomAppending,  setRoomAppending] = useState(false);
+  const [roomVertCtx,    setRoomVertCtx]   = useState(null); // {id, x, y}
+  const [roomColCtx,     setRoomColCtx]    = useState(null); // {id, x, y}
+  const [roomSvgCtx,     setRoomSvgCtx]    = useState(null); // {x, y, svgX, svgY}
+  const [roomHovWall,    setRoomHovWall]   = useState(null); // hovered wall id
+  const room3DCanvasRef = useRef(null);
+  const [roomTempVerts,  setRoomTempVerts] = useState([]);       // vertices during drawing
+  const [roomCursor,     setRoomCursor]    = useState(null);     // {x,y,snapped,nearClose}
+  const [roomCeilH,      setRoomCeilH]     = useState(280);
+  const [roomVbox,       setRoomVbox]      = useState({x:-50,y:-50,w:1300,h:900});
+  const [roomRenameWid,  setRoomRenameWid] = useState(null);     // wall being renamed
+  const [roomRenameVal,  setRoomRenameVal] = useState('');
+  const [roomName,       setRoomName]      = useState('');
+  const [roomNameEdit,   setRoomNameEdit]  = useState(false);
   const [nameVal,       setNameVal]       = useState('');
   const [dragOver,      setDragOver]      = useState(false);
   const [libDragOver,   setLibDragOver]   = useState(false);
@@ -1090,6 +1136,8 @@ function App() {
   const [batchTagInput, setBatchTagInput] = useState('');
   const [ratingFilter,  setRatingFilter]  = useState(0); // 0 = no filter, 1-5 = min rating
   const [ctxMenu,       setCtxMenu]       = useState(null); // {x, y, itemId}
+  const [projCtxMenu,   setProjCtxMenu]   = useState(null); // {x, y, id}
+  const pendingRoomViewRef = useRef(false);
   const [canvasCtx,     setCanvasCtx]     = useState(null); // {x, y, cx, cy} canvas right-click
   const [showLibPreview, setShowLibPreview] = useState(() => localStorage.getItem('tb-lib-preview') !== 'false');
   const [libMuted,       setLibMuted]       = useState(false);
@@ -1181,9 +1229,16 @@ function App() {
   const uploadSectInput = useRef(null);
   const boardPxRef      = useRef(null);
   const wrapRef         = useRef(null);
+  const roomSvgRef      = useRef(null);
+  const roomRef         = useRef(null);
+  const roomVboxRef     = useRef({x:-50,y:-50,w:1300,h:900});
+  const importRoomRef   = useRef(null);
+  const reset3DViewRef  = useRef(null);
+  const snapshot3DRef   = useRef(null);
   const undoStack       = useRef([]);
   const redoStack       = useRef([]);
   const wasDragged      = useRef(false);
+  const preClickSel     = useRef(null);
   const boardZoom       = useRef({});
   const importInputRef  = useRef(null);
   const clipboardRef    = useRef([]);
@@ -1205,6 +1260,34 @@ function App() {
     document.addEventListener('pointerdown', close);
     return () => document.removeEventListener('pointerdown', close);
   }, [ctxMenu !== null]);
+
+  useEffect(() => {
+    if (!projCtxMenu) return;
+    const close = () => setProjCtxMenu(null);
+    document.addEventListener('pointerdown', close);
+    return () => document.removeEventListener('pointerdown', close);
+  }, [projCtxMenu !== null]);
+
+  useEffect(() => {
+    if (!roomVertCtx) return;
+    const close = () => setRoomVertCtx(null);
+    document.addEventListener('pointerdown', close);
+    return () => document.removeEventListener('pointerdown', close);
+  }, [roomVertCtx !== null]);
+
+  useEffect(() => {
+    if (!roomColCtx) return;
+    const close = () => setRoomColCtx(null);
+    document.addEventListener('pointerdown', close);
+    return () => document.removeEventListener('pointerdown', close);
+  }, [roomColCtx !== null]);
+
+  useEffect(() => {
+    if (!roomSvgCtx) return;
+    const close = () => setRoomSvgCtx(null);
+    document.addEventListener('pointerdown', close);
+    return () => document.removeEventListener('pointerdown', close);
+  }, [roomSvgCtx !== null]);
 
   // keep allBoardItems in sync with current board mutations
   useEffect(() => {
@@ -1268,6 +1351,291 @@ function App() {
   useEffect(() => { boardHistoryRef.current = {}; previousBidRef.current = null; }, [pid]);
   useEffect(() => { if (pid) localStorage.setItem('tb-lastpid', pid); }, [pid]);
   useEffect(() => { if (pid && bid) localStorage.setItem(`tb-lastbid-${pid}`, bid); }, [bid, pid]);
+
+  useEffect(() => {
+    if (!pid) { setRoom(null); roomRef.current = null; setRoomView('board'); return; }
+    const goRoom = pendingRoomViewRef.current;
+    pendingRoomViewRef.current = false;
+    api.get(`/api/projects/${pid}/room`).then(r => {
+      setRoom(r); roomRef.current = r;
+      if (r) { setRoomCeilH(r.ceilingHeight || 280); setRoomName(r.name || ''); }
+      if (goRoom) setRoomView('room');
+    });
+    setRoomDrawing(false); setRoomAppending(false); setRoomTempVerts([]); setRoomCursor(null);
+    if (!goRoom) setRoomView('board');
+  }, [pid]);
+
+  useEffect(() => {
+    if (roomView !== '3d') return;
+    if (!room || !window.THREE) return;
+
+    let animId, renderer, controls;
+    let cancelled = false;
+
+    const initScene = async () => {
+      const [boardItemsResults, photosData] = await Promise.all([
+        Promise.all(
+          room.walls
+            .filter(w => w.boardId)
+            .map(async w => {
+              try {
+                const its = await api.get(`/api/boards/${pid}/${w.boardId}/items`);
+                return { boardId: w.boardId, items: its || [] };
+              } catch(e) { return { boardId: w.boardId, items: [] }; }
+            })
+        ),
+        api.get(`/api/projects/${pid}/photos`).catch(() => []),
+      ]);
+      if (cancelled) return;
+
+      const boardItemsMap = {};
+      boardItemsResults.forEach(({ boardId, items }) => { boardItemsMap[boardId] = items; });
+      const photoMap = {};
+      (photosData || []).forEach(p => { photoMap[p.id] = p; });
+
+      const canvas = room3DCanvasRef.current;
+      if (!canvas) return;
+      const THREE = window.THREE;
+      const wrap = canvas.parentElement;
+      const w = wrap.clientWidth, h = wrap.clientHeight;
+      if (!w || !h) return;
+
+      const vx = room.vertices.map(v => v.x), vy = room.vertices.map(v => v.y);
+      const cx = (Math.min(...vx) + Math.max(...vx)) / 2;
+      const cz = (Math.min(...vy) + Math.max(...vy)) / 2;
+      const ch = room.ceilingHeight || 280;
+      const span = Math.max(Math.max(...vx)-Math.min(...vx), Math.max(...vy)-Math.min(...vy), ch);
+      const near = Math.max(1, span * 0.001);
+      const far  = span * 100;
+
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+      renderer.setSize(w, h);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setClearColor(0x1e1e1e);
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(55, w / h, near, far);
+      const dist = span * 0.9;
+      const initCamPos = new THREE.Vector3(cx, ch * 0.6 + dist * 0.5, cz + dist * 0.8);
+      const initTarget = new THREE.Vector3(cx, ch * 0.4, cz);
+      camera.position.copy(initCamPos);
+      camera.lookAt(initTarget);
+
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.target.copy(initTarget);
+      controls.enableDamping = true; controls.dampingFactor = 0.08;
+      controls.enableZoom = false; // handled manually for proportional deltaY zoom
+      controls.minDistance = span * 0.05; controls.maxDistance = span * 6;
+      controls.update();
+
+      // Proportional zoom: scale by deltaY magnitude, same approach as SVG floor plan
+      const onCanvasWheel = e2 => {
+        e2.preventDefault();
+        const px = e2.deltaMode === 1 ? e2.deltaY * 40 : e2.deltaMode === 2 ? e2.deltaY * 400 : e2.deltaY;
+        const factor = Math.pow(1.001, px);
+        const dir = new THREE.Vector3().subVectors(camera.position, controls.target);
+        const newLen = Math.max(controls.minDistance, Math.min(controls.maxDistance, dir.length() * factor));
+        dir.setLength(newLen);
+        camera.position.copy(controls.target).add(dir);
+        controls.update();
+      };
+      renderer.domElement.addEventListener('wheel', onCanvasWheel, {passive: false});
+
+      // Reset view function exposed to the reset button
+      reset3DViewRef.current = () => {
+        camera.position.copy(initCamPos);
+        controls.target.copy(initTarget);
+        controls.update();
+      };
+
+      // Snapshot: render current frame → upload as photo to the library
+      snapshot3DRef.current = async () => {
+        renderer.render(scene, camera);
+        const dataUrl = renderer.domElement.toDataURL('image/jpeg', 0.92);
+        const res = await fetch(dataUrl);
+        const blob = await res.blob();
+        const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+        const file = new File([blob], `sala_${ts}.jpg`, { type: 'image/jpeg' });
+        const p = pidRef.current;
+        if (!p) return;
+        const photo = await api.upload(`/api/projects/${p}/photos`, file);
+        if (photo.error) return;
+        setPhotos(ps => [...ps, photo]);
+        showToast(lang === 'es' ? 'Vista guardada en librería' : 'View saved to library');
+      };
+
+      scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+      const d1 = new THREE.DirectionalLight(0xffffff, 0.7);
+      d1.position.set(cx + span, ch * 2, cz - span * 0.5); scene.add(d1);
+      const d2 = new THREE.DirectionalLight(0xffffff, 0.25);
+      d2.position.set(cx - span * 0.5, ch * 0.5, cz + span); scene.add(d2);
+
+      // Floor grid
+      const gridSize = Math.max(2000, span * 2);
+      const gridDivs = Math.round(gridSize / 100);
+      const grid = new THREE.GridHelper(gridSize, gridDivs, 0x555555, 0x333333);
+      grid.position.set(cx, 0.5, cz);
+      scene.add(grid);
+
+      if (room.closed !== false && room.vertices.length >= 3) {
+        const shape = new THREE.Shape();
+        shape.moveTo(room.vertices[0].x, -room.vertices[0].y);
+        room.vertices.slice(1).forEach(v => shape.lineTo(v.x, -v.y));
+        shape.closePath();
+        const fGeo = new THREE.ShapeGeometry(shape);
+        fGeo.rotateX(-Math.PI / 2);
+        scene.add(new THREE.Mesh(fGeo, new THREE.MeshLambertMaterial({ color: 0x4a4540 })));
+        const cGeo = fGeo.clone(); cGeo.translate(0, ch, 0);
+        scene.add(new THREE.Mesh(cGeo, new THREE.MeshLambertMaterial({ color: 0x2a2a2a, side: THREE.BackSide })));
+      }
+
+      const loader  = new THREE.TextureLoader();
+
+      room.walls.forEach(wall => {
+        const v1 = room.vertices.find(v => v.id === wall.v1);
+        const v2 = room.vertices.find(v => v.id === wall.v2);
+        if (!v1 || !v2) return;
+        const x1 = v1.x, z1 = v1.y, x2 = v2.x, z2 = v2.y;
+        const dx = x2 - x1, dz = z2 - z1;
+        const len = Math.sqrt(dx*dx + dz*dz); if (len < 1) return;
+        const dirX = dx/len, dirZ = dz/len;
+        const rotY = Math.atan2(-dirZ, dirX);
+
+        const wColor = wall.color || '#d0c8bc';
+        const wMesh = new THREE.Mesh(new THREE.PlaneGeometry(len, ch), new THREE.MeshLambertMaterial({ color: wColor, side: THREE.DoubleSide }));
+        wMesh.position.set((x1+x2)/2, ch/2, (z1+z2)/2);
+        wMesh.rotation.y = rotY;
+        scene.add(wMesh);
+
+        if (!wall.boardId) return;
+        const board = boards.find(b => b.id === wall.boardId);
+        const rawItems = boardItemsMap[wall.boardId] || [];
+        const bItems = rawItems.filter(i => !i.type || i.type === 'photo' || i.type === 'text' || i.type === 'note');
+        if (!board || !bItems.length) return;
+        const bPx = getBoardPx(board);
+        if (!bPx) return;
+        const fW = board.fixedW, fH = board.fixedH || ch;
+        const sideSign = wall.flipSide ? -1 : 1;
+        const normX = -dirZ * sideSign, normZ = dirX * sideSign;
+
+        bItems.forEach(item => {
+          const isText = item.type === 'text';
+          const isNote = item.type === 'note';
+          const photo = !isText && !isNote ? photoMap[item.photoId] : null;
+          const itemH = isText ? (item.h || item.w * 0.3)
+                      : isNote ? (item.h || 150)
+                      : photo ? item.w * (photo.h / photo.w) : item.w;
+          const iw = item.w / bPx.w * fW;
+          const ih = itemH / bPx.h * fH;
+          const ix = (item.x + item.w/2) / bPx.w * fW;
+          const iy = fH * (1 - (item.y + itemH/2) / bPx.h);
+          const pos = { x: x1 + dirX*ix + normX*2, y: iy, z: z1 + dirZ*ix + normZ*2 };
+          const pMesh = new THREE.Mesh(
+            new THREE.PlaneGeometry(iw, ih),
+            new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, transparent: true })
+          );
+          pMesh.position.set(pos.x, pos.y, pos.z);
+          pMesh.rotation.y = rotY;
+          scene.add(pMesh);
+          if (isText || isNote) {
+            const SCALE = 2;
+            const cvW = Math.max(1, Math.round(item.w * SCALE));
+            const cvH = Math.max(1, Math.round(itemH * SCALE));
+            const cvs = document.createElement('canvas');
+            cvs.width = cvW; cvs.height = cvH;
+            const ctx2 = cvs.getContext('2d');
+            if (isNote) {
+              const accent = (item.noteColor && NOTE_COLOR_VALS[item.noteColor]) ? NOTE_COLOR_VALS[item.noteColor][0] : '#c8a832';
+              const bg = (item.noteColor && NOTE_COLOR_VALS[item.noteColor]) ? NOTE_COLOR_VALS[item.noteColor][1] : 'rgba(255,253,231,0.92)';
+              ctx2.fillStyle = bg;
+              ctx2.fillRect(0, 0, cvW, cvH);
+              ctx2.fillStyle = accent;
+              ctx2.fillRect(0, 0, 6*SCALE, cvH);
+              const pad = 12*SCALE;
+              let ty = pad;
+              if (item.title) {
+                ctx2.fillStyle = '#222';
+                ctx2.font = `bold ${13*SCALE}px sans-serif`;
+                ctx2.fillText(item.title, pad, ty);
+                ty += 18*SCALE;
+              }
+              ctx2.fillStyle = '#444';
+              ctx2.font = `${11*SCALE}px sans-serif`;
+              (item.text || '').split('\n').forEach(line => {
+                ctx2.fillText(line, pad, ty, cvW - pad*2);
+                ty += 16*SCALE;
+              });
+            } else {
+              const tFont = TEXT_FONTS.find(f => f.id === (item.fontFamily || 'serif')) || TEXT_FONTS[0];
+              const fs = (item.fontSize || 40) * SCALE;
+              ctx2.clearRect(0, 0, cvW, cvH);
+              ctx2.font = `${fs}px ${tFont.family}`;
+              ctx2.fillStyle = item.textColor || '#1a1a1a';
+              ctx2.textAlign = item.textAlign || 'left';
+              ctx2.textBaseline = 'middle';
+              const tx = item.textAlign === 'right' ? cvW - 4 : item.textAlign === 'center' ? cvW/2 : 4;
+              ctx2.fillText(item.text || '', tx, cvH/2);
+            }
+            const tex = new THREE.CanvasTexture(cvs);
+            pMesh.material = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, transparent: true, alphaTest: 0.01 });
+          } else if (item.photoId) {
+            loader.load(`/photos/${pid}/${item.photoId}/thumb`, tex => {
+              if (cancelled) return;
+              tex.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
+              pMesh.material = new THREE.MeshLambertMaterial({ map: tex, side: THREE.DoubleSide });
+            });
+          }
+        });
+      });
+
+      // Columns
+      (room.columns || []).forEach(col => {
+        const cMesh = new THREE.Mesh(
+          new THREE.BoxGeometry(col.w, ch, col.d),
+          new THREE.MeshLambertMaterial({color: '#aaaaaa'})
+        );
+        cMesh.position.set(col.x + col.w/2, ch/2, col.y + col.d/2);
+        scene.add(cMesh);
+      });
+
+      const animate = () => {
+        animId = requestAnimationFrame(animate);
+        controls.update();
+        renderer.render(scene, camera);
+      };
+      animate();
+
+      const onResize = () => {
+        const nw = wrap.clientWidth, nh = wrap.clientHeight;
+        renderer.setSize(nw, nh); camera.aspect = nw/nh; camera.updateProjectionMatrix();
+      };
+      window.addEventListener('resize', onResize);
+      controls._wheelCleanup   = () => renderer.domElement.removeEventListener('wheel', onCanvasWheel);
+      controls._resizeCleanup  = () => window.removeEventListener('resize', onResize);
+
+      scene._threeScene = scene; // keep ref for dispose
+      renderer._threeScene = scene;
+    };
+
+    initScene();
+
+    return () => {
+      cancelled = true;
+      reset3DViewRef.current = null;
+      snapshot3DRef.current = null;
+      if (animId) cancelAnimationFrame(animId);
+      if (controls?._wheelCleanup)  controls._wheelCleanup();
+      if (controls?._resizeCleanup) controls._resizeCleanup();
+      if (controls) controls.dispose();
+      if (renderer) {
+        renderer._threeScene?.traverse(obj => {
+          if (obj.geometry) obj.geometry.dispose();
+          if (obj.material) [].concat(obj.material).forEach(m => { if (m.map) m.map.dispose(); m.dispose(); });
+        });
+        renderer.dispose();
+      }
+    };
+  }, [roomView, room, boards, pid]);
 
   useEffect(() => {
     if (modal === 'memoria') {
@@ -1419,6 +1787,24 @@ function App() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [zoomStep, fitBoard, undo, redo, pushUndo, saveItemsNow]);
+
+  useEffect(() => {
+    if (!roomDrawing) return;
+    const onKey = e => {
+      const tag = document.activeElement?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      if (e.key === 'Backspace') {
+        e.preventDefault();
+        setRoomTempVerts(vs => vs.length > 1 ? vs.slice(0, -1) : vs);
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setRoomDrawing(false); setRoomAppending(false); setRoomTempVerts([]); setRoomCursor(null);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [roomDrawing]);
 
   const saveItemsNow = useCallback((its) => {
     const p = pidRef.current, b = bidRef.current;
@@ -1811,6 +2197,7 @@ ${rows}
       }
     }
     const bp = boardPxRef.current;
+    if (bp) w = Math.min(w, bp.w);
     const maxZ = itemsRef.current.length ? Math.max(...itemsRef.current.map(i => i.z || 0)) : 0;
     const h = Math.round(w * photo.h / photo.w);
     let x = Math.round(cx - w / 2);
@@ -2578,12 +2965,16 @@ ${rows}
     e.stopPropagation(); e.preventDefault();
 
     const beforeDrag = itemsRef.current.map(i => ({ ...i }));
-    // Update selection
-    if (e.shiftKey) {
-      const ns = selRef.current.includes(itemId)
-        ? selRef.current.filter(id => id !== itemId)
-        : [...selRef.current, itemId];
-      selRef.current = ns; setSel(ns);
+    // Update selection — preClickSel saves the state before this change
+    // so handleItemClick can toggle correctly using the pre-click baseline
+    preClickSel.current = [...selRef.current];
+    if (e.shiftKey || e.ctrlKey || e.metaKey) {
+      // Only add here (never remove) so drag always includes the clicked item.
+      // handleItemClick does the proper toggle using preClickSel.
+      if (!selRef.current.includes(itemId)) {
+        const ns = [...selRef.current, itemId];
+        selRef.current = ns; setSel(ns);
+      }
     } else {
       if (!selRef.current.includes(itemId)) {
         selRef.current = [itemId]; setSel([itemId]);
@@ -3227,6 +3618,341 @@ ${rows}
     showToast(lang === 'es' ? `Tablero "${name}" creado` : `Board "${name}" created`);
   };
 
+  // ── Room editor ───────────────────────────────────────────────────────────
+  const roomSvgPt = e => {
+    const svg = roomSvgRef.current;
+    if (!svg) return {x:0,y:0};
+    const rect = svg.getBoundingClientRect();
+    const vb = roomVboxRef.current;
+    return {
+      x: vb.x + (e.clientX - rect.left) * vb.w / rect.width,
+      y: vb.y + (e.clientY - rect.top)  * vb.h / rect.height,
+    };
+  };
+
+  const roomSnapPt = (verts, raw) => {
+    const snapDist = roomVboxRef.current.w * 0.018;
+    // Snap to existing saved vertices (for appending to existing geometry)
+    const savedRoom = roomRef.current;
+    if (savedRoom) {
+      const lastId = verts.length ? verts[verts.length-1].id : null;
+      for (const v of savedRoom.vertices) {
+        if (v.id === lastId) continue; // don't snap back to where we just came from
+        const d = Math.sqrt((raw.x-v.x)**2 + (raw.y-v.y)**2);
+        if (d < snapDist) return {x:v.x, y:v.y, nearExisting:true, existingId:v.id, snapped:true, nearClose:false};
+      }
+    }
+    // Snap to first temp vertex to close the polygon
+    if (verts.length >= 3) {
+      const first = verts[0];
+      const d = Math.sqrt((raw.x-first.x)**2 + (raw.y-first.y)**2);
+      if (d < snapDist) return {x:first.x, y:first.y, nearClose:true, snapped:false};
+    }
+    // Snap to 45°/90° angles from previous vertex
+    if (verts.length >= 1) {
+      const prev = verts[verts.length-1];
+      const dx = raw.x-prev.x, dy = raw.y-prev.y;
+      const len = Math.sqrt(dx*dx+dy*dy);
+      if (len > 2) {
+        const angle = Math.atan2(dy,dx)*180/Math.PI;
+        const nearest = Math.round(angle/45)*45;
+        const diff = Math.abs(((angle-nearest)+180)%360-180);
+        if (diff < 12) {
+          const r = nearest*Math.PI/180;
+          return {x:prev.x+len*Math.cos(r), y:prev.y+len*Math.sin(r), nearClose:false, snapped:true};
+        }
+      }
+    }
+    return {...raw, nearClose:false, snapped:false};
+  };
+
+  const roomWallLen = (wall, verts) => {
+    const v1 = verts.find(v=>v.id===wall.v1), v2 = verts.find(v=>v.id===wall.v2);
+    if (!v1||!v2) return 0;
+    return Math.sqrt((v2.x-v1.x)**2+(v2.y-v1.y)**2);
+  };
+
+  const cmLabel = cm => cm >= 100 ? `${(cm/100).toFixed(2).replace('.',',')} m` : `${Math.round(cm)} cm`;
+
+  const saveRoom = r => {
+    setRoom(r); roomRef.current = r;
+    api.put(`/api/projects/${pidRef.current}/room`, r);
+  };
+
+  // Auto-fit viewbox whenever switching to room view
+  useEffect(() => {
+    if (roomView !== 'room') return;
+    const r = roomRef.current;
+    if (!r || !r.vertices.length) return;
+    const xs = r.vertices.map(v => v.x), ys = r.vertices.map(v => v.y);
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+    const minY = Math.min(...ys), maxY = Math.max(...ys);
+    const pw = Math.max(50, maxX - minX), ph = Math.max(50, maxY - minY);
+    const pad = Math.max(pw, ph) * 0.15 + 30;
+    const nv = {x: minX-pad, y: minY-pad, w: pw+pad*2, h: ph+pad*2};
+    roomVboxRef.current = nv; setRoomVbox(nv);
+  }, [roomView]);
+
+  const addColumn = (svgX, svgY) => {
+    const r = roomRef.current; if (!r) return;
+    const vb = roomVboxRef.current;
+    const cx = svgX ?? (vb.x + vb.w/2), cy = svgY ?? (vb.y + vb.h/2);
+    const col = {id:`col${Date.now().toString(36)}`, x:Math.round(cx-15), y:Math.round(cy-15), w:30, d:30, label:''};
+    saveRoom({...r, columns:[...(r.columns||[]), col]});
+  };
+
+  const onColumnPD = (e, colId) => {
+    if (roomDrawing) return;
+    e.stopPropagation(); e.preventDefault();
+    const svgEl = roomSvgRef.current;
+    const col = roomRef.current.columns?.find(c => c.id === colId);
+    if (!col) return;
+    const toSvg = (cx, cy) => {
+      const p = svgEl.createSVGPoint(); p.x = cx; p.y = cy;
+      const s = p.matrixTransform(svgEl.getScreenCTM().inverse());
+      return {x: s.x, y: s.y};
+    };
+    const pt0 = toSvg(e.clientX, e.clientY);
+    const ox = col.x, oy = col.y;
+    const offX = ox - pt0.x, offY = oy - pt0.y;
+    const onMM = e2 => {
+      const r = roomRef.current;
+      const pt = toSvg(e2.clientX, e2.clientY);
+      const nc = (r.columns||[]).map(c => c.id===colId ? {...c, x:pt.x+offX, y:pt.y+offY} : c);
+      const nr = {...r, columns:nc};
+      setRoom(nr); roomRef.current = nr;
+    };
+    const onMU = () => {
+      window.removeEventListener('pointermove', onMM);
+      window.removeEventListener('pointerup', onMU);
+      saveRoom(roomRef.current);
+    };
+    window.addEventListener('pointermove', onMM);
+    window.addEventListener('pointerup', onMU);
+  };
+
+  const _finishDrawing = (verts, closed, append) => {
+    const r = roomRef.current;
+    const baseVerts = (append && r) ? r.vertices : [];
+    const baseWalls = (append && r) ? r.walls   : [];
+    const existingIds = new Set(baseVerts.map(v => v.id));
+    // Don't re-add vertices that were snapped to existing ones
+    const newVerts = verts.filter(v => !existingIds.has(v.id));
+    // Find the highest wall number already in use to avoid collisions
+    const maxN = baseWalls.reduce((m, w) => {
+      const match = w.name?.match(/(\d+)$/);
+      return match ? Math.max(m, parseInt(match[1])) : m;
+    }, 0);
+    const pfx = Date.now().toString(36);
+    const newWalls = closed
+      ? verts.map((v,i) => {
+          const v2 = verts[(i+1)%verts.length];
+          return {id:`w${pfx}${i}`, v1:v.id, v2:v2.id,
+            name:lang==='es'?`Pared ${maxN+i+1}`:`Wall ${maxN+i+1}`, boardId:null};
+        })
+      : verts.slice(0,-1).map((v,i) => ({
+          id:`w${pfx}${i}`, v1:v.id, v2:verts[i+1].id,
+          name:lang==='es'?`Pared ${maxN+i+1}`:`Wall ${maxN+i+1}`, boardId:null,
+        }));
+    saveRoom({
+      name:          r?.name,
+      ceilingHeight: r?.ceilingHeight || roomCeilH,
+      vertices: [...baseVerts, ...newVerts],
+      walls:    [...baseWalls, ...newWalls],
+      closed:   !append && closed,
+    });
+    setRoomDrawing(false); setRoomAppending(false); setRoomTempVerts([]); setRoomCursor(null);
+  };
+
+  const closeRoomPolygon  = (verts, append) => _finishDrawing(verts, true,  append);
+  const finishOpenPolygon = (verts, append) => { if (verts.length >= 2) _finishDrawing(verts, false, append); };
+
+  const onRoomSvgClick = e => {
+    if (!roomDrawing) return;
+    const raw = roomSvgPt(e);
+    const pt = roomSnapPt(roomTempVerts, raw);
+    if (pt.nearClose && roomTempVerts.length >= 3) { closeRoomPolygon(roomTempVerts, roomAppending); return; }
+    // Reuse existing vertex ID when snapping to it (avoids duplicate vertices)
+    const id = pt.existingId || `v${Date.now().toString(36)}${Math.random().toString(36).slice(2,5)}`;
+    setRoomTempVerts(vs => [...vs, {id, x:pt.x, y:pt.y}]);
+  };
+
+  const onRoomSvgDblClick = e => { e.stopPropagation(); };
+
+  const onRoomSvgMM = e => {
+    if (!roomDrawing) return;
+    setRoomCursor(roomSnapPt(roomTempVerts, roomSvgPt(e)));
+  };
+
+  const onRoomSvgWheel = e => {
+    e.preventDefault();
+    const px = e.deltaMode === 1 ? e.deltaY * 40 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
+    const factor = Math.pow(1.001, px);
+    const pt = roomSvgPt(e);
+    const vb = roomVboxRef.current;
+    const newW = Math.max(80, Math.min(8000, vb.w * factor));
+    const f = newW / vb.w;
+    const nv = {x:pt.x-(pt.x-vb.x)*f, y:pt.y-(pt.y-vb.y)*f, w:newW, h:vb.h*f};
+    roomVboxRef.current = nv; setRoomVbox(nv);
+  };
+
+  const onRoomSvgPD = e => {
+    if (roomDrawing) return;
+    if (e.button !== 0 && e.button !== 1) return;
+    e.preventDefault();
+    const svgEl = roomSvgRef.current;
+    const rect = svgEl.getBoundingClientRect();
+    const vb0 = {...roomVboxRef.current};
+    const scX = vb0.w / rect.width, scY = vb0.h / rect.height;
+    const sx = e.clientX, sy = e.clientY;
+    const onMM = e2 => {
+      const nv = {x:vb0.x-(e2.clientX-sx)*scX, y:vb0.y-(e2.clientY-sy)*scY, w:vb0.w, h:vb0.h};
+      roomVboxRef.current = nv; setRoomVbox(nv);
+    };
+    const onMU = () => { window.removeEventListener('pointermove',onMM); window.removeEventListener('pointerup',onMU); };
+    window.addEventListener('pointermove', onMM);
+    window.addEventListener('pointerup', onMU);
+  };
+
+  const load3DLibs = () => new Promise(resolve => {
+    if (window.THREE?.OrbitControls) { resolve(); return; }
+    const s1 = document.createElement('script');
+    s1.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+    s1.onload = () => {
+      const s2 = document.createElement('script');
+      s2.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js';
+      s2.onload = resolve;
+      document.head.appendChild(s2);
+    };
+    document.head.appendChild(s1);
+  });
+
+  const openRoom3D = async () => { await load3DLibs(); setRoomView('3d'); };
+
+  const deleteRoomVertex = vid => {
+    const r = roomRef.current; if (!r) return;
+    const conn = r.walls.filter(w => w.v1 === vid || w.v2 === vid);
+    let newWalls;
+    if (conn.length === 2) {
+      // middle vertex: merge the two walls into one keeping the first wall's name/board
+      const [w1, w2] = conn;
+      const a = w1.v1 === vid ? w1.v2 : w1.v1;
+      const b = w2.v1 === vid ? w2.v2 : w2.v1;
+      const merged = {id:w1.id, v1:a, v2:b, name:w1.name, boardId:w1.boardId||w2.boardId||null};
+      newWalls = r.walls.filter(w=>w.id!==w1.id&&w.id!==w2.id).concat(merged);
+    } else {
+      newWalls = r.walls.filter(w=>w.v1!==vid&&w.v2!==vid);
+    }
+    saveRoom({...r, vertices:r.vertices.filter(v=>v.id!==vid), walls:newWalls});
+    setRoomVertCtx(null);
+  };
+
+  const onRoomVertexPD = (e, vid) => {
+    e.stopPropagation();
+    const r0 = roomRef.current; if (!r0) return;
+    const v0 = r0.vertices.find(v => v.id === vid); if (!v0) return;
+    const svgEl = roomSvgRef.current;
+    const toSvg = (cx, cy) => {
+      const p = svgEl.createSVGPoint(); p.x = cx; p.y = cy;
+      const s = p.matrixTransform(svgEl.getScreenCTM().inverse());
+      return {x: s.x, y: s.y};
+    };
+    const pt0 = toSvg(e.clientX, e.clientY);
+    const offX = v0.x - pt0.x, offY = v0.y - pt0.y;
+    const onMM = e2 => {
+      const r = roomRef.current; if (!r) return;
+      const pt = toSvg(e2.clientX, e2.clientY);
+      const updated = {...r, vertices:r.vertices.map(v=>v.id===vid?{...v,x:pt.x+offX,y:pt.y+offY}:v)};
+      setRoom(updated); roomRef.current = updated;
+    };
+    const onMU = () => {
+      document.removeEventListener('pointermove', onMM);
+      document.removeEventListener('pointerup', onMU);
+      if (roomRef.current) api.put(`/api/projects/${pidRef.current}/room`, roomRef.current);
+    };
+    document.addEventListener('pointermove', onMM);
+    document.addEventListener('pointerup', onMU);
+  };
+
+  const createRoomBoard = async wallId => {
+    const r = roomRef.current; if (!r) return;
+    const wall = r.walls.find(w=>w.id===wallId); if (!wall) return;
+    const len = Math.round(roomWallLen(wall, r.vertices));
+    const b = await api.post(`/api/projects/${pidRef.current}/boards`, {name:wall.name});
+    const TARGET_W = 4000;
+    const dpi = Math.max(1, Math.round(TARGET_W / len * 2.54 * 10) / 10);
+    // defaultW = ~60cm in canvas px — sensible starting size for a print on a wall
+    const defaultW = Math.round(60 / 2.54 * dpi);
+    await api.patch(`/api/projects/${pidRef.current}/boards/${b.id}`, {
+      fixed:true, fixedW:len, fixedH:r.ceilingHeight, dpi, units:'cm', defaultW,
+    });
+    const fullB = {...b, fixed:true, fixedW:len, fixedH:r.ceilingHeight, dpi, units:'cm', defaultW};
+    setBoards(bs=>[...bs, fullB]);
+    const updatedRoom = {...r, walls:r.walls.map(w=>w.id===wallId?{...w,boardId:b.id}:w)};
+    saveRoom(updatedRoom);
+    setBid(b.id); bidRef.current = b.id;
+    setRoomView('board');
+    showToast(lang==='es'?`Tablero "${wall.name}" creado`:`Board "${wall.name}" created`);
+  };
+
+  const unlinkRoomBoard = wallId => {
+    const r = roomRef.current; if (!r) return;
+    saveRoom({...r, walls:r.walls.map(w=>w.id===wallId?{...w,boardId:null}:w)});
+  };
+
+  const syncWallBoard = async (wall, board) => {
+    const r = roomRef.current; if (!r) return;
+    const len = roomWallLen(wall, r.vertices);
+    const newW = Math.round(len * 10) / 10;
+    const newBPx = getBoardPx({...board, fixedW: newW});
+    if (!newBPx) return;
+    const items = await api.get(`/api/boards/${pidRef.current}/${board.id}/items`);
+    const overflow = (items || []).some(item => {
+      if (item.type === 'note' || item.type === 'zone') return false;
+      return (item.x || 0) + (item.w || 0) > newBPx.w;
+    });
+    if (overflow) { showToast(t('salaWallSyncOverflow'), true); return; }
+    await api.patch(`/api/projects/${pidRef.current}/boards/${board.id}`, {fixedW: newW});
+    setBoards(bs => bs.map(b => b.id === board.id ? {...b, fixedW: newW} : b));
+    showToast(t('salaWallSyncOk'));
+  };
+
+  const deleteRoom = () => {
+    showConfirm(lang==='es'?'¿Eliminar la sala? Se perderá la geometría de la planta.':'Delete the room? The floor plan geometry will be lost.', () => {
+      api.del(`/api/projects/${pidRef.current}/room`);
+      setRoom(null); roomRef.current = null; setRoomView('board');
+    });
+  };
+
+  const exportRoom = () => {
+    const r = roomRef.current; if (!r) return;
+    const blob = new Blob([JSON.stringify(r, null, 2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `sala-${(r.name||'sala').replace(/[^a-z0-9]/gi,'_').toLowerCase()}.json`;
+    a.click(); URL.revokeObjectURL(a.href);
+  };
+
+  const importRoom = e => {
+    const file = e.target.files?.[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const r = JSON.parse(ev.target.result);
+        if (!Array.isArray(r.vertices) || !Array.isArray(r.walls))
+          return showToast(lang==='es'?'Formato de sala inválido':'Invalid room format', true);
+        saveRoom(r);
+        setRoomName(r.name || '');
+        if (r.ceilingHeight) setRoomCeilH(r.ceilingHeight);
+        showToast(lang==='es'?'Sala importada':'Room imported');
+      } catch { showToast(lang==='es'?'Error al leer el archivo':'Error reading file', true); }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  // ── Room editor ───────────────────────────────────────────────────────────
+
   const onResizeZonePD = (e, itemId, mode) => {
     e.stopPropagation(); e.preventDefault();
     const before = itemsRef.current.map(i => ({ ...i }));
@@ -3407,14 +4133,22 @@ ${rows}
     const idsToToggle = item.groupId
       ? itemsRef.current.filter(i => i.groupId === item.groupId).map(i => i.id)
       : [item.id];
-    if (e.shiftKey) {
-      const cur = selRef.current;
-      const allPresent = idsToToggle.every(id => cur.includes(id));
-      const next = allPresent
-        ? cur.filter(id => !idsToToggle.includes(id))
-        : [...cur, ...idsToToggle.filter(id => !cur.includes(id))];
-      selRef.current = next; setSel(next);
+    if (e.shiftKey || e.ctrlKey || e.metaKey) {
+      // Use the pre-click selection as baseline (onItemPD may have already added itemId).
+      const pre = preClickSel.current ?? selRef.current;
+      preClickSel.current = null;
+      const wasAllPresent = idsToToggle.every(id => pre.includes(id));
+      if (wasAllPresent) {
+        // Was fully selected → remove the whole group
+        const next = selRef.current.filter(id => !idsToToggle.includes(id));
+        selRef.current = next; setSel(next);
+      } else {
+        // Was not fully selected → ensure all group members are added
+        const next = [...new Set([...selRef.current, ...idsToToggle])];
+        selRef.current = next; setSel(next);
+      }
     } else {
+      preClickSel.current = null;
       selRef.current = idsToToggle; setSel(idsToToggle);
     }
   };
@@ -3841,7 +4575,8 @@ ${rows}
                       const isActive = p.id === pid;
                       return (
                         <div key={p.id} className="nproj">
-                          <div className={`nproj-row${isActive ? ' active' : ''}`} onClick={() => setPid(p.id)}>
+                          <div className={`nproj-row${isActive ? ' active' : ''}`} onClick={() => setPid(p.id)}
+                            onContextMenu={e => { e.preventDefault(); e.stopPropagation(); setProjCtxMenu({ id: p.id, x: e.clientX, y: e.clientY }); }}>
                             <span className="nproj-arrow">{isActive ? '▾' : '›'}</span>
                             {renaming?.type === 'project' && renaming.id === p.id ? (
                               <input className="n-rename" autoFocus value={renaming.value}
@@ -3863,7 +4598,7 @@ ${rows}
                               {boards.map(b => (
                                 <div key={b.id}
                                   className={`nboard-row${b.id === bid ? ' active' : ''}${boardDragOver === b.id ? ' drag-over' : ''}`}
-                                  onClick={() => setBid(b.id)}
+                                  onClick={() => { setBid(b.id); setRoomView('board'); }}
                                   draggable
                                   onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; setBoardDragId(b.id); }}
                                   onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setBoardDragOver(b.id); }}
@@ -3895,6 +4630,12 @@ ${rows}
                               <div className="nboard-add" onClick={() => { setNameVal(''); setModal('board'); }}>
                                 {t('addBoard')}
                               </div>
+                              {room !== null && (
+                                <div className={`nsala-row${roomView==='room'?' active':''}`}
+                                  onClick={() => setRoomView('room')}>
+                                  🏛 {roomName || (lang==='es'?'Sala':'Room')}
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
@@ -3918,9 +4659,273 @@ ${rows}
           {/* ── WORKSPACE ── */}
           <div className="workspace">
 
+            {/* ROOM VIEW */}
+            {roomView === 'room' && pid && (() => {
+              const vb = roomVbox;
+              const vbStr = `${vb.x} ${vb.y} ${vb.w} ${vb.h}`;
+              const gridLines = [];
+              const MINOR = 50, MAJOR = 100;
+              for (let x = Math.floor(vb.x/MINOR)*MINOR; x <= vb.x+vb.w; x+=MINOR) {
+                const maj = x%MAJOR===0;
+                gridLines.push(<line key={`gv${x}`} x1={x} y1={vb.y} x2={x} y2={vb.y+vb.h} stroke={maj?'rgba(128,128,128,.18)':'rgba(128,128,128,.07)'} strokeWidth={maj?.8:.4}/>);
+              }
+              for (let y = Math.floor(vb.y/MINOR)*MINOR; y <= vb.y+vb.h; y+=MINOR) {
+                const maj = y%MAJOR===0;
+                gridLines.push(<line key={`gh${y}`} x1={vb.x} y1={y} x2={vb.x+vb.w} y2={y} stroke={maj?'rgba(128,128,128,.18)':'rgba(128,128,128,.07)'} strokeWidth={maj?.8:.4}/>);
+              }
+              const allVerts = room ? room.vertices : roomTempVerts;
+              const svgFontSz = Math.round(vb.w * 0.013);
+              return (
+                <div className="room-view">
+                  <div className="room-svg-wrap">
+                    <svg ref={roomSvgRef} viewBox={vbStr}
+                      onClick={onRoomSvgClick} onMouseMove={onRoomSvgMM}
+                      onDoubleClick={onRoomSvgDblClick}
+                      onWheel={onRoomSvgWheel}
+                      onPointerDown={onRoomSvgPD}
+                      onContextMenu={e=>{
+                        if(roomDrawing)return;
+                        e.preventDefault();
+                        const pt=roomSvgPt(e);
+                        setRoomSvgCtx({x:e.clientX,y:e.clientY,svgX:pt.x,svgY:pt.y});
+                      }}
+                      style={{cursor:roomDrawing?'crosshair':undefined, userSelect:'none'}}>
+                      <g>{gridLines}</g>
+
+                      {/* Polygon fill — only for closed rooms */}
+                      {room && room.closed !== false && (
+                        <polygon points={room.vertices.map(v=>`${v.x},${v.y}`).join(' ')}
+                          fill="rgba(100,160,220,.07)" stroke="none"/>
+                      )}
+
+                      {/* Saved walls */}
+                      {room && room.walls.map(wall => {
+                        const v1=room.vertices.find(v=>v.id===wall.v1), v2=room.vertices.find(v=>v.id===wall.v2);
+                        if(!v1||!v2) return null;
+                        const mx=(v1.x+v2.x)/2, my=(v1.y+v2.y)/2;
+                        const len=roomWallLen(wall,room.vertices);
+                        const linked = wall.boardId && boards.find(b=>b.id===wall.boardId);
+                        const hov = roomHovWall === wall.id;
+                        return (
+                          <g key={wall.id}
+                            onMouseEnter={()=>!roomDrawing&&setRoomHovWall(wall.id)}
+                            onMouseLeave={()=>setRoomHovWall(null)}>
+                            {/* Wide invisible hit area for easier hover */}
+                            <line x1={v1.x} y1={v1.y} x2={v2.x} y2={v2.y} stroke="transparent" strokeWidth={svgFontSz*1.4} style={{pointerEvents:'stroke'}}/>
+                            <line x1={v1.x} y1={v1.y} x2={v2.x} y2={v2.y}
+                              stroke={hov?'var(--acc)':(linked?'var(--acc)':'var(--dim)')}
+                              strokeWidth={hov?4:2.5} opacity={hov?1:linked?1:0.7}/>
+                            <text x={mx} y={my+svgFontSz*.4} textAnchor="middle" fontSize={svgFontSz*.8}
+                              fill={hov?'var(--acc)':'var(--muted)'} style={{pointerEvents:'none'}}>{cmLabel(len)}</text>
+                          </g>
+                        );
+                      })}
+
+                      {/* Temp walls during drawing */}
+                      {roomTempVerts.slice(1).map((v,i)=>{
+                        const prev=roomTempVerts[i];
+                        return <line key={i} x1={prev.x} y1={prev.y} x2={v.x} y2={v.y} stroke="var(--acc)" strokeWidth={2}/>;
+                      })}
+
+                      {/* Active segment */}
+                      {roomDrawing && roomCursor && roomTempVerts.length>0 && (
+                        <line x1={roomTempVerts[roomTempVerts.length-1].x} y1={roomTempVerts[roomTempVerts.length-1].y}
+                          x2={roomCursor.x} y2={roomCursor.y}
+                          stroke={roomCursor.snapped?'var(--acc)':'var(--dim)'}
+                          strokeWidth={1.5} strokeDasharray="8 4"/>
+                      )}
+
+                      {/* Temp vertices */}
+                      {roomTempVerts.map((v,i)=>(
+                        <circle key={v.id} cx={v.x} cy={v.y} r={i===0?svgFontSz*.7:svgFontSz*.45}
+                          fill={i===0?'var(--acc)':'var(--text)'} stroke="var(--bg)" strokeWidth={1.5}/>
+                      ))}
+
+                      {/* Columns */}
+                      {room && (room.columns||[]).map(col=>(
+                        <rect key={col.id} x={col.x} y={col.y} width={col.w} height={col.d}
+                          fill="var(--text)" opacity={0.65} rx={1}
+                          style={{cursor:roomDrawing?'default':'move'}}
+                          onPointerDown={e=>onColumnPD(e,col.id)}
+                          onContextMenu={e=>{e.preventDefault();e.stopPropagation();setRoomColCtx({id:col.id,x:e.clientX,y:e.clientY});}}/>
+                      ))}
+
+                      {/* Saved vertices (draggable, right-click to delete) */}
+                      {room && !roomDrawing && room.vertices.map(v=>(
+                        <circle key={v.id} cx={v.x} cy={v.y} r={svgFontSz*.55}
+                          fill="var(--acc)" stroke="var(--bg)" strokeWidth={1.5}
+                          style={{cursor:'move'}} onPointerDown={e=>onRoomVertexPD(e,v.id)}
+                          onContextMenu={e=>{e.preventDefault();e.stopPropagation();setRoomVertCtx({id:v.id,x:e.clientX,y:e.clientY});}}/>
+                      ))}
+
+                      {/* Cursor dot */}
+                      {roomDrawing && roomCursor && (
+                        <circle cx={roomCursor.x} cy={roomCursor.y} r={svgFontSz*.4}
+                          fill={roomCursor.nearClose||roomCursor.nearExisting?'#4caf50':roomCursor.snapped?'var(--acc)':'var(--dim)'}
+                          stroke="var(--bg)" strokeWidth={1.2} style={{pointerEvents:'none'}}/>
+                      )}
+                    </svg>
+
+                    {/* Toolbar */}
+                    <div className="room-toolbar">
+                      {!roomDrawing && !room && <button className="btn" onClick={()=>{setRoomDrawing(true);setRoomAppending(false);setRoomTempVerts([]);setRoomCursor(null);}}>
+                        {t('salaDraw')}
+                      </button>}
+                      {!roomDrawing && room && <button className="btn" onClick={()=>{setRoomAppending(true);setRoomDrawing(true);setRoomTempVerts([]);setRoomCursor(null);}}>
+                        {t('salaEdit')}
+                      </button>}
+                      {roomDrawing && <button className="btn" onClick={()=>{setRoomDrawing(false);setRoomAppending(false);setRoomTempVerts([]);setRoomCursor(null);}}>
+                        {t('salaCancel')}
+                      </button>}
+                      {roomDrawing && roomTempVerts.length >= 2 && (
+                        <button className="btn" onClick={() => finishOpenPolygon(roomTempVerts, roomAppending)}>
+                          {t('salaFinish')}
+                        </button>
+                      )}
+                      {room && !roomDrawing && <button className="btn" onClick={openRoom3D}>{lang==='es'?'Vista 3D':'3D View'}</button>}
+                      {room && !roomDrawing && <button className="btn" onClick={exportRoom} title={lang==='es'?'Exportar sala':'Export room'}><SvgExport size={11}/></button>}
+                      {!roomDrawing && <button className="btn" onClick={()=>importRoomRef.current?.click()} title={lang==='es'?'Importar sala':'Import room'}><SvgImport size={11}/></button>}
+                      <input ref={importRoomRef} type="file" accept=".json" style={{display:'none'}} onChange={importRoom}/>
+                      {room && !roomDrawing && <button className="btn danger" onClick={deleteRoom}>{t('salaDelete')}</button>}
+                      <span style={{fontSize:9,color:'var(--muted)',marginLeft:4}}>{lang==='es'?'Rueda → zoom · Arrastrar → desplazar':'Wheel → zoom · Drag → pan'}</span>
+                    </div>
+
+                    {/* Drawing hint */}
+                    {roomDrawing && <div className="room-hint">
+                      {roomCursor?.nearClose ? (lang==='es'?'Clic para cerrar la figura':'Click to close') : t('salaDrawHint')}
+                      {roomCursor?.snapped && !roomCursor?.nearClose && ` · ${t('salaSnapHint')}`}
+                    </div>}
+                    {!roomDrawing && !room && <div className="room-hint">{lang==='es'?'Pulsa "Dibujar planta" para empezar':'Click "Draw floor plan" to start'}</div>}
+                  </div>
+
+                  {/* Wall panel */}
+                  <div className="room-panel">
+                    <div className="room-panel-hd" style={{display:'flex',alignItems:'center',gap:6}}>
+                      {roomNameEdit ? (
+                        <input autoFocus value={roomName} placeholder={lang==='es'?'Nombre de la sala…':'Room name…'}
+                          style={{flex:1,background:'var(--input)',border:'1px solid var(--acc)',color:'var(--text)',fontSize:10,padding:'2px 6px',borderRadius:3,fontFamily:'inherit'}}
+                          onChange={e=>{setRoomName(e.target.value);}}
+                          onKeyDown={e=>{
+                            if(e.key==='Enter'||e.key==='Escape'){setRoomNameEdit(false);saveRoom({...roomRef.current,name:roomName.trim()});}
+                          }}
+                          onBlur={()=>{setRoomNameEdit(false);saveRoom({...roomRef.current,name:roomName.trim()});}}
+                          onClick={e=>e.stopPropagation()}/>
+                      ) : (
+                        <span style={{flex:1,cursor:'text',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}
+                          title={lang==='es'?'Clic para nombrar la sala':'Click to name the room'}
+                          onClick={()=>setRoomNameEdit(true)}>
+                          {roomName || (lang==='es'?'Sin nombre…':'Unnamed…')}
+                        </span>
+                      )}
+                    </div>
+                    <div className="room-panel-hd" style={{fontSize:8,paddingTop:6,paddingBottom:6}}>{t('salaWallsHd')}</div>
+                    <div className="room-cfg">
+                      <label>{t('salaCeilLbl')}</label>
+                      <input type="number" min="100" max="2000" step="10"
+                        value={roomCeilH}
+                        onChange={e => {
+                          const v = Number(e.target.value)||280;
+                          setRoomCeilH(v);
+                          if (roomRef.current) saveRoom({...roomRef.current, ceilingHeight:v});
+                        }}/>
+                      <span>{t('salaCeilUnit')}</span>
+                    </div>
+                    <div className="room-walls">
+                      {!room ? (
+                        <div className="room-empty">{t('salaNoWalls')}</div>
+                      ) : room.walls.map(wall => {
+                        const len = roomWallLen(wall, room.vertices);
+                        const linkedBoard = wall.boardId ? boards.find(b=>b.id===wall.boardId) : null;
+                        const mismatch = linkedBoard && linkedBoard.fixed && linkedBoard.units === 'cm' && Math.abs(linkedBoard.fixedW - len) > 0.5;
+                        return (
+                          <div key={wall.id} className={`room-wall-row${roomHovWall===wall.id?' hov':''}`}
+                            onMouseEnter={()=>setRoomHovWall(wall.id)}
+                            onMouseLeave={()=>setRoomHovWall(null)}>
+                            {roomRenameWid === wall.id ? (
+                              <input className="room-wall-rename" autoFocus value={roomRenameVal}
+                                onChange={e=>setRoomRenameVal(e.target.value)}
+                                onKeyDown={e=>{
+                                  if(e.key==='Enter'){
+                                    saveRoom({...roomRef.current,walls:roomRef.current.walls.map(w=>w.id===wall.id?{...w,name:roomRenameVal.trim()||w.name}:w)});
+                                    setRoomRenameWid(null);
+                                  }
+                                  if(e.key==='Escape') setRoomRenameWid(null);
+                                }}
+                                onBlur={()=>{
+                                  saveRoom({...roomRef.current,walls:roomRef.current.walls.map(w=>w.id===wall.id?{...w,name:roomRenameVal.trim()||w.name}:w)});
+                                  setRoomRenameWid(null);
+                                }}
+                                onClick={e=>e.stopPropagation()}/>
+                            ) : (
+                              <span className="room-wall-name" title={t('salaWallRename')}
+                                onDoubleClick={()=>{setRoomRenameWid(wall.id);setRoomRenameVal(wall.name);}}>
+                                {wall.name}
+                              </span>
+                            )}
+                            <span className="room-wall-len">{cmLabel(len)}</span>
+                            {mismatch && <span className="room-wall-warn" title={t('salaWallMismatch')}>⚠</span>}
+                            <input type="color" value={wall.color||'#d0c8bc'}
+                              title={lang==='es'?'Color de pared':'Wall color'}
+                              style={{width:18,height:18,padding:0,border:'1px solid var(--border2)',borderRadius:2,cursor:'pointer',flexShrink:0}}
+                              onChange={e=>saveRoom({...roomRef.current,walls:roomRef.current.walls.map(w=>w.id===wall.id?{...w,color:e.target.value}:w)})}/>
+                            {linkedBoard && (
+                              <button className="btn" style={{fontSize:9,padding:'1px 5px',flexShrink:0}}
+                                title={wall.flipSide?(lang==='es'?'Fotos al dorso (clic para cambiar)':'Photos on back (click to flip)'):(lang==='es'?'Fotos al frente (clic para cambiar)':'Photos on front (click to flip)')}
+                                onClick={()=>saveRoom({...roomRef.current,walls:roomRef.current.walls.map(w=>w.id===wall.id?{...w,flipSide:!w.flipSide}:w)})}>
+                                {wall.flipSide?'◁':'▷'}
+                              </button>
+                            )}
+                            {mismatch && (
+                              <button className="btn" style={{fontSize:8,padding:'2px 6px',color:'#e87528',borderColor:'#e87528'}}
+                                onClick={()=>syncWallBoard(wall, linkedBoard)}>
+                                {t('salaWallSync')}
+                              </button>
+                            )}
+                            {linkedBoard ? (
+                              <button className="btn" style={{fontSize:8,padding:'2px 6px',color:'var(--acc)',borderColor:'var(--acc-dim)'}}
+                                onClick={()=>{setBid(linkedBoard.id);bidRef.current=linkedBoard.id;setRoomView('board');}}>
+                                {t('salaWallBoard')}
+                              </button>
+                            ) : (
+                              <button className="btn" style={{fontSize:8,padding:'2px 6px'}}
+                                onClick={()=>createRoomBoard(wall.id)}>
+                                {t('salaCreateBoard')}
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* 3D VIEW */}
+            {roomView === '3d' && pid && room && (
+              <div className="room-view">
+                <div className="room-svg-wrap" style={{background:'#1e1e1e', position:'relative'}}>
+                  <canvas ref={room3DCanvasRef} style={{display:'block', width:'100%', height:'100%'}}/>
+                  <div className="room-toolbar room-toolbar-3d">
+                    <button className="btn" onClick={() => setRoomView('room')}>← {lang==='es'?'Planta':'Floor plan'}</button>
+                    <button className="btn" onClick={() => reset3DViewRef.current?.()}>{lang==='es'?'Centrar':'Reset view'}</button>
+                    <button className="btn" onClick={() => snapshot3DRef.current?.()}>{lang==='es'?'Capturar':'Snapshot'}</button>
+                  </div>
+                </div>
+                <div className="room-panel">
+                  <div className="room-panel-hd">{lang==='es'?'VISTA 3D':'3D VIEW'}</div>
+                  <div style={{fontSize:10, color:'var(--muted)', padding:'10px 12px', lineHeight:1.7, whiteSpace:'pre-line'}}>
+                    {lang==='es'
+                      ? 'Arrastra izq. → orbitar\nBotón der. → desplazar\nRueda → zoom suave'
+                      : 'Left drag → orbit\nRight drag → pan\nWheel → smooth zoom'}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* CANVAS */}
             <div ref={wrapRef} className={`canvas-wrap${libExpanded ? ' lib-expanded' : ''}`}
-              style={boardPx ? { background: '#1e1e1e', padding: BOARD_PAD } : {}}
+              style={{...(boardPx ? { background: '#1e1e1e', padding: BOARD_PAD } : {}), ...((roomView==='room'||roomView==='3d')?{display:'none'}:{})}}
               onDragOver={e => { e.preventDefault(); setDragOver(true); }}
               onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget)) setDragOver(false); }}
               onDrop={onCanvasDrop}
@@ -4337,8 +5342,8 @@ ${rows}
             </div>
 
             {/* LIBRARY */}
-            {libOpen && <div className="lib-splitter" onPointerDown={onSplitterPD}/>}
-            {(() => {
+            {libOpen && roomView === 'board' && <div className="lib-splitter" onPointerDown={onSplitterPD}/>}
+            {roomView === 'board' && (() => {
               const libH = libOpen ? libHeight : 30;
               const sortedPhotos = photoSort === 'name'
                 ? [...photos].sort((a, b) => a.name.localeCompare(b.name))
@@ -4596,7 +5601,7 @@ ${rows}
         </div>
       )}
 
-      {bid && (
+      {bid && roomView === 'board' && (
         <div className="zoom-ctrl" style={{bottom: (libOpen ? libHeight : 30) + 20}}>
           <button className="zc-btn" title="Zoom − (Ctrl+−)" onClick={() => zoomStep(-1)}>−</button>
           <span className="zc-pct" style={{cursor: boardPx ? 'pointer' : 'default'}}>
@@ -4699,6 +5704,69 @@ ${rows}
                 {photo.exif.dateTaken && <div>{fmtExifDate(photo.exif.dateTaken)}</div>}
               </div>}
             </div>
+          </div>
+        );
+      })()}
+
+      {projCtxMenu && (
+        <div className="ctx-menu" style={{left: projCtxMenu.x, top: projCtxMenu.y}}
+          onPointerDown={e => e.stopPropagation()} onContextMenu={e => e.preventDefault()}>
+          <button className="ctx-item" onClick={() => {
+            const id = projCtxMenu.id;
+            setProjCtxMenu(null);
+            if (id === pidRef.current) { setRoomView('room'); }
+            else { pendingRoomViewRef.current = true; setPid(id); }
+          }}>{t('salaBtn')}</button>
+        </div>
+      )}
+
+      {roomVertCtx && (
+        <div className="ctx-menu" style={{left: roomVertCtx.x, top: roomVertCtx.y}}
+          onPointerDown={e => e.stopPropagation()} onContextMenu={e => e.preventDefault()}>
+          <button className="ctx-item ctx-danger" onClick={() => deleteRoomVertex(roomVertCtx.id)}>
+            × {lang === 'es' ? 'Eliminar vértice' : 'Delete vertex'}
+          </button>
+        </div>
+      )}
+
+      {roomSvgCtx && (
+        <div className="ctx-menu" style={{left:roomSvgCtx.x, top:roomSvgCtx.y}}
+          onPointerDown={e=>e.stopPropagation()} onContextMenu={e=>e.preventDefault()}>
+          <button className="ctx-item" onClick={()=>{addColumn(roomSvgCtx.svgX, roomSvgCtx.svgY);setRoomSvgCtx(null);}}>
+            {t('salaAddCol')}
+          </button>
+        </div>
+      )}
+
+      {roomColCtx && (() => {
+        const col = (room?.columns||[]).find(c=>c.id===roomColCtx.id);
+        if (!col) return null;
+        const updateCol = (patch) => {
+          const r = roomRef.current;
+          const nr = {...r, columns:(r.columns||[]).map(c=>c.id===col.id?{...c,...patch}:c)};
+          setRoom(nr); roomRef.current = nr;
+        };
+        return (
+          <div className="ctx-menu" style={{left:roomColCtx.x, top:roomColCtx.y}}
+            onPointerDown={e=>e.stopPropagation()} onContextMenu={e=>e.preventDefault()}>
+            <div style={{padding:'5px 12px 3px',fontSize:10,color:'var(--muted)',letterSpacing:'.5px'}}>{lang==='es'?'COLUMNA':'COLUMN'}</div>
+            <div style={{display:'flex',gap:6,padding:'4px 12px',alignItems:'center'}}>
+              <span style={{fontSize:10,color:'var(--text)',minWidth:14}}>{lang==='es'?'An':'W'}</span>
+              <input type="number" min="5" style={{width:52,fontSize:10,background:'var(--input)',border:'1px solid var(--border2)',color:'var(--text)',borderRadius:3,padding:'2px 4px'}}
+                value={col.w} onChange={e=>updateCol({w:Math.max(5,Number(e.target.value))})}
+                onBlur={()=>saveRoom(roomRef.current)} onPointerDown={e=>e.stopPropagation()}/>
+              <span style={{fontSize:10,color:'var(--text)',minWidth:14}}>{lang==='es'?'Pr':'D'}</span>
+              <input type="number" min="5" style={{width:52,fontSize:10,background:'var(--input)',border:'1px solid var(--border2)',color:'var(--text)',borderRadius:3,padding:'2px 4px'}}
+                value={col.d} onChange={e=>updateCol({d:Math.max(5,Number(e.target.value))})}
+                onBlur={()=>saveRoom(roomRef.current)} onPointerDown={e=>e.stopPropagation()}/>
+              <span style={{fontSize:9,color:'var(--muted)'}}>cm</span>
+            </div>
+            <div className="ctx-sep"/>
+            <button className="ctx-item ctx-danger" onClick={()=>{
+              const r=roomRef.current;
+              saveRoom({...r,columns:(r.columns||[]).filter(c=>c.id!==roomColCtx.id)});
+              setRoomColCtx(null);
+            }}>× {lang==='es'?'Eliminar columna':'Delete column'}</button>
           </div>
         );
       })()}

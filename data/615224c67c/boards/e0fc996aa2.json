@@ -1,0 +1,84 @@
+[
+  {
+    "id": "mpf9x243mjq",
+    "photoId": "df2e695951d5",
+    "x": 584.6641082494738,
+    "y": 702.0285974188403,
+    "w": 276,
+    "z": 1,
+    "label": "",
+    "rot": 0,
+    "frame": 0
+  },
+  {
+    "id": "mpf9x3wqlvo",
+    "photoId": "df2e695951d5",
+    "x": 2274.920916481892,
+    "y": 657.3325373813171,
+    "w": 276,
+    "z": 2,
+    "label": "",
+    "rot": 0,
+    "frame": 0,
+    "zoneId": "mpfarareta8"
+  },
+  {
+    "id": "mpf9x8czza6",
+    "photoId": "48a2896d0241",
+    "x": 940.5046335778043,
+    "y": 613.3325373813171,
+    "w": 276,
+    "z": 3,
+    "label": "",
+    "rot": 0,
+    "frame": 0
+  },
+  {
+    "id": "mpf9y2ellj5",
+    "photoId": "5949458273f0",
+    "x": 1940.2462902950706,
+    "y": 657.3325373813171,
+    "w": 276,
+    "z": 4,
+    "label": "",
+    "rot": 0,
+    "frame": 0,
+    "zoneId": "mpfarareta8"
+  },
+  {
+    "id": "mpfarareta8",
+    "type": "zone",
+    "label": "",
+    "color": "blue",
+    "x": 1879.969696969697,
+    "y": 573.3472056398881,
+    "w": 755,
+    "h": 988,
+    "z": 0
+  },
+  {
+    "id": "mpfexb4o0uq",
+    "type": "text",
+    "text": "TABLEAU - EXPOSICION VIRTUAL",
+    "x": 780.5046335778043,
+    "y": 285,
+    "w": 859,
+    "h": 130,
+    "z": 5,
+    "fontSize": 60,
+    "textAlign": "center",
+    "fontFamily": "display",
+    "textColor": "#1a1a1a"
+  },
+  {
+    "id": "mpfkcxjpz71",
+    "photoId": "4e0d310711fe",
+    "x": 1421,
+    "y": 657.3325373813173,
+    "w": 276,
+    "z": 6,
+    "label": "",
+    "rot": 0,
+    "frame": 0
+  }
+]

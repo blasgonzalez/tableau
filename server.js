@@ -53,6 +53,7 @@ const boardDir   = pid         => path.join(DATA_DIR, pid, 'boards');
 const boardFile  = (pid, bid)  => path.join(boardDir(pid), `${bid}.json`);
 const boardsMeta = pid         => path.join(projDir(pid), 'boards.json');
 const photosMeta = pid         => path.join(projDir(pid), 'photos.json');
+const roomFile   = pid         => path.join(projDir(pid), 'room.json');
 
 function readJSON(file, def = []) {
   try   { return JSON.parse(fs.readFileSync(file, 'utf8')); }
@@ -345,6 +346,24 @@ app.put('/api/projects/:pid/boards/order', (req, res) => {
   const sorted = order.map(id => map[id]).filter(Boolean);
   boards.forEach(b => { if (!order.includes(b.id)) sorted.push(b); });
   writeJSON(boardsMeta(pid), sorted);
+  res.json({ ok: true });
+});
+
+// ── Room geometry ─────────────────────────────────────────────────────────────
+app.get('/api/projects/:pid/room', (req, res) => {
+  const f = roomFile(req.params.pid);
+  res.json(fs.existsSync(f) ? readJSON(f, null) : null);
+});
+
+app.put('/api/projects/:pid/room', (req, res) => {
+  ensureDir(projDir(req.params.pid));
+  writeJSON(roomFile(req.params.pid), req.body);
+  res.json({ ok: true });
+});
+
+app.delete('/api/projects/:pid/room', (req, res) => {
+  const f = roomFile(req.params.pid);
+  if (fs.existsSync(f)) fs.unlinkSync(f);
   res.json({ ok: true });
 });
 

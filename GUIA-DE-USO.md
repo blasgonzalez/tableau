@@ -409,6 +409,58 @@ En modo presentación: la cuadrícula se oculta automáticamente, las notas inte
 
 ---
 
+## Sala y vista 3D
+
+La sala permite dibujar la planta del espacio expositivo y visualizar en 3D cómo quedan las fotos colocadas en cada pared.
+
+### Abrir la sala
+
+Haz clic en el botón **🏛 Sala** en la barra de navegación del panel izquierdo. Si el proyecto no tiene sala, aparece una pantalla vacía con el botón **Crear sala**.
+
+### Dibujar la planta
+
+1. Haz clic en **Dibujar planta** para entrar en modo dibujo.
+2. Haz clic en el canvas para ir colocando vértices. El sistema se engancha automáticamente a ángulos de 45° y 90°.
+3. Para cerrar el polígono, haz clic sobre el primer vértice. Para dejarlo abierto (pasillo, sala irregular), haz clic en **Finalizar abierta**.
+4. Pulsa **⌫** para deshacer el último vértice, o **Cancelar** para salir sin guardar.
+
+Una vez dibujada, puedes editar la planta con **Editar planta**:
+- Arrastra cualquier vértice para reposicionarlo.
+- Arrastra una columna para moverla dentro del espacio.
+
+### Paredes y tableros vinculados
+
+El panel derecho muestra la lista de paredes detectadas. Para cada pared puedes:
+
+| Acción | Cómo |
+|---|---|
+| Renombrar | Doble clic sobre el nombre |
+| Cambiar color | Clic en el selector de color |
+| Cambiar lado de las fotos | Clic en el botón **▷ / ◁** (frente o dorso) |
+| Crear tablero | Clic en **+ Tablero** — crea un tablero fijo con el ancho y alto de la pared |
+| Ir al tablero | Clic en **Ver tablero →** |
+
+#### Aviso de desincronización ⚠
+
+Cuando la longitud real de la pared difiere del ancho configurado en el tablero vinculado (porque hayas movido vértices después de crear el tablero), aparece un badge **⚠** y un botón **Sincronizar** en la fila de la pared.
+
+- **Sincronizar** actualiza el ancho del tablero para que coincida con la pared actual.
+- Si hay fotos que quedarían fuera del nuevo ancho, la sincronización se bloquea y aparece un aviso. Ve primero al tablero, ajusta o elimina esas fotos y vuelve a sincronizar.
+
+### Vista 3D
+
+Haz clic en **Vista 3D** para ver una representación tridimensional de la sala con las fotos colocadas en cada pared. Usa el ratón para orbitar (clic + arrastrar), hacer zoom (rueda) y desplazarte (clic derecho + arrastrar).
+
+| Botón | Acción |
+|---|---|
+| **← Planta** | Volver a la vista de planta |
+| **Centrar** | Restablecer la cámara a la posición inicial |
+| **Capturar** | Guardar la vista actual como foto en la librería del proyecto |
+
+La captura se guarda automáticamente en la librería con el nombre `sala_FECHA-HORA.jpg` y la etiqueta `sala`.
+
+---
+
 ## Fotos rechazadas
 
 El botón **✕** que aparece al pasar el ratón sobre una miniatura de la librería marca la foto como rechazada. Las fotos rechazadas:

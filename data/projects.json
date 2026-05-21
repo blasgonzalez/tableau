@@ -17,6 +17,12 @@
   {
     "id": "615224c67c",
     "name": "Cadernos da Limia",
-    "created": 1777735823047
+    "created": 1777735823047,
+    "sections": [
+      {
+        "id": "mpfl5di3z5d",
+        "name": "Vistas sala"
+      }
+    ]
   }
 ]

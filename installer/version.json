@@ -1,6 +1,6 @@
 {
-  "version": "1.6.5",
+  "version": "1.7.0",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-05-20",
-  "notes": "Memoria: correcciones de estabilidad · Zonas a tablero con nombre personalizado · Orden z-index explícito"
+  "releaseDate": "2026-05-21",
+  "notes": "Vista 3D: captura de vistas · Sala: aviso y sincronización pared/tablero · Correcciones de posicionamiento"
 }

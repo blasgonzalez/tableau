@@ -1,0 +1,114 @@
+{
+  "ceilingHeight": 280,
+  "vertices": [
+    {
+      "id": "vmpf6z0irpy2",
+      "x": 343.1139672882899,
+      "y": 889.6915601448337
+    },
+    {
+      "id": "vmpf6z4lb684",
+      "x": 343.2616487455198,
+      "y": 180.02500625125595
+    },
+    {
+      "id": "vmpf6zdw0e0p",
+      "x": 370.7492273313468,
+      "y": 179.94926547933443
+    },
+    {
+      "id": "vmpf6zgfknk3",
+      "x": 369.8830262378195,
+      "y": 136.51797912326765
+    },
+    {
+      "id": "vmpf6zhm29sz",
+      "x": 340.0490578718438,
+      "y": 136.22757296253593
+    },
+    {
+      "id": "vmpf6zjhmwbz",
+      "x": 335.32942547012175,
+      "y": -198.4968585570231
+    },
+    {
+      "id": "vmpf6zo94081",
+      "x": 743.4448830804419,
+      "y": -34.63662000101931
+    },
+    {
+      "id": "vmpf6zpct3fj",
+      "x": 1060.1747935127396,
+      "y": -36.09051297820522
+    },
+    {
+      "id": "vmpfd15ay4oj",
+      "x": 693.4616581888092,
+      "y": -200.34838667629995
+    }
+  ],
+  "walls": [
+    {
+      "id": "wmpf6zjmb0",
+      "v1": "vmpf6z0irpy2",
+      "v2": "vmpf6z4lb684",
+      "name": "Pared 1",
+      "boardId": "e0fc996aa2",
+      "flipSide": false
+    },
+    {
+      "id": "wmpf6zjmb4",
+      "v1": "vmpf6zdw0e0p",
+      "v2": "vmpf6zgfknk3",
+      "name": "Pared 5",
+      "boardId": "517c21b5a5"
+    },
+    {
+      "id": "wmpf6zjmb5",
+      "v1": "vmpf6zgfknk3",
+      "v2": "vmpf6zhm29sz",
+      "name": "Pared 6",
+      "boardId": null
+    },
+    {
+      "id": "wmpf6zjmb6",
+      "v1": "vmpf6zhm29sz",
+      "v2": "vmpf6zjhmwbz",
+      "name": "Pared 7",
+      "boardId": "2592cc8a0e"
+    },
+    {
+      "id": "wmpf6zwjc7",
+      "v1": "vmpf6zo94081",
+      "v2": "vmpf6zpct3fj",
+      "name": "Pared 8",
+      "boardId": "772eeadecc"
+    },
+    {
+      "id": "wmpf6zjmb3",
+      "v1": "vmpf6zdw0e0p",
+      "v2": "vmpf6z4lb684",
+      "name": "Pared 4",
+      "boardId": null
+    },
+    {
+      "id": "wmpfd1j3o6",
+      "v1": "vmpf6zjhmwbz",
+      "v2": "vmpfd15ay4oj",
+      "name": "Pared 7",
+      "boardId": "18fd5dc071"
+    }
+  ],
+  "closed": false,
+  "columns": [
+    {
+      "id": "colmpfigwpd",
+      "x": 866.1593164452254,
+      "y": 194.55938679813215,
+      "w": 30,
+      "d": 30,
+      "label": ""
+    }
+  ],
+  "name": "Sala Apostrophe"
+}
