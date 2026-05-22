@@ -186,7 +186,7 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 /* ── WORKSPACE ── */
 .workspace{flex:1;display:flex;flex-direction:column;overflow:hidden}
 .canvas-wrap{flex:1;overflow:auto;background:var(--bg)}
-.canvas-wrap.lib-expanded .bitem-bar,.canvas-wrap.lib-expanded .dim-tag{display:none !important}
+.canvas-wrap.lib-expanded .bitem-bar,.canvas-wrap.lib-expanded .zone-hdr{display:none !important}
 .canvas{position:relative;min-width:3000px;min-height:2200px;z-index:1}
 .canvas-drop-hint{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(196,137,74,.06);border:3px dashed var(--acc-dim);font-size:14px;letter-spacing:3px;color:var(--acc);pointer-events:none;z-index:500}
 
@@ -256,9 +256,6 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .lbl-popup-close:hover{color:var(--text)}
 .lbl-popup-ta{background:var(--surf);border:1px solid var(--border2);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12px;padding:8px 10px;outline:none;resize:none;flex:1;min-height:0;overflow-y:auto;line-height:1.6;letter-spacing:.3px;width:100%;box-sizing:border-box}
 .lbl-popup-ta:focus{border-color:var(--acc-dim)}
-/* dimension tag visible on hover/select */
-.dim-tag{position:absolute;bottom:calc(22px / var(--canvas-zoom,1));left:0;background:rgba(13,12,11,.88);color:rgba(255,255,255,.9);font-size:8px;padding:2px 7px;letter-spacing:.4px;pointer-events:none;opacity:0;transition:opacity .12s;white-space:nowrap;zoom:calc(1 / var(--canvas-zoom,1))}
-.bitem:hover .dim-tag{opacity:1}
 /* ── NOTE ITEMS ── */
 .nitem{position:absolute;cursor:grab;user-select:none}
 .nitem-body{width:100%;height:100%;background:var(--panel);border:1px solid var(--border2);border-left:3px solid var(--acc-dim);display:flex;flex-direction:column;box-sizing:border-box}
@@ -289,12 +286,10 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .nitem.inmem .nitem-body{border-left-color:var(--acc)}
 /* ── ZONE ITEMS ── */
 .zitem{position:absolute;cursor:grab;user-select:none}
-.zitem:hover .bitem-bar{opacity:1}
+.zitem.locked{cursor:default}
 .zitem.sel .zitem-body{outline:2px dashed var(--acc-dim);outline-offset:3px}
 .zitem.anchor .zitem-body{outline:2px solid var(--acc);outline-offset:3px}
 .zitem-body{width:100%;height:100%;box-sizing:border-box;border-radius:3px;position:relative}
-.zitem-label{position:absolute;top:8px;left:10px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;background:transparent;border:none;outline:none;cursor:text;font-family:'IBM Plex Mono',monospace;font-weight:600;max-width:calc(100% - 20px)}
-.zitem-label::placeholder{opacity:.35;font-weight:400;text-transform:none;letter-spacing:.3px}
 .zrh{position:absolute;opacity:0;transition:opacity .12s;z-index:20}
 .zitem:hover .zrh,.zitem.sel .zrh{opacity:1}
 .zrh.nw,.zrh.ne,.zrh.sw,.zrh.se{width:10px;height:10px;background:rgba(255,255,255,.75);zoom:calc(1/var(--canvas-zoom,1))}
@@ -302,10 +297,14 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .zrh.ne{top:calc(-4px / var(--canvas-zoom,1));right:calc(-4px / var(--canvas-zoom,1));cursor:ne-resize}
 .zrh.sw{bottom:calc(-4px / var(--canvas-zoom,1));left:calc(-4px / var(--canvas-zoom,1));cursor:sw-resize}
 .zrh.se{bottom:calc(-4px / var(--canvas-zoom,1));right:calc(-4px / var(--canvas-zoom,1));cursor:se-resize}
-.zrh.n{top:0;left:20%;right:20%;height:8px;cursor:n-resize}
-.zrh.s{bottom:0;left:20%;right:20%;height:8px;cursor:s-resize}
-.zrh.e{right:0;top:20%;bottom:20%;width:8px;cursor:e-resize}
-.zrh.w{left:0;top:20%;bottom:20%;width:8px;cursor:w-resize}
+.zrh.n{top:0;left:0;right:0;height:12px;cursor:n-resize;border-top:2px solid transparent}
+.zrh.s{bottom:0;left:0;right:0;height:12px;cursor:s-resize;border-bottom:2px solid transparent}
+.zrh.e{right:0;top:0;bottom:0;width:12px;cursor:e-resize;border-right:2px solid transparent}
+.zrh.w{left:0;top:0;bottom:0;width:12px;cursor:w-resize;border-left:2px solid transparent}
+.zitem:hover .zrh.n,.zitem.sel .zrh.n{border-top-color:rgba(255,255,255,.35)}
+.zitem:hover .zrh.s,.zitem.sel .zrh.s{border-bottom-color:rgba(255,255,255,.35)}
+.zitem:hover .zrh.e,.zitem.sel .zrh.e{border-right-color:rgba(255,255,255,.35)}
+.zitem:hover .zrh.w,.zitem.sel .zrh.w{border-left-color:rgba(255,255,255,.35)}
 /* ── MEM INFO BLOCK ── */
 .mem-info-block{display:flex;flex-direction:column;gap:7px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border2)}
 .mem-info-hd{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-bottom:1px}
@@ -527,6 +526,14 @@ select.inp{cursor:pointer;appearance:none;padding-right:28px;background-image:ur
 @keyframes replacing-pulse{0%,100%{outline-opacity:1}50%{outline-opacity:.3}}
 .group-badge{position:absolute;right:0;top:0;font-size:6px;color:var(--muted);padding:1px 3px;pointer-events:none;zoom:calc(1/var(--canvas-zoom,1));background:var(--panel);letter-spacing:.5px;border-radius:0 0 0 3px}
 .zone-badge{position:absolute;top:calc(4px / var(--canvas-zoom,1));right:calc(4px / var(--canvas-zoom,1));width:calc(7px / var(--canvas-zoom,1));height:calc(7px / var(--canvas-zoom,1));border-radius:50%;pointer-events:none;z-index:5;opacity:.85}
+.zone-hdr{position:absolute;top:0;left:0;right:0;z-index:9000;display:flex;align-items:center;gap:calc(4px / var(--canvas-zoom,1));padding:0 calc(3px / var(--canvas-zoom,1)) 0 calc(7px / var(--canvas-zoom,1));height:calc(28px / var(--canvas-zoom,1));border-radius:calc(3px / var(--canvas-zoom,1)) calc(3px / var(--canvas-zoom,1)) 0 0;cursor:grab;user-select:none;box-sizing:border-box;opacity:0;transition:opacity .12s}
+.zitem:hover .zone-hdr{opacity:.4;pointer-events:none}
+.zitem.sel .zone-hdr{opacity:1;pointer-events:auto}
+.zone-hdr input{font-size:calc(9px / var(--canvas-zoom,1));letter-spacing:1.2px;text-transform:uppercase;background:transparent;border:none;outline:none;cursor:text;font-family:'IBM Plex Mono',monospace;font-weight:600;flex:1;min-width:0;color:inherit}
+.zone-hdr input::placeholder{opacity:.35;font-weight:400;text-transform:none;letter-spacing:.3px}
+.zone-hdr-grip{font-size:calc(13px / var(--canvas-zoom,1));opacity:.5;flex-shrink:0;line-height:1}
+.zone-hdr-sc{font-size:calc(10px / var(--canvas-zoom,1));opacity:.7;flex-shrink:0;line-height:1}
+.zone-hdr .ibc{width:calc(22px / var(--canvas-zoom,1));height:calc(22px / var(--canvas-zoom,1));font-size:calc(11px / var(--canvas-zoom,1));flex-shrink:0}
 /* ── THUMB COPY BUTTON ── */
 .thumb-cp{position:absolute;bottom:2px;right:22px;width:18px;height:18px;background:rgba(0,0,0,.62);color:rgba(255,255,255,.82);border:1px solid rgba(255,255,255,.18);cursor:pointer;font-size:10px;border-radius:2px;display:none;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;line-height:1;z-index:2}
 .thumb:hover .thumb-cp{display:flex}
@@ -794,7 +801,7 @@ const I18N = {
     projectPhotosL1:'Fotos del', projectPhotosL2:'proyecto',
     libTitle:'Biblioteca', sortImported:'Importación', sortName:'Nombre A→Z', sortColor:'Tono', sortBrightness:'Luminosidad', sortRating:'Valoración', filterPending:'Sin colocar', libSearchPh:'buscar…', tagFilterBtn:'Etiquetas', tagFilterAll:'Todas', tagPopHd:'Etiquetas', tagNewPh:'nueva etiqueta…', noTagsYet:'Sin etiquetas aún', libPreviewToggle:'Vista previa al pasar el ratón', bgColor:'Color de fondo', bgColorNone:'Sin color (tema)', ratingFilterHint:'Filtrar por valoración mínima',
     setDefaultSize:'Usar como tamaño de referencia', duplicateItem:'Duplicar', defaultSizeSet:'Tamaño de referencia guardado', defaultSizeActive: w => `Tamaño de referencia: ${w} px`, clear:'Limpiar', swapPos:'Intercambiar posición', flipH:'Voltear horizontal', flipV:'Voltear vertical',
-    gridLayoutBtn:'Cuadrícula', gridTitle:'Colocar en cuadrícula', gridColsLabel:'Columnas', gridGapLabel:'Separación', gridFits:(n,tot)=>n>=tot?'Todas las fotos caben':`Caben ${n} de ${tot}`, gridPlace:'Colocar',
+    gridLayoutBtn:'Cuadrícula', gridTitle:'Colocar en cuadrícula', gridColsLabel:'Columnas', gridGapLabel:'Separación', gridScaleLabel:'Escala', gridFits:(n,tot)=>n>=tot?'Todas las fotos caben':`Caben ${n} de ${tot}`, gridPlace:'Colocar',
     libSnapExpand:'Ampliar librería', libSnapCollapse:'Reducir librería',
     uploadHint:'Sube fotos con ↑ Subir →', dragFilesHint:'o arrastra archivos al canvas',
     alreadyInTableau:'ya en el tableau',
@@ -850,7 +857,7 @@ const I18N = {
     confirmOverflow: 'Algunas fotos quedarán fuera de las nuevas dimensiones. ¿Continuar?',
     invalidDims: 'Las dimensiones deben ser mayores que cero',
     pxPreview: (w, h) => `${w} × ${h} px`,
-    gridToggle: 'Guías', gridHiddenZoom: 'Guías activas — zoom demasiado bajo para mostrarlas', gridAuto: 'Auto', fitView: 'Ajustar', fitWidth: 'Ajustar al ancho (Ctrl+0)', snapGrid: 'Imán', addNote: '+ Nota', addZone: '+ Zona', zoneColor: 'Color de zona', copyZoneToBoard: 'Copiar a nuevo tablero', moveZoneToBoard: 'Mover a nuevo tablero', zoneLabelPh: 'Nombre de zona…', zoneCaptureBtn: 'Capturar contenido',
+    gridToggle: 'Guías', gridHiddenZoom: 'Guías activas — zoom demasiado bajo para mostrarlas', gridAuto: 'Auto', fitView: 'Ajustar', fitWidth: 'Ajustar al ancho (Ctrl+0)', snapGrid: 'Imán', addNote: '+ Nota', addZone: '+ Zona', zoneColor: 'Color de zona', zoneScaleContent: 'Escalar contenido al redimensionar', copyZoneToBoard: 'Copiar a nuevo tablero', moveZoneToBoard: 'Mover a nuevo tablero', zoneLabelPh: 'Nombre de zona…', zoneCaptureBtn: 'Capturar contenido', gridWrapZone: 'Envolver en zona escalable',
     salaBtn:'🏛 Sala', salaCreate:'Crear sala', salaDelete:'Eliminar sala', salaDraw:'Dibujar planta', salaEdit:'Editar planta', salaAddSection:'+ Añadir segmento', salaCancel:'Cancelar dibujo', salaFinish:'Finalizar abierta', salaCeilLbl:'Altura del techo', salaCeilUnit:'cm', salaWallsHd:'PAREDES', salaNoWalls:'Dibuja la planta para ver las paredes aquí', salaCreateBoard:'+ Tablero', salaWallBoard:'Ver tablero →', salaDrawHint:'Clic → vértice · 1er punto → cerrar · Finalizar → abierto · ⌫ → deshacer · se engancha en 45°/90°', salaSnapHint:'⊾ enganchado', salaDeleteWall:'Desvincular tablero', salaWallRename:'Renombrar pared', salaAddCol:'+ Columna', salaWallMismatch:'El tablero es más ancho que la pared', salaWallSync:'Sincronizar', salaWallSyncOk:'Tablero sincronizado con la pared', salaWallSyncOverflow:'Hay fotos fuera del nuevo ancho. Mueve o elimina las fotos en el tablero primero.',
     reportHeading:'Tableau — Memoria del Proyecto',
     noScaleConfigured:'sin escala configurada',
@@ -921,7 +928,7 @@ const I18N = {
     projectPhotosL1:'Project', projectPhotosL2:'photos',
     libTitle:'Library', sortImported:'Import date', sortName:'Name A→Z', sortColor:'Hue', sortBrightness:'Brightness', sortRating:'Rating', filterPending:'Unplaced', libSearchPh:'search…', tagFilterBtn:'Tags', tagFilterAll:'All', tagPopHd:'Tags', tagNewPh:'new tag…', noTagsYet:'No tags yet', libPreviewToggle:'Hover preview', bgColor:'Background colour', bgColorNone:'No colour (theme)', ratingFilterHint:'Filter by minimum rating',
     setDefaultSize:'Set as default size', duplicateItem:'Duplicate', defaultSizeSet:'Default size saved', defaultSizeActive: w => `Default size: ${w} px`, clear:'Clear', swapPos:'Swap positions', flipH:'Flip horizontal', flipV:'Flip vertical',
-    gridLayoutBtn:'Grid', gridTitle:'Place as grid', gridColsLabel:'Columns', gridGapLabel:'Gap', gridFits:(n,tot)=>n>=tot?'All photos fit':`${n} of ${tot} fit`, gridPlace:'Place',
+    gridLayoutBtn:'Grid', gridTitle:'Place as grid', gridColsLabel:'Columns', gridGapLabel:'Gap', gridScaleLabel:'Scale', gridFits:(n,tot)=>n>=tot?'All photos fit':`${n} of ${tot} fit`, gridPlace:'Place',
     libSnapExpand:'Expand library', libSnapCollapse:'Collapse library',
     uploadHint:'Upload photos with ↑ Upload →', dragFilesHint:'or drag files to canvas',
     alreadyInTableau:'already in tableau',
@@ -977,7 +984,7 @@ const I18N = {
     confirmOverflow: 'Some photos will be outside the new dimensions. Continue?',
     invalidDims: 'Dimensions must be greater than zero',
     pxPreview: (w, h) => `${w} × ${h} px`,
-    gridToggle: 'Grid', gridHiddenZoom: 'Grid active — zoom too low to display', gridAuto: 'Auto', fitView: 'Fit', fitWidth: 'Fit to width (Ctrl+0)', snapGrid: 'Snap', addNote: '+ Note', addZone: '+ Zone', zoneColor: 'Zone color', copyZoneToBoard: 'Copy to new board', moveZoneToBoard: 'Move to new board', zoneLabelPh: 'Zone name…', zoneCaptureBtn: 'Capture content',
+    gridToggle: 'Grid', gridHiddenZoom: 'Grid active — zoom too low to display', gridAuto: 'Auto', fitView: 'Fit', fitWidth: 'Fit to width (Ctrl+0)', snapGrid: 'Snap', addNote: '+ Note', addZone: '+ Zone', zoneColor: 'Zone color', zoneScaleContent: 'Scale content on resize', copyZoneToBoard: 'Copy to new board', moveZoneToBoard: 'Move to new board', zoneLabelPh: 'Zone name…', zoneCaptureBtn: 'Capture content', gridWrapZone: 'Wrap in scalable zone',
     salaBtn:'🏛 Room', salaCreate:'Create room', salaDelete:'Delete room', salaDraw:'Draw floor plan', salaEdit:'Edit floor plan', salaAddSection:'+ Add section', salaCancel:'Cancel drawing', salaFinish:'Finish open', salaCeilLbl:'Ceiling height', salaCeilUnit:'cm', salaWallsHd:'WALLS', salaNoWalls:'Draw the floor plan to see walls here', salaCreateBoard:'+ Board', salaWallBoard:'Go to board →', salaDrawHint:'Click → vertex · 1st point → close · Finish → end open · ⌫ → undo · snaps at 45°/90°', salaSnapHint:'⊾ snapped', salaDeleteWall:'Unlink board', salaWallRename:'Rename wall', salaAddCol:'+ Column', salaWallMismatch:'Board is wider than the wall', salaWallSync:'Sync', salaWallSyncOk:'Board synced to wall', salaWallSyncOverflow:'Photos would overflow the new width. Move or remove them in the board editor first.',
     reportHeading:'Tableau — Project Report',
     noScaleConfigured:'no scale configured',
@@ -1157,6 +1164,8 @@ function App() {
   const [gridModal,  setGridModal]  = useState(false);
   const [gridCols,   setGridCols]   = useState(2);
   const [gridGap,    setGridGap]    = useState(20);
+  const [gridScale,  setGridScale]  = useState(100);
+  const [gridWrapZone, setGridWrapZone] = useState(false);
   const showLibPreviewRef = useRef(localStorage.getItem('tb-lib-preview') !== 'false');
   const [libPreview,      setLibPreview]      = useState(null); // {photo, x, y}
   const [pinnedPreview,   setPinnedPreview]   = useState(null); // {photo, x, y} — click-pinned
@@ -1510,7 +1519,7 @@ function App() {
         if (!wall.boardId) return;
         const board = boards.find(b => b.id === wall.boardId);
         const rawItems = boardItemsMap[wall.boardId] || [];
-        const bItems = rawItems.filter(i => !i.type || i.type === 'photo' || i.type === 'text' || i.type === 'note');
+        const bItems = rawItems.filter(i => !i.type || i.type === 'photo' || i.type === 'text');
         if (!board || !bItems.length) return;
         const bPx = getBoardPx(board);
         if (!bPx) return;
@@ -1520,10 +1529,8 @@ function App() {
 
         bItems.forEach(item => {
           const isText = item.type === 'text';
-          const isNote = item.type === 'note';
-          const photo = !isText && !isNote ? photoMap[item.photoId] : null;
+          const photo = !isText ? photoMap[item.photoId] : null;
           const itemH = isText ? (item.h || item.w * 0.3)
-                      : isNote ? (item.h || 150)
                       : photo ? item.w * (photo.h / photo.w) : item.w;
           const iw = item.w / bPx.w * fW;
           const ih = itemH / bPx.h * fH;
@@ -1537,35 +1544,14 @@ function App() {
           pMesh.position.set(pos.x, pos.y, pos.z);
           pMesh.rotation.y = rotY;
           scene.add(pMesh);
-          if (isText || isNote) {
+          if (isText) {
             const SCALE = 2;
             const cvW = Math.max(1, Math.round(item.w * SCALE));
             const cvH = Math.max(1, Math.round(itemH * SCALE));
             const cvs = document.createElement('canvas');
             cvs.width = cvW; cvs.height = cvH;
             const ctx2 = cvs.getContext('2d');
-            if (isNote) {
-              const accent = (item.noteColor && NOTE_COLOR_VALS[item.noteColor]) ? NOTE_COLOR_VALS[item.noteColor][0] : '#c8a832';
-              const bg = (item.noteColor && NOTE_COLOR_VALS[item.noteColor]) ? NOTE_COLOR_VALS[item.noteColor][1] : 'rgba(255,253,231,0.92)';
-              ctx2.fillStyle = bg;
-              ctx2.fillRect(0, 0, cvW, cvH);
-              ctx2.fillStyle = accent;
-              ctx2.fillRect(0, 0, 6*SCALE, cvH);
-              const pad = 12*SCALE;
-              let ty = pad;
-              if (item.title) {
-                ctx2.fillStyle = '#222';
-                ctx2.font = `bold ${13*SCALE}px sans-serif`;
-                ctx2.fillText(item.title, pad, ty);
-                ty += 18*SCALE;
-              }
-              ctx2.fillStyle = '#444';
-              ctx2.font = `${11*SCALE}px sans-serif`;
-              (item.text || '').split('\n').forEach(line => {
-                ctx2.fillText(line, pad, ty, cvW - pad*2);
-                ty += 16*SCALE;
-              });
-            } else {
+            {
               const tFont = TEXT_FONTS.find(f => f.id === (item.fontFamily || 'serif')) || TEXT_FONTS[0];
               const fs = (item.fontSize || 40) * SCALE;
               ctx2.clearRect(0, 0, cvW, cvH);
@@ -2812,10 +2798,12 @@ ${rows}
     const units = board?.units || 'px';
     const defaultGap = units === 'mm' ? 5 : units === 'cm' ? 0.5 : units === 'in' ? 0.2 : 20;
     setGridGap(defaultGap);
+    setGridScale(100);
+    setGridWrapZone(false);
     setGridModal(true);
   };
 
-  const placeAsGrid = (cols, gapUnits) => {
+  const placeAsGrid = (cols, gapUnits, scale = 100, wrapZone = false) => {
     const ids = libSelRef.current;
     if (!ids.length || !bidRef.current) return;
     const board = boardsRef.current.find(b => b.id === bidRef.current);
@@ -2827,9 +2815,10 @@ ${rows}
     const selPhotos = ids.map(id => photosRef.current.find(p => p.id === id)).filter(Boolean);
     if (!selPhotos.length) return;
 
-    const cellW = bPx
+    const naturalCellW = bPx
       ? Math.max(1, Math.round((bPx.w - gapPx * (cols + 1)) / cols))
       : (board.defaultW || 300);
+    const cellW = bPx ? Math.max(1, Math.round(naturalCellW * scale / 100)) : naturalCellW;
     const rows = Math.ceil(selPhotos.length / cols);
     const rowHeights = [];
     for (let r = 0; r < rows; r++) {
@@ -2847,7 +2836,8 @@ ${rows}
 
     let startX, startY;
     if (bPx) {
-      startX = gapPx; startY = gapPx;
+      startX = Math.round((bPx.w - (cols * cellW + gapPx * (cols - 1))) / 2);
+      startY = gapPx;
     } else {
       const wrap = wrapRef.current; const z = zoomRef.current;
       const cx = (wrap.scrollLeft + wrap.clientWidth / 2) / z;
@@ -2875,7 +2865,25 @@ ${rows}
       }
       y += rowHeights[r] + gapPx;
     }
-    const nit = [...itemsRef.current, ...newItems];
+    let nit = [...itemsRef.current, ...newItems];
+    if (wrapZone && newItems.length) {
+      const PADB = 16, PADTOP = 40, PADV = 16; // PADTOP: zone-hdr (26px) sits above the zone body, plus breathing room
+      const bp = boardPxRef.current;
+      const minX = Math.min(...newItems.map(i => i.x));
+      const minY = Math.min(...newItems.map(i => i.y));
+      const maxX = Math.max(...newItems.map(i => i.x + i.w));
+      const maxY = Math.max(...newItems.map(i => { const p = photosRef.current.find(ph => ph.id === i.photoId); return i.y + (p ? Math.round(i.w * p.h / p.w) : i.w); }));
+      const nonZones = nit.filter(i => i.type !== 'zone');
+      const minZ = nonZones.length ? Math.min(...nonZones.map(i => i.z || 0)) - 1 : -1;
+      const zid = Date.now().toString(36) + Math.random().toString(36).slice(2, 4) + 'z';
+      let zx = minX - PADV, zy = minY - PADTOP;
+      let zw = maxX - minX + PADV * 2, zh = maxY - minY + PADB + PADTOP;
+      if (zx < 0) { zw += zx; zx = 0; }
+      if (zy < 0) { zh += zy; zy = 0; }
+      if (bp) { zw = Math.min(zw, bp.w - zx); zh = Math.min(zh, bp.h - zy); }
+      const zone = {id:zid, type:'zone', label:'', color:'blue', scaleContent:true, x:zx, y:zy, w:zw, h:zh, z:minZ};
+      nit = [...nit.map(i => newItems.find(n => n.id === i.id) ? {...i, zoneId: zid} : i), zone];
+    }
     const norm = applyNormalized(nit);
     selRef.current = newItems.map(i => i.id); setSel(selRef.current);
     saveItemsNow(norm);
@@ -2887,6 +2895,8 @@ ${rows}
   // ── hover info ────────────────────────────────────────────────────────────
   const showPhotoInfo = (photo, status, thumbSrc, itemW = null, itemH = null) =>
     setHoverInfo({ photo, status, thumbSrc, itemW, itemH });
+  const showItemInfo = (type, label, w, h, extra = {}) =>
+    setHoverInfo({ type, label, w, h, ...extra });
   const clearHoverInfo = () => setHoverInfo(null);
 
   // ── drag ──────────────────────────────────────────────────────────────────
@@ -3960,18 +3970,52 @@ ${rows}
     const ox = it.x, oy = it.y, ow = it.w, oh = it.h || 320;
     const sx = e.clientX, sy = e.clientY;
     let cx = ox, cy = oy, cw = ow, ch = oh;
+    const scaleMode = !!it.scaleContent;
+    // capture original member positions so scaling always applies from the drag start
+    const origMembers = scaleMode
+      ? itemsRef.current.filter(i => i.zoneId === itemId && i.type !== 'zone').map(i => ({...i}))
+      : [];
+    const applyScale = (nx, ny, nw, nh, setFn) => {
+      const scaleX = nw / ow, scaleY = nh / oh;
+      setFn(its => its.map(i => {
+        if (i.id === itemId) return {...i, x: nx, y: ny, w: nw, h: nh};
+        const orig = origMembers.find(om => om.id === i.id);
+        if (!orig) return i;
+        return {
+          ...orig,
+          x: Math.round(nx + (orig.x - ox) * scaleX),
+          y: Math.round(ny + (orig.y - oy) * scaleY),
+          w: Math.max(20, Math.round(orig.w * scaleX)),
+          ...(orig.h ? {h: Math.max(20, Math.round(orig.h * scaleY))} : {}),
+        };
+      }));
+    };
     const onMM = e => {
       const z = zoomRef.current;
       const dx = (e.clientX - sx) / z, dy = (e.clientY - sy) / z;
       const bp = boardPxRef.current;
       let nx = ox, ny = oy, nw = ow, nh = oh;
-      if (mode.includes('e')) nw = Math.max(80, ow + dx);
-      if (mode.includes('w')) { nw = Math.max(80, ow - dx); nx = ox + ow - nw; }
-      if (mode.includes('s')) nh = Math.max(60, oh + dy);
-      if (mode.includes('n')) { nh = Math.max(60, oh - dy); ny = oy + oh - nh; }
+      if (scaleMode) {
+        if (mode.includes('e')) nw = Math.max(40, ow + dx);
+        if (mode.includes('w')) { nw = Math.max(40, ow - dx); nx = ox + ow - nw; }
+        if (mode.includes('s')) nh = Math.max(30, oh + dy);
+        if (mode.includes('n')) { nh = Math.max(30, oh - dy); ny = oy + oh - nh; }
+      } else {
+        const PAD = 16;
+        const members = itemsRef.current.filter(i => i.zoneId === itemId && i.type !== 'zone');
+        const cRight  = members.length ? Math.max(...members.map(i => i.x + i.w)) - ox + PAD : 80;
+        const cBottom = members.length ? Math.max(...members.map(i => i.y + getItemH(i))) - oy + PAD : 60;
+        const cLeft   = members.length ? Math.min(...members.map(i => i.x)) - ox - PAD : 0;
+        const cTop    = members.length ? Math.min(...members.map(i => i.y)) - oy - PAD : 0;
+        if (mode.includes('e')) nw = Math.max(cRight, ow + dx);
+        if (mode.includes('w')) { nw = Math.max(ow - cLeft, ow - dx); nx = ox + ow - nw; }
+        if (mode.includes('s')) nh = Math.max(cBottom, oh + dy);
+        if (mode.includes('n')) { nh = Math.max(oh - cTop, oh - dy); ny = oy + oh - nh; }
+      }
       if (bp) { nw = Math.min(nw, bp.w - nx); nh = Math.min(nh, bp.h - ny); nx = Math.max(0, nx); ny = Math.max(0, ny); }
       cx = nx; cy = ny; cw = nw; ch = nh;
-      setItems(its => its.map(i => i.id === itemId ? { ...i, x: nx, y: ny, w: nw, h: nh } : i));
+      if (scaleMode) applyScale(nx, ny, nw, nh, setItems);
+      else setItems(its => its.map(i => i.id === itemId ? { ...i, x: nx, y: ny, w: nw, h: nh } : i));
     };
     const onMU = () => {
       window.removeEventListener('pointermove', onMM);
@@ -3981,21 +4025,38 @@ ${rows}
         undoStack.current = [...undoStack.current.slice(-49), before];
         redoStack.current = [];
       }
-      let nit = itemsRef.current.map(i => i.id === itemId ? { ...i, x: rx, y: ry, w: rw, h: rh } : i);
-      // recompute membership, never steal from other zones
-      nit = nit.map(i => {
-        if (i.type === 'zone') return i;
-        const icx = i.x + i.w / 2, icy = i.y + getItemH(i) / 2;
-        const inside = icx >= rx && icx <= rx + rw && icy >= ry && icy <= ry + rh;
-        const oldZid = i.zoneId ?? null;
-        let newZid;
-        if (inside && (oldZid === null || oldZid === itemId)) newZid = itemId;
-        else if (!inside && oldZid === itemId) newZid = null;
-        else newZid = oldZid;
-        if (newZid === oldZid) return i;
-        if (newZid) return { ...i, zoneId: newZid };
-        const { zoneId: _z, ...rest } = i; return rest;
-      });
+      let nit;
+      if (scaleMode) {
+        const scaleX = rw / ow, scaleY = rh / oh;
+        nit = itemsRef.current.map(i => {
+          if (i.id === itemId) return {...i, x: rx, y: ry, w: rw, h: rh};
+          const orig = origMembers.find(om => om.id === i.id);
+          if (!orig) return i;
+          return {
+            ...orig,
+            x: Math.round(rx + (orig.x - ox) * scaleX),
+            y: Math.round(ry + (orig.y - oy) * scaleY),
+            w: Math.max(20, Math.round(orig.w * scaleX)),
+            ...(orig.h ? {h: Math.max(20, Math.round(orig.h * scaleY))} : {}),
+          };
+        });
+      } else {
+        nit = itemsRef.current.map(i => i.id === itemId ? { ...i, x: rx, y: ry, w: rw, h: rh } : i);
+        // recompute membership, never steal from other zones
+        nit = nit.map(i => {
+          if (i.type === 'zone') return i;
+          const icx = i.x + i.w / 2, icy = i.y + getItemH(i) / 2;
+          const inside = icx >= rx && icx <= rx + rw && icy >= ry && icy <= ry + rh;
+          const oldZid = i.zoneId ?? null;
+          let newZid;
+          if (inside && (oldZid === null || oldZid === itemId)) newZid = itemId;
+          else if (!inside && oldZid === itemId) newZid = null;
+          else newZid = oldZid;
+          if (newZid === oldZid) return i;
+          if (newZid) return { ...i, zoneId: newZid };
+          const { zoneId: _z, ...rest } = i; return rest;
+        });
+      }
       setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
     };
     window.addEventListener('pointermove', onMM);
@@ -4201,6 +4262,27 @@ ${rows}
         {t('infoEmpty1')}<br/>{t('infoEmpty2')}
       </div>
     );
+    if (hoverInfo.type) {
+      const { type, label, w, h, scaleContent } = hoverInfo;
+      const physDims = boardDpi && boardUnits && boardUnits !== 'px'
+        ? `${pxToPhys(w, boardDpi, boardUnits)} × ${pxToPhys(h, boardDpi, boardUnits)}`
+        : null;
+      const pxDims = `${w} × ${h} px`;
+      const typeLabel = type === 'zone' ? (lang === 'es' ? 'ZONA' : 'ZONE')
+        : type === 'note' ? (lang === 'es' ? 'NOTA' : 'NOTE')
+        : type === 'text' ? (lang === 'es' ? 'TEXTO' : 'TEXT') : type.toUpperCase();
+      return (
+        <div className="info-panel">
+          <div className="info-meta" style={{gap:5}}>
+            <div className="info-name" style={{color:'var(--muted)',fontSize:8,letterSpacing:'1.5px'}}>{typeLabel}</div>
+            <div className="info-name">{label || '—'}</div>
+            {physDims && <div className="info-phys">{physDims}</div>}
+            <div className="info-row">{pxDims}</div>
+            {scaleContent && <div className="info-row">↔ {lang === 'es' ? 'Escala contenido' : 'Scales content'}</div>}
+          </div>
+        </div>
+      );
+    }
     const { photo, status, thumbSrc, itemW, itemH } = hoverInfo;
     const boardNames = photo?.id ? photoBoardNames(photo.id) : [];
     const rating = photo?.rating || 0;
@@ -5034,17 +5116,20 @@ ${rows}
                   if (item.type === 'zone') {
                     const zClr = ZONE_COLOR_VALS[item.color] || ZONE_COLOR_VALS.blue;
                     return (
-                      <div key={item.id} className={`zitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}`}
-                        style={{ position:'absolute', left: item.x, top: item.y, width: item.w, height: item.h || 320, zIndex: item.z || -1 }}
+                      <div key={item.id} className={`zitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}${item.locked?' locked':''}`}
+                        style={{ position:'absolute', left: item.x, top: item.y, width: item.w, height: item.h || 320 }}
                         onPointerDown={e => onItemPD(e, item.id)}
                         onClick={e => handleItemClick(e, item)}
                         onContextMenu={e => openCtxMenu(e, item.id)}
+                        onMouseEnter={() => showItemInfo('zone', item.label, item.w, item.h||320, {color:item.color, scaleContent:item.scaleContent})}
+                        onMouseLeave={clearHoverInfo}
                       >
-                        <div className="bitem-bar" onPointerDown={e => e.stopPropagation()} style={item.y * zoom < 40 ? {bottom:'auto',top:'100%'} : undefined}>
-                          <button className="ibc del" title={t('deleteBtn')} onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
-                        </div>
-                        <div className="zitem-body" style={{background: zClr.fill, border:`2px dashed ${zClr.border}`}}>
-                          <input className="zitem-label" value={item.label||''} placeholder={t('zoneLabelPh')}
+                        <div className="zone-hdr"
+                          style={{background: zClr.fill, borderBottom:`1px solid ${zClr.border}`}}
+                        >
+                          <span className="zone-hdr-grip">⠿</span>
+                          <input
+                            value={item.label||''} placeholder={t('zoneLabelPh')}
                             style={{color: zClr.text}}
                             onChange={e => { const nit = itemsRef.current.map(i => i.id === item.id ? {...i, label: e.target.value} : i); setItems(nit); itemsRef.current = nit; }}
                             onFocus={pushUndo}
@@ -5052,7 +5137,32 @@ ${rows}
                             onPointerDown={e => e.stopPropagation()}
                             onClick={e => e.stopPropagation()}
                           />
+                          {item.scaleContent && <span className="zone-hdr-sc">↔</span>}
+                          <button className="ibc" title={item.locked ? t('unlockBtn') : t('lockBtn')}
+                            style={{color: item.locked ? 'var(--acc)' : undefined}}
+                            onClick={e => { e.stopPropagation(); updateItemLocked(item.id, !item.locked); }}
+                            onPointerDown={e => e.stopPropagation()}
+                          >{item.locked ? <SvgUnlock/> : <SvgLock/>}</button>
+                          <button className="ibc del" title={t('deleteBtn')}
+                            onClick={e => {
+                              e.stopPropagation();
+                              const members = itemsRef.current.filter(i => i.zoneId === item.id);
+                              if (members.length > 0) {
+                                showConfirm(
+                                  lang==='es'
+                                    ? `¿Eliminar zona "${item.label||'sin nombre'}"? Los ${members.length} elementos quedarán sin zona.`
+                                    : `Delete zone "${item.label||'unnamed'}"? Its ${members.length} items will be unzoned.`,
+                                  () => deleteItem(item.id)
+                                );
+                              } else {
+                                deleteItem(item.id);
+                              }
+                            }}
+                            onPointerDown={e => e.stopPropagation()}
+                          >×</button>
                         </div>
+                        <div className="zitem-body" style={{background: zClr.fill, border:`2px dashed ${zClr.border}`}}/>
+
                         <div className="zrh nw" onPointerDown={e => onResizeZonePD(e, item.id, 'nw')}/>
                         <div className="zrh ne" onPointerDown={e => onResizeZonePD(e, item.id, 'ne')}/>
                         <div className="zrh sw" onPointerDown={e => onResizeZonePD(e, item.id, 'sw')}/>
@@ -5076,6 +5186,8 @@ ${rows}
                         onPointerDown={e => onItemPD(e, item.id)}
                         onClick={e => handleItemClick(e, item)}
                         onContextMenu={e => openCtxMenu(e, item.id)}
+                        onMouseEnter={() => showItemInfo('text', item.text?.split('\n')[0], item.w, item.h || 130)}
+                        onMouseLeave={clearHoverInfo}
                       >
                         {item.locked && <div className="lock-badge"><SvgLock/></div>}
                         <div className="bitem-bar" onPointerDown={e => e.stopPropagation()} style={item.y * zoom < 40 ? {bottom:'auto',top:'100%'} : undefined}>
@@ -5152,26 +5264,23 @@ ${rows}
                     </div>
                   );
 
-                  if (item.type === 'note') return (
+                  if (item.type === 'note') {
+                  const noteColorVals = item.noteColor && NOTE_COLOR_VALS[item.noteColor];
+                  const noteDark = boardPx && noteColorVals;
+                  const noteTxtColor = noteDark ? '#1a1005' : undefined;
+                  return (
                     <div key={item.id} className={`nitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}${item.inMemory?' inmem':''}${item.locked?' locked':''}${item.groupId?' grouped':''}`}
                       style={{ left: item.x, top: item.y, width: item.w, height: item.h || 150, zIndex: item.z||1, ...(item.freeRot ? {transform:`rotate(${item.freeRot}deg)`,transformOrigin:'center center'} : {}) }}
                       onPointerDown={e => onItemPD(e, item.id)}
                       onClick={e => handleItemClick(e, item)}
                       onContextMenu={e => openCtxMenu(e, item.id)}
+                      onMouseEnter={() => showItemInfo('note', item.label || item.text?.split('\n')[0], item.w, item.h || 150)}
+                      onMouseLeave={clearHoverInfo}
                     >
                       <div className="bitem-bar" onPointerDown={e => e.stopPropagation()} style={item.y * zoom < 40 ? {bottom:'auto',top:'100%'} : undefined}>
-                        <button className="ibc" title={t('noteFontSize')}
-                          style={{fontSize:9,letterSpacing:.3,fontWeight:600,color:item.fontSize?'var(--acc)':'var(--dim)'}}
-                          onClick={e => { e.stopPropagation(); cycleNoteFontSize(item.id, item.fontSize ?? null); }}>
-                          {NOTE_FONT_LABEL(item.fontSize ?? null)}</button>
                         <button className="ibc" title={t('noteColor')}
                           onClick={e => { e.stopPropagation(); setNoteColorPanelId(id => id === item.id ? null : item.id); }}
                           style={{background: item.noteColor ? NOTE_COLOR_VALS[item.noteColor]?.[0] : undefined, color: item.noteColor ? 'rgba(255,255,255,.85)' : undefined}}>■</button>
-                        <button className="ibc" title={t(item.inMemory ? 'noteExcludeMemBtn' : 'noteInMemoryBtn')}
-                          style={{color: item.inMemory ? 'var(--acc)' : undefined}}
-                          onClick={e => { e.stopPropagation(); updateNoteInMemory(item.id, !item.inMemory); }}>
-                          {item.inMemory ? <SvgMemOn/> : <SvgMemOff/>}
-                        </button>
                         <button className="ibc" title={t(item.locked ? 'unlockBtn' : 'lockBtn')}
                           style={{color: item.locked ? 'var(--acc)' : undefined}}
                           onClick={e => { e.stopPropagation(); updateItemLocked(item.id, !item.locked); }}>{item.locked ? <SvgUnlock/> : <SvgLock/>}</button>
@@ -5190,15 +5299,16 @@ ${rows}
                           </div>
                         </div>
                       )}
-                      <div className="nitem-body" style={item.noteColor && NOTE_COLOR_VALS[item.noteColor] ? {background:NOTE_COLOR_VALS[item.noteColor][1],borderLeftColor:NOTE_COLOR_VALS[item.noteColor][0]} : undefined}>
+                      <div className="nitem-body" style={noteColorVals ? {background:noteColorVals[1],borderLeftColor:noteColorVals[0],...(noteDark?{color:noteTxtColor}:{})} : undefined}>
                         <input className="nitem-title" value={item.title||''} placeholder={t('noteTitlePh')}
                           onChange={e => updateNoteTitle(item.id, e.target.value)}
                           onFocus={pushUndo}
                           onBlur={saveLabel}
                           onPointerDown={e => e.stopPropagation()}
                           onClick={e => e.stopPropagation()}
+                          style={noteDark ? {color:noteTxtColor} : undefined}
                         />
-                        <textarea className="nitem-txt" value={item.text||''} placeholder={lang==='es'?'nota…':'note…'} style={item.fontSize ? {fontSize:item.fontSize} : undefined}
+                        <textarea className="nitem-txt" value={item.text||''} placeholder={lang==='es'?'nota…':'note…'} style={{...(item.fontSize?{fontSize:item.fontSize}:{}), ...(noteDark?{color:noteTxtColor}:{})}}
                           onChange={e => updateNoteText(item.id, e.target.value)}
                           onFocus={pushUndo}
                           onBlur={saveLabel}
@@ -5244,6 +5354,7 @@ ${rows}
                       {item.zoneId && (() => { const oz = itemsRef.current.find(i => i.id === item.zoneId); const zc = oz ? (ZONE_COLOR_VALS[oz.color] || ZONE_COLOR_VALS.blue) : ZONE_COLOR_VALS.blue; return <div className="zone-badge" style={{background: zc.border}} title={oz?.label || (lang==='es'?'Zona':'Zone')}/>; })()}
                     </div>
                   );
+                  } // end note
                   const photo = photos.find(p => p.id === item.photoId);
                   const rot = item.rot || 0;
                   const isSwapped = rot % 180 !== 0;
@@ -5321,7 +5432,6 @@ ${rows}
                       })()}
                       {item.groupId && <div className="group-badge">⊓</div>}
                       {item.zoneId && (() => { const oz = itemsRef.current.find(i => i.id === item.zoneId); const zc = oz ? (ZONE_COLOR_VALS[oz.color] || ZONE_COLOR_VALS.blue) : ZONE_COLOR_VALS.blue; return <div className="zone-badge" style={{background: zc.border}} title={oz?.label || (lang==='es'?'Zona':'Zone')}/>; })()}
-                      <div className="dim-tag">{dimLabel(item.w, displayH, boardDpi, boardUnits, item.frame)}</div>
                       <div className="lbl"
                         style={{ top: displayH + (item.frame ? physToPx(item.frame, boardDpi, boardUnits) : 0) }}
                         onPointerDown={e => e.stopPropagation()}
@@ -5798,6 +5908,11 @@ ${rows}
                     style={{width:16,height:16,borderRadius:'50%',cursor:'pointer',background:ZONE_COLOR_VALS[c].border,border:`2px solid ${ctxItem.color===c?'var(--acc)':'transparent'}`}}/>
                 ))}
               </div>
+              <div className="ctx-sep"/>
+              <button className="ctx-item" onClick={() => {
+                const nit = itemsRef.current.map(i => i.id === ctxItem.id ? {...i, scaleContent: !ctxItem.scaleContent} : i);
+                setItems(nit); itemsRef.current = nit; saveItemsNow(nit); setCtxMenu(null);
+              }}>{ctxItem.scaleContent ? '☑' : '☐'} {t('zoneScaleContent')}</button>
               {hasMembers && <>
                 <div className="ctx-sep"/>
                 <button className="ctx-item" onClick={() => { convertZoneToBoard(ctxMenu.itemId, false); setCtxMenu(null); }}>⊞ {t('copyZoneToBoard')}</button>
@@ -5818,17 +5933,27 @@ ${rows}
             </div>
           );
         }
-        const isNote = ctxItem.type === 'note' || ctxItem.type === 'text';
+        const isNote = ctxItem.type === 'note';
+        const isNoteOrText = ctxItem.type === 'note' || ctxItem.type === 'text';
         return (
           <div className="ctx-menu" style={{left: ctxMenu.x, top: ctxMenu.y}}
             onPointerDown={e => e.stopPropagation()} onContextMenu={e => e.preventDefault()}>
             <button className="ctx-item" onClick={() => { bringFwd(ctxMenu.itemId); setCtxMenu(null); }}>↑ {t('bringFwdBtn')}</button>
-            {!isNote && <button className="ctx-item" onClick={() => { setPropsPanelId(id => id === ctxMenu.itemId ? null : ctxMenu.itemId); setCtxMenu(null); }}>▣ {t('frameLabel')}</button>}
-            {!isNote && <><div className="ctx-sep"/>
+            {!isNoteOrText && <button className="ctx-item" onClick={() => { setPropsPanelId(id => id === ctxMenu.itemId ? null : ctxMenu.itemId); setCtxMenu(null); }}>▣ {t('frameLabel')}</button>}
+            {!isNoteOrText && <><div className="ctx-sep"/>
               <button className="ctx-item" onClick={() => { setDefaultW(ctxItem.w); setCtxMenu(null); }}>⊞ {t('setDefaultSize')}</button>
               <button className="ctx-item" onClick={() => { setReplaceMode({ itemId: ctxMenu.itemId }); setCtxMenu(null); if (!libOpen) { setLibOpen(true); localStorage.setItem('libOpen','true'); } }}>⇄ {t('replacePhoto')}</button>
               <button className="ctx-item" onClick={() => { flipItem(ctxMenu.itemId, 'flipH'); setCtxMenu(null); }}>↔ {t('flipH')}</button>
               <button className="ctx-item" onClick={() => { flipItem(ctxMenu.itemId, 'flipV'); setCtxMenu(null); }}>↕ {t('flipV')}</button>
+            </>}
+            {isNote && <><div className="ctx-sep"/>
+              <button className="ctx-item" onClick={() => { cycleNoteFontSize(ctxItem.id, ctxItem.fontSize ?? null); setCtxMenu(null); }}>
+                {lang==='es'?'Tamaño:':'Size:'} {NOTE_FONT_LABEL(ctxItem.fontSize ?? null)} →{NOTE_FONT_LABEL(NOTE_FONT_CYCLE[(NOTE_FONT_CYCLE.indexOf(ctxItem.fontSize??null)+1)%NOTE_FONT_CYCLE.length])}
+              </button>
+              <button className="ctx-item" onClick={() => { updateNoteInMemory(ctxItem.id, !ctxItem.inMemory); setCtxMenu(null); }}
+                style={{color: ctxItem.inMemory ? 'var(--acc)' : undefined}}>
+                {ctxItem.inMemory ? '★' : '☆'} {t(ctxItem.inMemory ? 'noteExcludeMemBtn' : 'noteInMemoryBtn')}
+              </button>
             </>}
             <div className="ctx-sep"/>
             <button className="ctx-item" onClick={() => { dupItem(ctxMenu.itemId); setCtxMenu(null); }}>⧉ {t('duplicateItem')}</button>
@@ -6047,9 +6172,10 @@ ${rows}
         const gapPx = Math.round(physToPx(gridGap, dpi, units));
         const selPhotos = libSel.map(id => photos.find(p => p.id === id)).filter(Boolean);
         const N = selPhotos.length;
-        const cellW = bPx
+        const naturalCellW = bPx
           ? Math.max(0, Math.round((bPx.w - gapPx * (cols + 1)) / cols))
           : (activeBoardMeta?.defaultW || 300);
+        const cellW = bPx ? Math.max(1, Math.round(naturalCellW * gridScale / 100)) : naturalCellW;
         let fitsAll = true, fitsCount = N;
         if (bPx && cellW > 0) {
           let count = 0, y = gapPx;
@@ -6087,14 +6213,33 @@ ${rows}
                 </div>
               </div>
               {bPx && (
-                <div style={{marginTop:8, fontSize:11, color: fitsAll ? 'var(--acc)' : 'var(--danger)'}}>
+                <div style={{marginTop:10}}>
+                  <div className="cfg-label" style={{marginBottom:4}}>
+                    {t('gridScaleLabel')} — {gridScale}%
+                    {gridScale < 100 && <span style={{color:'var(--muted)',marginLeft:6}}>{pxToPhys(cellW, dpi, units) || cellW + 'px'}/foto</span>}
+                  </div>
+                  <input type="range" min={20} max={100} step={5} value={gridScale}
+                    style={{width:'100%',accentColor:'var(--acc)'}}
+                    onChange={e => setGridScale(parseInt(e.target.value))} />
+                </div>
+              )}
+              {bPx && (
+                <div style={{marginTop:6, fontSize:11, color: fitsAll ? 'var(--acc)' : 'var(--danger)'}}>
                   {t('gridFits', fitsCount, N)}
                 </div>
               )}
-              <div className="modal-row" style={{marginTop:12}}>
+              <div style={{marginTop:10,display:'flex',gap:7,alignItems:'center'}}>
+                <input type="checkbox" id="grid-wrap" checked={gridWrapZone}
+                  onChange={e => setGridWrapZone(e.target.checked)}
+                  style={{accentColor:'var(--acc)',cursor:'pointer'}}/>
+                <label htmlFor="grid-wrap" style={{fontSize:10,color:'var(--text)',cursor:'pointer',userSelect:'none'}}>
+                  {t('gridWrapZone')}
+                </label>
+              </div>
+              <div className="modal-row" style={{marginTop:10}}>
                 <button className="btn" onClick={() => setGridModal(false)}>{t('cancel')}</button>
                 <button className="btn acc" disabled={!canPlace || (bPx && !fitsAll)}
-                  onClick={() => placeAsGrid(cols, gridGap)}>{t('gridPlace')}</button>
+                  onClick={() => placeAsGrid(cols, gridGap, gridScale, gridWrapZone)}>{t('gridPlace')}</button>
               </div>
             </div>
           </div>

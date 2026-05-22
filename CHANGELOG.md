@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.7.1] — 2026-05-22
+### Añadido
+- Zonas: cabecera de control (etiqueta, bloquear, eliminar) visible al seleccionar la zona; aparece como fantasma al pasar el cursor sin bloquear el acceso a las fotos
+- Zonas: esquinas y bordes de redimensionado ahora visibles y funcionales (aparecen al pasar el cursor)
+
+### Corregido
+- Notas de texto ocultas en la vista 3D de sala (solo se muestran fotos y texto libre)
+- Barra de control de notas simplificada: solo color, bloquear y eliminar; tamaño de fuente y memoria accesibles desde el menú contextual
+- Texto de las notas ilegible en tableros fijos (fondo blanco): las notas con color personalizado usan texto oscuro automáticamente
+
+---
+
 ## [1.7.0] — 2026-05-21
 ### Añadido
 - Vista 3D: botón "Capturar" que guarda la vista actual como foto en la librería del proyecto

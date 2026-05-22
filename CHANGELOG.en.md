@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.7.1] — 2026-05-22
+### Added
+- Zones: control header (label, lock, delete) visible when zone is selected; shown as a ghost on hover without blocking access to photos
+- Zones: corner and edge resize handles now visible and functional (appear on hover)
+
+### Fixed
+- Text notes hidden in the 3D room view (only photos and free text are rendered)
+- Note control bar simplified: only colour, lock and delete; font size and memory accessible from the right-click context menu
+- Note text illegible on fixed boards (white background): notes with a custom colour now automatically use dark text
+
+---
+
 ## [1.7.0] — 2026-05-21
 ### Added
 - 3D view: "Snapshot" button that saves the current view as a photo in the project library

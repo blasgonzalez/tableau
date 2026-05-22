@@ -1,6 +1,6 @@
 {
-  "version": "1.7.0",
+  "version": "1.7.1",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-05-21",
-  "notes": "Vista 3D: captura de vistas · Sala: aviso y sincronización pared/tablero · Correcciones de posicionamiento"
+  "releaseDate": "2026-05-22",
+  "notes": "Cabecera de zona visible · Barra de notas simplificada · Notas ocultas en vista 3D · Legibilidad de notas en tableros fijos"
 }

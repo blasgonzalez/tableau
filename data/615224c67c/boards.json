@@ -42,5 +42,16 @@
     "fixedW": 316.7,
     "fixedH": 280,
     "defaultW": 924
+  },
+  {
+    "id": "68bb094e41",
+    "name": "Pared 7",
+    "created": 1779438839197,
+    "units": "cm",
+    "dpi": 30.3,
+    "fixed": true,
+    "fixedW": 335,
+    "fixedH": 280,
+    "defaultW": 716
   }
 ]
