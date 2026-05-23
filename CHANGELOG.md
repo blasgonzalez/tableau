@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.8.0] — 2026-05-23
+### Añadido
+- Tableros fijos: guías de borde en tiempo real al seleccionar un elemento — cuatro líneas de puntos muestran la distancia a cada borde del tablero durante el arrastre
+- Tableros fijos: distancias a bordes en el panel de información (esquina inferior izquierda), actualizadas fotograma a fotograma mientras se arrastra
+- Tableros fijos: indicador de centrado — las guías se vuelven sólidas y ámbar cuando el elemento está centrado horizontal o verticalmente; el panel muestra "⊕ centrado H/V"
+- Tableros fijos: snap al eje central del tablero (H y V) al arrastrar elementos; la guía ámbar aparece al acercarse al centro
+- Arrastre restringido a un eje: mantener Shift mientras se arrastra bloquea el movimiento al eje dominante de los primeros pixels (horizontal o vertical), como en Photoshop
+- Zoom suave con Ctrl+rueda: zoom continuo multiplicativo (×1.1 por tick) en lugar de saltos discretos
+- Zoom: el porcentaje se muestra siempre en tableros fijos; el botón ⇔ ajusta la vista en ambos tipos de tablero
+- Zoom: el botón − ya no queda atascado por encima del nivel establecido por "Ajustar vista" en tableros grandes
+
+---
+
 ## [1.7.1] — 2026-05-22
 ### Añadido
 - Zonas: cabecera de control (etiqueta, bloquear, eliminar) visible al seleccionar la zona; aparece como fantasma al pasar el cursor sin bloquear el acceso a las fotos

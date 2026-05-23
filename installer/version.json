@@ -1,6 +1,6 @@
 {
-  "version": "1.7.1",
+  "version": "1.8.0",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-05-22",
-  "notes": "Cabecera de zona visible · Barra de notas simplificada · Notas ocultas en vista 3D · Legibilidad de notas en tableros fijos"
+  "releaseDate": "2026-05-23",
+  "notes": "Guías de borde en tiempo real · Snap al centro · Zoom suave · Arrastre restringido (Shift)"
 }

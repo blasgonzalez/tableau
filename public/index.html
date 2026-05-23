@@ -111,6 +111,11 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .info-name{font-size:10px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .info-row{font-size:9px;color:var(--dim);letter-spacing:.2px;line-height:1.5}
 .info-phys{font-size:9px;color:var(--acc-dim);letter-spacing:.2px}
+.info-pos{padding:7px 10px 6px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:5px}
+.info-pos-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 6px}
+.info-pos-cell{font-size:10px;color:var(--dim);display:flex;align-items:center;gap:5px;letter-spacing:.3px}
+.info-pos-arr{font-size:11px;color:var(--muted);width:12px;flex-shrink:0;text-align:center}
+.info-pos-cent{font-size:8px;letter-spacing:.8px;color:var(--acc);padding-top:1px}
 .info-boards{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px}
 .ibd-tag{font-size:7px;letter-spacing:.4px;padding:1px 5px;border:1px solid var(--border2);color:var(--sub)}
 .ibd-tag.cur{border-color:var(--acc-dim);color:var(--acc);background:var(--acc-faint)}
@@ -1673,11 +1678,14 @@ function App() {
   }, [zoom]);
 
   const zoomStep = useCallback((dir) => {
-    // Find next ZOOM_STEP above/below current zoom, or clamp
     setZoom(z => {
-      const above = ZOOM_STEPS.filter(s => dir > 0 ? s > z + 0.001 : s < z - 0.001);
-      if (dir > 0) return above.length ? above[0]              : ZOOM_STEPS[ZOOM_STEPS.length - 1];
-      else         return above.length ? above[above.length - 1] : ZOOM_STEPS[0];
+      if (dir > 0) {
+        const above = ZOOM_STEPS.filter(s => s > z + 0.001);
+        return above.length ? above[0] : Math.min(4, z * 1.2);
+      } else {
+        const below = ZOOM_STEPS.filter(s => s < z - 0.001);
+        return below.length ? below[below.length - 1] : Math.max(0.05, z / 1.2);
+      }
     });
   }, []);
 
@@ -1686,11 +1694,12 @@ function App() {
       if (!e.ctrlKey) return;
       if (!wrapRef.current?.contains(e.target)) return;
       e.preventDefault();
-      zoomStep(e.deltaY < 0 ? 1 : -1);
+      const factor = e.deltaY < 0 ? 1.1 : 1 / 1.1;
+      setZoom(z => Math.max(0.05, Math.min(4, z * factor)));
     };
     window.addEventListener('wheel', onWheel, { passive: false });
     return () => window.removeEventListener('wheel', onWheel);
-  }, [zoomStep]);
+  }, []);
 
   useEffect(() => {
     const onKey = e => {
@@ -2893,8 +2902,8 @@ ${rows}
 
   // ── import from repo ──────────────────────────────────────────────────────
   // ── hover info ────────────────────────────────────────────────────────────
-  const showPhotoInfo = (photo, status, thumbSrc, itemW = null, itemH = null) =>
-    setHoverInfo({ photo, status, thumbSrc, itemW, itemH });
+  const showPhotoInfo = (photo, status, thumbSrc, itemW = null, itemH = null, itemX = null, itemY = null) =>
+    setHoverInfo({ photo, status, thumbSrc, itemW, itemH, itemX, itemY });
   const showItemInfo = (type, label, w, h, extra = {}) =>
     setHoverInfo({ type, label, w, h, ...extra });
   const clearHoverInfo = () => setHoverInfo(null);
@@ -3029,6 +3038,7 @@ ${rows}
     dragIds.forEach(id => { const it = itemsRef.current.find(i => i.id === id); if (it) starts[id] = { x: it.x, y: it.y }; });
     const sx = e.clientX, sy = e.clientY;
     let ldx = 0, ldy = 0;
+    let axisLock = null; // 'h' | 'v' | null — set on first move with Shift held
 
     const clampItem = (i, x, y) => {
       const bp = boardPxRef.current;
@@ -3080,6 +3090,22 @@ ${rows}
           if (Math.abs(diff) < thresh && (bestDy === null || Math.abs(diff) < Math.abs(bestDy))) bestDy = diff;
           if (Math.abs(diff) < thresh)
             newGuides.h.push({ pos: ie, from: Math.min(bx, oi.x) - 12, to: Math.max(bx2, ox2) + 12 });
+        }
+      }
+      // ── Board center snap (fixed boards only) ─────────────────────────────
+      const bp = boardPxRef.current;
+      if (bp) {
+        const bcx = bp.w / 2, bcy = bp.h / 2;
+        const gcx = bx + bw / 2, gcy = by + bh / 2;
+        const dx = gcx - bcx;
+        if (Math.abs(dx) < thresh && (bestDx === null || Math.abs(dx) < Math.abs(bestDx))) {
+          bestDx = dx;
+          newGuides.v.push({ pos: bcx, from: 0, to: bp.h, color: 'rgba(196,137,74,.7)' });
+        }
+        const dy = gcy - bcy;
+        if (Math.abs(dy) < thresh && (bestDy === null || Math.abs(dy) < Math.abs(bestDy))) {
+          bestDy = dy;
+          newGuides.h.push({ pos: bcy, from: 0, to: bp.w, color: 'rgba(196,137,74,.7)' });
         }
       }
       // ── Gap equality snap ─────────────────────────────────────────────────
@@ -3180,6 +3206,14 @@ ${rows}
     };
     const onMM = e => {
       ldx = e.clientX - sx; ldy = e.clientY - sy;
+      if (e.shiftKey) {
+        if (!axisLock && (Math.abs(ldx) > 6 || Math.abs(ldy) > 6))
+          axisLock = Math.abs(ldx) >= Math.abs(ldy) ? 'h' : 'v';
+        if (axisLock === 'h') ldy = 0;
+        else if (axisLock === 'v') ldx = 0;
+      } else {
+        axisLock = null;
+      }
       const z = zoomRef.current;
       const { sdx, sdy } = applySnap(ldx/z, ldy/z);
       setItems(its => its.map(i => {
@@ -4257,11 +4291,41 @@ ${rows}
 
   // ── INFO PANEL render helper ──────────────────────────────────────────────
   const InfoPanel = () => {
-    if (!hoverInfo) return (
+    // ── Live position data when item selected on fixed board ──────────────────
+    const posData = boardPx && sel.length > 0 ? (() => {
+      const anchor = items.find(i => i.id === sel[0] && i.w);
+      if (!anchor) return null;
+      let iH;
+      if (anchor.photoId) {
+        const ph = photos.find(p => p.id === anchor.photoId);
+        const isSwapped = [90,270].includes(Math.abs((anchor.rot||0)%360));
+        iH = ph ? (isSwapped ? Math.round(anchor.w*ph.w/ph.h) : Math.round(anchor.w*ph.h/ph.w)) : anchor.w;
+      } else { iH = anchor.h || (anchor.type==='note'?150:130); }
+      const x=anchor.x, y=anchor.y, w=anchor.w, h=iH;
+      const dT=y, dB=boardPx.h-(y+h), dL=x, dR=boardPx.w-(x+w);
+      const centH=Math.abs((x+w/2)-boardPx.w/2)<=2, centV=Math.abs((y+h/2)-boardPx.h/2)<=2;
+      const fmt = v => { const px=Math.round(v); return boardDpi&&boardUnits&&boardUnits!=='px'?pxToPhys(px,boardDpi,boardUnits):`${px}px`; };
+      return { dT, dB, dL, dR, centH, centV, fmt };
+    })() : null;
+    const posSection = posData && (
+      <div className="info-pos">
+        <div className="info-pos-grid">
+          <div className="info-pos-cell" style={posData.centV?{color:'var(--acc)'}:{}}><span className="info-pos-arr">↑</span>{posData.fmt(posData.dT)}</div>
+          <div className="info-pos-cell" style={posData.centV?{color:'var(--acc)'}:{}}><span className="info-pos-arr">↓</span>{posData.fmt(posData.dB)}</div>
+          <div className="info-pos-cell" style={posData.centH?{color:'var(--acc)'}:{}}><span className="info-pos-arr">←</span>{posData.fmt(posData.dL)}</div>
+          <div className="info-pos-cell" style={posData.centH?{color:'var(--acc)'}:{}}><span className="info-pos-arr">→</span>{posData.fmt(posData.dR)}</div>
+        </div>
+        {(posData.centH||posData.centV) && (
+          <div className="info-pos-cent">⊕ {posData.centH&&posData.centV?(lang==='es'?'centrado':'centered'):posData.centH?(lang==='es'?'centrado H':'centered H'):(lang==='es'?'centrado V':'centered V')}</div>
+        )}
+      </div>
+    );
+    if (!hoverInfo && !posSection) return (
       <div className="info-empty">
         {t('infoEmpty1')}<br/>{t('infoEmpty2')}
       </div>
     );
+    if (!hoverInfo) return posSection;
     if (hoverInfo.type) {
       const { type, label, w, h, scaleContent } = hoverInfo;
       const physDims = boardDpi && boardUnits && boardUnits !== 'px'
@@ -4271,7 +4335,7 @@ ${rows}
       const typeLabel = type === 'zone' ? (lang === 'es' ? 'ZONA' : 'ZONE')
         : type === 'note' ? (lang === 'es' ? 'NOTA' : 'NOTE')
         : type === 'text' ? (lang === 'es' ? 'TEXTO' : 'TEXT') : type.toUpperCase();
-      return (
+      return (<>{posSection}
         <div className="info-panel">
           <div className="info-meta" style={{gap:5}}>
             <div className="info-name" style={{color:'var(--muted)',fontSize:8,letterSpacing:'1.5px'}}>{typeLabel}</div>
@@ -4281,7 +4345,7 @@ ${rows}
             {scaleContent && <div className="info-row">↔ {lang === 'es' ? 'Escala contenido' : 'Scales content'}</div>}
           </div>
         </div>
-      );
+      </>);
     }
     const { photo, status, thumbSrc, itemW, itemH } = hoverInfo;
     const boardNames = photo?.id ? photoBoardNames(photo.id) : [];
@@ -4305,7 +4369,7 @@ ${rows}
       }
     }
     const brightPct = brightness != null ? Math.round(brightness * 100) : null;
-    return (
+    return (<>{posSection}
       <div className="info-panel">
         <img className="info-thumb"
           src={thumbSrc || (pid && photo?.id ? `/photos/${pid}/${photo.id}/thumb` : '')}
@@ -4379,7 +4443,7 @@ ${rows}
           </div>
         </div>
       </div>
-    );
+    </>);
   };
 
   // ── CONFIG hint ───────────────────────────────────────────────────────────
@@ -5097,6 +5161,29 @@ ${rows}
                 {lasso && <div className="lasso" style={{left:lasso.x1,top:lasso.y1,width:Math.max(0,lasso.x2-lasso.x1),height:Math.max(0,lasso.y2-lasso.y1)}}/>}
                 {snapGuides.v.map((g, i) => <div key={`sgv${i}`} style={{position:'absolute',left:g.pos,top:g.from,width:1/zoom,height:g.to-g.from,background:g.color||'var(--acc)',opacity:.85,pointerEvents:'none',zIndex:9999}}/>)}
                 {snapGuides.h.map((g, i) => <div key={`sgh${i}`} style={{position:'absolute',left:g.from,top:g.pos,width:g.to-g.from,height:1/zoom,background:g.color||'var(--acc)',opacity:.85,pointerEvents:'none',zIndex:9999}}/>)}
+                {boardPx && sel.length>0 && (() => {
+                  const anchor = items.find(i => i.id===sel[0] && i.w);
+                  if (!anchor) return null;
+                  let iH;
+                  if (anchor.photoId) {
+                    const ph = photos.find(p => p.id===anchor.photoId);
+                    const isSwapped = [90,270].includes(Math.abs((anchor.rot||0)%360));
+                    iH = ph ? (isSwapped ? Math.round(anchor.w*ph.w/ph.h) : Math.round(anchor.w*ph.h/ph.w)) : anchor.w;
+                  } else { iH = anchor.h || (anchor.type==='note'?150:130); }
+                  const x=anchor.x, y=anchor.y, w=anchor.w, h=iH;
+                  const bW=boardPx.w, bH=boardPx.h;
+                  const cx=x+w/2, cy=y+h/2;
+                  const centH=Math.abs(cx-bW/2)<=2, centV=Math.abs(cy-bH/2)<=2;
+                  const bdrV=`calc(1px / var(--canvas-zoom,1)) ${centV?'solid':'dashed'} ${centV?'rgba(196,137,74,.8)':'rgba(60,160,255,.5)'}`;
+                  const bdrH=`calc(1px / var(--canvas-zoom,1)) ${centH?'solid':'dashed'} ${centH?'rgba(196,137,74,.8)':'rgba(60,160,255,.5)'}`;
+                  const MIN=6, dT=y, dB=bH-(y+h), dL=x, dR=bW-(x+w);
+                  return (<>
+                    {dT>MIN&&<div style={{position:'absolute',left:cx,top:0,width:0,height:y,borderLeft:bdrV,pointerEvents:'none',zIndex:450}}/>}
+                    {dB>MIN&&<div style={{position:'absolute',left:cx,top:y+h,width:0,height:dB,borderLeft:bdrV,pointerEvents:'none',zIndex:450}}/>}
+                    {dL>MIN&&<div style={{position:'absolute',left:0,top:cy,width:x,height:0,borderTop:bdrH,pointerEvents:'none',zIndex:450}}/>}
+                    {dR>MIN&&<div style={{position:'absolute',left:x+w,top:cy,width:dR,height:0,borderTop:bdrH,pointerEvents:'none',zIndex:450}}/>}
+                  </>);
+                })()}
                 {!bid && (
                   <div className="hint">
                     <em>{t('noBoard')}</em>
@@ -5376,7 +5463,7 @@ ${rows}
                       onPointerDown={e => onItemPD(e, item.id)}
                       onClick={e => handleItemClick(e, item)}
                       onContextMenu={e => openCtxMenu(e, item.id)}
-                      onMouseEnter={() => photo && showPhotoInfo(photo, 'board', `/photos/${pid}/${photo.id}/thumb`, item.w, displayH)}
+                      onMouseEnter={() => photo && showPhotoInfo(photo, 'board', `/photos/${pid}/${photo.id}/thumb`, item.w, displayH, item.x, item.y)}
                       onMouseLeave={clearHoverInfo}
                     >
                       {item.locked && <div className="lock-badge"><SvgLock/></div>}
@@ -5714,12 +5801,12 @@ ${rows}
       {bid && roomView === 'board' && (
         <div className="zoom-ctrl" style={{bottom: (libOpen ? libHeight : 30) + 20}}>
           <button className="zc-btn" title="Zoom − (Ctrl+−)" onClick={() => zoomStep(-1)}>−</button>
-          <span className="zc-pct" style={{cursor: boardPx ? 'pointer' : 'default'}}>
-            {boardPx
-              ? <span title={t('fitView')} onClick={fitBoard}>{t('fitView')}</span>
-              : `${Math.round(zoom*100)}%`}
+          <span className="zc-pct" onClick={boardPx ? fitBoard : fitWidth}
+            title={boardPx ? `${t('fitView')} (Ctrl+0)` : t('fitWidth')}>
+            {Math.round(zoom*100)}%
           </span>
-          {!boardPx && <button className="zc-btn" title={t('fitWidth')} onClick={fitWidth} style={{fontSize:13}}>⇔</button>}
+          <button className="zc-btn" title={boardPx ? `${t('fitView')} (Ctrl+0)` : t('fitWidth')}
+            onClick={boardPx ? fitBoard : fitWidth} style={{fontSize:13}}>⇔</button>
           <button className="zc-btn" title="Zoom + (Ctrl++)" onClick={() => zoomStep(1)}>+</button>
         </div>
       )}

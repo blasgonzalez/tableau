@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.8.0] — 2026-05-23
+### Added
+- Fixed boards: real-time edge guides when an element is selected — four dashed lines show the distance to each board edge, updating live during drag
+- Fixed boards: edge distances displayed in the info panel (bottom-left), updated frame-by-frame while dragging
+- Fixed boards: centering indicator — guides turn solid amber when the element is horizontally or vertically centered; the panel shows "⊕ centered H/V"
+- Fixed boards: snap to board centre axes (H and V) when dragging; amber guide appears as the element approaches the centre
+- Axis-constrained drag: holding Shift while dragging locks movement to the dominant axis of the first pixels of motion (horizontal or vertical), like Photoshop
+- Smooth Ctrl+wheel zoom: continuous multiplicative zoom (×1.1 per tick) instead of discrete steps
+- Zoom: percentage always shown on fixed boards; ⇔ button fits the view on both board types
+- Zoom: the − button no longer gets stuck above the level set by "Fit view" on large boards
+
+---
+
 ## [1.7.1] — 2026-05-22
 ### Added
 - Zones: control header (label, lock, delete) visible when zone is selected; shown as a ghost on hover without blocking access to photos
