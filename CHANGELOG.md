@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.1] — 2026-05-23
+### Añadido
+- Vista 3D: figura de escala humana (175 cm) activable desde la barra de herramientas — tronco generado con `LatheGeometry` para un perfil orgánico continuo sin costuras; cabeza oval; articulaciones esféricas en hombros, codos, caderas y rodillas
+- Vista 3D: botón "↔ Mover" para arrastrar la figura libremente por el suelo de la sala; desactiva la órbita mientras se arrastra y la restaura al terminar
+
+---
+
 ## [1.8.0] — 2026-05-23
 ### Añadido
 - Tableros fijos: guías de borde en tiempo real al seleccionar un elemento — cuatro líneas de puntos muestran la distancia a cada borde del tablero durante el arrastre

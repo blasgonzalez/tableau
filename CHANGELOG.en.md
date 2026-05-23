@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.1] — 2026-05-23
+### Added
+- 3D view: human scale figure (175 cm) toggled from the toolbar — torso built with `LatheGeometry` for a seamless organic silhouette; oval head; spherical joints at shoulders, elbows, hips and knees
+- 3D view: "↔ Move" button to drag the figure freely across the room floor; orbit controls are disabled during drag and restored on exit
+
+---
+
 ## [1.8.0] — 2026-05-23
 ### Added
 - Fixed boards: real-time edge guides when an element is selected — four dashed lines show the distance to each board edge, updating live during drag

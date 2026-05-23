@@ -202,6 +202,7 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .room-toolbar{position:absolute;top:10px;left:10px;display:flex;gap:6px;align-items:center;z-index:2}
 .room-toolbar-3d .btn{background:rgba(0,0,0,.55);color:rgba(255,255,255,.78);border-color:rgba(255,255,255,.18);backdrop-filter:blur(4px)}
 .room-toolbar-3d .btn:hover{color:#fff;border-color:rgba(255,255,255,.4);background:rgba(0,0,0,.72)}
+.room-toolbar-3d .btn.active{color:#fff;border-color:rgba(196,137,74,.7);background:rgba(196,137,74,.25)}
 .room-hint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);font-size:9px;letter-spacing:.5px;color:var(--muted);background:var(--panel);border:1px solid var(--border);padding:4px 12px;border-radius:3px;pointer-events:none;white-space:nowrap}
 .room-panel{width:260px;flex-shrink:0;background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
 .room-panel-hd{padding:12px 14px 8px;font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border);flex-shrink:0}
@@ -1104,6 +1105,8 @@ function App() {
   const [roomSvgCtx,     setRoomSvgCtx]    = useState(null); // {x, y, svgX, svgY}
   const [roomHovWall,    setRoomHovWall]   = useState(null); // hovered wall id
   const room3DCanvasRef = useRef(null);
+  const [show3DPerson,     setShow3DPerson]    = useState(false);
+  const [personMoveMode,   setPersonMoveMode]  = useState(false);
   const [roomTempVerts,  setRoomTempVerts] = useState([]);       // vertices during drawing
   const [roomCursor,     setRoomCursor]    = useState(null);     // {x,y,snapped,nearClose}
   const [roomCeilH,      setRoomCeilH]     = useState(280);
@@ -1247,8 +1250,10 @@ function App() {
   const roomRef         = useRef(null);
   const roomVboxRef     = useRef({x:-50,y:-50,w:1300,h:900});
   const importRoomRef   = useRef(null);
-  const reset3DViewRef  = useRef(null);
-  const snapshot3DRef   = useRef(null);
+  const reset3DViewRef       = useRef(null);
+  const snapshot3DRef        = useRef(null);
+  const toggle3DPersonRef    = useRef(null);
+  const togglePersonMoveRef  = useRef(null);
   const undoStack       = useRef([]);
   const redoStack       = useRef([]);
   const wasDragged      = useRef(false);
@@ -1589,6 +1594,120 @@ function App() {
         scene.add(cMesh);
       });
 
+      // Person scale reference — 175 cm, LatheGeometry torso for organic shape
+      const pMat = new THREE.MeshLambertMaterial({ color: 0xc49060, transparent: true, opacity: 0.90 });
+      const personParts = [];
+      const personPos = { x: cx, z: cz };
+      const S = 14;
+      const pAdd = (geo, ox, oy) => {
+        const m = new THREE.Mesh(geo, pMat);
+        m.position.set(personPos.x + ox, oy, personPos.z);
+        m.visible = false;
+        scene.add(m);
+        personParts.push(m);
+        return m;
+      };
+      // Head — oval (taller than wide, slightly flat front/back)
+      const hGeo = new THREE.SphereGeometry(11, S, 12); hGeo.scale(1, 1.15, 0.88);
+      pAdd(hGeo, 0, 163);
+      // Torso + neck: single LatheGeometry — eliminates seams between chest/waist/hips
+      const tPts = [
+        new THREE.Vector2(14, 65),  // crotch opening
+        new THREE.Vector2(18, 75),  // inner hip
+        new THREE.Vector2(20, 84),  // hip
+        new THREE.Vector2(15, 98),  // waist (narrowest)
+        new THREE.Vector2(19, 113), // lower chest
+        new THREE.Vector2(22, 127), // full chest
+        new THREE.Vector2(23, 136), // widest — shoulder area
+        new THREE.Vector2(18, 144), // shoulder taper
+        new THREE.Vector2(7,  149), // neck base
+        new THREE.Vector2(5,  153), // neck top
+      ];
+      pAdd(new THREE.LatheGeometry(tPts, 24), 0, 0).scale.z = 0.70;
+      // Shoulder joints
+      pAdd(new THREE.SphereGeometry(7.5, S, 8), -24, 143);
+      pAdd(new THREE.SphereGeometry(7.5, S, 8), +24, 143);
+      // Upper arms
+      pAdd(new THREE.CylinderGeometry(6, 5, 30, S), -28, 128);
+      pAdd(new THREE.CylinderGeometry(6, 5, 30, S), +28, 128);
+      // Elbows
+      pAdd(new THREE.SphereGeometry(5.5, S, 8), -29, 113);
+      pAdd(new THREE.SphereGeometry(5.5, S, 8), +29, 113);
+      // Forearms
+      pAdd(new THREE.CylinderGeometry(4.5, 3.5, 26, S), -29, 100);
+      pAdd(new THREE.CylinderGeometry(4.5, 3.5, 26, S), +29, 100);
+      // Hip joints (inside pelvis)
+      pAdd(new THREE.SphereGeometry(9, S, 8), -15, 73);
+      pAdd(new THREE.SphereGeometry(9, S, 8), +15, 73);
+      // Thighs
+      pAdd(new THREE.CylinderGeometry(8.5, 7, 36, S), -15, 55);
+      pAdd(new THREE.CylinderGeometry(8.5, 7, 36, S), +15, 55);
+      // Knees
+      pAdd(new THREE.SphereGeometry(7, S, 8), -15, 37);
+      pAdd(new THREE.SphereGeometry(7, S, 8), +15, 37);
+      // Calves
+      pAdd(new THREE.CylinderGeometry(6.5, 4, 30, S), -15, 22);
+      pAdd(new THREE.CylinderGeometry(6.5, 4, 30, S), +15, 22);
+      // Feet
+      pAdd(new THREE.BoxGeometry(11, 5, 30), -15, 4);
+      pAdd(new THREE.BoxGeometry(11, 5, 30), +15, 4);
+
+      toggle3DPersonRef.current = () => {
+        const next = !personParts[0].visible;
+        personParts.forEach(m => { m.visible = next; });
+        if (!next && inMoveMode) exitMoveMode();
+      };
+
+      // Drag to reposition figure — OrbitControls disabled while in move mode
+      let inMoveMode = false;
+      let dragOffset = null;
+      const getFloorHit = ev => {
+        const rect = canvas.getBoundingClientRect();
+        const mv = new THREE.Vector2(
+          ((ev.clientX - rect.left) / rect.width)  * 2 - 1,
+          -((ev.clientY - rect.top) / rect.height) * 2 + 1
+        );
+        const ray = new THREE.Raycaster();
+        ray.setFromCamera(mv, camera);
+        const hit = new THREE.Vector3();
+        return ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), hit) ? hit : null;
+      };
+      const exitMoveMode = () => {
+        inMoveMode = false; dragOffset = null;
+        controls.enabled = true; canvas.style.cursor = '';
+        setPersonMoveMode(false);
+      };
+      const onFigMD = ev => {
+        if (!inMoveMode || ev.button !== 0) return;
+        const h = getFloorHit(ev);
+        if (h) dragOffset = { dx: h.x - personPos.x, dz: h.z - personPos.z };
+      };
+      const onFigMM = ev => {
+        if (!inMoveMode || !dragOffset) return;
+        const h = getFloorHit(ev);
+        if (!h) return;
+        const newX = h.x - dragOffset.dx, newZ = h.z - dragOffset.dz;
+        const pdx = newX - personPos.x, pdz = newZ - personPos.z;
+        personParts.forEach(m => { m.position.x += pdx; m.position.z += pdz; });
+        personPos.x = newX; personPos.z = newZ;
+      };
+      const onFigMU = () => { dragOffset = null; };
+      canvas.addEventListener('mousedown', onFigMD);
+      canvas.addEventListener('mousemove', onFigMM);
+      canvas.addEventListener('mouseup',   onFigMU);
+      togglePersonMoveRef.current = () => {
+        if (!inMoveMode) {
+          inMoveMode = true; controls.enabled = false;
+          canvas.style.cursor = 'move'; setPersonMoveMode(true);
+        } else { exitMoveMode(); }
+      };
+      controls._personCleanup = () => {
+        canvas.removeEventListener('mousedown', onFigMD);
+        canvas.removeEventListener('mousemove', onFigMM);
+        canvas.removeEventListener('mouseup',   onFigMU);
+        if (inMoveMode) { controls.enabled = true; canvas.style.cursor = ''; }
+      };
+
       const animate = () => {
         animId = requestAnimationFrame(animate);
         controls.update();
@@ -1614,9 +1733,12 @@ function App() {
       cancelled = true;
       reset3DViewRef.current = null;
       snapshot3DRef.current = null;
+      toggle3DPersonRef.current = null;
+      togglePersonMoveRef.current = null;
       if (animId) cancelAnimationFrame(animId);
-      if (controls?._wheelCleanup)  controls._wheelCleanup();
-      if (controls?._resizeCleanup) controls._resizeCleanup();
+      if (controls?._wheelCleanup)   controls._wheelCleanup();
+      if (controls?._resizeCleanup)  controls._resizeCleanup();
+      if (controls?._personCleanup)  controls._personCleanup();
       if (controls) controls.dispose();
       if (renderer) {
         renderer._threeScene?.traverse(obj => {
@@ -2237,9 +2359,23 @@ ${rows}
     if (!wrap) return;
     const its = itemsRef.current;
     if (!its.length) { setZoom(1); return; }
+    const minX = Math.min(...its.map(i => i.x));
     const maxX = Math.max(...its.map(i => i.x + (i.w || 0)));
-    const z = Math.max(0.05, Math.min(4, (wrap.clientWidth - 80) / maxX));
+    const minY = Math.min(...its.map(i => i.y));
+    const maxY = Math.max(...its.map(i => i.y + getItemH(i)));
+    const cW = maxX - minX || 1, cH = maxY - minY || 1;
+    const PAD = 60;
+    const z = Math.max(0.05, Math.min(4, Math.min(
+      (wrap.clientWidth  - PAD * 2) / cW,
+      (wrap.clientHeight - PAD * 2) / cH
+    )));
     setZoom(z);
+    requestAnimationFrame(() => {
+      const w = wrapRef.current;
+      if (!w) return;
+      w.scrollLeft = Math.max(0, minX * z - Math.max(PAD, (w.clientWidth  - cW * z) / 2));
+      w.scrollTop  = Math.max(0, minY * z - Math.max(PAD, (w.clientHeight - cH * z) / 2));
+    });
   }, []);
 
   // restore saved zoom or auto-fit when switching boards
@@ -5056,14 +5192,16 @@ ${rows}
                     <button className="btn" onClick={() => setRoomView('room')}>← {lang==='es'?'Planta':'Floor plan'}</button>
                     <button className="btn" onClick={() => reset3DViewRef.current?.()}>{lang==='es'?'Centrar':'Reset view'}</button>
                     <button className="btn" onClick={() => snapshot3DRef.current?.()}>{lang==='es'?'Capturar':'Snapshot'}</button>
+                    <button className={`btn${show3DPerson?' active':''}`} title={lang==='es'?'Mostrar escala humana (175 cm)':'Show human scale (175 cm)'} onClick={() => { if (show3DPerson && personMoveMode) togglePersonMoveRef.current?.(); toggle3DPersonRef.current?.(); setShow3DPerson(v => !v); }}>{lang==='es'?'👤 Persona':'👤 Person'}</button>
+                    {show3DPerson && <button className={`btn${personMoveMode?' active':''}`} title={lang==='es'?'Arrastra la figura por el suelo de la sala':'Drag figure across the room floor'} onClick={() => togglePersonMoveRef.current?.()}>{lang==='es'?(personMoveMode?'✓ Listo':'↔ Mover'):(personMoveMode?'✓ Done':'↔ Move')}</button>}
                   </div>
                 </div>
                 <div className="room-panel">
                   <div className="room-panel-hd">{lang==='es'?'VISTA 3D':'3D VIEW'}</div>
                   <div style={{fontSize:10, color:'var(--muted)', padding:'10px 12px', lineHeight:1.7, whiteSpace:'pre-line'}}>
                     {lang==='es'
-                      ? 'Arrastra izq. → orbitar\nBotón der. → desplazar\nRueda → zoom suave'
-                      : 'Left drag → orbit\nRight drag → pan\nWheel → smooth zoom'}
+                      ? `Arrastra izq. → orbitar\nBotón der. → desplazar\nRueda → zoom suave${show3DPerson ? '\nClic en suelo → colocar figura' : ''}`
+                      : `Left drag → orbit\nRight drag → pan\nWheel → smooth zoom${show3DPerson ? '\nClick on floor → place figure' : ''}`}
                   </div>
                 </div>
               </div>
