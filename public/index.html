@@ -161,6 +161,8 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .titem-drag{height:18px;background:rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;padding:0 6px;cursor:grab;flex-shrink:0;gap:6px}
 .titem.locked .titem-drag{cursor:default}
 .app.presentation .titem-drag{display:none}
+.app.presentation .bitem,.app.presentation .nitem,.app.presentation .zitem,.app.presentation .titem{cursor:default !important}
+.bitem.pres-swap-sel .bitem-img-wrap{outline:3px solid var(--acc) !important;outline-offset:3px}
 .titem-drag-icon{color:var(--muted);font-size:9px;letter-spacing:2px;pointer-events:none}
 .titem-drag-label{font-size:7px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;pointer-events:none;flex:1}
 .titem-txt{flex:1;background:transparent;border:none;resize:none;outline:none;padding:8px 10px;line-height:1.35;overflow:hidden;cursor:text;color:inherit}
@@ -187,6 +189,8 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .pres-nav.next{right:12px}
 .app.presentation:hover .pres-nav{opacity:1;pointer-events:auto}
 .pres-nav.disabled{opacity:0 !important;pointer-events:none}
+.pres-zones-btn{position:fixed;top:14px;left:14px;z-index:2000;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.25);color:rgba(255,255,255,.85);font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.6px;padding:5px 12px;cursor:pointer;backdrop-filter:blur(4px);transition:border-color .15s,color .15s}
+.pres-zones-btn:hover{color:#fff;border-color:rgba(255,255,255,.5)}
 
 /* ── WORKSPACE ── */
 .workspace{flex:1;display:flex;flex-direction:column;overflow:hidden}
@@ -240,6 +244,7 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .bitem.sel .bitem-img-wrap{outline:2px dashed var(--acc-dim);outline-offset:2px}
 .bitem.sel.anchor .bitem-img-wrap{outline:2px solid var(--acc);outline-offset:2px}
 .bitem.replacing .bitem-img-wrap{outline:2px solid #e06060 !important;outline-offset:3px;animation:replacing-pulse 1s ease-in-out infinite}
+.bitem.swap-target .bitem-img-wrap{outline:3px solid var(--acc) !important;outline-offset:3px}
 .bitem-bar{position:absolute;bottom:100%;right:0;display:flex;gap:3px;opacity:0;transition:opacity .12s;zoom:calc(1 / var(--canvas-zoom,1));z-index:250}
 .props-panel{position:absolute;top:0;left:0;background:var(--panel2);border:1px solid var(--border2);border-radius:3px;padding:8px 10px;z-index:200;min-width:160px;box-shadow:0 4px 14px rgba(0,0,0,.45);display:flex;flex-direction:column;gap:6px;zoom:calc(1 / var(--canvas-zoom,1))}
 .props-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
@@ -407,8 +412,9 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .thumb img{width:100%;height:100%;object-fit:cover;pointer-events:none;display:block}
 .thumb.in-board{border-color:var(--acc)}
 .thumb.lib-sel{outline:3px solid var(--text);outline-offset:-2px}
-.thumb.lib-sel::after{content:'✓';position:absolute;top:3px;right:3px;width:15px;height:15px;background:var(--acc);color:var(--bg);border-radius:50%;font-size:9px;font-weight:700;line-height:15px;text-align:center;z-index:10;pointer-events:none}
 .lib-sel-bar{display:flex;align-items:center;gap:8px;padding:5px 10px;background:var(--acc-faint);border-top:1px solid var(--acc-dim);font-size:9px;color:var(--acc);flex-shrink:0;letter-spacing:.3px}
+.lib-sel-all-hdr{background:none;border:none;color:var(--dim);cursor:pointer;font-size:10px;padding:0 4px;line-height:1;transition:color .12s;margin-left:-2px}
+.lib-sel-all-hdr:hover{color:var(--acc)}
 .lib-sel-count{flex:1}
 .lib-sel-btn{background:none;border:1px solid var(--acc-dim);color:var(--acc);cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:9px;padding:2px 7px;letter-spacing:.3px;transition:background .12s}
 .lib-sel-btn:hover{background:var(--acc-faint)}
@@ -814,6 +820,8 @@ const I18N = {
     libTitle:'Biblioteca', sortImported:'Importación', sortName:'Nombre A→Z', sortColor:'Tono', sortBrightness:'Luminosidad', sortRating:'Valoración', filterPending:'Sin colocar', libSearchPh:'buscar…', tagFilterBtn:'Etiquetas', tagFilterAll:'Todas', tagPopHd:'Etiquetas', tagNewPh:'nueva etiqueta…', noTagsYet:'Sin etiquetas aún', libPreviewToggle:'Vista previa al pasar el ratón', bgColor:'Color de fondo', bgColorNone:'Sin color (tema)', ratingFilterHint:'Filtrar por valoración mínima',
     setDefaultSize:'Usar como tamaño de referencia', duplicateItem:'Duplicar', defaultSizeSet:'Tamaño de referencia guardado', defaultSizeActive: w => `Tamaño de referencia: ${w} px`, clear:'Limpiar', swapPos:'Intercambiar posición', flipH:'Voltear horizontal', flipV:'Voltear vertical',
     gridLayoutBtn:'Cuadrícula', gridTitle:'Colocar en cuadrícula', gridColsLabel:'Columnas', gridGapLabel:'Separación', gridScaleLabel:'Escala', gridFits:(n,tot)=>n>=tot?'Todas las fotos caben':`Caben ${n} de ${tot}`, gridPlace:'Colocar',
+    pairsLayoutBtn:'Parejas', pairsLabel: n => `Pareja ${n}`, tripleLabel: n => `Trío ${n}`,
+    presViewZones:'Ver zonas', presZoneOf:(i,n)=>`${i} / ${n}`,
     libSnapExpand:'Ampliar librería', libSnapCollapse:'Reducir librería',
     uploadHint:'Sube fotos con ↑ Subir →', dragFilesHint:'o arrastra archivos al canvas',
     alreadyInTableau:'ya en el tableau',
@@ -857,6 +865,7 @@ const I18N = {
     confirmDeletePhotosPlaced: n => `\n${n} de ellas están colocadas en tableros y se eliminarán del canvas.`,
     libSelAdd:'Añadir al tablero', selected:'seleccionadas',
     libSelClearTip:'Quitar selección', libSelAddTip:'Añadir todas al tablero en fila', libSelDeleteTip:'Eliminar seleccionadas del proyecto',
+    libSelectAll:'Sel. todas', libFlatViewBtn:'Vista plana', libSectionViewBtn:'Por secciones',
     inBoard:'EN TABLEAU', inProject:'en proyecto', importBtn:'+ Importar',
     aboutLabel:'Acerca de', authorLabel:'Autor',
     alLeft:'Alinear borde izquierdo', alRight:'Alinear borde derecho', alCH:'Centrar horizontalmente',
@@ -941,6 +950,8 @@ const I18N = {
     libTitle:'Library', sortImported:'Import date', sortName:'Name A→Z', sortColor:'Hue', sortBrightness:'Brightness', sortRating:'Rating', filterPending:'Unplaced', libSearchPh:'search…', tagFilterBtn:'Tags', tagFilterAll:'All', tagPopHd:'Tags', tagNewPh:'new tag…', noTagsYet:'No tags yet', libPreviewToggle:'Hover preview', bgColor:'Background colour', bgColorNone:'No colour (theme)', ratingFilterHint:'Filter by minimum rating',
     setDefaultSize:'Set as default size', duplicateItem:'Duplicate', defaultSizeSet:'Default size saved', defaultSizeActive: w => `Default size: ${w} px`, clear:'Clear', swapPos:'Swap positions', flipH:'Flip horizontal', flipV:'Flip vertical',
     gridLayoutBtn:'Grid', gridTitle:'Place as grid', gridColsLabel:'Columns', gridGapLabel:'Gap', gridScaleLabel:'Scale', gridFits:(n,tot)=>n>=tot?'All photos fit':`${n} of ${tot} fit`, gridPlace:'Place',
+    pairsLayoutBtn:'Pairs', pairsLabel: n => `Pair ${n}`, tripleLabel: n => `Triple ${n}`,
+    presViewZones:'View zones', presZoneOf:(i,n)=>`${i} / ${n}`,
     libSnapExpand:'Expand library', libSnapCollapse:'Collapse library',
     uploadHint:'Upload photos with ↑ Upload →', dragFilesHint:'or drag files to canvas',
     alreadyInTableau:'already in tableau',
@@ -984,6 +995,7 @@ const I18N = {
     confirmDeletePhotosPlaced: n => `\n${n} of them are placed on boards and will be removed from the canvas.`,
     libSelAdd:'Add to board', selected:'selected',
     libSelClearTip:'Clear selection', libSelAddTip:'Add all to board in a row', libSelDeleteTip:'Delete selected from project',
+    libSelectAll:'Sel. all', libFlatViewBtn:'Flat view', libSectionViewBtn:'By sections',
     inBoard:'IN TABLEAU', inProject:'in project', importBtn:'+ Import',
     aboutLabel:'About', authorLabel:'Author',
     alLeft:'Align left edges', alRight:'Align right edges', alCH:'Center horizontally',
@@ -1143,12 +1155,14 @@ function App() {
   const [boardDragId,   setBoardDragId]   = useState(null);
   const [boardDragOver, setBoardDragOver] = useState(null);
   const [snapGuides,    setSnapGuides]    = useState({ h: [], v: [] });
+  const [dragSwapTarget, setDragSwapTarget] = useState(null);
   const [libSel,        setLibSel]        = useState([]);
   const libSelRef = useRef([]);
   const libSelAnchorRef = useRef(null);
   const [sections,      setSections]      = useState([]); // [{id, name}]
   const sectionsRef = useRef([]);
   const [sectCollapsed, setSectCollapsed] = useState({}); // {sectionId: bool}
+  const [libFlatView,   setLibFlatView]   = useState(() => localStorage.getItem('libFlatView') === 'true');
   const [sectCtxMenu,   setSectCtxMenu]   = useState(null); // {photoId, x, y}
   const [sectBatchPop,  setSectBatchPop]  = useState(null); // {x, y}
   const [renamingSect,  setRenamingSect]  = useState(null); // sectionId being renamed
@@ -1192,6 +1206,11 @@ function App() {
   const hoveredThumbRef = useRef(null);
   const displayedPhotosRef = useRef([]);
   const [presentation,  setPresentation]  = useState(false);
+  const presentationRef = useRef(false);
+  const [presZoneIdx,   setPresZoneIdx]   = useState(-1);
+  const [presSwapSel,   setPresSwapSel]   = useState(null);
+  const presSwapSelRef = useRef(null);
+  const presZoneIdxRef = useRef(-1);
   const [rejectedFilter, setRejectedFilter] = useState(false); // false=ocultar rechazadas, true=solo rechazadas, null=todas
   const [replaceMode,   setReplaceMode]   = useState(null); // {itemId} when active
   const [hoverInfo,     setHoverInfo]     = useState(null);
@@ -1280,6 +1299,8 @@ function App() {
   useEffect(() => { itemsRef.current         = items;         }, [items]);
   useEffect(() => { pidRef.current           = pid;           }, [pid]);
   useEffect(() => { bidRef.current           = bid;           }, [bid]);
+  useEffect(() => { presentationRef.current  = presentation;  }, [presentation]);
+  useEffect(() => { presSwapSelRef.current   = presSwapSel;   }, [presSwapSel]);
   useEffect(() => { photosRef.current        = photos;        }, [photos]);
   useEffect(() => { showLibPreviewRef.current = showLibPreview; }, [showLibPreview]);
   useEffect(() => { allBoardItemsRef.current = allBoardItems; }, [allBoardItems]);
@@ -2268,6 +2289,7 @@ ${rows}
 
   // ── context menu ─────────────────────────────────────────────────────────
   const openCtxMenu = (e, itemId) => {
+    if (presentationRef.current) return;
     e.preventDefault();
     e.stopPropagation();
     const x = Math.min(e.clientX, window.innerWidth  - 185);
@@ -2874,14 +2896,25 @@ ${rows}
         return;
       }
       if (presentation && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) {
-        const bs = boardsRef.current;
-        const idx = bs.findIndex(b => b.id === bidRef.current);
-        const next = e.key === 'ArrowRight' ? idx + 1 : idx - 1;
-        if (next >= 0 && next < bs.length) setBid(bs[next].id);
+        const allIt = itemsRef.current;
+        const sortedZones = allIt.filter(i => i.type === 'zone').sort((a, b) => a.x - b.x)
+          .filter(z => allIt.some(i => i.zoneId === z.id && i.photoId));
+        if (sortedZones.length > 0 && presZoneIdxRef.current >= 0) {
+          const next = e.key === 'ArrowRight'
+            ? Math.min(sortedZones.length - 1, presZoneIdxRef.current + 1)
+            : Math.max(0, presZoneIdxRef.current - 1);
+          presZoneIdxRef.current = next; setPresZoneIdx(next);
+        } else {
+          const bs = boardsRef.current;
+          const idx = bs.findIndex(b => b.id === bidRef.current);
+          const next = e.key === 'ArrowRight' ? idx + 1 : idx - 1;
+          if (next >= 0 && next < bs.length) setBid(bs[next].id);
+        }
         return;
       }
       if (e.key !== 'Escape') return;
       if (sectCtxMenu) { setSectCtxMenu(null); return; }
+      if (presZoneIdxRef.current >= 0) { presZoneIdxRef.current = -1; setPresZoneIdx(-1); setPresSwapSel(null); return; }
       if (presentation) { setPresentation(false); return; }
       if (pinnedPreview) { setPinnedPreview(null); return; }
       if (fillPlaceholder) { setFillPlaceholder(null); return; }
@@ -3064,6 +3097,58 @@ ${rows}
     setGridModal(false);
   };
 
+  const placeAsPairs = (groupSize = 2) => {
+    const ids = libSelRef.current;
+    if (!ids.length || !bidRef.current) return;
+    const board = boardsRef.current.find(b => b.id === bidRef.current);
+    if (!board) return;
+    const selPhotos = ids.map(id => photosRef.current.find(p => p.id === id)).filter(Boolean);
+    if (!selPhotos.length) return;
+    const bPx = boardPxRef.current;
+    const INNER_GAP = 16, ZONE_GAP = 48, ZONE_PAD = 20, ZONE_HDR = 36;
+    const cellW = bPx
+      ? Math.max(80, Math.floor((bPx.w - INNER_GAP * (groupSize - 1) - ZONE_PAD * 2) / groupSize))
+      : (board.defaultW || 300);
+    const groups = [];
+    for (let i = 0; i < selPhotos.length; i += groupSize) groups.push(selPhotos.slice(i, i + groupSize));
+    let curX;
+    if (bPx) {
+      curX = 0;
+    } else {
+      const wrap = wrapRef.current, z = zoomRef.current;
+      const zoneW = cellW * groupSize + INNER_GAP * (groupSize - 1) + ZONE_PAD * 2;
+      curX = Math.round((wrap.scrollLeft + wrap.clientWidth / 2) / z - (zoneW * groups.length + ZONE_GAP * (groups.length - 1)) / 2);
+    }
+    pushUndo();
+    const maxZ = itemsRef.current.length ? Math.max(...itemsRef.current.map(i => i.z || 0)) : 0;
+    const nonZ = itemsRef.current.filter(i => i.type !== 'zone');
+    const baseZ = nonZ.length ? Math.min(...nonZ.map(i => i.z || 0)) - 1 : -1;
+    const defFrame = board.defaultFrame || 0;
+    const allItems = [], allZones = [], newIds = [];
+    groups.forEach((group, gi) => {
+      const heights = group.map(ph => Math.round(cellW * ph.h / ph.w));
+      const groupH = Math.max(...heights);
+      const zoneW = cellW * groupSize + INNER_GAP * (groupSize - 1) + ZONE_PAD * 2;
+      const zoneH = groupH + ZONE_HDR + ZONE_PAD;
+      const zid = `z${Date.now().toString(36)}${Math.random().toString(36).slice(2,4)}${gi}`;
+      const label = groupSize === 2 ? t('pairsLabel', gi + 1) : t('tripleLabel', gi + 1);
+      let photoX = curX + ZONE_PAD;
+      group.forEach((photo, pi) => {
+        const h = Math.round(cellW * photo.h / photo.w);
+        const id = `${Date.now().toString(36)}${Math.random().toString(36).slice(2,5)}${gi}${pi}`;
+        allItems.push({ id, photoId: photo.id, x: Math.round(photoX), y: ZONE_HDR + Math.round((groupH - h) / 2), w: cellW, z: maxZ + allItems.length + 1, label: '', rot: 0, frame: defFrame, zoneId: zid });
+        newIds.push(id);
+        photoX += cellW + INNER_GAP;
+      });
+      allZones.push({ id: zid, type: 'zone', label, color: 'blue', scaleContent: false, x: curX, y: 0, w: zoneW, h: zoneH, z: baseZ - gi });
+      curX += zoneW + ZONE_GAP;
+    });
+    const norm = applyNormalized([...itemsRef.current, ...allItems, ...allZones]);
+    selRef.current = newIds; setSel(newIds);
+    saveItemsNow(norm);
+    setLibSelection([]);
+  };
+
   // ── import from repo ──────────────────────────────────────────────────────
   // ── hover info ────────────────────────────────────────────────────────────
   const showPhotoInfo = (photo, status, thumbSrc, itemW = null, itemH = null, itemX = null, itemY = null) =>
@@ -3143,6 +3228,24 @@ ${rows}
 
   // ── item interactions ─────────────────────────────────────────────────────
   const onItemPD = (e, itemId) => {
+    if (presentationRef.current) {
+      if (e.button !== 0) return;
+      const item = itemsRef.current.find(i => i.id === itemId);
+      if (!item?.photoId) return;
+      e.stopPropagation();
+      if (!presSwapSelRef.current) { presSwapSelRef.current = itemId; setPresSwapSel(itemId); return; }
+      if (presSwapSelRef.current === itemId) { presSwapSelRef.current = null; setPresSwapSel(null); return; }
+      const other = itemsRef.current.find(i => i.id === presSwapSelRef.current);
+      if (!other?.photoId) { presSwapSelRef.current = itemId; setPresSwapSel(itemId); return; }
+      pushUndo();
+      saveItemsNow(applyNormalized(itemsRef.current.map(i => {
+        if (i.id === itemId)                 return {...i, photoId: other.photoId};
+        if (i.id === presSwapSelRef.current) return {...i, photoId: item.photoId};
+        return i;
+      })));
+      presSwapSelRef.current = null; setPresSwapSel(null);
+      return;
+    }
     if (e.button !== 0) return;
     if (e.target.closest('.lbl,.ibc,.rh')) return;
     e.stopPropagation(); e.preventDefault();
@@ -3368,6 +3471,8 @@ ${rows}
       const snappedY = snapVal(anchor.y + rawDy, gridCellPx);
       return { sdx: snappedX - anchor.x, sdy: snappedY - anchor.y };
     };
+    const draggedItem = itemsRef.current.find(i => i.id === dragIds[0]);
+    const canSwap = dragIds.length === 1 && draggedItem?.photoId;
     const onMM = e => {
       ldx = e.clientX - sx; ldy = e.clientY - sy;
       if (e.shiftKey) {
@@ -3385,11 +3490,54 @@ ${rows}
         const { x, y } = clampItem(i, starts[i.id].x + sdx, starts[i.id].y + sdy);
         return { ...i, x, y };
       }));
+      if (canSwap) {
+        const di = itemsRef.current.find(i => i.id === dragIds[0]);
+        if (di) {
+          const cx = starts[dragIds[0]].x + ldx/z + di.w/2;
+          const cy = starts[dragIds[0]].y + ldy/z + getItemH(di)/2;
+          const hit = itemsRef.current.find(i =>
+            i.id !== dragIds[0] && i.photoId && !i.locked &&
+            cx >= i.x && cx <= i.x + i.w && cy >= i.y && cy <= i.y + getItemH(i)
+          );
+          setDragSwapTarget(hit?.id ?? null);
+        }
+      }
     };
     const onMU = () => {
       window.removeEventListener('pointermove', onMM);
       window.removeEventListener('pointerup',   onMU);
       setSnapGuides({ h: [], v: [] });
+      setDragSwapTarget(null);
+      // Drag-to-swap: if dragged photo lands on another photo, swap positions
+      if (canSwap && (ldx !== 0 || ldy !== 0)) {
+        const z = zoomRef.current;
+        const di = itemsRef.current.find(i => i.id === dragIds[0]);
+        if (di) {
+          const cx = starts[dragIds[0]].x + ldx/z + di.w/2;
+          const cy = starts[dragIds[0]].y + ldy/z + getItemH(di)/2;
+          const hit = itemsRef.current.find(i =>
+            i.id !== dragIds[0] && i.photoId && !i.locked &&
+            cx >= i.x && cx <= i.x + i.w && cy >= i.y && cy <= i.y + getItemH(i)
+          );
+          if (hit) {
+            undoStack.current = [...undoStack.current.slice(-49), beforeDrag];
+            redoStack.current = []; wasDragged.current = true;
+            const srcZoneId = draggedItem.zoneId ?? null;
+            const dstZoneId = hit.zoneId ?? null;
+            const setZone = (item, zid) => {
+              if (zid) return { ...item, zoneId: zid };
+              const { zoneId: _z, ...rest } = item; return rest;
+            };
+            const nit = itemsRef.current.map(i => {
+              if (i.id === dragIds[0]) return setZone({ ...i, x: hit.x, y: hit.y }, dstZoneId);
+              if (i.id === hit.id)     return setZone({ ...i, x: starts[dragIds[0]].x, y: starts[dragIds[0]].y }, srcZoneId);
+              return i;
+            });
+            const norm = applyNormalized(nit);
+            saveItemsNow(norm); return;
+          }
+        }
+      }
       const z = zoomRef.current;
       const { sdx, sdy } = applySnap(ldx/z, ldy/z);
       setSnapGuides({ h: [], v: [] }); // clear any guides set by applySnap above
@@ -3423,7 +3571,6 @@ ${rows}
           if (!movedNonZone.includes(i.id)) return i;
           const cx = i.x + i.w / 2, cy = i.y + getItemH(i) / 2;
           const oldZid = i.zoneId ?? null;
-          // prefer current zone if the item is still inside it
           const currentZone = oldZid ? zones.find(zz => zz.id === oldZid) : null;
           const stillInCurrent = currentZone && cx >= currentZone.x && cx <= currentZone.x + currentZone.w && cy >= currentZone.y && cy <= currentZone.y + (currentZone.h || 320);
           const match = stillInCurrent ? currentZone : zones.find(zz => cx >= zz.x && cx <= zz.x + zz.w && cy >= zz.y && cy <= zz.y + (zz.h || 320));
@@ -3446,6 +3593,7 @@ ${rows}
   };
 
   const onResizePD = (e, itemId) => {
+    if (presentationRef.current) return;
     e.stopPropagation(); e.preventDefault();
     const it = itemsRef.current.find(i => i.id === itemId);
     if (it?.locked) return;
@@ -4985,7 +5133,7 @@ ${rows}
                                   <span className="nboard-name" title={b.name} onDoubleClick={e => { e.stopPropagation(); startRename('board', b.id, b.name, e); }}>{b.name}</span>
                                 )}
                                 {!(renaming?.type==='board' && renaming.id===b.id) && (
-                                  <span className="nboard-count">{(allBoardItems[b.id]||[]).filter(i=>i.type!=='note'&&i.type!=='text').length||''}</span>
+                                  <span className="nboard-count">{(allBoardItems[b.id]||[]).filter(i=>!i.type||i.type==='photo').length||''}</span>
                                 )}
                                 <div className="nrow-acts">
                                   <button className="nact edit" title={t('renameBtn')}      onClick={e => startRename('board', b.id, b.name, e)}>✎</button>
@@ -5713,7 +5861,7 @@ ${rows}
                   const offX = (item.w  - naturalW) / 2;
                   const offY = (displayH - naturalH) / 2;
                   return (
-                    <div key={item.id} className={`bitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}${item.locked?' locked':''}${item.groupId?' grouped':''}${replaceMode?.itemId===item.id?' replacing':''}`}
+                    <div key={item.id} className={`bitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}${item.locked?' locked':''}${item.groupId?' grouped':''}${replaceMode?.itemId===item.id?' replacing':''}${dragSwapTarget===item.id?' swap-target':''}${presentation&&presSwapSel===item.id?' pres-swap-sel':''}`}
                       style={{ left: item.x, top: item.y, width: item.w, zIndex: item.z||1, ...(item.freeRot ? {transform:`rotate(${item.freeRot}deg)`,transformOrigin:'center center'} : {}) }}
                       onPointerDown={e => onItemPD(e, item.id)}
                       onClick={e => handleItemClick(e, item)}
@@ -5839,6 +5987,7 @@ ${rows}
                   <button className="lib-snap-btn" onClick={snapLib} title={libHeightRef.current > window.innerHeight * 0.40 ? t('libSnapCollapse') : t('libSnapExpand')}>{libHeightRef.current > window.innerHeight * 0.40 ? '⊟' : '⊞'}</button>
                   <span className="lib-title">{t('libTitle')}</span>
                   <span className="lib-count">{displayedPhotos.length < photos.length ? `${displayedPhotos.length}/${photos.length}` : photos.length}</span>
+                  {libOpen && displayedPhotos.length > 0 && libSel.length === 0 && <button className="lib-sel-all-hdr" title={t('libSelectAll')} onClick={e => { e.stopPropagation(); const all = displayedPhotos.map(p => p.id); setLibSelection(all); libSelAnchorRef.current = all[0] ?? null; }}>☑</button>}
                   <span className="lib-spacer"/>
                   {pid && <>
                     <input className="lib-search" type="text" placeholder={t('libSearchPh')}
@@ -5886,6 +6035,7 @@ ${rows}
                       onClick={e => e.stopPropagation()}
                       onChange={e => { uploadFiles(e.target.files, null, uploadSectRef.current); e.target.value = ''; uploadSectRef.current = null; }}
                     />
+                    {sections.length > 0 && <button className={`lib-filter${libFlatView?' active':''}`} onClick={e => { e.stopPropagation(); const v = !libFlatView; setLibFlatView(v); localStorage.setItem('libFlatView', v); }} title={libFlatView ? t('libSectionViewBtn') : t('libFlatViewBtn')}>≡</button>}
                     <button className="sect-add-btn" onClick={e => { e.stopPropagation(); addSection(); }} title={t('addSection')}>{t('addSection')}</button>
                     <button className={`lib-mute-btn${libMuted?' active':''}`} onClick={e => { e.stopPropagation(); setLibMuted(v => !v); }} title={libMuted ? t('libMuteOff') : t('libMuteOn')}>{libMuted ? t('libMuteOff') : t('libMuteOn')}</button>
                     <button className="btn acc" style={{fontSize:9}} onClick={e => {
@@ -5946,13 +6096,18 @@ ${rows}
                                   libSelAnchorRef.current = p.id;
                                   const next = isSel ? libSel.filter(x => x !== p.id) : [...libSel, p.id];
                                   setLibSelection(next);
-                                } else if (e.shiftKey && libSelAnchorRef.current) {
+                                } else if (e.shiftKey) {
                                   const all = displayedPhotos.map(ph => ph.id);
-                                  const anchorIdx = all.indexOf(libSelAnchorRef.current);
-                                  const thisIdx = all.indexOf(p.id);
-                                  if (anchorIdx !== -1) {
-                                    const [from, to] = anchorIdx <= thisIdx ? [anchorIdx, thisIdx] : [thisIdx, anchorIdx];
-                                    setLibSelection(all.slice(from, to + 1));
+                                  if (libSelAnchorRef.current) {
+                                    const anchorIdx = all.indexOf(libSelAnchorRef.current);
+                                    const thisIdx = all.indexOf(p.id);
+                                    if (anchorIdx !== -1) {
+                                      const [from, to] = anchorIdx <= thisIdx ? [anchorIdx, thisIdx] : [thisIdx, anchorIdx];
+                                      setLibSelection(all.slice(from, to + 1));
+                                    } else {
+                                      libSelAnchorRef.current = p.id;
+                                      setLibSelection([p.id]);
+                                    }
                                   } else {
                                     libSelAnchorRef.current = p.id;
                                     setLibSelection([p.id]);
@@ -5984,7 +6139,7 @@ ${rows}
                             </div>
                           );
                         };
-                        if (sections.length === 0) {
+                        if (sections.length === 0 || libFlatView) {
                           return <div className="lib-photo-row">{displayedPhotos.map(renderThumb)}</div>;
                         }
                         const bySection = {};
@@ -6004,7 +6159,7 @@ ${rows}
                                 onDragOver={e => onSectDragOver(e, s.id)}
                                 onDragLeave={onSectDragLeave}
                                 onDrop={e => onSectDrop(e, s.id)}>
-                                <div className="sect-header" onClick={() => setSectCollapsed(c => ({...c, [s.id]: !c[s.id]}))}>
+                                <div className="sect-header" onClick={() => { setSectCollapsed(c => ({...c, [s.id]: !c[s.id]})); setLibPreview(null); clearTimeout(previewTimer.current); hoveredThumbRef.current = null; }}>
                                   <span className="sect-toggle">{collapsed ? '▶' : '▼'}</span>
                                   {renamingSect === s.id
                                     ? <input autoFocus className="sect-name-input" defaultValue={s.name}
@@ -6037,10 +6192,12 @@ ${rows}
                       <div className="lib-sel-bar" onClick={e => e.stopPropagation()}>
                         <span className="lib-sel-count">{libSel.length} {t('selected')}</span>
                         <button className="lib-sel-btn" title={t('libSelClearTip')} onClick={() => { setLibSelection([]); setBatchTagPop(null); setSectBatchPop(null); }}>✕</button>
+                        {libSel.length < displayedPhotosRef.current.length && <button className="lib-sel-btn" title={t('libSelectAll')} onClick={() => { const all = displayedPhotosRef.current.map(p => p.id); setLibSelection(all); libSelAnchorRef.current = all[0] ?? null; }}>☑ {t('libSelectAll')}</button>}
                         <button className="lib-sel-btn" title={t('batchTagBtn')} onClick={e => { const r = e.currentTarget.getBoundingClientRect(); setBatchTagPop(v => v ? null : {x: r.left, y: r.top}); setBatchTagInput(''); setSectBatchPop(null); }}>{t('batchTagBtn')}</button>
                         {sections.length > 0 && <button className="lib-sel-btn" title={t('moveToSection')} onClick={e => { const r = e.currentTarget.getBoundingClientRect(); setSectBatchPop(v => v ? null : {x: r.left, y: r.top}); setBatchTagPop(null); }}>{t('batchMoveSection')}</button>}
                         {bid && <button className="lib-sel-btn" title={t('libSelAddTip')} onClick={addSelectedToCanvas}>{t('libSelAdd')}</button>}
                         {bid && <button className="lib-sel-btn" onClick={openGridModal}>⊞ {t('gridLayoutBtn')}</button>}
+                        {bid && <button className="lib-sel-btn" onClick={() => placeAsPairs(2)} title={lang==='es'?'Añadir como parejas en zonas':'Add as pairs in zones'}>⊟ {t('pairsLayoutBtn')}</button>}
                         <button className="lib-sel-btn danger" title={t('libSelDeleteTip')} onClick={deleteSelectedPhotos}>× {t('deleteBtn')}</button>
                       </div>
                     )}
@@ -6107,17 +6264,106 @@ ${rows}
       )}
 
       {presentation && (() => {
+        const zoneMode = presZoneIdx >= 0;
+        const sortedZones = items.filter(i => i.type === 'zone').sort((a, b) => a.x - b.x)
+          .filter(z => items.some(i => i.zoneId === z.id && i.photoId));
         const presIdx = boards.findIndex(b => b.id === bid);
-        const hasPrev = presIdx > 0;
-        const hasNext = presIdx < boards.length - 1;
+        const exitPres = () => { presZoneIdxRef.current = -1; setPresZoneIdx(-1); setPresSwapSel(null); setPresentation(false); };
+        const enterZones = () => { presZoneIdxRef.current = 0; setPresZoneIdx(0); setPresSwapSel(null); };
+        const exitZones  = () => { presZoneIdxRef.current = -1; setPresZoneIdx(-1); setPresSwapSel(null); };
+        const hasPrev = zoneMode ? presZoneIdx > 0 : presIdx > 0;
+        const hasNext = zoneMode ? presZoneIdx < sortedZones.length - 1 : presIdx < boards.length - 1;
+        const goPrev  = () => zoneMode
+          ? (presZoneIdxRef.current = presZoneIdx - 1, setPresZoneIdx(presZoneIdx - 1))
+          : (presIdx > 0 && setBid(boards[presIdx - 1].id));
+        const goNext  = () => zoneMode
+          ? (presZoneIdxRef.current = presZoneIdx + 1, setPresZoneIdx(presZoneIdx + 1))
+          : (presIdx < boards.length - 1 && setBid(boards[presIdx + 1].id));
+
+        // Zone overlay content
+        let zoneOverlay = null;
+        if (zoneMode) {
+          const zone = sortedZones[presZoneIdx] ?? sortedZones[0];
+          if (zone) {
+            const zoneItems = items.filter(i => i.zoneId === zone.id && i.type !== 'zone' && i.photoId);
+            if (zoneItems.length) {
+              const vW = window.innerWidth, vH = window.innerHeight, pad = 80;
+              // Layout: recompose photos side-by-side, ignoring canvas positions
+              const GAP = 16;
+              const photoData = zoneItems.map(item => {
+                const ph = photos.find(p => p.id === item.photoId);
+                const aspect = ph ? ph.w / ph.h : 1;
+                return { item, aspect };
+              });
+              // Normalize all photos to the same height, then scale to fit screen
+              const refH = vH - pad * 2;
+              const totalW = photoData.reduce((s, d) => s + refH * d.aspect, 0) + GAP * (photoData.length - 1);
+              const scale = Math.min(1, (vW - pad * 2) / totalW);
+              const dispH = refH * scale;
+              const swapSelItem = presSwapSel ? itemsRef.current.find(i => i.id === presSwapSel) : null;
+              const swapSelName = swapSelItem ? (photos.find(p => p.id === swapSelItem.photoId)?.name || '?') : null;
+              let curX = 0;
+              const renderedPhotos = photoData.map(({ item, aspect }) => {
+                const w = refH * aspect * scale, h = dispH;
+                const left = curX; curX += w + GAP * scale;
+                const isSel = presSwapSel === item.id;
+                const handleClick = e => {
+                  e.stopPropagation();
+                  if (!presSwapSel) { setPresSwapSel(item.id); return; }
+                  if (presSwapSel === item.id) { setPresSwapSel(null); return; }
+                  const other = itemsRef.current.find(i => i.id === presSwapSel);
+                  if (!other) { setPresSwapSel(item.id); return; }
+                  pushUndo();
+                  saveItemsNow(applyNormalized(itemsRef.current.map(i => {
+                    if (i.id === item.id)  return {...i, photoId: other.photoId};
+                    if (i.id === other.id) return {...i, photoId: item.photoId};
+                    return i;
+                  })));
+                  setPresSwapSel(null);
+                };
+                return <img key={item.id} src={`/photos/${pid}/${item.photoId}`} onClick={handleClick}
+                  style={{position:'absolute',left,top:0,width:w,height:h,objectFit:'cover',userSelect:'none',cursor:'pointer',outline:isSel?'3px solid var(--acc)':'none',outlineOffset:'-3px',transition:'outline .1s'}}/>;
+              });
+              const totalDispW = curX - GAP * scale;
+              zoneOverlay = (
+                <div style={{position:'fixed',inset:0,zIndex:1900,background:'#000',display:'flex',alignItems:'center',justifyContent:'center'}}
+                  onClick={() => setPresSwapSel(null)}>
+                  <div style={{position:'relative',width:totalDispW,height:dispH,flexShrink:0}}>
+                    {renderedPhotos}
+                  </div>
+                  <div className="pres-title" style={{opacity:1,pointerEvents:'none'}}>
+                    <span>{zone.label || `${lang==='es'?'Zona':'Zone'} ${presZoneIdx + 1}`}</span>
+                    <span style={{color: swapSelName ? 'var(--acc)' : 'rgba(255,255,255,.3)', fontSize:9}}>
+                      {swapSelName
+                        ? (lang==='es' ? `· "${swapSelName}" — clic en otra para intercambiar` : `· "${swapSelName}" — click another to swap`)
+                        : (lang==='es' ? '· clic en una foto para intercambiarla' : '· click a photo to swap it')}
+                    </span>
+                    <div className="pres-dots">{sortedZones.map((z, i) => <div key={z.id} className={`pres-dot${i===presZoneIdx?' active':''}`}/>)}</div>
+                    <span style={{color:'rgba(255,255,255,.3)',fontSize:9}}>{presZoneIdx+1} / {sortedZones.length}</span>
+                  </div>
+                </div>
+              );
+            }
+          }
+        }
+
         return <>
-          <button className="pres-exit" onClick={() => setPresentation(false)}>{t('exitPresentation')}</button>
-          <button className={`pres-nav prev${!hasPrev ? ' disabled' : ''}`} onClick={() => hasPrev && setBid(boards[presIdx - 1].id)}>‹</button>
-          <button className={`pres-nav next${!hasNext ? ' disabled' : ''}`} onClick={() => hasNext && setBid(boards[presIdx + 1].id)}>›</button>
-          {activeBoard && <div className="pres-title">
-            <span>{activeProject?.name} · {activeBoard.name}</span>
-            {boards.length > 1 && <div className="pres-dots">{boards.map((b, i) => <div key={b.id} className={`pres-dot${b.id === bid ? ' active' : ''}`}/>)}</div>}
-          </div>}
+          {zoneOverlay}
+          {/* Toggle zona/tablero — misma posición siempre */}
+          {sortedZones.length > 0 && (
+            <button className="pres-zones-btn" onClick={zoneMode ? exitZones : enterZones}>
+              {zoneMode ? (lang==='es'?'◧ Ver tablero':'◧ Board view') : `▣ ${t('presViewZones')} (${sortedZones.length})`}
+            </button>
+          )}
+          <button className="pres-exit" onClick={exitPres}>{t('exitPresentation')}</button>
+          <button className={`pres-nav prev${!hasPrev?' disabled':''}`} onClick={goPrev}>‹</button>
+          <button className={`pres-nav next${!hasNext?' disabled':''}`} onClick={goNext}>›</button>
+          {!zoneMode && activeBoard && (
+            <div className="pres-title">
+              <span>{activeProject?.name} · {activeBoard.name}</span>
+              {boards.length > 1 && <div className="pres-dots">{boards.map((b,i) => <div key={b.id} className={`pres-dot${b.id===bid?' active':''}`}/>)}</div>}
+            </div>
+          )}
         </>;
       })()}
 

@@ -1,6 +1,6 @@
 {
-  "version": "1.8.2",
+  "version": "1.8.3",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-05-25",
-  "notes": "Multi-sala: varios planos de sala por proyecto, agrupación de tableros por sala en el navegador, colapso de salas"
+  "notes": "Presentación: modo zona rediseñado, intercambio de fotos en todos los modos, canvas solo lectura. Biblioteca: vista plana, selección múltiple. Correcciones en zonas y navegador."
 }

@@ -1,17 +1,30 @@
 # Changelog
 
-## [1.8.2] — 2026-05-25
+## [1.8.3] — 2026-05-25
 ### Added
 - Multi-room: a project can have multiple rooms, each with its own floor plan and walls
 - Navigator: boards grouped under their room, with a per-room collapse arrow
 - Navigator: boards not linked to any room appear directly under the project, without any extra label
 - Room panel: "New room" button available from the room panel (next to the room tabs)
+- Library: flat view (no section grouping) toggled with a button
+- Library: "Select all" button per section header; Ctrl+click for multi-select; Shift+click for range select
+- Presentation: zone mode redesigned — photos recomposed side-by-side at full screen ignoring canvas positions; navigate between zones with ‹ ›
+- Presentation: "View zones / View board" toggle button to switch modes without leaving presentation
+- Presentation: photo swap by click available in all presentation modes (board and zone)
+- Presentation: canvas is read-only (no dragging, resizing or context menu)
 
 ### Fixed
 - Floor plans were not saved after finishing a drawing (PUT went to `/rooms/undefined` due to missing `id`)
 - Creating a board for a wall could assign the board to the wrong room
 - A navigator item could be active-highlighted simultaneously as both a room and a board; now only one item is active at a time
 - Migration from `room.json` → `rooms.json` made robust (no longer skipped if the target file exists but is empty)
+- Navigator: board photo count included zones and notes; now counts photos only
+- Presentation: selection checkmark overlapped the delete button in the library; replaced with an outline border
+- Zone presentation: 3 photos appeared in a pair because drag was assigning `zoneId` to unzoned photos
+- Zone presentation: "View zones" button appeared but did nothing when a zone had no assigned photos
+- Zone presentation: display area was huge when photos were far apart on the canvas
+- Photo swap in presentation: swap was also exchanging `zoneId`, breaking zone membership; now only swaps `photoId`
+- Drag: a photo removed from a zone and dropped back inside correctly recovers its zone membership
 
 ---
 

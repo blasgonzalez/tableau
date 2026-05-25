@@ -52,7 +52,8 @@
     "tags": [
       "Color"
     ],
-    "rejected": true
+    "rejected": false,
+    "sectionId": "mp9dl89on3b"
   },
   {
     "id": "175037ef4e80",
@@ -86,7 +87,8 @@
       "b": 248
     },
     "rating": 5,
-    "sectionId": "mp9dl89on3b"
+    "sectionId": "mp9dl89on3b",
+    "rejected": false
   },
   {
     "id": "8febc52d726d",
@@ -153,6 +155,6 @@
     "tags": [
       "ByN"
     ],
-    "sectionId": "mp9dllqeth9"
+    "sectionId": "mp9dl89on3b"
   }
 ]

@@ -1,17 +1,30 @@
 # Changelog
 
-## [1.8.2] — 2026-05-25
+## [1.8.3] — 2026-05-25
 ### Añadido
 - Multi-sala: un proyecto puede tener varias salas; cada sala tiene su propio plano de planta y paredes
 - Navegador: tableros agrupados bajo su sala, con flecha de colapso por sala
 - Navegador: tableros sin sala cuelgan directamente del proyecto, sin etiqueta extra
 - Sala: botón "Nueva sala" disponible desde el panel de sala (junto a las pestañas de sala)
+- Biblioteca: vista plana (sin agrupación por sección) activable con un botón toggle
+- Biblioteca: botón "Seleccionar todo" en la cabecera de cada sección; Ctrl+clic para selección múltiple; Shift+clic para selección por rango
+- Presentación: modo zona rediseñado — las fotos se recomponen en pantalla completa lado a lado ignorando las posiciones del canvas; navegar entre zonas con ‹ ›
+- Presentación: botón toggle "Ver zonas / Ver tablero" para cambiar de modo sin salir de la presentación
+- Presentación: intercambio de fotos por clic disponible en todos los modos de presentación (tablero y zona)
+- Presentación: canvas en solo lectura (sin arrastrar, redimensionar ni menú contextual)
 
 ### Corregido
 - Planos de sala no se guardaban al finalizar el dibujo (PUT iba a `/rooms/undefined` por `id` ausente)
 - Al crear un tablero para una pared, el tablero podía aparecer asignado a la sala incorrecta
 - El elemento activo en el navegador podía iluminarse simultáneamente en sala y tablero; ahora solo hay un elemento activo
 - Migración de `room.json` → `rooms.json` robustecida (no se omite si el archivo destino existe pero está vacío)
+- Navegador: el contador de fotos en un tablero incluía zonas y notas; ahora solo cuenta fotos
+- Presentación: el icono de selección se superponía al botón de eliminar en la biblioteca; reemplazado por borde de contorno
+- Presentación en zona: aparecían 3 fotos en una pareja porque el arrastre asignaba `zoneId` a fotos no pertenecientes a ninguna zona
+- Presentación en zona: el botón "Ver zonas" aparecía pero no hacía nada si la zona no tenía fotos asignadas
+- Presentación en zona: el espacio de visualización era enorme cuando las fotos estaban alejadas en el canvas
+- Intercambio de fotos en presentación: el swap intercambiaba también el `zoneId` rompiendo la pertenencia de zona; ahora solo cambia el `photoId`
+- Arrastre: una foto sacada de una zona y vuelta a soltar dentro de una zona recupera correctamente su membresía
 
 ---
 

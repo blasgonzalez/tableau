@@ -16,7 +16,10 @@
       "Bash(del fonts\\\\test_*.png)",
       "Bash(Select-String -Path \"d:\\\\blasg\\\\Pictures\\\\Proyectos\\\\tableau\\\\public\\\\index.html\" -Pattern \"room|saveRoom|loadRoom|roomCeilH|roomName|roomRef\" -CaseSensitive -n)",
       "Bash(Select-Object -First 80)",
-      "Bash(dir \"d:\\\\blasg\\\\Pictures\\\\Proyectos\\\\tableau\\\\data\\\\615224c67c\")"
+      "Bash(dir \"d:\\\\blasg\\\\Pictures\\\\Proyectos\\\\tableau\\\\data\\\\615224c67c\")",
+      "Bash(gh release *)",
+      "Bash(dir \"d:\\\\blasg\\\\Pictures\\\\Proyectos\\\\tableau\\\\data\")",
+      "Bash(python -c ' *)"
     ],
     "additionalDirectories": [
       "d:\\blasg\\Pictures\\Proyectos\\tableau\\fonts"
