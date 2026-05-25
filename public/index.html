@@ -220,8 +220,14 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .room-wall-rename{font-size:10px;background:var(--input);border:1px solid var(--acc);color:var(--text);padding:1px 5px;border-radius:2px;font-family:inherit;width:80px}
 .room-empty{padding:24px 16px;color:var(--dim);font-size:10px;line-height:1.8;text-align:center}
 .room-no-sala{display:flex;flex:1;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:var(--dim);font-size:10px}
-.nsala-row{display:flex;align-items:center;padding:5px 8px 5px 14px;cursor:pointer;color:var(--dim);font-size:9px;letter-spacing:.5px;transition:color .12s;border-left:2px solid transparent}
+.nsala-row{display:flex;align-items:center;padding:5px 8px 5px 8px;cursor:pointer;color:var(--dim);font-size:9px;letter-spacing:.5px;transition:color .12s;border-left:2px solid transparent}
 .nsala-row:hover{color:var(--acc)}.nsala-row.active{color:var(--acc);border-left-color:var(--acc);background:var(--acc-faint)}
+.nsala-arrow{font-size:8px;width:12px;flex-shrink:0;color:var(--dim);margin-right:3px;transition:color .12s}
+.nsala-row:hover .nsala-arrow,.nsala-row.active .nsala-arrow{color:var(--acc)}
+.nsala-add{display:flex;align-items:center;padding:4px 8px 4px 14px;cursor:pointer;color:var(--muted);font-size:9px;letter-spacing:.4px;transition:color .12s}
+.nsala-add:hover{color:var(--acc)}
+.nboard-row.nboard-sub{padding-left:30px}
+.info-room-badge{font-size:9px;color:var(--muted);padding:5px 10px 0;letter-spacing:.3px;display:flex;align-items:center;gap:4px}
 
 /* ── BOARD ITEMS ── */
 .bitem{position:absolute;cursor:grab;user-select:none}
@@ -864,7 +870,7 @@ const I18N = {
     invalidDims: 'Las dimensiones deben ser mayores que cero',
     pxPreview: (w, h) => `${w} × ${h} px`,
     gridToggle: 'Guías', gridHiddenZoom: 'Guías activas — zoom demasiado bajo para mostrarlas', gridAuto: 'Auto', fitView: 'Ajustar', fitWidth: 'Ajustar al ancho (Ctrl+0)', snapGrid: 'Imán', addNote: '+ Nota', addZone: '+ Zona', zoneColor: 'Color de zona', zoneScaleContent: 'Escalar contenido al redimensionar', copyZoneToBoard: 'Copiar a nuevo tablero', moveZoneToBoard: 'Mover a nuevo tablero', zoneLabelPh: 'Nombre de zona…', zoneCaptureBtn: 'Capturar contenido', gridWrapZone: 'Envolver en zona escalable',
-    salaBtn:'🏛 Sala', salaCreate:'Crear sala', salaDelete:'Eliminar sala', salaDraw:'Dibujar planta', salaEdit:'Editar planta', salaAddSection:'+ Añadir segmento', salaCancel:'Cancelar dibujo', salaFinish:'Finalizar abierta', salaCeilLbl:'Altura del techo', salaCeilUnit:'cm', salaWallsHd:'PAREDES', salaNoWalls:'Dibuja la planta para ver las paredes aquí', salaCreateBoard:'+ Tablero', salaWallBoard:'Ver tablero →', salaDrawHint:'Clic → vértice · 1er punto → cerrar · Finalizar → abierto · ⌫ → deshacer · se engancha en 45°/90°', salaSnapHint:'⊾ enganchado', salaDeleteWall:'Desvincular tablero', salaWallRename:'Renombrar pared', salaAddCol:'+ Columna', salaWallMismatch:'El tablero es más ancho que la pared', salaWallSync:'Sincronizar', salaWallSyncOk:'Tablero sincronizado con la pared', salaWallSyncOverflow:'Hay fotos fuera del nuevo ancho. Mueve o elimina las fotos en el tablero primero.',
+    salaBtn:'🏛 Sala', salaCreate:'Crear sala', salaDelete:'Eliminar sala', salaDraw:'Dibujar planta', salaEdit:'Editar planta', salaAddSection:'+ Añadir segmento', salaCancel:'Cancelar', salaFinish:'Finalizar', salaCeilLbl:'Altura del techo', salaCeilUnit:'cm', salaWallsHd:'PAREDES', salaNoWalls:'Dibuja la planta para ver las paredes aquí', salaCreateBoard:'+ Tablero', salaWallBoard:'Ver tablero →', salaDrawHint:'Clic → añadir punto · 1er punto → cerrar · Esc/Finalizar → guardar · ⌫ → deshacer · se engancha en 45°/90°', salaSnapHint:'⊾ enganchado', salaDeleteWall:'Desvincular tablero', salaWallRename:'Renombrar pared', salaAddCol:'+ Columna', salaWallMismatch:'El tablero es más ancho que la pared', salaWallSync:'Sincronizar', salaWallSyncOk:'Tablero sincronizado con la pared', salaWallSyncOverflow:'Hay fotos fuera del nuevo ancho. Mueve o elimina las fotos en el tablero primero.',
     reportHeading:'Tableau — Memoria del Proyecto',
     noScaleConfigured:'sin escala configurada',
     reportDate: d => `Memoria del proyecto · ${d}`,
@@ -991,7 +997,7 @@ const I18N = {
     invalidDims: 'Dimensions must be greater than zero',
     pxPreview: (w, h) => `${w} × ${h} px`,
     gridToggle: 'Grid', gridHiddenZoom: 'Grid active — zoom too low to display', gridAuto: 'Auto', fitView: 'Fit', fitWidth: 'Fit to width (Ctrl+0)', snapGrid: 'Snap', addNote: '+ Note', addZone: '+ Zone', zoneColor: 'Zone color', zoneScaleContent: 'Scale content on resize', copyZoneToBoard: 'Copy to new board', moveZoneToBoard: 'Move to new board', zoneLabelPh: 'Zone name…', zoneCaptureBtn: 'Capture content', gridWrapZone: 'Wrap in scalable zone',
-    salaBtn:'🏛 Room', salaCreate:'Create room', salaDelete:'Delete room', salaDraw:'Draw floor plan', salaEdit:'Edit floor plan', salaAddSection:'+ Add section', salaCancel:'Cancel drawing', salaFinish:'Finish open', salaCeilLbl:'Ceiling height', salaCeilUnit:'cm', salaWallsHd:'WALLS', salaNoWalls:'Draw the floor plan to see walls here', salaCreateBoard:'+ Board', salaWallBoard:'Go to board →', salaDrawHint:'Click → vertex · 1st point → close · Finish → end open · ⌫ → undo · snaps at 45°/90°', salaSnapHint:'⊾ snapped', salaDeleteWall:'Unlink board', salaWallRename:'Rename wall', salaAddCol:'+ Column', salaWallMismatch:'Board is wider than the wall', salaWallSync:'Sync', salaWallSyncOk:'Board synced to wall', salaWallSyncOverflow:'Photos would overflow the new width. Move or remove them in the board editor first.',
+    salaBtn:'🏛 Room', salaCreate:'Create room', salaDelete:'Delete room', salaDraw:'Draw floor plan', salaEdit:'Edit floor plan', salaAddSection:'+ Add section', salaCancel:'Cancel', salaFinish:'Finish', salaCeilLbl:'Ceiling height', salaCeilUnit:'cm', salaWallsHd:'WALLS', salaNoWalls:'Draw the floor plan to see walls here', salaCreateBoard:'+ Board', salaWallBoard:'Go to board →', salaDrawHint:'Click → add point · 1st point → close · Esc/Finish → save · ⌫ → undo · snaps at 45°/90°', salaSnapHint:'⊾ snapped', salaDeleteWall:'Unlink board', salaWallRename:'Rename wall', salaAddCol:'+ Column', salaWallMismatch:'Board is wider than the wall', salaWallSync:'Sync', salaWallSyncOk:'Board synced to wall', salaWallSyncOverflow:'Photos would overflow the new width. Move or remove them in the board editor first.',
     reportHeading:'Tableau — Project Report',
     noScaleConfigured:'no scale configured',
     reportDate: d => `Project report · ${d}`,
@@ -1096,7 +1102,10 @@ function App() {
   const [memDraft,      setMemDraft]      = useState({ exTitle:'', subtitle:'', memSections:[] });
   const [memIncludeHeader, setMemIncludeHeader] = useState(true);
   const [zoneConvertPending, setZoneConvertPending] = useState(null); // {zoneId, move}
-  const [room,           setRoom]          = useState(null);     // {ceilingHeight, vertices, walls} | null
+  const [rooms,          setRooms]         = useState([]);       // [{id, name, ceilingHeight, vertices, walls, columns}]
+  const [activeRoomId,   setActiveRoomId]  = useState(null);
+  const [collapsedRooms, setCollapsedRooms] = useState(new Set());
+  const [room,           setRoom]          = useState(null);     // active room object | null
   const [roomView,       setRoomView]      = useState('board');  // 'board' | 'room'
   const [roomDrawing,    setRoomDrawing]   = useState(false);
   const [roomAppending,  setRoomAppending] = useState(false);
@@ -1248,6 +1257,8 @@ function App() {
   const wrapRef         = useRef(null);
   const roomSvgRef      = useRef(null);
   const roomRef         = useRef(null);
+  const roomsRef        = useRef([]);
+  const activeRoomIdRef = useRef(null);
   const roomVboxRef     = useRef({x:-50,y:-50,w:1300,h:900});
   const importRoomRef   = useRef(null);
   const reset3DViewRef       = useRef(null);
@@ -1372,12 +1383,21 @@ function App() {
   useEffect(() => { if (pid && bid) localStorage.setItem(`tb-lastbid-${pid}`, bid); }, [bid, pid]);
 
   useEffect(() => {
-    if (!pid) { setRoom(null); roomRef.current = null; setRoomView('board'); return; }
+    if (!pid) {
+      setRooms([]); roomsRef.current = [];
+      setRoom(null); roomRef.current = null;
+      setActiveRoomId(null); activeRoomIdRef.current = null;
+      setRoomView('board'); return;
+    }
     const goRoom = pendingRoomViewRef.current;
     pendingRoomViewRef.current = false;
-    api.get(`/api/projects/${pid}/room`).then(r => {
-      setRoom(r); roomRef.current = r;
-      if (r) { setRoomCeilH(r.ceilingHeight || 280); setRoomName(r.name || ''); }
+    api.get(`/api/projects/${pid}/rooms`).then(rs => {
+      const arr = rs || [];
+      setRooms(arr); roomsRef.current = arr;
+      const first = arr[0] || null;
+      setRoom(first); roomRef.current = first;
+      setActiveRoomId(first?.id || null); activeRoomIdRef.current = first?.id || null;
+      if (first) { setRoomCeilH(first.ceilingHeight || 280); setRoomName(first.name || ''); }
       if (goRoom) setRoomView('room');
     });
     setRoomDrawing(false); setRoomAppending(false); setRoomTempVerts([]); setRoomCursor(null);
@@ -1652,6 +1672,10 @@ function App() {
       pAdd(new THREE.BoxGeometry(11, 5, 30), -15, 4);
       pAdd(new THREE.BoxGeometry(11, 5, 30), +15, 4);
 
+      // Sync visibility with React state (scene rebuilds when switching views)
+      if (show3DPerson) personParts.forEach(m => { m.visible = true; });
+      if (personMoveMode) setPersonMoveMode(false); // inMoveMode always starts false
+
       toggle3DPersonRef.current = () => {
         const next = !personParts[0].visible;
         personParts.forEach(m => { m.visible = next; });
@@ -1916,12 +1940,16 @@ function App() {
       }
       if (e.key === 'Escape') {
         e.preventDefault();
-        setRoomDrawing(false); setRoomAppending(false); setRoomTempVerts([]); setRoomCursor(null);
+        if (roomTempVerts.length >= 2) {
+          finishOpenPolygon(roomTempVerts, roomAppending);
+        } else {
+          setRoomDrawing(false); setRoomAppending(false); setRoomTempVerts([]); setRoomCursor(null);
+        }
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [roomDrawing]);
+  }, [roomDrawing, roomTempVerts, roomAppending]);
 
   const saveItemsNow = useCallback((its) => {
     const p = pidRef.current, b = bidRef.current;
@@ -3801,13 +3829,11 @@ ${rows}
   // ── Room editor ───────────────────────────────────────────────────────────
   const roomSvgPt = e => {
     const svg = roomSvgRef.current;
-    if (!svg) return {x:0,y:0};
-    const rect = svg.getBoundingClientRect();
-    const vb = roomVboxRef.current;
-    return {
-      x: vb.x + (e.clientX - rect.left) * vb.w / rect.width,
-      y: vb.y + (e.clientY - rect.top)  * vb.h / rect.height,
-    };
+    if (!svg) return {x:0, y:0};
+    const pt = svg.createSVGPoint();
+    pt.x = e.clientX; pt.y = e.clientY;
+    const s = pt.matrixTransform(svg.getScreenCTM().inverse());
+    return {x: s.x, y: s.y};
   };
 
   const roomSnapPt = (verts, raw) => {
@@ -3856,7 +3882,32 @@ ${rows}
 
   const saveRoom = r => {
     setRoom(r); roomRef.current = r;
-    api.put(`/api/projects/${pidRef.current}/room`, r);
+    setRooms(rs => { const next = rs.map(x => x.id === r.id ? r : x); roomsRef.current = next; return next; });
+    api.put(`/api/projects/${pidRef.current}/rooms/${r.id}`, r);
+  };
+
+  const switchRoom = rid => {
+    const r = roomsRef.current.find(x => x.id === rid) || null;
+    setRoom(r); roomRef.current = r;
+    setActiveRoomId(rid); activeRoomIdRef.current = rid;
+    if (r) { setRoomCeilH(r.ceilingHeight || 280); setRoomName(r.name || ''); }
+    setRoomDrawing(false); setRoomTempVerts([]); setRoomCursor(null);
+    setRoomView('room');
+  };
+
+  const addRoom = () => {
+    const pid = pidRef.current; if (!pid) return;
+    const n = roomsRef.current.length + 1;
+    const newR = { name: lang === 'es' ? `Sala ${n}` : `Room ${n}`, ceilingHeight: roomCeilH, vertices: [], walls: [], columns: [] };
+    api.post(`/api/projects/${pid}/rooms`, newR).then(r => {
+      const next = [...roomsRef.current, r];
+      setRooms(next); roomsRef.current = next;
+      setRoom(r); roomRef.current = r;
+      setActiveRoomId(r.id); activeRoomIdRef.current = r.id;
+      setRoomName(r.name);
+      setRoomDrawing(false); setRoomTempVerts([]); setRoomCursor(null);
+      setRoomView('room');
+    });
   };
 
   // Auto-fit viewbox whenever switching to room view
@@ -3935,6 +3986,7 @@ ${rows}
           name:lang==='es'?`Pared ${maxN+i+1}`:`Wall ${maxN+i+1}`, boardId:null,
         }));
     saveRoom({
+      ...r,
       name:          r?.name,
       ceilingHeight: r?.ceilingHeight || roomCeilH,
       vertices: [...baseVerts, ...newVerts],
@@ -4048,7 +4100,7 @@ ${rows}
     const onMU = () => {
       document.removeEventListener('pointermove', onMM);
       document.removeEventListener('pointerup', onMU);
-      if (roomRef.current) api.put(`/api/projects/${pidRef.current}/room`, roomRef.current);
+      if (roomRef.current) api.put(`/api/projects/${pidRef.current}/rooms/${roomRef.current.id}`, roomRef.current);
     };
     document.addEventListener('pointermove', onMM);
     document.addEventListener('pointerup', onMU);
@@ -4098,9 +4150,16 @@ ${rows}
   };
 
   const deleteRoom = () => {
+    const r = roomRef.current; if (!r) return;
     showConfirm(lang==='es'?'¿Eliminar la sala? Se perderá la geometría de la planta.':'Delete the room? The floor plan geometry will be lost.', () => {
-      api.del(`/api/projects/${pidRef.current}/room`);
-      setRoom(null); roomRef.current = null; setRoomView('board');
+      api.del(`/api/projects/${pidRef.current}/rooms/${r.id}`);
+      const next = roomsRef.current.filter(x => x.id !== r.id);
+      setRooms(next); roomsRef.current = next;
+      const fallback = next[0] || null;
+      setRoom(fallback); roomRef.current = fallback;
+      setActiveRoomId(fallback?.id || null); activeRoomIdRef.current = fallback?.id || null;
+      if (fallback) { setRoomCeilH(fallback.ceilingHeight || 280); setRoomName(fallback.name || ''); }
+      else setRoomView('board');
     });
   };
 
@@ -4118,12 +4177,26 @@ ${rows}
     const reader = new FileReader();
     reader.onload = ev => {
       try {
-        const r = JSON.parse(ev.target.result);
-        if (!Array.isArray(r.vertices) || !Array.isArray(r.walls))
+        const parsed = JSON.parse(ev.target.result);
+        if (!Array.isArray(parsed.vertices) || !Array.isArray(parsed.walls))
           return showToast(lang==='es'?'Formato de sala inválido':'Invalid room format', true);
-        saveRoom(r);
-        setRoomName(r.name || '');
-        if (r.ceilingHeight) setRoomCeilH(r.ceilingHeight);
+        // Merge into active room (keep its id) or create new one if no active room
+        const cur = roomRef.current;
+        const merged = cur
+          ? { ...cur, ...parsed, id: cur.id }
+          : { ...parsed, id: `r${Date.now().toString(36)}` };
+        if (cur) {
+          saveRoom(merged);
+        } else {
+          api.post(`/api/projects/${pidRef.current}/rooms`, merged).then(r => {
+            const next = [...roomsRef.current, r];
+            setRooms(next); roomsRef.current = next;
+            setRoom(r); roomRef.current = r;
+            setActiveRoomId(r.id); activeRoomIdRef.current = r.id;
+          });
+        }
+        setRoomName(parsed.name || '');
+        if (parsed.ceilingHeight) setRoomCeilH(parsed.ceilingHeight);
         showToast(lang==='es'?'Sala importada':'Room imported');
       } catch { showToast(lang==='es'?'Error al leer el archivo':'Error reading file', true); }
     };
@@ -4485,6 +4558,7 @@ ${rows}
     }
     const { photo, status, thumbSrc, itemW, itemH } = hoverInfo;
     const boardNames = photo?.id ? photoBoardNames(photo.id) : [];
+    const currentBoardRoom = rooms.find(r => r.walls?.some(w => w.boardId === bid));
     const rating = photo?.rating || 0;
     const tags = photo?.tags || [];
     const mc = photo?.meanColor;
@@ -4506,6 +4580,11 @@ ${rows}
     }
     const brightPct = brightness != null ? Math.round(brightness * 100) : null;
     return (<>{posSection}
+      {currentBoardRoom && (
+        <div className="info-room-badge">
+          🏛 {currentBoardRoom.name || (lang==='es'?'Sala':'Room')}
+        </div>
+      )}
       <div className="info-panel">
         <img className="info-thumb"
           src={thumbSrc || (pid && photo?.id ? `/photos/${pid}/${photo.id}/thumb` : '')}
@@ -4875,51 +4954,74 @@ ${rows}
                               <button className="nact del"  title={t('deleteBtn')}  onClick={e => deleteProject(p.id, e)}>×</button>
                             </div>
                           </div>
-                          {isActive && (
-                            <div className="nboards">
-                              {boards.map(b => (
-                                <div key={b.id}
-                                  className={`nboard-row${b.id === bid ? ' active' : ''}${boardDragOver === b.id ? ' drag-over' : ''}`}
-                                  onClick={() => { setBid(b.id); setRoomView('board'); }}
-                                  draggable
-                                  onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; setBoardDragId(b.id); }}
-                                  onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setBoardDragOver(b.id); }}
-                                  onDragLeave={() => setBoardDragOver(null)}
-                                  onDrop={e => { e.preventDefault(); setBoardDragOver(null); if (boardDragId) reorderBoards(boardDragId, b.id); setBoardDragId(null); }}
-                                  onDragEnd={() => { setBoardDragId(null); setBoardDragOver(null); }}
-                                >
-                                  <span className="nboard-drag">⠿</span>
-                                  <span className="nboard-dash">└</span>
-                                  {renaming?.type === 'board' && renaming.id === b.id ? (
-                                    <input className="n-rename" autoFocus value={renaming.value}
-                                      onChange={e => setRenaming(r => ({ ...r, value: e.target.value }))}
-                                      onKeyDown={e => { if (e.key==='Enter') submitRename(); if (e.key==='Escape') setRenaming(null); }}
-                                      onBlur={submitRename} onClick={e => e.stopPropagation()}
-                                    />
-                                  ) : (
-                                    <span className="nboard-name" title={b.name} onDoubleClick={e => { e.stopPropagation(); startRename('board', b.id, b.name, e); }}>{b.name}</span>
-                                  )}
-                                  {!(renaming?.type === 'board' && renaming.id === b.id) && (
-                                    <span className="nboard-count">{(allBoardItems[b.id] || []).filter(i => i.type !== 'note' && i.type !== 'text').length || ''}</span>
-                                  )}
-                                  <div className="nrow-acts">
-                                    <button className="nact edit" title={t('renameBtn')}      onClick={e => startRename('board', b.id, b.name, e)}>✎</button>
-                                    <button className="nact edit" title={t('duplicateBoard')} onClick={e => duplicateBoard(b.id, e)}>⧉</button>
-                                    <button className="nact del"  title={t('deleteBtn')}      onClick={e => deleteBoard(b.id, e)}>×</button>
-                                  </div>
+                          {isActive && (() => {
+                            const roomOfBoard = b => rooms.find(r => r.walls?.some(w => w.boardId === b.id));
+                            const roomBoards = {};
+                            const unassigned = [];
+                            boards.forEach(b => {
+                              const r = roomOfBoard(b);
+                              if (r) { (roomBoards[r.id] = roomBoards[r.id] || []).push(b); }
+                              else unassigned.push(b);
+                            });
+                            const renderBoard = (b, sub) => (
+                              <div key={b.id}
+                                className={`nboard-row${sub?' nboard-sub':''}${b.id===bid&&roomView==='board'?' active':''}${boardDragOver===b.id?' drag-over':''}`}
+                                onClick={() => { setBid(b.id); setRoomView('board'); }}
+                                draggable
+                                onDragStart={e => { e.dataTransfer.effectAllowed='move'; setBoardDragId(b.id); }}
+                                onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect='move'; setBoardDragOver(b.id); }}
+                                onDragLeave={() => setBoardDragOver(null)}
+                                onDrop={e => { e.preventDefault(); setBoardDragOver(null); if (boardDragId) reorderBoards(boardDragId, b.id); setBoardDragId(null); }}
+                                onDragEnd={() => { setBoardDragId(null); setBoardDragOver(null); }}
+                              >
+                                <span className="nboard-drag">⠿</span>
+                                <span className="nboard-dash">└</span>
+                                {renaming?.type==='board' && renaming.id===b.id ? (
+                                  <input className="n-rename" autoFocus value={renaming.value}
+                                    onChange={e => setRenaming(r => ({...r, value:e.target.value}))}
+                                    onKeyDown={e => { if (e.key==='Enter') submitRename(); if (e.key==='Escape') setRenaming(null); }}
+                                    onBlur={submitRename} onClick={e => e.stopPropagation()}/>
+                                ) : (
+                                  <span className="nboard-name" title={b.name} onDoubleClick={e => { e.stopPropagation(); startRename('board', b.id, b.name, e); }}>{b.name}</span>
+                                )}
+                                {!(renaming?.type==='board' && renaming.id===b.id) && (
+                                  <span className="nboard-count">{(allBoardItems[b.id]||[]).filter(i=>i.type!=='note'&&i.type!=='text').length||''}</span>
+                                )}
+                                <div className="nrow-acts">
+                                  <button className="nact edit" title={t('renameBtn')}      onClick={e => startRename('board', b.id, b.name, e)}>✎</button>
+                                  <button className="nact edit" title={t('duplicateBoard')} onClick={e => duplicateBoard(b.id, e)}>⧉</button>
+                                  <button className="nact del"  title={t('deleteBtn')}      onClick={e => deleteBoard(b.id, e)}>×</button>
                                 </div>
-                              ))}
-                              <div className="nboard-add" onClick={() => { setNameVal(''); setModal('board'); }}>
-                                {t('addBoard')}
                               </div>
-                              {room !== null && (
-                                <div className={`nsala-row${roomView==='room'?' active':''}`}
-                                  onClick={() => setRoomView('room')}>
-                                  🏛 {roomName || (lang==='es'?'Sala':'Room')}
+                            );
+                            const isSalaActive = r => roomView === 'room' && activeRoomId === r.id;
+                            return (
+                              <div className="nboards">
+                                {unassigned.map(b => renderBoard(b, false))}
+                                {rooms.map(r => (
+                                  <React.Fragment key={r.id}>
+                                    <div className={`nsala-row${isSalaActive(r)?' active':''}`}>
+                                      <span className="nsala-arrow"
+                                        onClick={() => setCollapsedRooms(prev => {
+                                          const next = new Set(prev);
+                                          if (next.has(r.id)) next.delete(r.id); else next.add(r.id);
+                                          return next;
+                                        })}>
+                                        {collapsedRooms.has(r.id)?'›':'⌄'}
+                                      </span>
+                                      <span style={{flex:1}} onClick={() => switchRoom(r.id)}>
+                                        🏛 {r.name || (lang==='es'?'Sala':'Room')}
+                                      </span>
+                                    </div>
+                                    {!collapsedRooms.has(r.id) && (roomBoards[r.id]||[]).map(b => renderBoard(b, true))}
+                                  </React.Fragment>
+                                ))}
+                                <div className="nboard-add" onClick={() => { setNameVal(''); setModal('board'); }}>
+                                  {t('addBoard')}
                                 </div>
-                              )}
-                            </div>
-                          )}
+                              </div>
+                            );
+                          })()}
                         </div>
                       );
                     })}
@@ -5065,6 +5167,7 @@ ${rows}
                         </button>
                       )}
                       {room && !roomDrawing && <button className="btn" onClick={openRoom3D}>{lang==='es'?'Vista 3D':'3D View'}</button>}
+                      {!roomDrawing && rooms.length === 0 && <button className="btn" onClick={addRoom}>+ {lang==='es'?'Nueva sala':'New room'}</button>}
                       {room && !roomDrawing && <button className="btn" onClick={exportRoom} title={lang==='es'?'Exportar sala':'Export room'}><SvgExport size={11}/></button>}
                       {!roomDrawing && <button className="btn" onClick={()=>importRoomRef.current?.click()} title={lang==='es'?'Importar sala':'Import room'}><SvgImport size={11}/></button>}
                       <input ref={importRoomRef} type="file" accept=".json" style={{display:'none'}} onChange={importRoom}/>
@@ -5082,6 +5185,20 @@ ${rows}
 
                   {/* Wall panel */}
                   <div className="room-panel">
+                    {/* Room tabs — always shown so the + button is accessible */}
+                    {rooms.length >= 1 && (
+                      <div style={{display:'flex',flexWrap:'wrap',gap:3,padding:'6px 8px',borderBottom:'1px solid var(--border)',flexShrink:0}}>
+                        {rooms.length > 1 && rooms.map(r => (
+                          <button key={r.id}
+                            className={`btn${r.id===activeRoomId?' active':''}`}
+                            style={{fontSize:9,padding:'2px 7px'}}
+                            onClick={() => switchRoom(r.id)}>
+                            {r.name || (lang==='es'?'Sala':'Room')}
+                          </button>
+                        ))}
+                        <button className="btn" style={{fontSize:9,padding:'2px 7px'}} onClick={addRoom}>+ {lang==='es'?'Nueva sala':'New room'}</button>
+                      </div>
+                    )}
                     <div className="room-panel-hd" style={{display:'flex',alignItems:'center',gap:6}}>
                       {roomNameEdit ? (
                         <input autoFocus value={roomName} placeholder={lang==='es'?'Nombre de la sala…':'Room name…'}

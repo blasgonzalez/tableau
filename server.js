@@ -54,6 +54,22 @@ const boardFile  = (pid, bid)  => path.join(boardDir(pid), `${bid}.json`);
 const boardsMeta = pid         => path.join(projDir(pid), 'boards.json');
 const photosMeta = pid         => path.join(projDir(pid), 'photos.json');
 const roomFile   = pid         => path.join(projDir(pid), 'room.json');
+const roomsFile  = pid         => path.join(projDir(pid), 'rooms.json');
+
+// Migrate single room.json → rooms.json on first access
+function migrateRooms(pid) {
+  const nf = roomsFile(pid);
+  if (fs.existsSync(nf) && readJSON(nf, []).length > 0) return;
+  const of = roomFile(pid);
+  if (fs.existsSync(of)) {
+    const old = readJSON(of, null);
+    if (old && old.vertices) {
+      writeJSON(nf, [{ id: `r${Date.now().toString(36)}`, name: old.name || 'Sala', ...old }]);
+      return;
+    }
+  }
+  if (!fs.existsSync(nf)) writeJSON(nf, []);
+}
 
 function readJSON(file, def = []) {
   try   { return JSON.parse(fs.readFileSync(file, 'utf8')); }
@@ -349,7 +365,41 @@ app.put('/api/projects/:pid/boards/order', (req, res) => {
   res.json({ ok: true });
 });
 
-// ── Room geometry ─────────────────────────────────────────────────────────────
+// ── Rooms (multi-room) ────────────────────────────────────────────────────────
+app.get('/api/projects/:pid/rooms', (req, res) => {
+  const pid = req.params.pid;
+  migrateRooms(pid);
+  res.json(readJSON(roomsFile(pid), []));
+});
+
+app.post('/api/projects/:pid/rooms', (req, res) => {
+  const pid = req.params.pid;
+  migrateRooms(pid);
+  const rooms = readJSON(roomsFile(pid), []);
+  const r = { id: `r${Date.now().toString(36)}`, ...req.body };
+  rooms.push(r);
+  writeJSON(roomsFile(pid), rooms);
+  res.json(r);
+});
+
+app.put('/api/projects/:pid/rooms/:rid', (req, res) => {
+  const { pid, rid } = req.params;
+  const rooms = readJSON(roomsFile(pid), []);
+  const idx = rooms.findIndex(r => r.id === rid);
+  if (idx === -1) return res.status(404).json({ error: 'not found' });
+  rooms[idx] = { ...rooms[idx], ...req.body, id: rid };
+  writeJSON(roomsFile(pid), rooms);
+  res.json({ ok: true });
+});
+
+app.delete('/api/projects/:pid/rooms/:rid', (req, res) => {
+  const { pid, rid } = req.params;
+  const f = roomsFile(pid);
+  if (fs.existsSync(f)) writeJSON(f, readJSON(f, []).filter(r => r.id !== rid));
+  res.json({ ok: true });
+});
+
+// ── Room geometry (legacy single-room — kept for compatibility) ───────────────
 app.get('/api/projects/:pid/room', (req, res) => {
   const f = roomFile(req.params.pid);
   res.json(fs.existsSync(f) ? readJSON(f, null) : null);

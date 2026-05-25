@@ -53,5 +53,32 @@
     "fixedW": 335,
     "fixedH": 280,
     "defaultW": 716
+  },
+  {
+    "id": "cfb9f332bc",
+    "name": "Pared 3",
+    "created": 1779689698983,
+    "units": "cm",
+    "dpi": 36.7,
+    "fixed": true,
+    "fixedW": 277,
+    "fixedH": 280,
+    "defaultW": 867
+  },
+  {
+    "id": "9d727ffc4e",
+    "name": "Pared 2",
+    "created": 1779690922698,
+    "units": "cm",
+    "dpi": 25.9,
+    "fixed": true,
+    "fixedW": 392,
+    "fixedH": 280,
+    "defaultW": 612
+  },
+  {
+    "id": "dd9fa78882",
+    "name": "Mi tablero",
+    "created": 1779691778450
   }
 ]

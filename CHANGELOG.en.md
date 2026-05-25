@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.8.2] — 2026-05-25
+### Added
+- Multi-room: a project can have multiple rooms, each with its own floor plan and walls
+- Navigator: boards grouped under their room, with a per-room collapse arrow
+- Navigator: boards not linked to any room appear directly under the project, without any extra label
+- Room panel: "New room" button available from the room panel (next to the room tabs)
+
+### Fixed
+- Floor plans were not saved after finishing a drawing (PUT went to `/rooms/undefined` due to missing `id`)
+- Creating a board for a wall could assign the board to the wrong room
+- A navigator item could be active-highlighted simultaneously as both a room and a board; now only one item is active at a time
+- Migration from `room.json` → `rooms.json` made robust (no longer skipped if the target file exists but is empty)
+
+---
+
 ## [1.8.1] — 2026-05-23
 ### Added
 - 3D view: human scale figure (175 cm) toggled from the toolbar — torso built with `LatheGeometry` for a seamless organic silhouette; oval head; spherical joints at shoulders, elbows, hips and knees

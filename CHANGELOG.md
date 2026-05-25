@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.8.2] — 2026-05-25
+### Añadido
+- Multi-sala: un proyecto puede tener varias salas; cada sala tiene su propio plano de planta y paredes
+- Navegador: tableros agrupados bajo su sala, con flecha de colapso por sala
+- Navegador: tableros sin sala cuelgan directamente del proyecto, sin etiqueta extra
+- Sala: botón "Nueva sala" disponible desde el panel de sala (junto a las pestañas de sala)
+
+### Corregido
+- Planos de sala no se guardaban al finalizar el dibujo (PUT iba a `/rooms/undefined` por `id` ausente)
+- Al crear un tablero para una pared, el tablero podía aparecer asignado a la sala incorrecta
+- El elemento activo en el navegador podía iluminarse simultáneamente en sala y tablero; ahora solo hay un elemento activo
+- Migración de `room.json` → `rooms.json` robustecida (no se omite si el archivo destino existe pero está vacío)
+
+---
+
 ## [1.8.1] — 2026-05-23
 ### Añadido
 - Vista 3D: figura de escala humana (175 cm) activable desde la barra de herramientas — tronco generado con `LatheGeometry` para un perfil orgánico continuo sin costuras; cabeza oval; articulaciones esféricas en hombros, codos, caderas y rodillas

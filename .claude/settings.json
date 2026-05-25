@@ -13,7 +13,10 @@
       "PowerShell(Invoke-RestMethod -Uri \"http://localhost:3000/api/projects/644a2d3620/boards\" -Method Get)",
       "WebFetch(domain:fonts.googleapis.com)",
       "Bash(del test_fonts.js)",
-      "Bash(del fonts\\\\test_*.png)"
+      "Bash(del fonts\\\\test_*.png)",
+      "Bash(Select-String -Path \"d:\\\\blasg\\\\Pictures\\\\Proyectos\\\\tableau\\\\public\\\\index.html\" -Pattern \"room|saveRoom|loadRoom|roomCeilH|roomName|roomRef\" -CaseSensitive -n)",
+      "Bash(Select-Object -First 80)",
+      "Bash(dir \"d:\\\\blasg\\\\Pictures\\\\Proyectos\\\\tableau\\\\data\\\\615224c67c\")"
     ],
     "additionalDirectories": [
       "d:\\blasg\\Pictures\\Proyectos\\tableau\\fonts"

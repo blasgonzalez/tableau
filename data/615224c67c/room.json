@@ -1,4 +1,5 @@
 {
+  "name": "Sala Apostrophe",
   "ceilingHeight": 280,
   "vertices": [
     {
@@ -45,6 +46,11 @@
       "id": "vmpfd15ay4oj",
       "x": 693.4616581888092,
       "y": -200.34838667629995
+    },
+    {
+      "id": "vmpkshs73wer",
+      "x": 1060.1747935127396,
+      "y": 893.040437822246
     }
   ],
   "walls": [
@@ -97,18 +103,14 @@
       "v2": "vmpfd15ay4oj",
       "name": "Pared 7",
       "boardId": "18fd5dc071"
-    }
-  ],
-  "closed": false,
-  "columns": [
+    },
     {
-      "id": "colmpfigwpd",
-      "x": 866.1593164452254,
-      "y": 194.55938679813215,
-      "w": 30,
-      "d": 30,
-      "label": ""
+      "id": "wmpkshwfk0",
+      "v1": "vmpf6zpct3fj",
+      "v2": "vmpkshs73wer",
+      "name": "Pared 9",
+      "boardId": null
     }
   ],
-  "name": "Sala Apostrophe"
+  "closed": false
 }

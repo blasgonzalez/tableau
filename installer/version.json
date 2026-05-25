@@ -1,6 +1,6 @@
 {
-  "version": "1.8.1",
+  "version": "1.8.2",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-05-23",
-  "notes": "Vista 3D: figura de escala humana (175 cm) con tronco orgánico · Arrastrar figura por la sala"
+  "releaseDate": "2026-05-25",
+  "notes": "Multi-sala: varios planos de sala por proyecto, agrupación de tableros por sala en el navegador, colapso de salas"
 }
