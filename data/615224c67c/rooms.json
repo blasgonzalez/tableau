@@ -53,6 +53,16 @@
         "id": "vmpkshs73wer",
         "x": 1060.1747935127396,
         "y": 893.040437822246
+      },
+      {
+        "id": "vmplit24cwiv",
+        "x": 651.501708984375,
+        "y": -439.3061218261719
+      },
+      {
+        "id": "vmplit4n9zvf",
+        "x": 1091.5126558948577,
+        "y": -439.3061218261719
       }
     ],
     "walls": [
@@ -111,7 +121,14 @@
         "v1": "vmpf6zpct3fj",
         "v2": "vmpkshs73wer",
         "name": "Pared 9",
-        "boardId": null
+        "boardId": "79232cba09"
+      },
+      {
+        "id": "wmplit8mb0",
+        "v1": "vmplit24cwiv",
+        "v2": "vmplit4n9zvf",
+        "name": "Pared 10",
+        "boardId": "29f6bcbc64"
       }
     ],
     "closed": false

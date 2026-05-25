@@ -1128,6 +1128,9 @@ function App() {
   const room3DCanvasRef = useRef(null);
   const [show3DPerson,     setShow3DPerson]    = useState(false);
   const [personMoveMode,   setPersonMoveMode]  = useState(false);
+  const [walkMode3D,       setWalkMode3D]      = useState(false);
+  const [walkLocked,       setWalkLocked]      = useState(false);
+  const [walkStarted,      setWalkStarted]     = useState(false);
   const [roomTempVerts,  setRoomTempVerts] = useState([]);       // vertices during drawing
   const [roomCursor,     setRoomCursor]    = useState(null);     // {x,y,snapped,nearClose}
   const [roomCeilH,      setRoomCeilH]     = useState(280);
@@ -1202,7 +1205,8 @@ function App() {
   const [pinnedPreview,   setPinnedPreview]   = useState(null); // {photo, x, y} — click-pinned
   const [fullscreenPhoto, setFullscreenPhoto] = useState(null); // {photo, index}
   const previewTimer    = useRef(null);
-  const thumbClickTimer = useRef(null);
+  const thumbClickTimer  = useRef(null);
+  const cascadeStepRef   = useRef(0);
   const hoveredThumbRef = useRef(null);
   const displayedPhotosRef = useRef([]);
   const [presentation,  setPresentation]  = useState(false);
@@ -1284,6 +1288,7 @@ function App() {
   const snapshot3DRef        = useRef(null);
   const toggle3DPersonRef    = useRef(null);
   const togglePersonMoveRef  = useRef(null);
+  const toggle3DWalkRef      = useRef(null);
   const undoStack       = useRef([]);
   const redoStack       = useRef([]);
   const wasDragged      = useRef(false);
@@ -1503,6 +1508,7 @@ function App() {
 
       // Reset view function exposed to the reset button
       reset3DViewRef.current = () => {
+        if (walkActive) exitWalk();
         camera.position.copy(initCamPos);
         controls.target.copy(initTarget);
         controls.update();
@@ -1550,6 +1556,7 @@ function App() {
       }
 
       const loader  = new THREE.TextureLoader();
+      const walkTargets = [];
 
       room.walls.forEach(wall => {
         const v1 = room.vertices.find(v => v.id === wall.v1);
@@ -1565,7 +1572,9 @@ function App() {
         const wMesh = new THREE.Mesh(new THREE.PlaneGeometry(len, ch), new THREE.MeshLambertMaterial({ color: wColor, side: THREE.DoubleSide }));
         wMesh.position.set((x1+x2)/2, ch/2, (z1+z2)/2);
         wMesh.rotation.y = rotY;
+        wMesh.userData.isWalkTarget = true;
         scene.add(wMesh);
+        walkTargets.push(wMesh);
 
         if (!wall.boardId) return;
         const board = boards.find(b => b.id === wall.boardId);
@@ -1594,7 +1603,9 @@ function App() {
           );
           pMesh.position.set(pos.x, pos.y, pos.z);
           pMesh.rotation.y = rotY;
+          pMesh.userData.isWalkTarget = true;
           scene.add(pMesh);
+          walkTargets.push(pMesh);
           if (isText) {
             const SCALE = 2;
             const cvW = Math.max(1, Math.round(item.w * SCALE));
@@ -1753,9 +1764,123 @@ function App() {
         if (inMoveMode) { controls.enabled = true; canvas.style.cursor = ''; }
       };
 
+      // ── Walk mode ─────────────────────────────────────────────
+      let walkActive = false;
+      let walkYaw = 0, walkPitch = 0;
+      const walkKeys = {};
+      const EYE_H = 160;
+      const WALK_SPEED = span * 0.005;
+
+      const releaseLock = () => {
+        if (document.pointerLockElement === canvas) document.exitPointerLock();
+      };
+      const requestLock = () => {
+        if (walkActive && document.pointerLockElement !== canvas) canvas.requestPointerLock();
+      };
+
+      const enterWalk = () => {
+        walkActive = true;
+        controls.enabled = false;
+        const dir = new THREE.Vector3();
+        camera.getWorldDirection(dir);
+        walkYaw   = Math.atan2(dir.x, -dir.z);
+        walkPitch = Math.asin(Math.max(-0.99, Math.min(0.99, dir.y)));
+        camera.position.y = EYE_H;
+        personParts.forEach(m => { m.visible = false; });
+        setShow3DPerson(false);
+        setWalkMode3D(true);
+        setWalkLocked(false);
+        setWalkStarted(false);
+      };
+      const exitWalk = () => {
+        walkActive = false;
+        Object.keys(walkKeys).forEach(k => delete walkKeys[k]);
+        releaseLock();
+        controls.enabled = true;
+        const dir = new THREE.Vector3();
+        camera.getWorldDirection(dir);
+        controls.target.copy(camera.position).addScaledVector(dir, 200);
+        controls.update();
+        setWalkMode3D(false);
+        setWalkLocked(false);
+        setWalkStarted(false);
+      };
+      toggle3DWalkRef.current = () => walkActive ? exitWalk() : enterWalk();
+
+      // Click on canvas while walking:
+      //   hit wall/photo → snap camera in front of it
+      //   hit empty space → request pointer lock for free look
+      const walkRay = new THREE.Raycaster();
+      const onWalkClick = e => {
+        if (!walkActive || document.pointerLockElement === canvas) return;
+        const rect = canvas.getBoundingClientRect();
+        const mx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        const my = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        walkRay.setFromCamera(new THREE.Vector2(mx, my), camera);
+        const hits = walkRay.intersectObjects(walkTargets);
+        if (hits.length > 0) {
+          const hit = hits[0];
+          let normal = hit.face.normal.clone().transformDirection(hit.object.matrixWorld).normalize();
+          if (normal.dot(camera.position.clone().sub(hit.point)) < 0) normal.negate();
+          const dest = hit.point.clone().addScaledVector(normal, 200);
+          dest.y = EYE_H;
+          camera.position.copy(dest);
+          const lookDir = hit.point.clone().sub(dest).normalize();
+          walkYaw = Math.atan2(lookDir.x, -lookDir.z);
+          walkPitch = 0;
+        } else {
+          requestLock();
+        }
+      };
+      canvas.addEventListener('click', onWalkClick);
+
+      // Mouse look only while pointer is locked (unlimited rotation across screen edges)
+      const onWalkMM = e => {
+        if (!walkActive || document.pointerLockElement !== canvas) return;
+        walkYaw   -= e.movementX * 0.003;
+        walkPitch -= e.movementY * 0.003;
+        walkPitch  = Math.max(-1.4, Math.min(1.4, walkPitch));
+      };
+      document.addEventListener('mousemove', onWalkMM);
+
+      // Sync lock state to React (pointerlockchange fires on Esc too)
+      const onPLChange = () => {
+        const locked = document.pointerLockElement === canvas;
+        setWalkLocked(locked);
+        if (!locked && !walkActive) exitWalk();
+      };
+      document.addEventListener('pointerlockchange', onPLChange);
+
+      const onWalkKD = e => { walkKeys[e.code] = true; };
+      const onWalkKU = e => { delete walkKeys[e.code]; };
+      window.addEventListener('keydown', onWalkKD);
+      window.addEventListener('keyup',   onWalkKU);
+
+      controls._walkCleanup = () => {
+        canvas.removeEventListener('click',  onWalkClick);
+        document.removeEventListener('mousemove', onWalkMM);
+        document.removeEventListener('pointerlockchange', onPLChange);
+        window.removeEventListener('keydown', onWalkKD);
+        window.removeEventListener('keyup',   onWalkKU);
+        releaseLock();
+      };
+
       const animate = () => {
         animId = requestAnimationFrame(animate);
-        controls.update();
+        if (walkActive) {
+          const TURN_SPEED = 0.03;
+          if (walkKeys['ArrowLeft']  || walkKeys['KeyA']) walkYaw += TURN_SPEED;
+          if (walkKeys['ArrowRight'] || walkKeys['KeyD']) walkYaw -= TURN_SPEED;
+          const fwdX = Math.sin(walkYaw), fwdZ = -Math.cos(walkYaw);
+          const pos = camera.position;
+          if (walkKeys['KeyW'] || walkKeys['ArrowUp'])   { pos.x += fwdX * WALK_SPEED; pos.z += fwdZ * WALK_SPEED; }
+          if (walkKeys['KeyS'] || walkKeys['ArrowDown']) { pos.x -= fwdX * WALK_SPEED; pos.z -= fwdZ * WALK_SPEED; }
+          pos.y = EYE_H;
+          const cp = Math.cos(walkPitch);
+          camera.lookAt(pos.x + Math.sin(walkYaw)*cp, pos.y + Math.sin(walkPitch), pos.z - Math.cos(walkYaw)*cp);
+        } else {
+          controls.update();
+        }
         renderer.render(scene, camera);
       };
       animate();
@@ -1780,10 +1905,12 @@ function App() {
       snapshot3DRef.current = null;
       toggle3DPersonRef.current = null;
       togglePersonMoveRef.current = null;
+      toggle3DWalkRef.current = null;
       if (animId) cancelAnimationFrame(animId);
       if (controls?._wheelCleanup)   controls._wheelCleanup();
       if (controls?._resizeCleanup)  controls._resizeCleanup();
       if (controls?._personCleanup)  controls._personCleanup();
+      if (controls?._walkCleanup)    controls._walkCleanup();
       if (controls) controls.dispose();
       if (renderer) {
         renderer._threeScene?.traverse(obj => {
@@ -1824,6 +1951,7 @@ function App() {
       setItems(it); itemsRef.current = it;
     });
     selRef.current = []; setSel([]);
+    cascadeStepRef.current = 0;
   }, [bid, pid]);
 
   const showConfirm = (message, onConfirm, danger = true) => setConfirmModal({ message, onConfirm, danger });
@@ -2448,9 +2576,12 @@ ${rows}
     const z = zoomRef.current;
     const bp = boardPxRef.current;
     const pad = bp ? BOARD_PAD : 0;
+    const STEP = 28, MAX_STEPS = 8;
+    const n = cascadeStepRef.current % MAX_STEPS;
+    cascadeStepRef.current += 1;
     placePhoto(photo,
-      (wrap.scrollLeft + wrap.clientWidth  / 2 - pad) / z,
-      (wrap.scrollTop  + wrap.clientHeight / 2 - pad) / z,
+      (wrap.scrollLeft + wrap.clientWidth  / 2 - pad) / z + n * STEP,
+      (wrap.scrollTop  + wrap.clientHeight / 2 - pad) / z + n * STEP,
     );
   };
 
@@ -5453,20 +5584,70 @@ ${rows}
               <div className="room-view">
                 <div className="room-svg-wrap" style={{background:'#1e1e1e', position:'relative'}}>
                   <canvas ref={room3DCanvasRef} style={{display:'block', width:'100%', height:'100%'}}/>
+                  {walkMode3D && !walkStarted && (
+                    <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(0,0,0,.55)',zIndex:5,cursor:'pointer'}}
+                      onClick={() => { setWalkStarted(true); const c = room3DCanvasRef.current; if (c) c.requestPointerLock(); }}>
+                      <div style={{background:'rgba(255,255,255,.07)',border:'1px solid rgba(255,255,255,.15)',padding:'24px 32px',display:'flex',flexDirection:'column',gap:10,minWidth:280}} onClick={e => e.stopPropagation()}>
+                        <div style={{color:'rgba(255,255,255,.4)',fontSize:9,letterSpacing:2,textTransform:'uppercase',marginBottom:4}}>{lang==='es'?'Modo paseo':'Walk mode'}</div>
+                        {[
+                          ['↑ / ↓', lang==='es'?'Avanzar / retroceder':'Move forward / back'],
+                          ['← / →', lang==='es'?'Girar':'Turn'],
+                          [lang==='es'?'Clic en pared':'Click on wall', lang==='es'?'Posicionarse enfrente':'Snap in front of it'],
+                          [lang==='es'?'Clic en vacío':'Click on empty space', lang==='es'?'Capturar ratón para mirar libremente':'Capture mouse for free look'],
+                          ['Esc', lang==='es'?'Soltar el ratón':'Release mouse'],
+                        ].map(([k,v]) => (
+                          <div key={k} style={{display:'flex',gap:16,alignItems:'baseline'}}>
+                            <span style={{color:'#c49050',fontFamily:'monospace',fontSize:11,minWidth:110,textAlign:'right'}}>{k}</span>
+                            <span style={{color:'rgba(255,255,255,.7)',fontSize:11}}>{v}</span>
+                          </div>
+                        ))}
+                        <div style={{marginTop:8,textAlign:'center',color:'rgba(255,255,255,.35)',fontSize:10,letterSpacing:1}}>{lang==='es'?'— clic para comenzar —':'— click to start —'}</div>
+                      </div>
+                    </div>
+                  )}
+                  {walkMode3D && walkStarted && walkLocked && (
+                    <div style={{position:'absolute',bottom:14,left:'50%',transform:'translateX(-50%)',background:'rgba(0,0,0,.5)',color:'rgba(255,255,255,.5)',fontSize:9,padding:'3px 12px',pointerEvents:'none',whiteSpace:'nowrap',zIndex:5}}>
+                      {lang==='es'?'↑↓ avanzar · ←→ girar · Esc soltar ratón':'↑↓ move · ←→ turn · Esc release mouse'}
+                    </div>
+                  )}
                   <div className="room-toolbar room-toolbar-3d">
                     <button className="btn" onClick={() => setRoomView('room')}>← {lang==='es'?'Planta':'Floor plan'}</button>
                     <button className="btn" onClick={() => reset3DViewRef.current?.()}>{lang==='es'?'Centrar':'Reset view'}</button>
                     <button className="btn" onClick={() => snapshot3DRef.current?.()}>{lang==='es'?'Capturar':'Snapshot'}</button>
                     <button className={`btn${show3DPerson?' active':''}`} title={lang==='es'?'Mostrar escala humana (175 cm)':'Show human scale (175 cm)'} onClick={() => { if (show3DPerson && personMoveMode) togglePersonMoveRef.current?.(); toggle3DPersonRef.current?.(); setShow3DPerson(v => !v); }}>{lang==='es'?'👤 Persona':'👤 Person'}</button>
                     {show3DPerson && <button className={`btn${personMoveMode?' active':''}`} title={lang==='es'?'Arrastra la figura por el suelo de la sala':'Drag figure across the room floor'} onClick={() => togglePersonMoveRef.current?.()}>{lang==='es'?(personMoveMode?'✓ Listo':'↔ Mover'):(personMoveMode?'✓ Done':'↔ Move')}</button>}
+                    <button className={`btn${walkMode3D?' active':''}`} title={lang==='es'?'Pasear por la sala — flechas para moverse y girar, clic para capturar ratón':'Walk through the room — arrows to move and turn, click to capture mouse'} onClick={() => toggle3DWalkRef.current?.()}>{lang==='es'?(walkMode3D?'✕ Salir paseo':'◉ Pasear'):(walkMode3D?'✕ Exit walk':'◉ Walk')}</button>
                   </div>
                 </div>
                 <div className="room-panel">
                   <div className="room-panel-hd">{lang==='es'?'VISTA 3D':'3D VIEW'}</div>
-                  <div style={{fontSize:10, color:'var(--muted)', padding:'10px 12px', lineHeight:1.7, whiteSpace:'pre-line'}}>
-                    {lang==='es'
-                      ? `Arrastra izq. → orbitar\nBotón der. → desplazar\nRueda → zoom suave${show3DPerson ? '\nClic en suelo → colocar figura' : ''}`
-                      : `Left drag → orbit\nRight drag → pan\nWheel → smooth zoom${show3DPerson ? '\nClick on floor → place figure' : ''}`}
+                  <div style={{padding:'10px 12px'}}>
+                    {walkMode3D ? (
+                      [
+                        ['↑ / ↓',      lang==='es'?'Avanzar / retroceder':'Move forward / back'],
+                        ['← / →',      lang==='es'?'Girar':'Turn'],
+                        [lang==='es'?'Clic en pared':'Click on wall',  lang==='es'?'Posicionarse enfrente':'Snap in front of it'],
+                        [lang==='es'?'Clic en vacío':'Click on empty', lang==='es'?'Capturar ratón':'Capture mouse to look'],
+                        ['Esc',         lang==='es'?'Soltar el ratón':'Release mouse'],
+                      ].map(([k,v]) => (
+                        <div key={k} style={{display:'flex',gap:8,marginBottom:5,alignItems:'baseline'}}>
+                          <span style={{color:'var(--acc)',fontFamily:'monospace',fontSize:10,minWidth:90,flexShrink:0,textAlign:'right'}}>{k}</span>
+                          <span style={{color:'var(--muted)',fontSize:10}}>{v}</span>
+                        </div>
+                      ))
+                    ) : (
+                      [
+                        [lang==='es'?'Arrastra izq.':'Left drag',   lang==='es'?'Orbitar':'Orbit'],
+                        [lang==='es'?'Botón der.':'Right drag',      lang==='es'?'Desplazar':'Pan'],
+                        [lang==='es'?'Rueda':'Wheel',                lang==='es'?'Zoom suave':'Smooth zoom'],
+                        ...(show3DPerson ? [[lang==='es'?'Clic en suelo':'Click on floor', lang==='es'?'Colocar figura':'Place figure']] : []),
+                      ].map(([k,v]) => (
+                        <div key={k} style={{display:'flex',gap:8,marginBottom:5,alignItems:'baseline'}}>
+                          <span style={{color:'var(--acc)',fontFamily:'monospace',fontSize:10,minWidth:90,flexShrink:0,textAlign:'right'}}>{k}</span>
+                          <span style={{color:'var(--muted)',fontSize:10}}>{v}</span>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
@@ -6097,18 +6278,30 @@ ${rows}
                                   const next = isSel ? libSel.filter(x => x !== p.id) : [...libSel, p.id];
                                   setLibSelection(next);
                                 } else if (e.shiftKey) {
-                                  const all = displayedPhotos.map(ph => ph.id);
-                                  if (libSelAnchorRef.current) {
-                                    const anchorIdx = all.indexOf(libSelAnchorRef.current);
-                                    const thisIdx = all.indexOf(p.id);
+                                  // Resolve which group (section id or '__none__') a photo belongs to
+                                  const photoGroup = (photoId) => {
+                                    if (sections.length === 0 || libFlatView) return '__all__';
+                                    const ph = displayedPhotos.find(x => x.id === photoId);
+                                    if (!ph) return '__none__';
+                                    return (ph.sectionId && sections.find(s => s.id === ph.sectionId)) ? ph.sectionId : '__none__';
+                                  };
+                                  // Photos in the same group, in displayedPhotos order (consistent within a group)
+                                  const groupOf = photoGroup(p.id);
+                                  const groupPhotos = displayedPhotos
+                                    .filter(ph => photoGroup(ph.id) === groupOf)
+                                    .map(ph => ph.id);
+                                  if (libSelAnchorRef.current && photoGroup(libSelAnchorRef.current) === groupOf) {
+                                    const anchorIdx = groupPhotos.indexOf(libSelAnchorRef.current);
+                                    const thisIdx   = groupPhotos.indexOf(p.id);
                                     if (anchorIdx !== -1) {
                                       const [from, to] = anchorIdx <= thisIdx ? [anchorIdx, thisIdx] : [thisIdx, anchorIdx];
-                                      setLibSelection(all.slice(from, to + 1));
+                                      setLibSelection(groupPhotos.slice(from, to + 1));
                                     } else {
                                       libSelAnchorRef.current = p.id;
                                       setLibSelection([p.id]);
                                     }
                                   } else {
+                                    // Anchor missing or in a different group → start fresh
                                     libSelAnchorRef.current = p.id;
                                     setLibSelection([p.id]);
                                   }

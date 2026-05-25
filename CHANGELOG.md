@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.8.4] — 2026-05-25
+### Añadido
+- Vista 3D: modo paseo en primera persona — flechas ↑↓ para avanzar/retroceder, ←→ para girar; clic en el canvas para capturar el ratón (rotación libre sin límite de borde)
+- Vista 3D: clic en una pared o foto durante el paseo posiciona la cámara perpendicular a ella a 200 cm
+- Vista 3D: instrucciones del modo paseo visibles en el overlay inicial y en el panel lateral derecho
+- Vista 3D: la figura de escala humana se oculta automáticamente al entrar en modo paseo
+- Biblioteca: fotos añadidas individualmente con clic aparecen en cascada diagonal (no apiladas en el mismo punto)
+
+### Corregido
+- Biblioteca: Shift+clic con varias secciones seleccionaba fotos de otras secciones; el rango ahora se restringe al mismo grupo (sección o sin sección)
+
+---
+
 ## [1.8.3] — 2026-05-25
 ### Añadido
 - Multi-sala: un proyecto puede tener varias salas; cada sala tiene su propio plano de planta y paredes

@@ -80,5 +80,27 @@
     "id": "dd9fa78882",
     "name": "Mi tablero",
     "created": 1779691778450
+  },
+  {
+    "id": "29f6bcbc64",
+    "name": "Pared 10",
+    "created": 1779732558083,
+    "units": "cm",
+    "dpi": 23.1,
+    "fixed": true,
+    "fixedW": 440,
+    "fixedH": 280,
+    "defaultW": 546
+  },
+  {
+    "id": "79232cba09",
+    "name": "Pared 9",
+    "created": 1779732694339,
+    "units": "cm",
+    "dpi": 10.9,
+    "fixed": true,
+    "fixedW": 929,
+    "fixedH": 280,
+    "defaultW": 257
   }
 ]

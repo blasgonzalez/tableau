@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.8.4] — 2026-05-25
+### Added
+- 3D view: first-person walk mode — ↑↓ arrows to move forward/back, ←→ to turn; click canvas to capture mouse for unlimited rotation
+- 3D view: clicking a wall or photo during walk mode snaps the camera perpendicular to it at 200 cm
+- 3D view: walk mode instructions shown in the initial overlay and in the right panel
+- 3D view: human scale figure is automatically hidden when entering walk mode
+- Library: photos added individually by click are placed in a diagonal cascade (no longer stacked at the same point)
+
+### Fixed
+- Library: Shift+click with multiple sections was selecting photos from other sections; range is now restricted to the same group (section or unsectioned)
+
+---
+
 ## [1.8.3] — 2026-05-25
 ### Added
 - Multi-room: a project can have multiple rooms, each with its own floor plan and walls
