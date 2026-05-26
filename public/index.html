@@ -858,6 +858,7 @@ const I18N = {
     allowPopups:'Permite ventanas emergentes para imprimir',
     confirmDeleteProject:'¿Eliminar este proyecto y todas sus fotos?',
     confirmDeleteBoard:'¿Eliminar este tablero?',
+    confirmDeleteWallBoards: names => `Al eliminar la pared se borrarán también los tableros vinculados: ${names}. ¿Continuar?`,
     duplicateBoard:'Duplicar tablero',
     confirmDeletePhoto:'¿Eliminar esta foto del proyecto?',
     confirmDeletePhotoPlaced: boards => `Esta foto está colocada en: ${boards}. Se eliminará del canvas también. ¿Continuar?`,
@@ -988,6 +989,7 @@ const I18N = {
     allowPopups:'Allow pop-ups to print',
     confirmDeleteProject:'Delete this project and all its photos?',
     confirmDeleteBoard:'Delete this board?',
+    confirmDeleteWallBoards: names => `Deleting the wall will also delete its linked boards: ${names}. Continue?`,
     duplicateBoard:'Duplicate board',
     confirmDeletePhoto:'Delete this photo from the project?',
     confirmDeletePhotoPlaced: boards => `This photo is placed on: ${boards}. It will also be removed from the board. Continue?`,
@@ -4388,19 +4390,42 @@ ${rows}
   const deleteRoomVertex = vid => {
     const r = roomRef.current; if (!r) return;
     const conn = r.walls.filter(w => w.v1 === vid || w.v2 === vid);
-    let newWalls;
     if (conn.length === 2) {
-      // middle vertex: merge the two walls into one keeping the first wall's name/board
+      // middle vertex: merge the two walls into one keeping the first wall's name/boards
       const [w1, w2] = conn;
       const a = w1.v1 === vid ? w1.v2 : w1.v1;
       const b = w2.v1 === vid ? w2.v2 : w2.v1;
-      const merged = {id:w1.id, v1:a, v2:b, name:w1.name, boardId:w1.boardId||w2.boardId||null};
-      newWalls = r.walls.filter(w=>w.id!==w1.id&&w.id!==w2.id).concat(merged);
+      const merged = {id:w1.id, v1:a, v2:b, name:w1.name,
+        boardId:     w1.boardId     || w2.boardId     || null,
+        boardIdBack: w1.boardIdBack || w2.boardIdBack || null,
+      };
+      const newWalls = r.walls.filter(w=>w.id!==w1.id&&w.id!==w2.id).concat(merged);
+      saveRoom({...r, vertices:r.vertices.filter(v=>v.id!==vid), walls:newWalls});
+      setRoomVertCtx(null);
     } else {
-      newWalls = r.walls.filter(w=>w.v1!==vid&&w.v2!==vid);
+      const linkedIds = [...new Set(conn.flatMap(w=>[w.boardId,w.boardIdBack].filter(Boolean)))];
+      const doDelete = () => {
+        const newWalls = r.walls.filter(w=>w.v1!==vid&&w.v2!==vid);
+        saveRoom({...r, vertices:r.vertices.filter(v=>v.id!==vid), walls:newWalls});
+        if (linkedIds.length) {
+          Promise.all(linkedIds.map(id => api.del(`/api/projects/${pidRef.current}/boards/${id}`))).then(() => {
+            setBoards(bs => bs.filter(b => !linkedIds.includes(b.id)));
+            setAllBoardItems(prev => { const n = {...prev}; linkedIds.forEach(id => delete n[id]); return n; });
+            if (linkedIds.includes(bidRef.current)) {
+              const rem = boardsRef.current.filter(b => !linkedIds.includes(b.id));
+              setBid(rem[0]?.id || null); bidRef.current = rem[0]?.id || null;
+            }
+          });
+        }
+        setRoomVertCtx(null);
+      };
+      if (linkedIds.length) {
+        const names = linkedIds.map(id => boardsRef.current.find(b=>b.id===id)?.name || id).join(', ');
+        showConfirm(t('confirmDeleteWallBoards', names), doDelete);
+      } else {
+        doDelete();
+      }
     }
-    saveRoom({...r, vertices:r.vertices.filter(v=>v.id!==vid), walls:newWalls});
-    setRoomVertCtx(null);
   };
 
   const onRoomVertexPD = (e, vid) => {
@@ -4461,6 +4486,7 @@ ${rows}
     const wall = r.walls.find(w=>w.id===wallId); if (!wall) return;
     const boardField = side === 'A' ? 'boardId' : 'boardIdBack';
     const len = Math.round(roomWallLen(wall, r.vertices));
+    const wallH = wall.height ?? (r.ceilingHeight || 280);
     const label = `${wall.name}${side==='B'?' B':''}`;
     const b = await api.post(`/api/projects/${pidRef.current}/boards`, {name:label});
     const TARGET_W = 4000;
@@ -4468,9 +4494,9 @@ ${rows}
     // defaultW = ~60cm in canvas px — sensible starting size for a print on a wall
     const defaultW = Math.round(60 / 2.54 * dpi);
     await api.patch(`/api/projects/${pidRef.current}/boards/${b.id}`, {
-      fixed:true, fixedW:len, fixedH:r.ceilingHeight, dpi, units:'cm', defaultW,
+      fixed:true, fixedW:len, fixedH:wallH, dpi, units:'cm', defaultW,
     });
-    const fullB = {...b, fixed:true, fixedW:len, fixedH:r.ceilingHeight, dpi, units:'cm', defaultW};
+    const fullB = {...b, fixed:true, fixedW:len, fixedH:wallH, dpi, units:'cm', defaultW};
     setBoards(bs=>[...bs, fullB]);
     const updatedRoom = {...r, walls:r.walls.map(w=>w.id===wallId?{...w,[boardField]:b.id}:w)};
     saveRoom(updatedRoom);
@@ -4489,7 +4515,8 @@ ${rows}
     const r = roomRef.current; if (!r) return;
     const len = roomWallLen(wall, r.vertices);
     const newW = Math.round(len * 10) / 10;
-    const newBPx = getBoardPx({...board, fixedW: newW});
+    const newH = Math.round((wall.height ?? (r.ceilingHeight || 280)) * 10) / 10;
+    const newBPx = getBoardPx({...board, fixedW: newW, fixedH: newH});
     if (!newBPx) return;
     const items = await api.get(`/api/boards/${pidRef.current}/${board.id}/items`);
     const overflow = (items || []).some(item => {
@@ -4497,8 +4524,8 @@ ${rows}
       return (item.x || 0) + (item.w || 0) > newBPx.w;
     });
     if (overflow) { showToast(t('salaWallSyncOverflow'), true); return; }
-    await api.patch(`/api/projects/${pidRef.current}/boards/${board.id}`, {fixedW: newW});
-    setBoards(bs => bs.map(b => b.id === board.id ? {...b, fixedW: newW} : b));
+    await api.patch(`/api/projects/${pidRef.current}/boards/${board.id}`, {fixedW: newW, fixedH: newH});
+    setBoards(bs => bs.map(b => b.id === board.id ? {...b, fixedW: newW, fixedH: newH} : b));
     showToast(t('salaWallSyncOk'));
   };
 
@@ -4911,7 +4938,7 @@ ${rows}
     }
     const { photo, status, thumbSrc, itemW, itemH } = hoverInfo;
     const boardNames = photo?.id ? photoBoardNames(photo.id) : [];
-    const currentBoardRoom = rooms.find(r => r.walls?.some(w => w.boardId === bid));
+    const currentBoardRoom = rooms.find(r => r.walls?.some(w => w.boardId === bid || w.boardIdBack === bid));
     const rating = photo?.rating || 0;
     const tags = photo?.tags || [];
     const mc = photo?.meanColor;
@@ -5308,7 +5335,7 @@ ${rows}
                             </div>
                           </div>
                           {isActive && (() => {
-                            const roomOfBoard = b => rooms.find(r => r.walls?.some(w => w.boardId === b.id));
+                            const roomOfBoard = b => rooms.find(r => r.walls?.some(w => w.boardId === b.id || w.boardIdBack === b.id));
                             const roomBoards = {};
                             const unassigned = [];
                             boards.forEach(b => {
@@ -5631,8 +5658,9 @@ ${rows}
                         const len = roomWallLen(wall, room.vertices);
                         const boardA = wall.boardId     ? boards.find(b=>b.id===wall.boardId)     : null;
                         const boardB = wall.boardIdBack ? boards.find(b=>b.id===wall.boardIdBack) : null;
-                        const mmA = boardA && boardA.fixed && boardA.units==='cm' && Math.abs(boardA.fixedW-len)>0.5;
-                        const mmB = boardB && boardB.fixed && boardB.units==='cm' && Math.abs(boardB.fixedW-len)>0.5;
+                        const wallH = wall.height ?? (room.ceilingHeight||280);
+                        const mmA = boardA && boardA.fixed && boardA.units==='cm' && (Math.abs(boardA.fixedW-len)>0.5 || Math.abs((boardA.fixedH||0)-wallH)>0.5);
+                        const mmB = boardB && boardB.fixed && boardB.units==='cm' && (Math.abs(boardB.fixedW-len)>0.5 || Math.abs((boardB.fixedH||0)-wallH)>0.5);
                         const colA = wall.color    || '#d0c8bc';
                         const colB = wall.colorBack|| '#d0c8bc';
                         const sideBtn = (side, board, mismatch, color) => (
@@ -6739,8 +6767,9 @@ ${rows}
         const wLen = roomWallLen(cw, room.vertices);
         const boardA = cw.boardId     ? boards.find(b=>b.id===cw.boardId)     : null;
         const boardB = cw.boardIdBack ? boards.find(b=>b.id===cw.boardIdBack) : null;
-        const mmA = boardA && boardA.fixed && boardA.units==='cm' && Math.abs(boardA.fixedW-wLen)>0.5;
-        const mmB = boardB && boardB.fixed && boardB.units==='cm' && Math.abs(boardB.fixedW-wLen)>0.5;
+        const cwH = cw.height ?? (room.ceilingHeight||280);
+        const mmA = boardA && boardA.fixed && boardA.units==='cm' && (Math.abs(boardA.fixedW-wLen)>0.5 || Math.abs((boardA.fixedH||0)-cwH)>0.5);
+        const mmB = boardB && boardB.fixed && boardB.units==='cm' && (Math.abs(boardB.fixedW-wLen)>0.5 || Math.abs((boardB.fixedH||0)-cwH)>0.5);
         const saveWall = patch => saveRoom({...roomRef.current, walls: roomRef.current.walls.map(w => w.id===cw.id ? {...w,...patch} : w)});
         const saveWallFn = fn => saveRoom({...roomRef.current, walls: roomRef.current.walls.map(w => w.id===cw.id ? fn(w) : w)});
         const ctxNumInput = (val, placeholder, min, max, step, onChange) => (

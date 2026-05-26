@@ -1,6 +1,6 @@
 {
-  "version": "1.8.5",
+  "version": "1.8.6",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-05-26",
-  "notes": "Paredes: tablero por cara A y B con color independiente, highlight de cara en plano 2D. Vista 3D: paseo en primera persona, esquinas de paredes mejoradas. Snap 45°/90° al recolocar vértices."
+  "notes": "Sala: al eliminar un vértice que borra paredes con tableros vinculados, avisa y los elimina. Al fusionar dos paredes en una, conserva los tableros de cara B."
 }

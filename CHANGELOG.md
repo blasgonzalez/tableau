@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.6] — 2026-05-26
+### Corregido
+- Sala: al eliminar un vértice que borra paredes con tableros vinculados, el diálogo avisa con los nombres de los tableros afectados y los elimina si se confirma
+- Sala: al fusionar dos paredes (eliminación de vértice intermedio), el tablero de cara B ya no se pierde
+
+---
+
 ## [1.8.5] — 2026-05-26
 ### Añadido
 - Vista 3D: esquinas de paredes con posts en vértices compartidos — uniones limpias a cualquier ángulo

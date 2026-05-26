@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.6] — 2026-05-26
+### Fixed
+- Room: deleting a vertex that removes walls with linked boards now shows a confirmation dialog listing the affected boards and deletes them on confirm
+- Room: merging two walls (deleting a middle vertex) no longer discards the Side B board
+
+---
+
 ## [1.8.5] — 2026-05-26
 ### Added
 - 3D view: wall corners use vertex posts at shared vertices for clean joins at any angle
