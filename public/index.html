@@ -879,7 +879,7 @@ const I18N = {
     invalidDims: 'Las dimensiones deben ser mayores que cero',
     pxPreview: (w, h) => `${w} × ${h} px`,
     gridToggle: 'Guías', gridHiddenZoom: 'Guías activas — zoom demasiado bajo para mostrarlas', gridAuto: 'Auto', fitView: 'Ajustar', fitWidth: 'Ajustar al ancho (Ctrl+0)', snapGrid: 'Imán', addNote: '+ Nota', addZone: '+ Zona', zoneColor: 'Color de zona', zoneScaleContent: 'Escalar contenido al redimensionar', copyZoneToBoard: 'Copiar a nuevo tablero', moveZoneToBoard: 'Mover a nuevo tablero', zoneLabelPh: 'Nombre de zona…', zoneCaptureBtn: 'Capturar contenido', gridWrapZone: 'Envolver en zona escalable',
-    salaBtn:'🏛 Sala', salaCreate:'Crear sala', salaDelete:'Eliminar sala', salaDraw:'Dibujar planta', salaEdit:'Editar planta', salaAddSection:'+ Añadir segmento', salaCancel:'Cancelar', salaFinish:'Finalizar', salaCeilLbl:'Altura del techo', salaCeilUnit:'cm', salaWallsHd:'PAREDES', salaNoWalls:'Dibuja la planta para ver las paredes aquí', salaCreateBoard:'+ Tablero', salaWallBoard:'Ver tablero →', salaDrawHint:'Clic → añadir punto · 1er punto → cerrar · Esc/Finalizar → guardar · ⌫ → deshacer · se engancha en 45°/90°', salaSnapHint:'⊾ enganchado', salaDeleteWall:'Desvincular tablero', salaWallRename:'Renombrar pared', salaAddCol:'+ Columna', salaWallMismatch:'El tablero es más ancho que la pared', salaWallSync:'Sincronizar', salaWallSyncOk:'Tablero sincronizado con la pared', salaWallSyncOverflow:'Hay fotos fuera del nuevo ancho. Mueve o elimina las fotos en el tablero primero.',
+    salaBtn:'🏛 Sala', salaCreate:'Crear sala', salaDelete:'Eliminar sala', salaDraw:'Dibujar planta', salaEdit:'Editar planta', salaAddSection:'+ Añadir segmento', salaCancel:'Cancelar', salaFinish:'Finalizar', salaCeilLbl:'Altura del techo', salaCeilUnit:'cm', salaWallsHd:'PAREDES', salaNoWalls:'Dibuja la planta para ver las paredes aquí', salaCreateBoard:'+ Tablero', salaWallBoard:'Ver tablero →', salaDrawHint:'Clic → añadir punto · 1er punto → cerrar · Esc/Finalizar → guardar · ⌫ → deshacer · ⇧ → ángulo recto', salaSnapHint:'⊾ enganchado', salaDeleteWall:'Desvincular tablero', salaWallRename:'Renombrar pared', salaAddCol:'+ Columna', salaWallMismatch:'El tablero es más ancho que la pared', salaWallSync:'Sincronizar', salaWallSyncOk:'Tablero sincronizado con la pared', salaWallSyncOverflow:'Hay fotos fuera del nuevo ancho. Mueve o elimina las fotos en el tablero primero.',
     reportHeading:'Tableau — Memoria del Proyecto',
     noScaleConfigured:'sin escala configurada',
     reportDate: d => `Memoria del proyecto · ${d}`,
@@ -1009,7 +1009,7 @@ const I18N = {
     invalidDims: 'Dimensions must be greater than zero',
     pxPreview: (w, h) => `${w} × ${h} px`,
     gridToggle: 'Grid', gridHiddenZoom: 'Grid active — zoom too low to display', gridAuto: 'Auto', fitView: 'Fit', fitWidth: 'Fit to width (Ctrl+0)', snapGrid: 'Snap', addNote: '+ Note', addZone: '+ Zone', zoneColor: 'Zone color', zoneScaleContent: 'Scale content on resize', copyZoneToBoard: 'Copy to new board', moveZoneToBoard: 'Move to new board', zoneLabelPh: 'Zone name…', zoneCaptureBtn: 'Capture content', gridWrapZone: 'Wrap in scalable zone',
-    salaBtn:'🏛 Room', salaCreate:'Create room', salaDelete:'Delete room', salaDraw:'Draw floor plan', salaEdit:'Edit floor plan', salaAddSection:'+ Add section', salaCancel:'Cancel', salaFinish:'Finish', salaCeilLbl:'Ceiling height', salaCeilUnit:'cm', salaWallsHd:'WALLS', salaNoWalls:'Draw the floor plan to see walls here', salaCreateBoard:'+ Board', salaWallBoard:'Go to board →', salaDrawHint:'Click → add point · 1st point → close · Esc/Finish → save · ⌫ → undo · snaps at 45°/90°', salaSnapHint:'⊾ snapped', salaDeleteWall:'Unlink board', salaWallRename:'Rename wall', salaAddCol:'+ Column', salaWallMismatch:'Board is wider than the wall', salaWallSync:'Sync', salaWallSyncOk:'Board synced to wall', salaWallSyncOverflow:'Photos would overflow the new width. Move or remove them in the board editor first.',
+    salaBtn:'🏛 Room', salaCreate:'Create room', salaDelete:'Delete room', salaDraw:'Draw floor plan', salaEdit:'Edit floor plan', salaAddSection:'+ Add section', salaCancel:'Cancel', salaFinish:'Finish', salaCeilLbl:'Ceiling height', salaCeilUnit:'cm', salaWallsHd:'WALLS', salaNoWalls:'Draw the floor plan to see walls here', salaCreateBoard:'+ Board', salaWallBoard:'Go to board →', salaDrawHint:'Click → add point · 1st point → close · Esc/Finish → save · ⌫ → undo · ⇧ → right angle', salaSnapHint:'⊾ snapped', salaDeleteWall:'Unlink board', salaWallRename:'Rename wall', salaAddCol:'+ Column', salaWallMismatch:'Board is wider than the wall', salaWallSync:'Sync', salaWallSyncOk:'Board synced to wall', salaWallSyncOverflow:'Photos would overflow the new width. Move or remove them in the board editor first.',
     reportHeading:'Tableau — Project Report',
     noScaleConfigured:'no scale configured',
     reportDate: d => `Project report · ${d}`,
@@ -1124,7 +1124,9 @@ function App() {
   const [roomVertCtx,    setRoomVertCtx]   = useState(null); // {id, x, y}
   const [roomColCtx,     setRoomColCtx]    = useState(null); // {id, x, y}
   const [roomSvgCtx,     setRoomSvgCtx]    = useState(null); // {x, y, svgX, svgY}
+  const [roomWallCtx,    setRoomWallCtx]   = useState(null); // {wallId, x, y}
   const [roomHovWall,    setRoomHovWall]   = useState(null); // hovered wall id
+  const [roomHovSide,    setRoomHovSide]   = useState(null); // {wallId, side:'A'|'B'}
   const room3DCanvasRef = useRef(null);
   const [show3DPerson,     setShow3DPerson]    = useState(false);
   const [personMoveMode,   setPersonMoveMode]  = useState(false);
@@ -1134,6 +1136,7 @@ function App() {
   const [roomTempVerts,  setRoomTempVerts] = useState([]);       // vertices during drawing
   const [roomCursor,     setRoomCursor]    = useState(null);     // {x,y,snapped,nearClose}
   const [roomCeilH,      setRoomCeilH]     = useState(280);
+  const [roomWallThick,  setRoomWallThick] = useState(15);
   const [roomVbox,       setRoomVbox]      = useState({x:-50,y:-50,w:1300,h:900});
   const [roomRenameWid,  setRoomRenameWid] = useState(null);     // wall being renamed
   const [roomRenameVal,  setRoomRenameVal] = useState('');
@@ -1345,6 +1348,13 @@ function App() {
     return () => document.removeEventListener('pointerdown', close);
   }, [roomSvgCtx !== null]);
 
+  useEffect(() => {
+    if (!roomWallCtx) return;
+    const close = () => setRoomWallCtx(null);
+    document.addEventListener('pointerdown', close);
+    return () => document.removeEventListener('pointerdown', close);
+  }, [roomWallCtx !== null]);
+
   // keep allBoardItems in sync with current board mutations
   useEffect(() => {
     if (bid) setAllBoardItems(prev => ({ ...prev, [bid]: items }));
@@ -1423,7 +1433,7 @@ function App() {
       const first = arr[0] || null;
       setRoom(first); roomRef.current = first;
       setActiveRoomId(first?.id || null); activeRoomIdRef.current = first?.id || null;
-      if (first) { setRoomCeilH(first.ceilingHeight || 280); setRoomName(first.name || ''); }
+      if (first) { setRoomCeilH(first.ceilingHeight || 280); setRoomWallThick(first.wallThickness ?? 15); setRoomName(first.name || ''); }
       if (goRoom) setRoomView('room');
     });
     setRoomDrawing(false); setRoomAppending(false); setRoomTempVerts([]); setRoomCursor(null);
@@ -1558,6 +1568,21 @@ function App() {
       const loader  = new THREE.TextureLoader();
       const walkTargets = [];
 
+      const vertexPosts = new Map();
+      room.walls.forEach(wall => {
+        const pv1 = room.vertices.find(v => v.id === wall.v1);
+        const pv2 = room.vertices.find(v => v.id === wall.v2);
+        if (!pv1 || !pv2) return;
+        const pwh = wall.height ?? ch;
+        const pwt = wall.thickness ?? (room.wallThickness ?? 15);
+        const pc  = wall.color || '#d0c8bc';
+        for (const [vid, vx, vz] of [[wall.v1, pv1.x, pv1.y], [wall.v2, pv2.x, pv2.y]]) {
+          const ex = vertexPosts.get(vid);
+          if (!ex) vertexPosts.set(vid, {x:vx, z:vz, wt:pwt, wh:pwh, color:pc, n:1});
+          else { ex.wt=Math.max(ex.wt,pwt); ex.wh=Math.max(ex.wh,pwh); ex.n++; }
+        }
+      });
+
       room.walls.forEach(wall => {
         const v1 = room.vertices.find(v => v.id === wall.v1);
         const v2 = room.vertices.find(v => v.id === wall.v2);
@@ -1568,23 +1593,31 @@ function App() {
         const dirX = dx/len, dirZ = dz/len;
         const rotY = Math.atan2(-dirZ, dirX);
 
+        const wh = wall.height ?? ch;
+        const wt = wall.thickness ?? (room.wallThickness ?? 15);
+
         const wColor = wall.color || '#d0c8bc';
-        const wMesh = new THREE.Mesh(new THREE.PlaneGeometry(len, ch), new THREE.MeshLambertMaterial({ color: wColor, side: THREE.DoubleSide }));
-        wMesh.position.set((x1+x2)/2, ch/2, (z1+z2)/2);
+        const wMesh = new THREE.Mesh(
+          new THREE.BoxGeometry(len, wh, wt),
+          new THREE.MeshLambertMaterial({color: wColor})
+        );
+        wMesh.position.set((x1+x2)/2, wh/2, (z1+z2)/2);
         wMesh.rotation.y = rotY;
         wMesh.userData.isWalkTarget = true;
         scene.add(wMesh);
         walkTargets.push(wMesh);
 
-        if (!wall.boardId) return;
-        const board = boards.find(b => b.id === wall.boardId);
-        const rawItems = boardItemsMap[wall.boardId] || [];
+        const wallSides = [];
+        if (wall.boardId)     wallSides.push({boardId: wall.boardId,     sideSign:  1});
+        if (wall.boardIdBack) wallSides.push({boardId: wall.boardIdBack, sideSign: -1});
+        wallSides.forEach(({boardId, sideSign}) => {
+        const board = boards.find(b => b.id === boardId);
+        const rawItems = boardItemsMap[boardId] || [];
         const bItems = rawItems.filter(i => !i.type || i.type === 'photo' || i.type === 'text');
         if (!board || !bItems.length) return;
         const bPx = getBoardPx(board);
         if (!bPx) return;
-        const fW = board.fixedW, fH = board.fixedH || ch;
-        const sideSign = wall.flipSide ? -1 : 1;
+        const fW = board.fixedW, fH = board.fixedH || wh;
         const normX = -dirZ * sideSign, normZ = dirX * sideSign;
 
         bItems.forEach(item => {
@@ -1596,7 +1629,7 @@ function App() {
           const ih = itemH / bPx.h * fH;
           const ix = (item.x + item.w/2) / bPx.w * fW;
           const iy = fH * (1 - (item.y + itemH/2) / bPx.h);
-          const pos = { x: x1 + dirX*ix + normX*2, y: iy, z: z1 + dirZ*ix + normZ*2 };
+          const pos = { x: x1 + dirX*ix + normX*(wt/2+2), y: iy, z: z1 + dirZ*ix + normZ*(wt/2+2) };
           const pMesh = new THREE.Mesh(
             new THREE.PlaneGeometry(iw, ih),
             new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, transparent: true })
@@ -1634,6 +1667,18 @@ function App() {
             });
           }
         });
+        }); // wallSides.forEach
+      });
+
+      // Corner posts — square post at each vertex where 2+ walls meet
+      vertexPosts.forEach(({x, z, wt, wh, color, n}) => {
+        if (n < 2) return;
+        const pMesh = new THREE.Mesh(
+          new THREE.BoxGeometry(wt, wh, wt),
+          new THREE.MeshLambertMaterial({color})
+        );
+        pMesh.position.set(x, wh/2, z);
+        scene.add(pMesh);
       });
 
       // Columns
@@ -4115,7 +4160,7 @@ ${rows}
     return {x: s.x, y: s.y};
   };
 
-  const roomSnapPt = (verts, raw) => {
+  const roomSnapPt = (verts, raw, shiftKey=false) => {
     const snapDist = roomVboxRef.current.w * 0.018;
     // Snap to existing saved vertices (for appending to existing geometry)
     const savedRoom = roomRef.current;
@@ -4142,7 +4187,7 @@ ${rows}
         const angle = Math.atan2(dy,dx)*180/Math.PI;
         const nearest = Math.round(angle/45)*45;
         const diff = Math.abs(((angle-nearest)+180)%360-180);
-        if (diff < 12) {
+        if (shiftKey || diff < 12) {
           const r = nearest*Math.PI/180;
           return {x:prev.x+len*Math.cos(r), y:prev.y+len*Math.sin(r), nearClose:false, snapped:true};
         }
@@ -4169,7 +4214,7 @@ ${rows}
     const r = roomsRef.current.find(x => x.id === rid) || null;
     setRoom(r); roomRef.current = r;
     setActiveRoomId(rid); activeRoomIdRef.current = rid;
-    if (r) { setRoomCeilH(r.ceilingHeight || 280); setRoomName(r.name || ''); }
+    if (r) { setRoomCeilH(r.ceilingHeight || 280); setRoomWallThick(r.wallThickness ?? 15); setRoomName(r.name || ''); }
     setRoomDrawing(false); setRoomTempVerts([]); setRoomCursor(null);
     setRoomView('room');
   };
@@ -4281,7 +4326,7 @@ ${rows}
   const onRoomSvgClick = e => {
     if (!roomDrawing) return;
     const raw = roomSvgPt(e);
-    const pt = roomSnapPt(roomTempVerts, raw);
+    const pt = roomSnapPt(roomTempVerts, raw, e.shiftKey);
     if (pt.nearClose && roomTempVerts.length >= 3) { closeRoomPolygon(roomTempVerts, roomAppending); return; }
     // Reuse existing vertex ID when snapping to it (avoids duplicate vertices)
     const id = pt.existingId || `v${Date.now().toString(36)}${Math.random().toString(36).slice(2,5)}`;
@@ -4292,7 +4337,7 @@ ${rows}
 
   const onRoomSvgMM = e => {
     if (!roomDrawing) return;
-    setRoomCursor(roomSnapPt(roomTempVerts, roomSvgPt(e)));
+    setRoomCursor(roomSnapPt(roomTempVerts, roomSvgPt(e), e.shiftKey));
   };
 
   const onRoomSvgWheel = e => {
@@ -4372,8 +4417,34 @@ ${rows}
     const offX = v0.x - pt0.x, offY = v0.y - pt0.y;
     const onMM = e2 => {
       const r = roomRef.current; if (!r) return;
-      const pt = toSvg(e2.clientX, e2.clientY);
-      const updated = {...r, vertices:r.vertices.map(v=>v.id===vid?{...v,x:pt.x+offX,y:pt.y+offY}:v)};
+      const raw = toSvg(e2.clientX, e2.clientY);
+      let nx = raw.x + offX, ny = raw.y + offY;
+      const snapDist = roomVboxRef.current ? roomVboxRef.current.w * 0.018 : 20;
+      // Snap to nearby existing vertices
+      let snappedToVert = false;
+      for (const v of r.vertices) {
+        if (v.id === vid) continue;
+        if (Math.sqrt((nx-v.x)**2+(ny-v.y)**2) < snapDist) { nx=v.x; ny=v.y; snappedToVert=true; break; }
+      }
+      // Shift: snap to 45° from each connected wall's far endpoint
+      if (!snappedToVert && e2.shiftKey) {
+        const farVerts = r.walls
+          .filter(w => w.v1===vid || w.v2===vid)
+          .map(w => r.vertices.find(v => v.id===(w.v1===vid ? w.v2 : w.v1)))
+          .filter(Boolean);
+        let best = Infinity, bx = nx, by = ny;
+        for (const fv of farVerts) {
+          const dx = nx-fv.x, dy = ny-fv.y;
+          const len = Math.sqrt(dx*dx+dy*dy); if (len < 2) continue;
+          const angle = Math.atan2(dy,dx)*180/Math.PI;
+          const snapped = Math.round(angle/45)*45*Math.PI/180;
+          const sx = fv.x+len*Math.cos(snapped), sy = fv.y+len*Math.sin(snapped);
+          const d = Math.sqrt((sx-nx)**2+(sy-ny)**2);
+          if (d < best) { best=d; bx=sx; by=sy; }
+        }
+        nx=bx; ny=by;
+      }
+      const updated = {...r, vertices:r.vertices.map(v=>v.id===vid?{...v,x:nx,y:ny}:v)};
       setRoom(updated); roomRef.current = updated;
     };
     const onMU = () => {
@@ -4385,11 +4456,13 @@ ${rows}
     document.addEventListener('pointerup', onMU);
   };
 
-  const createRoomBoard = async wallId => {
+  const createRoomBoardSide = async (wallId, side='A') => {
     const r = roomRef.current; if (!r) return;
     const wall = r.walls.find(w=>w.id===wallId); if (!wall) return;
+    const boardField = side === 'A' ? 'boardId' : 'boardIdBack';
     const len = Math.round(roomWallLen(wall, r.vertices));
-    const b = await api.post(`/api/projects/${pidRef.current}/boards`, {name:wall.name});
+    const label = `${wall.name}${side==='B'?' B':''}`;
+    const b = await api.post(`/api/projects/${pidRef.current}/boards`, {name:label});
     const TARGET_W = 4000;
     const dpi = Math.max(1, Math.round(TARGET_W / len * 2.54 * 10) / 10);
     // defaultW = ~60cm in canvas px — sensible starting size for a print on a wall
@@ -4399,12 +4472,13 @@ ${rows}
     });
     const fullB = {...b, fixed:true, fixedW:len, fixedH:r.ceilingHeight, dpi, units:'cm', defaultW};
     setBoards(bs=>[...bs, fullB]);
-    const updatedRoom = {...r, walls:r.walls.map(w=>w.id===wallId?{...w,boardId:b.id}:w)};
+    const updatedRoom = {...r, walls:r.walls.map(w=>w.id===wallId?{...w,[boardField]:b.id}:w)};
     saveRoom(updatedRoom);
     setBid(b.id); bidRef.current = b.id;
     setRoomView('board');
-    showToast(lang==='es'?`Tablero "${wall.name}" creado`:`Board "${wall.name}" created`);
+    showToast(lang==='es'?`Tablero "${label}" creado`:`Board "${label}" created`);
   };
+  const createRoomBoard = wallId => createRoomBoardSide(wallId, 'A');
 
   const unlinkRoomBoard = wallId => {
     const r = roomRef.current; if (!r) return;
@@ -4437,7 +4511,7 @@ ${rows}
       const fallback = next[0] || null;
       setRoom(fallback); roomRef.current = fallback;
       setActiveRoomId(fallback?.id || null); activeRoomIdRef.current = fallback?.id || null;
-      if (fallback) { setRoomCeilH(fallback.ceilingHeight || 280); setRoomName(fallback.name || ''); }
+      if (fallback) { setRoomCeilH(fallback.ceilingHeight || 280); setRoomWallThick(fallback.wallThickness ?? 15); setRoomName(fallback.name || ''); }
       else setRoomView('board');
     });
   };
@@ -5347,7 +5421,7 @@ ${rows}
                       onWheel={onRoomSvgWheel}
                       onPointerDown={onRoomSvgPD}
                       onContextMenu={e=>{
-                        if(roomDrawing)return;
+                        if(roomDrawing && !roomAppending)return;
                         e.preventDefault();
                         const pt=roomSvgPt(e);
                         setRoomSvgCtx({x:e.clientX,y:e.clientY,svgX:pt.x,svgY:pt.y});
@@ -5367,19 +5441,42 @@ ${rows}
                         if(!v1||!v2) return null;
                         const mx=(v1.x+v2.x)/2, my=(v1.y+v2.y)/2;
                         const len=roomWallLen(wall,room.vertices);
-                        const linked = wall.boardId && boards.find(b=>b.id===wall.boardId);
+                        const linked = (wall.boardId && boards.find(b=>b.id===wall.boardId)) || (wall.boardIdBack && boards.find(b=>b.id===wall.boardIdBack));
                         const hov = roomHovWall === wall.id;
+                        const hovSide = roomHovSide?.wallId === wall.id ? roomHovSide.side : null;
+                        const isTabique = wall.height && wall.height < (room.ceilingHeight||280);
+                        const wt = wall.thickness ?? (room.wallThickness ?? 15);
+                        const sw = Math.max(wt, 3);
                         return (
                           <g key={wall.id}
                             onMouseEnter={()=>!roomDrawing&&setRoomHovWall(wall.id)}
-                            onMouseLeave={()=>setRoomHovWall(null)}>
+                            onMouseLeave={()=>setRoomHovWall(null)}
+                            onContextMenu={e=>{e.preventDefault();e.stopPropagation();setRoomWallCtx({wallId:wall.id,x:e.clientX,y:e.clientY});}}>
                             {/* Wide invisible hit area for easier hover */}
-                            <line x1={v1.x} y1={v1.y} x2={v2.x} y2={v2.y} stroke="transparent" strokeWidth={svgFontSz*1.4} style={{pointerEvents:'stroke'}}/>
+                            <line x1={v1.x} y1={v1.y} x2={v2.x} y2={v2.y} stroke="transparent" strokeWidth={Math.max(svgFontSz*1.4, sw*2)} style={{pointerEvents:'stroke'}}/>
                             <line x1={v1.x} y1={v1.y} x2={v2.x} y2={v2.y}
                               stroke={hov?'var(--acc)':(linked?'var(--acc)':'var(--dim)')}
-                              strokeWidth={hov?4:2.5} opacity={hov?1:linked?1:0.7}/>
-                            <text x={mx} y={my+svgFontSz*.4} textAnchor="middle" fontSize={svgFontSz*.8}
-                              fill={hov?'var(--acc)':'var(--muted)'} style={{pointerEvents:'none'}}>{cmLabel(len)}</text>
+                              strokeWidth={hov?sw+3:sw} opacity={hov?1:linked?1:0.8}
+                              strokeDasharray={isTabique?`${sw*2.5} ${sw*.8}`:undefined}/>
+                            <text x={mx} y={my+svgFontSz*(isTabique?-.1:.4)} textAnchor="middle" fontSize={svgFontSz*.85}
+                              fill={hov?'var(--acc)':'var(--sub)'} stroke="var(--bg)" strokeWidth={2.5} paintOrder="stroke"
+                              style={{pointerEvents:'none'}}>{cmLabel(len)}</text>
+                            {isTabique && (
+                              <text x={mx} y={my+svgFontSz*1.1} textAnchor="middle" fontSize={svgFontSz*.75}
+                                fill={hov?'var(--acc)':'var(--muted)'} stroke="var(--bg)" strokeWidth={2} paintOrder="stroke"
+                                style={{pointerEvents:'none'}}>h {cmLabel(wall.height)}</text>
+                            )}
+                            {hovSide && (()=>{
+                              const dx=v2.x-v1.x, dy=v2.y-v1.y, l=Math.sqrt(dx*dx+dy*dy);
+                              if(l<1) return null;
+                              const nx=-dy/l, ny=dx/l;
+                              const sign = hovSide==='A' ? 1 : -1;
+                              const wt2 = (wall.thickness??(room.wallThickness??15))/2;
+                              const ox=nx*sign*wt2, oy=ny*sign*wt2;
+                              const fc = hovSide==='A' ? '#e03030' : '#2288ee';
+                              return <line x1={v1.x+ox} y1={v1.y+oy} x2={v2.x+ox} y2={v2.y+oy}
+                                stroke={fc} strokeWidth={4} opacity={1} style={{pointerEvents:'none'}}/>;
+                            })()}
                           </g>
                         );
                       })}
@@ -5390,13 +5487,21 @@ ${rows}
                         return <line key={i} x1={prev.x} y1={prev.y} x2={v.x} y2={v.y} stroke="var(--acc)" strokeWidth={2}/>;
                       })}
 
-                      {/* Active segment */}
-                      {roomDrawing && roomCursor && roomTempVerts.length>0 && (
-                        <line x1={roomTempVerts[roomTempVerts.length-1].x} y1={roomTempVerts[roomTempVerts.length-1].y}
-                          x2={roomCursor.x} y2={roomCursor.y}
-                          stroke={roomCursor.snapped?'var(--acc)':'var(--dim)'}
-                          strokeWidth={1.5} strokeDasharray="8 4"/>
-                      )}
+                      {/* Active segment + live length label */}
+                      {roomDrawing && roomCursor && roomTempVerts.length>0 && (()=>{
+                        const prev=roomTempVerts[roomTempVerts.length-1];
+                        const dx=roomCursor.x-prev.x, dy=roomCursor.y-prev.y;
+                        const segLen=Math.sqrt(dx*dx+dy*dy);
+                        const mx=(prev.x+roomCursor.x)/2, my=(prev.y+roomCursor.y)/2;
+                        return (<g>
+                          <line x1={prev.x} y1={prev.y} x2={roomCursor.x} y2={roomCursor.y}
+                            stroke={roomCursor.snapped?'var(--acc)':'var(--dim)'}
+                            strokeWidth={1.5} strokeDasharray="8 4"/>
+                          {segLen>5&&<text x={mx} y={my-svgFontSz*.65} textAnchor="middle" fontSize={svgFontSz}
+                            fill="var(--acc)" stroke="var(--bg)" strokeWidth={3} paintOrder="stroke"
+                            style={{pointerEvents:'none'}}>{cmLabel(segLen)}</text>}
+                        </g>);
+                      })()}
 
                       {/* Temp vertices */}
                       {roomTempVerts.map((v,i)=>(
@@ -5508,13 +5613,39 @@ ${rows}
                         }}/>
                       <span>{t('salaCeilUnit')}</span>
                     </div>
+                    <div className="room-cfg">
+                      <label>{lang==='es'?'Grosor por defecto':'Default thickness'}</label>
+                      <input type="number" min="1" max="200" step="1"
+                        value={roomWallThick}
+                        onChange={e => {
+                          const v = Math.max(1, Number(e.target.value)||15);
+                          setRoomWallThick(v);
+                          if (roomRef.current) saveRoom({...roomRef.current, wallThickness:v});
+                        }}/>
+                      <span>cm</span>
+                    </div>
                     <div className="room-walls">
                       {!room ? (
                         <div className="room-empty">{t('salaNoWalls')}</div>
                       ) : room.walls.map(wall => {
                         const len = roomWallLen(wall, room.vertices);
-                        const linkedBoard = wall.boardId ? boards.find(b=>b.id===wall.boardId) : null;
-                        const mismatch = linkedBoard && linkedBoard.fixed && linkedBoard.units === 'cm' && Math.abs(linkedBoard.fixedW - len) > 0.5;
+                        const boardA = wall.boardId     ? boards.find(b=>b.id===wall.boardId)     : null;
+                        const boardB = wall.boardIdBack ? boards.find(b=>b.id===wall.boardIdBack) : null;
+                        const mmA = boardA && boardA.fixed && boardA.units==='cm' && Math.abs(boardA.fixedW-len)>0.5;
+                        const mmB = boardB && boardB.fixed && boardB.units==='cm' && Math.abs(boardB.fixedW-len)>0.5;
+                        const colA = wall.color    || '#d0c8bc';
+                        const colB = wall.colorBack|| '#d0c8bc';
+                        const sideBtn = (side, board, mismatch, color) => (
+                          <div style={{display:'flex',alignItems:'center',gap:1,flexShrink:0}}>
+                            {mismatch && <span className="room-wall-warn" title={t('salaWallMismatch')} style={{fontSize:9}}>⚠</span>}
+                            <button className="btn" style={{fontSize:8,padding:'1px 4px',flexShrink:0,borderLeft:`3px solid ${color}`}}
+                              onMouseEnter={()=>setRoomHovSide({wallId:wall.id,side})}
+                              onMouseLeave={()=>setRoomHovSide(null)}
+                              onClick={()=>{ if(board){setBid(board.id);bidRef.current=board.id;setRoomView('board');} else createRoomBoardSide(wall.id,side); }}>
+                              {side}{board?' ▶':' +'}
+                            </button>
+                          </div>
+                        );
                         return (
                           <div key={wall.id} className={`room-wall-row${roomHovWall===wall.id?' hov':''}`}
                             onMouseEnter={()=>setRoomHovWall(wall.id)}
@@ -5541,35 +5672,8 @@ ${rows}
                               </span>
                             )}
                             <span className="room-wall-len">{cmLabel(len)}</span>
-                            {mismatch && <span className="room-wall-warn" title={t('salaWallMismatch')}>⚠</span>}
-                            <input type="color" value={wall.color||'#d0c8bc'}
-                              title={lang==='es'?'Color de pared':'Wall color'}
-                              style={{width:18,height:18,padding:0,border:'1px solid var(--border2)',borderRadius:2,cursor:'pointer',flexShrink:0}}
-                              onChange={e=>saveRoom({...roomRef.current,walls:roomRef.current.walls.map(w=>w.id===wall.id?{...w,color:e.target.value}:w)})}/>
-                            {linkedBoard && (
-                              <button className="btn" style={{fontSize:9,padding:'1px 5px',flexShrink:0}}
-                                title={wall.flipSide?(lang==='es'?'Fotos al dorso (clic para cambiar)':'Photos on back (click to flip)'):(lang==='es'?'Fotos al frente (clic para cambiar)':'Photos on front (click to flip)')}
-                                onClick={()=>saveRoom({...roomRef.current,walls:roomRef.current.walls.map(w=>w.id===wall.id?{...w,flipSide:!w.flipSide}:w)})}>
-                                {wall.flipSide?'◁':'▷'}
-                              </button>
-                            )}
-                            {mismatch && (
-                              <button className="btn" style={{fontSize:8,padding:'2px 6px',color:'#e87528',borderColor:'#e87528'}}
-                                onClick={()=>syncWallBoard(wall, linkedBoard)}>
-                                {t('salaWallSync')}
-                              </button>
-                            )}
-                            {linkedBoard ? (
-                              <button className="btn" style={{fontSize:8,padding:'2px 6px',color:'var(--acc)',borderColor:'var(--acc-dim)'}}
-                                onClick={()=>{setBid(linkedBoard.id);bidRef.current=linkedBoard.id;setRoomView('board');}}>
-                                {t('salaWallBoard')}
-                              </button>
-                            ) : (
-                              <button className="btn" style={{fontSize:8,padding:'2px 6px'}}
-                                onClick={()=>createRoomBoard(wall.id)}>
-                                {t('salaCreateBoard')}
-                              </button>
-                            )}
+                            {sideBtn('A', boardA, mmA, colA)}
+                            {sideBtn('B', boardB, mmB, colB)}
                           </div>
                         );
                       })}
@@ -6628,6 +6732,81 @@ ${rows}
           </button>
         </div>
       )}
+
+      {roomWallCtx && (() => {
+        const cw = room?.walls.find(w => w.id === roomWallCtx.wallId);
+        if (!cw) return null;
+        const wLen = roomWallLen(cw, room.vertices);
+        const boardA = cw.boardId     ? boards.find(b=>b.id===cw.boardId)     : null;
+        const boardB = cw.boardIdBack ? boards.find(b=>b.id===cw.boardIdBack) : null;
+        const mmA = boardA && boardA.fixed && boardA.units==='cm' && Math.abs(boardA.fixedW-wLen)>0.5;
+        const mmB = boardB && boardB.fixed && boardB.units==='cm' && Math.abs(boardB.fixedW-wLen)>0.5;
+        const saveWall = patch => saveRoom({...roomRef.current, walls: roomRef.current.walls.map(w => w.id===cw.id ? {...w,...patch} : w)});
+        const saveWallFn = fn => saveRoom({...roomRef.current, walls: roomRef.current.walls.map(w => w.id===cw.id ? fn(w) : w)});
+        const ctxNumInput = (val, placeholder, min, max, step, onChange) => (
+          <input type="number" min={min} max={max} step={step}
+            value={val??''} placeholder={String(placeholder)}
+            style={{width:54,background:'var(--input)',border:'1px solid var(--border)',color:'var(--text)',fontSize:9,padding:'2px 5px',fontFamily:'inherit',borderRadius:2}}
+            onPointerDown={e=>e.stopPropagation()} onChange={onChange}/>
+        );
+        const sideLabel = s => s==='A' ? (lang==='es'?'Cara A':'Side A') : (lang==='es'?'Cara B':'Side B');
+        const ctxSideSection = (side, board, mismatch, colorKey, colorVal) => (<>
+          <div style={{padding:'3px 10px 2px',fontSize:8,color:'var(--muted)',letterSpacing:1,textTransform:'uppercase',borderTop:'1px solid var(--border)',display:'flex',alignItems:'center',gap:6,userSelect:'none'}}
+            onMouseEnter={()=>setRoomHovSide({wallId:cw.id,side})}
+            onMouseLeave={()=>setRoomHovSide(null)}>
+            <span style={{flex:1,color:side==='A'?'#e03030':'#2288ee',fontWeight:600}}>{sideLabel(side)}</span>
+            <input type="color" value={colorVal}
+              style={{width:20,height:16,padding:0,border:'1px solid var(--border2)',borderRadius:2,cursor:'pointer',flexShrink:0}}
+              onPointerDown={e=>e.stopPropagation()}
+              onChange={e=>saveWall({[colorKey]:e.target.value})}/>
+          </div>
+          {mismatch && (
+            <button className="ctx-item" style={{color:'#e87528'}}
+              onClick={()=>{syncWallBoard(cw,board);setRoomWallCtx(null);}}>
+              ⚠ {t('salaWallSync')}
+            </button>
+          )}
+          {board ? (<>
+            <button className="ctx-item"
+              onClick={()=>{setBid(board.id);bidRef.current=board.id;setRoomView('board');setRoomWallCtx(null);}}>
+              {t('salaWallBoard')}
+            </button>
+            <button className="ctx-item ctx-danger"
+              onClick={()=>{saveWallFn(w=>{const f=side==='A'?'boardId':'boardIdBack';const{[f]:_,...r}=w;return r;});setRoomWallCtx(null);}}>
+              {t('salaDeleteWall')}
+            </button>
+          </>) : (
+            <button className="ctx-item"
+              onClick={()=>{createRoomBoardSide(cw.id,side);setRoomWallCtx(null);}}>
+              {t('salaCreateBoard')}
+            </button>
+          )}
+        </>);
+        return (
+          <div className="ctx-menu" style={{left:roomWallCtx.x, top:roomWallCtx.y, minWidth:195}}
+            onPointerDown={e=>e.stopPropagation()} onContextMenu={e=>e.preventDefault()}>
+            <div style={{padding:'4px 10px 4px',fontSize:8,color:'var(--muted)',letterSpacing:1.5,textTransform:'uppercase',borderBottom:'1px solid var(--border)',userSelect:'none'}}>{cw.name} · {cmLabel(wLen)}</div>
+            <div className="ctx-item" style={{display:'flex',alignItems:'center',gap:7,cursor:'default',paddingTop:6,paddingBottom:6}}>
+              <span style={{flex:1,fontSize:9,color:'var(--dim)'}}>{lang==='es'?'Altura':'Height'}</span>
+              {ctxNumInput(cw.height, room.ceilingHeight||280, 20, room.ceilingHeight||280, 5, e=>{
+                const val=e.target.value.trim();
+                saveWallFn(w=>{ if(val===''){const{height,...r}=w;return r;} return{...w,height:Math.max(20,Math.min(Math.round(Number(val)),roomRef.current.ceilingHeight||280))};});
+              })}
+              <span style={{fontSize:9,color:'var(--muted)'}}>cm</span>
+            </div>
+            <div className="ctx-item" style={{display:'flex',alignItems:'center',gap:7,cursor:'default',paddingTop:4,paddingBottom:6}}>
+              <span style={{flex:1,fontSize:9,color:'var(--dim)'}}>{lang==='es'?'Grosor':'Thickness'}</span>
+              {ctxNumInput(cw.thickness, room.wallThickness??15, 1, 200, 1, e=>{
+                const val=e.target.value.trim();
+                saveWallFn(w=>{ if(val===''){const{thickness,...r}=w;return r;} return{...w,thickness:Math.max(1,Math.round(Number(val)))};});
+              })}
+              <span style={{fontSize:9,color:'var(--muted)'}}>cm</span>
+            </div>
+            {ctxSideSection('A', boardA, mmA, 'color',     cw.color    ||'#d0c8bc')}
+            {ctxSideSection('B', boardB, mmB, 'colorBack', cw.colorBack||'#d0c8bc')}
+          </div>
+        );
+      })()}
 
       {roomColCtx && (() => {
         const col = (room?.columns||[]).find(c=>c.id===roomColCtx.id);

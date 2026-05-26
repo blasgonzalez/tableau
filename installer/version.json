@@ -1,6 +1,6 @@
 {
-  "version": "1.8.4",
+  "version": "1.8.5",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-05-25",
-  "notes": "Vista 3D: modo paseo en primera persona (flechas + ratón), clic en pared para posicionarse. Biblioteca: cascada al añadir fotos, corrección Shift+clic con secciones."
+  "releaseDate": "2026-05-26",
+  "notes": "Paredes: tablero por cara A y B con color independiente, highlight de cara en plano 2D. Vista 3D: paseo en primera persona, esquinas de paredes mejoradas. Snap 45°/90° al recolocar vértices."
 }

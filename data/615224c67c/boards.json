@@ -102,5 +102,27 @@
     "fixedW": 929,
     "fixedH": 280,
     "defaultW": 257
+  },
+  {
+    "id": "e501ea3fec",
+    "name": "Pared 5",
+    "created": 1779774717500,
+    "units": "cm",
+    "dpi": 260.5,
+    "fixed": true,
+    "fixedW": 39,
+    "fixedH": 280,
+    "defaultW": 6154
+  },
+  {
+    "id": "400103d2ba",
+    "name": "Pared 20",
+    "created": 1779795100319,
+    "units": "cm",
+    "dpi": 73.6,
+    "fixed": true,
+    "fixedW": 138,
+    "fixedH": 280,
+    "defaultW": 1739
   }
 ]

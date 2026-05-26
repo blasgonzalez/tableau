@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.8.5] — 2026-05-26
+### Añadido
+- Vista 3D: esquinas de paredes con posts en vértices compartidos — uniones limpias a cualquier ángulo
+- Sala: cada pared puede tener un tablero por cara — Cara A (interior) y Cara B (exterior) independientes
+- Sala: color de pared independiente por cara (cara A y cara B)
+- Sala: botones A/B en la barra lateral con franja de color identificativa; al pasar el ratón se resalta la cara en el plano 2D (rojo = A, azul = B)
+- Sala: menú contextual diferencia cara A y cara B — color, tablero y sincronizar por separado
+- Sala: snap a 45°/90° al arrastrar vértices existentes manteniendo Shift; también hace snap a vértices cercanos
+
+---
+
 ## [1.8.4] — 2026-05-25
 ### Añadido
 - Vista 3D: modo paseo en primera persona — flechas ↑↓ para avanzar/retroceder, ←→ para girar; clic en el canvas para capturar el ratón (rotación libre sin límite de borde)

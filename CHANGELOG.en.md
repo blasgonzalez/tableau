@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.8.5] — 2026-05-26
+### Added
+- 3D view: wall corners use vertex posts at shared vertices for clean joins at any angle
+- Room: each wall can have a board per face — Side A (interior) and Side B (exterior) independently
+- Room: independent wall color per face (Side A and Side B)
+- Room: A/B buttons in the sidebar with color stripe indicator; hovering highlights the face in the 2D floor plan (red = A, blue = B)
+- Room: context menu separates Side A and Side B — color, board and sync controls per face
+- Room: snap to 45°/90° when dragging existing vertices while holding Shift; also snaps to nearby vertices
+
+---
+
 ## [1.8.4] — 2026-05-25
 ### Added
 - 3D view: first-person walk mode — ↑↓ arrows to move forward/back, ←→ to turn; click canvas to capture mouse for unlimited rotation
