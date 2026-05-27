@@ -20,7 +20,8 @@
       "Bash(gh release *)",
       "Bash(dir \"d:\\\\blasg\\\\Pictures\\\\Proyectos\\\\tableau\\\\data\")",
       "Bash(python -c ' *)",
-      "Bash(dir \"d:\\\\blasg\\\\Pictures\\\\Proyectos\\\\tableau\\\\dist\" /b)"
+      "Bash(dir \"d:\\\\blasg\\\\Pictures\\\\Proyectos\\\\tableau\\\\dist\" /b)",
+      "Bash(curl -s http://localhost:3000)"
     ],
     "additionalDirectories": [
       "d:\\blasg\\Pictures\\Proyectos\\tableau\\fonts"

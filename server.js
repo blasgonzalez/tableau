@@ -828,8 +828,10 @@ app.get('/api/projects/:pid/export', (req, res) => {
 
   const pMeta = photosMeta(pid);
   const bMeta = boardsMeta(pid);
+  const rMeta = roomsFile(pid);
   if (fs.existsSync(pMeta)) zip.addFile('photos.json', fs.readFileSync(pMeta));
   if (fs.existsSync(bMeta)) zip.addFile('boards.json', fs.readFileSync(bMeta));
+  if (fs.existsSync(rMeta)) zip.addFile('rooms.json',  fs.readFileSync(rMeta));
 
   readJSON(boardsMeta(pid)).forEach(b => {
     const bf = boardFile(pid, b.id);
@@ -928,6 +930,8 @@ app.post('/api/projects/import/:tempId/confirm', (req, res) => {
       initProject(newPid);
     }
 
+    const oldRooms = JSON.parse(zip.getEntry('rooms.json')?.getData().toString('utf8') || '[]');
+
     const photoIdMap = {};
     oldPhotos.forEach(p => { photoIdMap[p.id] = newId(12); });
     const boardIdMap = {};
@@ -962,6 +966,18 @@ app.post('/api/projects/import/:tempId/confirm', (req, res) => {
         ...(item.photoId ? { photoId: photoIdMap[item.photoId] || item.photoId } : {}),
       })));
     });
+
+    if (oldRooms.length) {
+      const newRooms = oldRooms.map(room => ({
+        ...room,
+        walls: (room.walls || []).map(wall => ({
+          ...wall,
+          ...(wall.boardId     ? { boardId:     boardIdMap[wall.boardId]     || wall.boardId     } : {}),
+          ...(wall.boardIdBack ? { boardIdBack: boardIdMap[wall.boardIdBack] || wall.boardIdBack } : {}),
+        })),
+      }));
+      writeJSON(roomsFile(newPid), newRooms);
+    }
 
     res.json(readJSON(projsFile()).find(p => p.id === newPid) || { id: newPid, name: exportMeta.projectName });
   } catch (e) {

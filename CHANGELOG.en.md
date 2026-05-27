@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.9.0] — 2026-05-27
+### Added
+- Text: free font size (8–999 px) with smart increment buttons, replacing fixed S/M/L/XL sizes
+- Text: bold and italic toggles per item
+- Text: correct multiline rendering in 3D view
+- Photo drag: drop hint distinguishes board, grid and zone as target
+- Photos in zone: dropping a photo onto a zone auto-fits it to the zone dimensions
+
+### Fixed
+- Grid: after dragging a cell, the release click no longer triggered an unintended swap
+- Grid: "Remove from grid" was removing all occurrences of the same photo; now removes only the selected cell
+- Text and notes: color on fixed-size boards (white background) now applies correct automatic contrast
+- Text and notes: no longer appear tiny on long walls (e.g. 15 m) in 3D view
+- Notes: now rendered correctly in 3D view
+
+---
+
 ## [1.8.7] — 2026-05-27
 ### Fixed
 - 3D view: photos placed on walls with a custom height are now positioned correctly (vertical axis uses the physical wall height, not the board's fixedH)

@@ -1,6 +1,6 @@
 {
-  "version": "1.8.7",
+  "version": "1.9.0",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-05-27",
-  "notes": "Vista 3D: fotos en paredes de altura personalizada se posicionan correctamente. Vista 3D: tableros de cara B ahora cargan sus fotos. Sala: al eliminar un vértice con paredes vinculadas a tableros, avisa y borra los tableros."
+  "notes": "Texto: tamaño libre (8–999 px), negrita e itálica. Vista 3D: notas y texto multilínea. Mosaico: corrección al quitar celdas. Fotos en zona: ajuste automático de dimensiones. Indicador de arrastre diferenciado."
 }

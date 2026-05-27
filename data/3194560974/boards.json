@@ -1,0 +1,184 @@
+[
+  {
+    "id": "bb955fac09",
+    "name": "Tablero 1",
+    "created": 1779113023225
+  },
+  {
+    "id": "6c7dfba5c4",
+    "name": "Pared 1",
+    "created": 1779380386976,
+    "units": "cm",
+    "dpi": 14.3,
+    "fixed": true,
+    "fixedW": 710,
+    "fixedH": 280,
+    "defaultW": 338
+  },
+  {
+    "id": "e0a7b7cb45",
+    "name": "Pared 5",
+    "created": 1779380991218,
+    "units": "cm",
+    "dpi": 236.3,
+    "fixed": true,
+    "fixedW": 43,
+    "fixedH": 280,
+    "defaultW": 5582
+  },
+  {
+    "id": "35721d985a",
+    "name": "Pared 8",
+    "created": 1779393636736,
+    "units": "cm",
+    "dpi": 32.1,
+    "fixed": true,
+    "fixedW": 317,
+    "fixedH": 280,
+    "defaultW": 758
+  },
+  {
+    "id": "a36663dee5",
+    "name": "Pared 7",
+    "created": 1779393704007,
+    "units": "cm",
+    "dpi": 30.3,
+    "fixed": true,
+    "fixedW": 335,
+    "fixedH": 280,
+    "defaultW": 716
+  },
+  {
+    "id": "fbec873d77",
+    "name": "Pared 7",
+    "created": 1779393752606,
+    "units": "cm",
+    "dpi": 28.4,
+    "fixed": true,
+    "fixedW": 358,
+    "fixedH": 280,
+    "defaultW": 671
+  },
+  {
+    "id": "21e5e61847",
+    "name": "Pared 9",
+    "created": 1779544977296,
+    "units": "cm",
+    "dpi": 28.9,
+    "fixed": true,
+    "fixedW": 351,
+    "fixedH": 280,
+    "defaultW": 683
+  },
+  {
+    "id": "04adbe500a",
+    "name": "Pared 11",
+    "created": 1779807044682,
+    "units": "cm",
+    "dpi": 338.7,
+    "fixed": true,
+    "fixedW": 30,
+    "fixedH": 280,
+    "defaultW": 8001
+  },
+  {
+    "id": "3b979598d2",
+    "name": "Pared 10",
+    "created": 1779807119218,
+    "units": "cm",
+    "dpi": 290.3,
+    "fixed": true,
+    "fixedW": 35,
+    "fixedH": 280,
+    "defaultW": 6857
+  },
+  {
+    "id": "28bd44f97d",
+    "name": "Pared 15 B",
+    "created": 1779829391276,
+    "units": "cm",
+    "dpi": 89.1,
+    "fixed": true,
+    "fixedW": 114,
+    "fixedH": 90,
+    "defaultW": 2105
+  },
+  {
+    "id": "9bbf611765",
+    "name": "Pared 13 B",
+    "created": 1779829497477,
+    "units": "cm",
+    "dpi": 89.1,
+    "fixed": true,
+    "fixedW": 114,
+    "fixedH": 90,
+    "defaultW": 2105
+  },
+  {
+    "id": "c1e8a2dec4",
+    "name": "Pared 8 B",
+    "created": 1779880958310,
+    "units": "cm",
+    "dpi": 32.1,
+    "fixed": true,
+    "fixedW": 317,
+    "fixedH": 280,
+    "defaultW": 758
+  },
+  {
+    "id": "db2fdf81ce",
+    "name": "Pared 1",
+    "created": 1779892046733,
+    "units": "cm",
+    "dpi": 6.4,
+    "fixed": true,
+    "fixedW": 1600,
+    "fixedH": 210,
+    "defaultW": 151
+  },
+  {
+    "id": "90a08e6211",
+    "name": "Pared 2",
+    "created": 1779892138070,
+    "units": "cm",
+    "dpi": 25.4,
+    "fixed": true,
+    "fixedW": 400,
+    "fixedH": 210,
+    "defaultW": 600
+  },
+  {
+    "id": "2e11690030",
+    "name": "Pared 3",
+    "created": 1779892247221,
+    "units": "cm",
+    "dpi": 7.3,
+    "fixed": true,
+    "fixedW": 1398,
+    "fixedH": 210,
+    "defaultW": 172
+  },
+  {
+    "id": "7a6b3159c7",
+    "name": "Pared 8 B",
+    "created": 1779896946662,
+    "units": "cm",
+    "dpi": 115.5,
+    "fixed": true,
+    "fixedW": 88,
+    "fixedH": 120,
+    "defaultW": 2728,
+    "inMemory": false
+  },
+  {
+    "id": "6fb8e072b2",
+    "name": "Pared 7 B",
+    "created": 1779897029619,
+    "units": "cm",
+    "dpi": 115.5,
+    "fixed": true,
+    "fixedW": 88,
+    "fixedH": 120,
+    "defaultW": 2728
+  }
+]

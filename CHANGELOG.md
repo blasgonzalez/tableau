@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.9.0] — 2026-05-27
+### Añadido
+- Texto: tamaño libre (8–999 px) con botones de incremento inteligente, en lugar de tallas fijas S/M/L/XL
+- Texto: negrita e itálica por elemento
+- Texto: renderizado multilínea correcto en la vista 3D
+- Arrastrar fotos: el indicador de arrastre diferencia tablero, mosaico y zona como destino
+- Fotos en zona: al soltar una foto sobre una zona, se adapta automáticamente a sus dimensiones
+
+### Corregido
+- Mosaico: tras arrastrar una celda, el clic de finalización ya no iniciaba un intercambio no deseado
+- Mosaico: «Quitar del mosaico» eliminaba todas las ocurrencias de la misma foto; ahora elimina solo la celda seleccionada
+- Texto y notas: el color en tableros de tamaño fijo (fondo blanco) aplica contraste automático correcto
+- Texto y notas: en paredes largas (p. ej. 15 m) ya no aparecen con tamaño minúsculo en la vista 3D
+- Notas: ahora se muestran correctamente en la vista 3D
+
+---
+
 ## [1.8.7] — 2026-05-27
 ### Corregido
 - Vista 3D: las fotos colocadas en paredes de altura personalizada se posicionan correctamente (el eje vertical usa la altura física de la pared, no el fixedH del tablero)

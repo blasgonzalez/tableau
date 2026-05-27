@@ -13,7 +13,7 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0d0c0b;--surf:#161412;--panel:#1c1916;--deep:#111009;
+  --bg:#0d0c0b;--surf:#161412;--panel:#1c1916;--panel2:#252018;--deep:#111009;
   --border:#2a231a;--border2:#3d3020;
   --acc:#c4894a;--acc-dim:#8a5f2e;--acc-faint:rgba(196,137,74,0.1);
   --text:#e0d4c0;--sub:#b0a090;--dim:#8a7c6e;--muted:#5a4e42;--danger:#c45050;
@@ -167,6 +167,8 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .titem-drag-label{font-size:7px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;pointer-events:none;flex:1}
 .titem-txt{flex:1;background:transparent;border:none;resize:none;outline:none;padding:8px 10px;line-height:1.35;overflow:hidden;cursor:text;color:inherit}
 .titem-txt::placeholder{opacity:.25}
+.tfmt-num{width:36px;text-align:center;background:var(--panel);border:1px solid var(--border2);color:var(--text);font-size:9px;padding:2px 4px;-moz-appearance:textfield}
+.tfmt-num::-webkit-outer-spin-button,.tfmt-num::-webkit-inner-spin-button{-webkit-appearance:none}
 .tfmt-panel{position:absolute;top:calc(100% + 4px);left:0;background:var(--panel2);border:1px solid var(--border2);padding:9px 11px;z-index:300;box-shadow:0 4px 14px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:7px;zoom:calc(1 / var(--canvas-zoom,1));min-width:190px}
 .tfmt-row{display:flex;align-items:center;gap:4px}
 .tfmt-lbl{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;width:38px;flex-shrink:0}
@@ -195,7 +197,10 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 /* ── WORKSPACE ── */
 .workspace{flex:1;display:flex;flex-direction:column;overflow:hidden}
 .canvas-wrap{flex:1;overflow:auto;background:var(--bg)}
+.canvas-wrap.panning{cursor:grab !important}
+.canvas-wrap.panning *{cursor:grab !important}
 .canvas-wrap.lib-expanded .bitem-bar,.canvas-wrap.lib-expanded .zone-hdr{display:none !important}
+.canvas-wrap.frame-painter .bitem:not(.locked){cursor:copy}
 .canvas{position:relative;min-width:3000px;min-height:2200px;z-index:1}
 .canvas-drop-hint{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(196,137,74,.06);border:3px dashed var(--acc-dim);font-size:14px;letter-spacing:3px;color:var(--acc);pointer-events:none;z-index:500}
 
@@ -246,10 +251,13 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .bitem.replacing .bitem-img-wrap{outline:2px solid #e06060 !important;outline-offset:3px;animation:replacing-pulse 1s ease-in-out infinite}
 .bitem.swap-target .bitem-img-wrap{outline:3px solid var(--acc) !important;outline-offset:3px}
 .bitem-bar{position:absolute;bottom:100%;right:0;display:flex;gap:3px;opacity:0;transition:opacity .12s;zoom:calc(1 / var(--canvas-zoom,1));z-index:250}
-.props-panel{position:absolute;top:0;left:0;background:var(--panel2);border:1px solid var(--border2);border-radius:3px;padding:8px 10px;z-index:200;min-width:160px;box-shadow:0 4px 14px rgba(0,0,0,.45);display:flex;flex-direction:column;gap:6px;zoom:calc(1 / var(--canvas-zoom,1))}
+.props-panel{position:absolute;top:0;left:0;background:var(--panel2);border:1px solid var(--border2);border-radius:3px;padding:8px 10px;z-index:500;min-width:180px;box-shadow:0 4px 14px rgba(0,0,0,.45);display:flex;flex-direction:column;gap:6px;zoom:calc(1 / var(--canvas-zoom,1))}
 .props-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .props-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
-.props-inp{width:64px;font-size:10px;background:var(--panel);border:1px solid var(--border2);color:var(--text);border-radius:2px;padding:3px 5px;text-align:right}
+.props-sec{font-size:7px;color:var(--dim);text-transform:uppercase;letter-spacing:1.5px;border-bottom:1px solid var(--border);padding-bottom:3px;margin-bottom:1px}
+.props-inp{width:54px;font-size:10px;background:var(--panel);border:1px solid var(--border2);color:var(--text);border-radius:2px;padding:3px 5px;text-align:right}
+.props-color{width:24px;height:22px;padding:0;border:1px solid var(--border2);border-radius:2px;cursor:pointer;background:none;flex-shrink:0}
+.frame-painter-banner{position:fixed;bottom:0;left:50%;transform:translateX(-50%);background:var(--acc);color:var(--bg);font-size:9px;letter-spacing:.8px;padding:6px 18px;z-index:600;pointer-events:none;white-space:nowrap;border-radius:4px 4px 0 0}
 .bitem:hover .bitem-bar{opacity:1}
 
 .ibc{width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;border:none;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-weight:500;background:var(--surf);color:var(--sub)}
@@ -260,10 +268,38 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .ibc.fwd:hover,.ibc.rot:hover{color:var(--text)}
 .rh{position:absolute;bottom:0;right:0;width:14px;height:14px;background:var(--acc);cursor:se-resize;opacity:0;transition:opacity .12s;zoom:calc(1 / var(--canvas-zoom,1))}
 .bitem:hover .rh{opacity:1}
-.lbl{position:absolute;left:0;right:0;box-sizing:border-box;font-size:calc(10px / var(--canvas-zoom,1));font-family:'IBM Plex Mono',monospace;color:var(--text);background:var(--panel2);border:none;border-top:1px solid var(--border2);padding:0 calc(6px / var(--canvas-zoom,1));letter-spacing:.3px;z-index:10;cursor:pointer;height:calc(26px / var(--canvas-zoom,1));display:flex;align-items:center;overflow:hidden;white-space:nowrap;user-select:none}
-.lbl:hover{border-top-color:var(--acc-dim)}
-.lbl-ph{color:var(--muted);font-style:italic}
-.lbl-more{color:var(--muted);margin-left:4px;font-style:italic}
+/* ── GRID ITEMS ── */
+.gitem{position:absolute;cursor:grab;user-select:none}
+.gitem:active{cursor:grabbing}
+.gitem-cell{position:absolute;overflow:hidden;background:var(--deep)}
+.gitem-cell img{display:block;width:100%;height:100%;pointer-events:none}
+.gitem-cell{cursor:grab}
+.gitem-cell:active{cursor:grabbing}
+.gitem-cell.swap-sel{outline:3px solid var(--acc);outline-offset:-3px;cursor:crosshair}
+.gitem-cell.swap-target:hover{outline:3px dashed var(--acc);outline-offset:-3px;cursor:crosshair}
+.gitem-outline{position:absolute;inset:0;pointer-events:none;z-index:5}
+.gitem.sel .gitem-outline{outline:2px dashed var(--acc-dim);outline-offset:3px}
+.gitem.sel.anchor .gitem-outline{outline:2px solid var(--acc);outline-offset:3px}
+.gitem-bar{position:absolute;bottom:100%;left:0;display:flex;gap:1px;align-items:center;opacity:0;transition:opacity .12s;zoom:calc(1/var(--canvas-zoom,1));z-index:250;background:var(--panel);border:1px solid var(--border2);padding:2px 3px;white-space:nowrap}
+.gitem:hover .gitem-bar,.gitem.sel .gitem-bar{opacity:1}
+.gitem-bar-lbl{font-size:9px;color:var(--sub);padding:0 3px;font-family:'IBM Plex Mono',monospace;letter-spacing:.3px;min-width:16px;text-align:center}
+.gitem-sep{width:1px;height:14px;background:var(--border2);margin:0 3px;flex-shrink:0}
+.gitem-rh{position:absolute;top:0;right:-4px;width:8px;height:100%;cursor:e-resize;z-index:10;background:transparent}
+.gitem-rh::after{content:'';position:absolute;top:0;right:2px;width:3px;height:100%;background:var(--acc);opacity:0;transition:opacity .12s}
+.gitem:hover .gitem-rh::after,.gitem.sel .gitem-rh::after{opacity:.5}
+.gitem-rh:hover::after{opacity:1 !important}
+.gitem-drop-hint{position:absolute;inset:0;background:rgba(0,0,0,.18);border:2px dashed var(--acc);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--acc);letter-spacing:.8px;pointer-events:none;z-index:20}
+.grid-ghost{position:absolute;cursor:move;user-select:none;z-index:9000}
+.grid-ghost-cell{position:absolute;overflow:hidden;background:var(--deep)}
+.grid-ghost-cell img{display:block;width:100%;height:100%}
+.grid-ghost-frame{position:absolute;inset:0;border:2px dashed var(--acc);pointer-events:none;z-index:5;box-sizing:border-box}
+.grid-ghost-frame.oversize{border-color:var(--danger)}
+.grid-ghost-rh{position:absolute;top:0;right:-5px;width:10px;height:100%;cursor:e-resize;z-index:10}
+.grid-ghost-rh::after{content:'';position:absolute;top:15%;right:3px;width:4px;height:70%;background:var(--acc);border-radius:2px}
+.grid-ghost-bar{position:absolute;top:100%;left:0;margin-top:8px;display:flex;align-items:center;gap:2px;background:var(--panel);border:1px solid var(--border2);padding:3px 4px;border-radius:3px;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.5);zoom:calc(1/var(--canvas-zoom,1))}
+.gitem-cell.drag-over{outline:2px solid var(--acc);outline-offset:-2px;opacity:.7}
+.gitem-cell.dragging{opacity:.35}
+.lbl-badge{position:absolute;bottom:0;left:0;font-size:6px;color:var(--sub);padding:1px 4px;pointer-events:none;zoom:calc(1/var(--canvas-zoom,1));background:var(--panel2);letter-spacing:.5px;border-radius:0 3px 0 0;opacity:.85}
 /* ── LABEL POPUP ── */
 .lbl-popup-ov{position:fixed;inset:0;z-index:800;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55)}
 .lbl-popup{background:var(--panel);border:1px solid var(--border2);padding:16px;display:flex;flex-direction:column;gap:10px;width:300px;min-width:220px;min-height:180px;box-shadow:0 4px 24px rgba(0,0,0,.5);resize:both;overflow:hidden}
@@ -307,6 +343,7 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .zitem.sel .zitem-body{outline:2px dashed var(--acc-dim);outline-offset:3px}
 .zitem.anchor .zitem-body{outline:2px solid var(--acc);outline-offset:3px}
 .zitem-body{width:100%;height:100%;box-sizing:border-box;border-radius:3px;position:relative}
+.zitem.drop-target .zitem-body{outline:2px solid var(--acc);outline-offset:2px}
 .zrh{position:absolute;opacity:0;transition:opacity .12s;z-index:20}
 .zitem:hover .zrh,.zitem.sel .zrh{opacity:1}
 .zrh.nw,.zrh.ne,.zrh.sw,.zrh.se{width:10px;height:10px;background:rgba(255,255,255,.75);zoom:calc(1/var(--canvas-zoom,1))}
@@ -620,6 +657,11 @@ select.btn option,select.inp option{background:var(--panel);color:var(--text)}
 .zc-btn:hover{color:var(--text);background:var(--surf)}
 .zc-pct{font-size:9px;letter-spacing:.5px;color:var(--sub);padding:0 8px;user-select:none;white-space:nowrap;min-width:38px;text-align:center;cursor:pointer}
 .zc-pct:hover{color:var(--acc)}
+.zc-room{display:flex;align-items:center;height:26px;border-right:1px solid var(--border2);flex-shrink:0}
+.zc-room-plan{display:flex;align-items:center;gap:3px;padding:0 7px 0 6px;height:100%;font-size:9px;letter-spacing:.3px;color:var(--acc);cursor:pointer;white-space:nowrap}
+.zc-room-plan:hover{background:var(--acc-faint)}
+.zc-room-3d{display:flex;align-items:center;padding:0 7px;height:100%;font-size:9px;letter-spacing:.3px;color:var(--dim);cursor:pointer;border-left:1px solid var(--border2);white-space:nowrap}
+.zc-room-3d:hover{color:var(--acc);background:var(--acc-faint)}
 .resize-tip{position:fixed;background:rgba(13,12,11,.96);border:1px solid var(--border2);color:var(--acc);font-size:11px;padding:5px 11px;letter-spacing:.3px;pointer-events:none;z-index:9999;white-space:nowrap;box-shadow:0 2px 10px rgba(0,0,0,.5)}
 </style>
 </head>
@@ -633,7 +675,7 @@ const THEMES = {
     label: 'Oscuro · Ámbar',
     bg: '#0d0c0b', acc: '#c4894a',
     vars: {
-      '--bg':'#0d0c0b','--surf':'#161412','--panel':'#1c1916','--deep':'#111009',
+      '--bg':'#0d0c0b','--surf':'#161412','--panel':'#1c1916','--panel2':'#252018','--deep':'#111009',
       '--border':'#2a231a','--border2':'#3d3020',
       '--acc':'#c4894a','--acc-dim':'#8a5f2e','--acc-faint':'rgba(196,137,74,0.1)',
       '--text':'#e0d4c0','--sub':'#b0a090','--dim':'#8a7c6e','--muted':'#5a4e42','--danger':'#c45050',
@@ -644,7 +686,7 @@ const THEMES = {
     label: 'Claro · Natural',
     bg: '#f4efe6', acc: '#8a5f2e',
     vars: {
-      '--bg':'#f4efe6','--surf':'#ede7dc','--panel':'#e6dfd3','--deep':'#f8f3ec',
+      '--bg':'#f4efe6','--surf':'#ede7dc','--panel':'#e6dfd3','--panel2':'#d8d0c2','--deep':'#f8f3ec',
       '--border':'#d0c8ba','--border2':'#b8ad9e',
       '--acc':'#8a5f2e','--acc-dim':'#6a4520','--acc-faint':'rgba(138,95,46,0.1)',
       '--text':'#271c10','--sub':'#4a3828','--dim':'#7a6550','--muted':'#a09080','--danger':'#c04040',
@@ -655,7 +697,7 @@ const THEMES = {
     label: 'Oscuro · Frío',
     bg: '#0c0e12', acc: '#7a9fd4',
     vars: {
-      '--bg':'#0c0e12','--surf':'#141820','--panel':'#1a1e2a','--deep':'#0e1018',
+      '--bg':'#0c0e12','--surf':'#141820','--panel':'#1a1e2a','--panel2':'#22283c','--deep':'#0e1018',
       '--border':'#202840','--border2':'#2a3550',
       '--acc':'#7a9fd4','--acc-dim':'#4d6fa8','--acc-faint':'rgba(122,159,212,0.1)',
       '--text':'#ccd4e4','--sub':'#8898b8','--dim':'#6070a0','--muted':'#3a4870','--danger':'#d06070',
@@ -666,7 +708,7 @@ const THEMES = {
     label: 'Alto Contraste',
     bg: '#000000', acc: '#ffcc33',
     vars: {
-      '--bg':'#000000','--surf':'#0d0d0d','--panel':'#141414','--deep':'#080808',
+      '--bg':'#000000','--surf':'#0d0d0d','--panel':'#141414','--panel2':'#1c1c1c','--deep':'#080808',
       '--border':'#2a2a2a','--border2':'#444444',
       '--acc':'#ffcc33','--acc-dim':'#cc9900','--acc-faint':'rgba(255,204,51,0.12)',
       '--text':'#ffffff','--sub':'#e0e0e0','--dim':'#b0b0b0','--muted':'#606060','--danger':'#ff5555',
@@ -677,7 +719,7 @@ const THEMES = {
     label: 'Claro · Frío',
     bg: '#f0f2f6', acc: '#4d6fa8',
     vars: {
-      '--bg':'#f0f2f6','--surf':'#e8ebf2','--panel':'#dfe3ee','--deep':'#f5f7fa',
+      '--bg':'#f0f2f6','--surf':'#e8ebf2','--panel':'#dfe3ee','--panel2':'#d2d8e6','--deep':'#f5f7fa',
       '--border':'#c4cad8','--border2':'#a8b0c8',
       '--acc':'#4d6fa8','--acc-dim':'#3a5590','--acc-faint':'rgba(77,111,168,0.1)',
       '--text':'#0e1220','--sub':'#2a3858','--dim':'#505e90','--muted':'#8898b8','--danger':'#c04040',
@@ -690,8 +732,7 @@ const ZOOM_STEPS = [0.25, 0.33, 0.5, 0.67, 0.75, 1.0, 1.25, 1.5, 2.0];
 
 const NOTE_FONT_CYCLE = [null, 9, 14, 18]; // null = default M (11px)
 const NOTE_FONT_LABEL = v => v === 9 ? 'S' : v === 14 ? 'L' : v === 18 ? 'XL' : 'M';
-const TEXT_FONT_SIZES = [16, 26, 40, 60];
-const TEXT_FONT_LABEL = v => v >= 50 ? 'XL' : v >= 36 ? 'L' : v >= 22 ? 'M' : 'S';
+const TEXT_FS_STEP = sz => sz < 20 ? 1 : sz < 60 ? 2 : sz < 120 ? 5 : 10;
 const TEXT_ALIGN_CYCLE = ['left', 'center', 'right'];
 const TEXT_ALIGN_ICON  = { left: '⫷', center: '⊟', right: '⫸' };
 const TEXT_FONTS = [
@@ -778,6 +819,26 @@ const physToPx = (phys, dpi, units) => {
   return Math.round((phys / factor) * dpi);
 };
 
+const calcGridLayout = (item, photosArr, dpi, units) => {
+  const gapPx  = physToPx(item.gap ?? 5, dpi, units);
+  const cols   = Math.max(1, item.cols || 3);
+  const cellW  = Math.max(10, (item.w - gapPx * (cols - 1)) / cols);
+  const pIds   = item.photoIds || [];
+  const rows   = [];
+  for (let r = 0; r * cols < pIds.length; r++) {
+    const rowIds = pIds.slice(r * cols, (r + 1) * cols);
+    const rowH = Math.max(...rowIds.map(id => {
+      const p = photosArr.find(x => x.id === id);
+      return (p && p.w > 0) ? Math.round(cellW * p.h / p.w) : Math.round(cellW);
+    }), 10);
+    rows.push({ ids: rowIds, h: rowH });
+  }
+  const totalH = rows.length > 0
+    ? rows.reduce((s, r) => s + r.h, 0) + gapPx * Math.max(0, rows.length - 1)
+    : 80;
+  return { gapPx, cols, cellW, rows, totalH };
+};
+
 const dimLabel = (w, h, dpi, units, frame = 0) => {
   const f = parseFloat(frame) || 0;
   if (dpi && units && units !== 'px') {
@@ -812,13 +873,15 @@ const I18N = {
     dragHint1:'Arrastra fotos desde la biblioteca (abajo)',
     dragHint2:'o desde el repositorio (panel izquierdo)',
     dragHint3:'o suelta imágenes desde el explorador de archivos',
-    dropHint:'Suelta para añadir al tablero',
+    dropHint:'Suelta para añadir al tablero', dropHintGrid:'Suelta para añadir al mosaico', dropHintZone:'Suelta para añadir a la zona',
     labelPlaceholder:'etiqueta…', rotateBtn:'Rotar 90°', bringFwdBtn:'Al frente', deleteBtn:'Eliminar', lockBtn:'Bloquear', unlockBtn:'Desbloquear',
     noteTitlePh:'título…', noteInMemoryBtn:'Incluir en memoria', noteExcludeMemBtn:'Excluir de memoria', notesSectionTitle:'Notas',
     renameBtn:'Renombrar',
     projectPhotosL1:'Fotos del', projectPhotosL2:'proyecto',
     libTitle:'Biblioteca', sortImported:'Importación', sortName:'Nombre A→Z', sortColor:'Tono', sortBrightness:'Luminosidad', sortRating:'Valoración', filterPending:'Sin colocar', libSearchPh:'buscar…', tagFilterBtn:'Etiquetas', tagFilterAll:'Todas', tagPopHd:'Etiquetas', tagNewPh:'nueva etiqueta…', noTagsYet:'Sin etiquetas aún', libPreviewToggle:'Vista previa al pasar el ratón', bgColor:'Color de fondo', bgColorNone:'Sin color (tema)', ratingFilterHint:'Filtrar por valoración mínima',
+    orientFilterHint: o => o === 'L' ? 'Formato horizontal' : o === 'P' ? 'Formato vertical' : o === 'S' ? 'Formato cuadrado' : 'Sin filtro formato',
     setDefaultSize:'Usar como tamaño de referencia', duplicateItem:'Duplicar', defaultSizeSet:'Tamaño de referencia guardado', defaultSizeActive: w => `Tamaño de referencia: ${w} px`, clear:'Limpiar', swapPos:'Intercambiar posición', flipH:'Voltear horizontal', flipV:'Voltear vertical',
+    gridItemBtn:'Mosaico', gridPendingHd:'Nuevo mosaico', gridPendingPlace:'Colocar en tablero', gridPendingWidth:'Ancho', gridItemCols:'Col', gridItemGap:'Sep', gridItemUngroup:'Separar en fotos', gridItemAddSel:'Añadir selección', gridItemRemove:'Quitar del mosaico', gridItemAddHint:'Arrastra fotos aquí para añadir',
     gridLayoutBtn:'Cuadrícula', gridTitle:'Colocar en cuadrícula', gridColsLabel:'Columnas', gridGapLabel:'Separación', gridScaleLabel:'Escala', gridFits:(n,tot)=>n>=tot?'Todas las fotos caben':`Caben ${n} de ${tot}`, gridPlace:'Colocar',
     pairsLayoutBtn:'Parejas', pairsLabel: n => `Pareja ${n}`, tripleLabel: n => `Trío ${n}`,
     presViewZones:'Ver zonas', presZoneOf:(i,n)=>`${i} / ${n}`,
@@ -885,8 +948,11 @@ const I18N = {
     noScaleConfigured:'sin escala configurada',
     reportDate: d => `Memoria del proyecto · ${d}`,
     colHdr: ['#','Foto','Dimensiones','Tamaño físico','Etiqueta'],
+    goToRoom: r => `Ir a sala: ${r} (R = planta · Shift+R = 3D)`,
     frameLabel:'Marco', frameDefault:'Marco por defecto',
     frameNote: (f, u) => `incl. ${f} ${u} de marco`,
+    matLabel:'Paspartú', moldingLabel:'Moldura',
+    framePainterCopy:'Copiar estilo de marco', framePainterHint:'Clic en fotos para aplicar · Esc para salir',
     exportProjectBtn:'Exportar proyecto (ZIP)', importProjectBtn:'⬆ Importar',
     importTitle:'Importar proyecto',
     importNew:'Importar como copia nueva', importReplace:'Reemplazar existente',
@@ -943,13 +1009,15 @@ const I18N = {
     dragHint1:'Drag photos from the library (below)',
     dragHint2:'or from the repository (left panel)',
     dragHint3:'or drop images from the file explorer',
-    dropHint:'Drop to add to board',
+    dropHint:'Drop to add to board', dropHintGrid:'Drop to add to grid', dropHintZone:'Drop to add to zone',
     labelPlaceholder:'label…', rotateBtn:'Rotate 90°', bringFwdBtn:'Bring forward', deleteBtn:'Delete', lockBtn:'Lock', unlockBtn:'Unlock',
     noteTitlePh:'title…', noteInMemoryBtn:'Include in report', noteExcludeMemBtn:'Exclude from report', notesSectionTitle:'Notes',
     renameBtn:'Rename',
     projectPhotosL1:'Project', projectPhotosL2:'photos',
     libTitle:'Library', sortImported:'Import date', sortName:'Name A→Z', sortColor:'Hue', sortBrightness:'Brightness', sortRating:'Rating', filterPending:'Unplaced', libSearchPh:'search…', tagFilterBtn:'Tags', tagFilterAll:'All', tagPopHd:'Tags', tagNewPh:'new tag…', noTagsYet:'No tags yet', libPreviewToggle:'Hover preview', bgColor:'Background colour', bgColorNone:'No colour (theme)', ratingFilterHint:'Filter by minimum rating',
+    orientFilterHint: o => o === 'L' ? 'Horizontal format' : o === 'P' ? 'Vertical format' : o === 'S' ? 'Square format' : 'No format filter',
     setDefaultSize:'Set as default size', duplicateItem:'Duplicate', defaultSizeSet:'Default size saved', defaultSizeActive: w => `Default size: ${w} px`, clear:'Clear', swapPos:'Swap positions', flipH:'Flip horizontal', flipV:'Flip vertical',
+    gridItemBtn:'Grid', gridPendingHd:'New grid', gridPendingPlace:'Place on board', gridPendingWidth:'Width', gridItemCols:'Col', gridItemGap:'Gap', gridItemUngroup:'Ungroup to photos', gridItemAddSel:'Add selection', gridItemRemove:'Remove from grid', gridItemAddHint:'Drop photos here to add',
     gridLayoutBtn:'Grid', gridTitle:'Place as grid', gridColsLabel:'Columns', gridGapLabel:'Gap', gridScaleLabel:'Scale', gridFits:(n,tot)=>n>=tot?'All photos fit':`${n} of ${tot} fit`, gridPlace:'Place',
     pairsLayoutBtn:'Pairs', pairsLabel: n => `Pair ${n}`, tripleLabel: n => `Triple ${n}`,
     presViewZones:'View zones', presZoneOf:(i,n)=>`${i} / ${n}`,
@@ -1016,8 +1084,11 @@ const I18N = {
     noScaleConfigured:'no scale configured',
     reportDate: d => `Project report · ${d}`,
     colHdr: ['#','Photo','Dimensions','Physical size','Label'],
+    goToRoom: r => `Go to room: ${r} (R = floor plan · Shift+R = 3D)`,
     frameLabel:'Frame', frameDefault:'Default frame',
     frameNote: (f, u) => `incl. ${f} ${u} frame`,
+    matLabel:'Mat', moldingLabel:'Molding',
+    framePainterCopy:'Copy frame style', framePainterHint:'Click photos to apply · Esc to exit',
     exportProjectBtn:'Export project (ZIP)', importProjectBtn:'⬆ Import',
     importTitle:'Import project',
     importNew:'Import as new copy', importReplace:'Replace existing',
@@ -1121,6 +1192,15 @@ function App() {
   const [collapsedRooms, setCollapsedRooms] = useState(new Set());
   const [room,           setRoom]          = useState(null);     // active room object | null
   const [roomView,       setRoomView]      = useState('board');  // 'board' | 'room'
+  const [boardBeforeRoom, setBoardBeforeRoom] = useState(null); // bid to return to from room/3D view
+  const [gridCellCtx,      setGridCellCtx]      = useState(null); // {gridId, photoId, x, y}
+  const [gridCellSel,      setGridCellSel]      = useState(null); // {gridId, index} — first click for swap
+  const gridCellSelRef = useRef(null);
+  const [gridDropTarget,   setGridDropTarget]   = useState(null); // gridId hovered during lib drag
+  const [zoneDropTarget,   setZoneDropTarget]   = useState(null); // zoneId hovered during lib drag
+  const [gridCellDragOver, setGridCellDragOver] = useState(null); // {gridId, index} cell being hovered during reorder
+  const [gridPending,      setGridPending]      = useState(null); // {photoIds, cols, gap, w, x, y}
+  const gridPendingRef = useRef(null);
   const [roomDrawing,    setRoomDrawing]   = useState(false);
   const [roomAppending,  setRoomAppending] = useState(false);
   const [roomVertCtx,    setRoomVertCtx]   = useState(null); // {id, x, y}
@@ -1181,6 +1261,7 @@ function App() {
   const [batchTagPop,   setBatchTagPop]   = useState(null); // {x, y}
   const [batchTagInput, setBatchTagInput] = useState('');
   const [ratingFilter,  setRatingFilter]  = useState(0); // 0 = no filter, 1-5 = min rating
+  const [orientFilter,  setOrientFilter]  = useState(null); // null | 'L' | 'P' | 'S'
   const [ctxMenu,       setCtxMenu]       = useState(null); // {x, y, itemId}
   const [projCtxMenu,   setProjCtxMenu]   = useState(null); // {x, y, id}
   const pendingRoomViewRef = useRef(false);
@@ -1239,6 +1320,9 @@ function App() {
   const [cfgDefaultFrame, setCfgDefaultFrame] = useState('0');
   const [cfgExportPad,   setCfgExportPad]   = useState('60');
   const [propsPanelId,  setPropsPanelId]  = useState(null);
+  const [framePainter,  setFramePainter]  = useState(null); // {matSize,matColor,frameSize,frameColor} when active
+  const [spaceDown,     setSpaceDown]     = useState(false);
+  const spaceRef = useRef(false);
   const [textFmtPanelId, setTextFmtPanelId] = useState(null);
   const [noteColorPanelId, setNoteColorPanelId] = useState(null);
   const [zoneColorPanelId, setZoneColorPanelId] = useState(null);
@@ -1408,7 +1492,15 @@ function App() {
     });
   }, [pid]);
 
-  useEffect(() => { setLibSearch(''); setLibSelection([]); libSelAnchorRef.current = null; setTagFilter([]); setTagPopover(null); setBatchTagPop(null); setSectBatchPop(null); setRatingFilter(0); setSectCtxMenu(null); setLibMuted(false); setUploadDropOpen(false); setExportDropOpen(false); }, [pid]);
+  useEffect(() => { setLibSearch(''); setLibSelection([]); libSelAnchorRef.current = null; setTagFilter([]); setTagPopover(null); setBatchTagPop(null); setSectBatchPop(null); setRatingFilter(0); setOrientFilter(null); setSectCtxMenu(null); setLibMuted(false); setUploadDropOpen(false); setExportDropOpen(false); }, [pid]);
+  useEffect(() => { gridPendingRef.current = gridPending; }, [gridPending]);
+  useEffect(() => { gridCellSelRef.current = gridCellSel; }, [gridCellSel]);
+  useEffect(() => { setGridDropTarget(null); setGridCellDragOver(null); setGridCellCtx(null); setGridCellSel(null); setZoneDropTarget(null); }, [bid]);
+  useEffect(() => {
+    setVersions([]);
+    if (!pid || !bid) return;
+    api.get(`/api/boards/${pid}/${bid}/versions`).then(vs => setVersions(Array.isArray(vs) ? vs : [])).catch(() => {});
+  }, [bid, pid]);
 
   useEffect(() => {
     const proj = projects.find(p => p.id === pid);
@@ -1614,25 +1706,33 @@ function App() {
         wallSides.forEach(({boardId, sideSign}) => {
         const board = boards.find(b => b.id === boardId);
         const rawItems = boardItemsMap[boardId] || [];
-        const bItems = rawItems.filter(i => !i.type || i.type === 'photo' || i.type === 'text');
+        const bItems = rawItems.filter(i => !i.type || i.type === 'photo' || i.type === 'text' || i.type === 'note');
         if (!board || !bItems.length) return;
         const bPx = getBoardPx(board);
         if (!bPx) return;
         const fW = board.fixedW;
         const normX = -dirZ * sideSign, normZ = dirX * sideSign;
+        const hexWall = wColor.startsWith('#') ? wColor : '#d0c8bc';
 
         bItems.forEach(item => {
           const isText = item.type === 'text';
-          const photo = !isText ? photoMap[item.photoId] : null;
+          const isNote = item.type === 'note';
+          const photo = (!isText && !isNote) ? photoMap[item.photoId] : null;
           const itemH = isText ? (item.h || item.w * 0.3)
+                      : isNote ? (item.h || item.w)
                       : photo ? item.w * (photo.h / photo.w) : item.w;
           const iw = item.w / bPx.w * fW;
           const ih = itemH / bPx.h * wh;
+          // Enforce minimum readable size for text/note items regardless of board DPI
+          const minH = (isText || isNote) ? wh * 0.03 : 0;
+          const sizeScale = (minH > 0 && ih > 0 && ih < minH) ? minH / ih : 1;
+          const finalIw = iw * sizeScale;
+          const finalIh = Math.max(ih, minH);
           const ix = (item.x + item.w/2) / bPx.w * fW;
           const iy = wh * (1 - (item.y + itemH/2) / bPx.h);
           const pos = { x: x1 + dirX*ix + normX*(wt/2+2), y: iy, z: z1 + dirZ*ix + normZ*(wt/2+2) };
           const pMesh = new THREE.Mesh(
-            new THREE.PlaneGeometry(iw, ih),
+            new THREE.PlaneGeometry(finalIw, finalIh),
             new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, transparent: true })
           );
           pMesh.position.set(pos.x, pos.y, pos.z);
@@ -1650,16 +1750,50 @@ function App() {
             {
               const tFont = TEXT_FONTS.find(f => f.id === (item.fontFamily || 'serif')) || TEXT_FONTS[0];
               const fs = (item.fontSize || 40) * SCALE;
+              const bold = item.fontWeight === 'bold' ? 'bold ' : '';
+              const italic = item.fontStyle === 'italic' ? 'italic ' : '';
               ctx2.clearRect(0, 0, cvW, cvH);
-              ctx2.font = `${fs}px ${tFont.family}`;
-              ctx2.fillStyle = item.textColor || '#1a1a1a';
+              ctx2.font = `${italic}${bold}${fs}px ${tFont.family}`;
+              const wallFallback = bgContrast(hexWall);
+              let textCol = item.textColor || wallFallback;
+              if (textCol.startsWith('#') && bgContrast(textCol) === bgContrast(hexWall)) textCol = wallFallback;
+              ctx2.fillStyle = textCol;
               ctx2.textAlign = item.textAlign || 'left';
-              ctx2.textBaseline = 'middle';
-              const tx = item.textAlign === 'right' ? cvW - 4 : item.textAlign === 'center' ? cvW/2 : 4;
-              ctx2.fillText(item.text || '', tx, cvH/2);
+              ctx2.textBaseline = 'alphabetic';
+              const tx = item.textAlign === 'right' ? cvW - 4*SCALE : item.textAlign === 'center' ? cvW/2 : 4*SCALE;
+              const lines = (item.text || '').split('\n');
+              const lineH = fs * 1.35;
+              const totalH = lines.length * lineH;
+              const startY = (cvH - totalH) / 2 + fs * 0.85;
+              lines.forEach((ln, i) => ctx2.fillText(ln, tx, startY + i * lineH));
             }
             const tex = new THREE.CanvasTexture(cvs);
             pMesh.material = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, transparent: true, alphaTest: 0.01 });
+          } else if (isNote) {
+            const SCALE = 2;
+            const cvW = Math.max(1, Math.round(item.w * SCALE));
+            const cvH = Math.max(1, Math.round(itemH * SCALE));
+            const cvs = document.createElement('canvas');
+            cvs.width = cvW; cvs.height = cvH;
+            const ctx2 = cvs.getContext('2d');
+            const noteBg = item.noteColor && NOTE_COLOR_VALS[item.noteColor] ? NOTE_COLOR_VALS[item.noteColor][0] : '#e8e0c8';
+            ctx2.fillStyle = noteBg;
+            ctx2.fillRect(0, 0, cvW, cvH);
+            const noteFg = bgContrast(noteBg);
+            ctx2.fillStyle = noteFg;
+            ctx2.textAlign = 'left';
+            ctx2.textBaseline = 'top';
+            if (item.title) {
+              ctx2.font = `bold ${14*SCALE}px 'IBM Plex Mono',monospace`;
+              ctx2.fillText(item.title, 7*SCALE, 7*SCALE);
+            }
+            if (item.text) {
+              ctx2.font = `${11*SCALE}px 'IBM Plex Mono',monospace`;
+              const lines = item.text.split('\n').slice(0, 10);
+              lines.forEach((ln, i) => ctx2.fillText(ln, 7*SCALE, ((item.title ? 26 : 7) + i * 14) * SCALE));
+            }
+            const tex = new THREE.CanvasTexture(cvs);
+            pMesh.material = new THREE.MeshLambertMaterial({ map: tex, side: THREE.DoubleSide });
           } else if (item.photoId) {
             loader.load(`/photos/${pid}/${item.photoId}/thumb`, tex => {
               if (cancelled) return;
@@ -2043,6 +2177,12 @@ function App() {
   }, []);
 
   useEffect(() => {
+    const onDragEnd = () => { setGridDropTarget(null); setGridCellDragOver(null); setZoneDropTarget(null); setDragOver(false); };
+    window.addEventListener('dragend', onDragEnd);
+    return () => window.removeEventListener('dragend', onDragEnd);
+  }, []);
+
+  useEffect(() => {
     const onKey = e => {
       if (e.ctrlKey || e.metaKey) {
         if (e.key === '+' || e.key === '=') { e.preventDefault(); zoomStep(1); }
@@ -2119,9 +2259,43 @@ function App() {
         setItems(nit); itemsRef.current = nit;
         saveItemsNow(nit);
       }
+      if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey && gridPendingRef.current) {
+        e.preventDefault(); placeGridPending(); return;
+      }
+      if ((e.key === 'r' || e.key === 'R') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        const linkedRoom = roomsRef.current.find(r => r.walls?.some(w => w.boardId === bidRef.current || w.boardIdBack === bidRef.current));
+        if (linkedRoom) {
+          e.preventDefault();
+          setBoardBeforeRoom(bidRef.current);
+          setRoom(linkedRoom); roomRef.current = linkedRoom;
+          setActiveRoomId(linkedRoom.id); activeRoomIdRef.current = linkedRoom.id;
+          if (e.shiftKey) {
+            load3DLibs().then(() => setRoomView('3d'));
+          } else {
+            setRoomView('room');
+          }
+        }
+      }
+    };
+    const onSpaceDown = e => {
+      if (e.code !== 'Space' || e.repeat) return;
+      const tag = document.activeElement?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      e.preventDefault();
+      spaceRef.current = true; setSpaceDown(true);
+    };
+    const onSpaceUp = e => {
+      if (e.code !== 'Space') return;
+      spaceRef.current = false; setSpaceDown(false);
     };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener('keydown', onSpaceDown);
+    window.addEventListener('keyup',   onSpaceUp);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('keydown', onSpaceDown);
+      window.removeEventListener('keyup',   onSpaceUp);
+    };
   }, [zoomStep, fitBoard, undo, redo, pushUndo, saveItemsNow]);
 
   useEffect(() => {
@@ -2338,8 +2512,10 @@ function App() {
           const font = fontMap[item.fontFamily || 'serif'] || 'Georgia,serif';
           const justify = alignMap[item.textAlign || 'center'] || 'center';
           const scaledSize = Math.max(6, Math.round((item.fontSize || 26) * sc));
+          const fw = item.fontWeight === 'bold' ? 'bold' : 'normal';
+          const fi = item.fontStyle === 'italic' ? 'italic' : 'normal';
           const txt = (item.text || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>');
-          return `<div style="position:absolute;left:${Math.round((item.x-minXpr)*sc)}px;top:${Math.round((item.y-minYpr)*sc)}px;width:${Math.round(item.w*sc)}px;height:${Math.round((item.h||130)*sc)}px;font-size:${scaledSize}px;font-family:${font};text-align:${item.textAlign||'center'};color:${color};display:flex;align-items:center;justify-content:${justify};padding:${Math.round(4*sc)}px;overflow:hidden;box-sizing:border-box;${rotStyle}">${txt}</div>`;
+          return `<div style="position:absolute;left:${Math.round((item.x-minXpr)*sc)}px;top:${Math.round((item.y-minYpr)*sc)}px;width:${Math.round(item.w*sc)}px;height:${Math.round((item.h||130)*sc)}px;font-size:${scaledSize}px;font-family:${font};font-weight:${fw};font-style:${fi};text-align:${item.textAlign||'center'};color:${color};display:flex;align-items:center;justify-content:${justify};padding:${Math.round(4*sc)}px;overflow:hidden;box-sizing:border-box;${rotStyle}">${txt}</div>`;
         }).join('');
         previewHtml = `<div class="preview-wrap"><div class="preview-box" style="width:${pW}px;height:${pH}px;background:${bg};border:${border}">${imgs}${textEls}</div><div class="preview-dim">${dimLabel(bW, bH, dpi, units)}</div></div>`;
       }
@@ -2548,6 +2724,18 @@ ${rows}
       y = Math.max(0, Math.min(y, bp.h - h));
     }
     const placedZone = findZoneAt(x, y, w, h);
+    if (placedZone) {
+      // Fit photo within zone — respect zone header height and add a small margin
+      const ZONE_HDR = 28, ZONE_PAD = 8;
+      const availW = placedZone.w - ZONE_PAD * 2;
+      const availH = (placedZone.h || 320) - ZONE_HDR - ZONE_PAD * 2;
+      const ratio = photo.w / photo.h;
+      w = availW / availH > ratio ? Math.round(availH * ratio) : availW;
+      w = Math.max(40, w);
+      const h2 = Math.round(w * photo.h / photo.w);
+      x = Math.round(placedZone.x + (placedZone.w - w) / 2);
+      y = Math.round(placedZone.y + ZONE_HDR + ZONE_PAD + (Math.max(0, availH - h2) / 2));
+    }
     const item = {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
       photoId: photo.id, x, y, w, z: maxZ + 1, label: '', rot: 0,
@@ -3096,10 +3284,13 @@ ${rows}
       if (pinnedPreview) { setPinnedPreview(null); return; }
       if (fillPlaceholder) { setFillPlaceholder(null); return; }
       if (replaceMode) { setReplaceMode(null); return; }
+      if (framePainter) { setFramePainter(null); return; }
+      if (gridPendingRef.current) { setGridPending(null); return; }
+      if (gridCellSelRef.current) { setGridCellSel(null); return; }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [fullscreenPhoto, presentation, pinnedPreview, fillPlaceholder, replaceMode, sectCtxMenu]);
+  }, [fullscreenPhoto, presentation, pinnedPreview, fillPlaceholder, replaceMode, sectCtxMenu, framePainter]);
 
   const deletePhoto = id => {
     const placedBoards = boards.filter(b =>
@@ -3153,6 +3344,9 @@ ${rows}
     const W = board?.defaultW || 320, GAP = 20;
     const maxZ = itemsRef.current.length ? Math.max(...itemsRef.current.map(i => i.z || 0)) : 0;
     const defFrame = board?.defaultFrame || 0;
+    const bp = boardPxRef.current;
+    const availW = bp ? bp.w : Math.round(wrap.clientWidth / z);
+    const perRow = Math.max(1, Math.floor((availW + GAP) / (W + GAP)));
     const newItems = ids.map((photoId, idx) => {
       const photo = photosRef.current.find(p => p.id === photoId);
       if (!photo) return null;
@@ -3160,12 +3354,22 @@ ${rows}
       return { id: Date.now().toString(36) + Math.random().toString(36).slice(2,5) + idx,
                photoId, w: W, h, z: maxZ + idx + 1, label: '', rot: 0, frame: defFrame };
     }).filter(Boolean);
-    const totalW = newItems.length * W + (newItems.length - 1) * GAP;
-    const bp = boardPxRef.current;
-    newItems.forEach((item, idx) => {
-      item.x = Math.round(cx - totalW / 2 + idx * (W + GAP));
-      item.y = Math.round(cy - item.h / 2);
-      if (bp) { item.x = Math.max(0, Math.min(item.x, bp.w - W)); item.y = Math.max(0, Math.min(item.y, bp.h - item.h)); }
+    const rows = [];
+    for (let r = 0; r < Math.ceil(newItems.length / perRow); r++)
+      rows.push(newItems.slice(r * perRow, (r + 1) * perRow));
+    const rowMaxH = rows.map(row => Math.max(...row.map(i => i.h)));
+    const totalGridH = rowMaxH.reduce((s, h) => s + h, 0) + GAP * Math.max(0, rows.length - 1);
+    let startY = Math.round(cy - totalGridH / 2);
+    if (bp) startY = Math.max(0, Math.min(startY, bp.h - totalGridH));
+    rows.forEach((row, ri) => {
+      const rowW = row.length * W + (row.length - 1) * GAP;
+      let startX = Math.round(cx - rowW / 2);
+      if (bp) startX = Math.max(0, Math.min(startX, bp.w - rowW));
+      const rowY = startY + rowMaxH.slice(0, ri).reduce((s, h) => s + h + GAP, 0);
+      row.forEach((item, ci) => {
+        item.x = Math.round(startX + ci * (W + GAP));
+        item.y = Math.round(rowY + (rowMaxH[ri] - item.h) / 2);
+      });
     });
     const nit = [...itemsRef.current, ...newItems];
     const norm = applyNormalized(nit);
@@ -3364,7 +3568,7 @@ ${rows}
   };
 
   const onCanvasDrop = async e => {
-    e.preventDefault(); setDragOver(false);
+    e.preventDefault(); setDragOver(false); setZoneDropTarget(null);
     const wrap = wrapRef.current;
     const r = wrap.getBoundingClientRect();
     const z = zoomRef.current;
@@ -3387,14 +3591,29 @@ ${rows}
       const W = board2?.defaultW || 320, GAP = 20;
       const maxZ = itemsRef.current.length ? Math.max(...itemsRef.current.map(i => i.z||0)) : 0;
       const defFrame = board2?.defaultFrame || 0;
+      const bp = boardPxRef.current;
+      const wrap = wrapRef.current;
+      const z2 = zoomRef.current;
+      const availW = bp ? bp.w : Math.round(wrap.clientWidth / z2);
+      const perRow = Math.max(1, Math.floor((availW + GAP) / (W + GAP)));
       const newItems = photoIds.map((photoId, idx) => {
         const photo = photosRef.current.find(p => p.id === photoId);
         if (!photo) return null;
         const h = Math.round(W * photo.h / photo.w);
         return { id: Date.now().toString(36) + Math.random().toString(36).slice(2,5) + idx,
-                 photoId, w: W, h, z: maxZ + idx + 1, label: '', rot: 0, frame: defFrame,
-                 x: Math.round(pos.x + idx * (W + GAP)), y: Math.round(pos.y) };
+                 photoId, w: W, h, z: maxZ + idx + 1, label: '', rot: 0, frame: defFrame };
       }).filter(Boolean);
+      const rows = [];
+      for (let r = 0; r < Math.ceil(newItems.length / perRow); r++)
+        rows.push(newItems.slice(r * perRow, (r + 1) * perRow));
+      const rowMaxH = rows.map(row => Math.max(...row.map(i => i.h)));
+      rows.forEach((row, ri) => {
+        const rowY = pos.y + rowMaxH.slice(0, ri).reduce((s, h) => s + h + GAP, 0);
+        row.forEach((item, ci) => {
+          item.x = Math.round(pos.x + ci * (W + GAP));
+          item.y = Math.round(rowY);
+        });
+      });
       const nit = [...itemsRef.current, ...newItems];
       const norm = applyNormalized(nit);
       selRef.current = newItems.map(i => i.id); setSel(selRef.current);
@@ -3405,6 +3624,7 @@ ${rows}
 
   // ── item interactions ─────────────────────────────────────────────────────
   const onItemPD = (e, itemId) => {
+    if (e.button === 0 && spaceRef.current) return; // space+drag = pan, handled by lasso effect
     if (presentationRef.current) {
       if (e.button !== 0) return;
       const item = itemsRef.current.find(i => i.id === itemId);
@@ -3898,11 +4118,31 @@ ${rows}
 
   // lasso: all on window so nothing in the React tree can block it
   useEffect(() => {
+    const startPan = (e, wrap) => {
+      e.preventDefault();
+      const sx = e.clientX, sy = e.clientY;
+      const sl = wrap.scrollLeft, st = wrap.scrollTop;
+      setSpaceDown(s => s); // keep cursor
+      const onMove = ev => {
+        wrap.scrollLeft = sl - (ev.clientX - sx);
+        wrap.scrollTop  = st - (ev.clientY - sy);
+      };
+      const onUp = () => {
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup',   onUp);
+      };
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup',   onUp);
+    };
     const onPD = e => {
-      if (e.button !== 0) return;
       const wrap = wrapRef.current;
       if (!wrap || !wrap.contains(e.target)) return;
-      if (e.target.closest('.align-bar,.bitem,.nitem,.titem')) return;
+      // Middle mouse button — always pan
+      if (e.button === 1) { startPan(e, wrap); return; }
+      if (e.button !== 0) return;
+      // Space+drag — pan over everything
+      if (spaceRef.current) { startPan(e, wrap); return; }
+      if (e.target.closest('.align-bar,.bitem,.nitem,.titem,.gitem,.grid-ghost')) return;
       const toCanvas = (cx, cy) => {
         const r = wrap.getBoundingClientRect();
         const z = zoomRef.current;
@@ -3965,6 +4205,102 @@ ${rows}
     const u = itemsRef.current.map(i => i.id === id ? {...i, fontSize: next} : i);
     itemsRef.current = u; setItems(u); saveItemsNow(u);
   };
+  const createGridItem = (photoIds) => {
+    if (!bidRef.current || !photoIds.length) return;
+    const board = boardsRef.current.find(b => b.id === bidRef.current);
+    const bpx = boardPxRef.current;
+    const wrap = wrapRef.current;
+    const z = zoomRef.current;
+    const pad = bpx ? BOARD_PAD : 0;
+    const dpi = board?.dpi || 150;
+    const units = board?.units || 'px';
+    const gap = !board || units === 'px' ? 10 : units === 'mm' ? 5 : units === 'cm' ? 0.5 : 0.2;
+    let cols = Math.min(Math.max(1, Math.round(Math.sqrt(photoIds.length))), photoIds.length, 5);
+    let w = bpx ? Math.round(bpx.w * 0.85) : Math.min(900, photoIds.length * 220);
+    if (bpx) {
+      // Increase cols until grid fits board height
+      while (cols < photoIds.length) {
+        const lay = calcGridLayout({photoIds, cols, gap, w}, photosRef.current, dpi, units);
+        if (lay.totalH <= bpx.h) break;
+        cols++;
+      }
+      // If still too tall, shrink width proportionally
+      const lay = calcGridLayout({photoIds, cols, gap, w}, photosRef.current, dpi, units);
+      if (lay.totalH > bpx.h && lay.totalH > 0)
+        w = Math.max(80, Math.round(w * (bpx.h * 0.95) / lay.totalH));
+    }
+    const lay = calcGridLayout({photoIds, cols, gap, w}, photosRef.current, dpi, units);
+    const cx = wrap ? Math.round((wrap.scrollLeft + wrap.clientWidth  / 2 - pad) / z - w / 2) : 100;
+    const cy = wrap ? Math.round((wrap.scrollTop  + wrap.clientHeight / 2 - pad) / z - lay.totalH / 2) : 100;
+    setGridPending({ photoIds: [...photoIds], cols, gap, w, x: Math.max(0, cx), y: Math.max(0, cy) });
+  };
+
+  const placeGridPending = () => {
+    const gp = gridPendingRef.current;
+    if (!gp || !bidRef.current) return;
+    pushUndo();
+    const maxZ = itemsRef.current.length ? Math.max(...itemsRef.current.map(i => i.z || 0)) : 0;
+    const item = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      type: 'grid', x: Math.max(0, Math.round(gp.x || 0)), y: Math.max(0, Math.round(gp.y || 0)),
+      w: gp.w, cols: gp.cols, gap: gp.gap,
+      photoIds: [...gp.photoIds], z: maxZ + 1,
+    };
+    const nit = [...itemsRef.current, item];
+    itemsRef.current = nit; setItems(nit); saveItemsNow(nit);
+    setLibSelection([]); libSelAnchorRef.current = null;
+    setGridPending(null);
+  };
+
+  const onGridResizePD = (e, itemId) => {
+    if (presentationRef.current) return;
+    e.stopPropagation(); e.preventDefault();
+    const it = itemsRef.current.find(i => i.id === itemId);
+    if (!it) return;
+    pushUndo();
+    let rawW = it.w;
+    const onMM = e => {
+      const bp = boardPxRef.current;
+      const maxW = bp ? bp.w - it.x : Infinity;
+      rawW = Math.max(60, Math.min(rawW + e.movementX / zoomRef.current, maxW));
+      const u = itemsRef.current.map(i => i.id === itemId ? {...i, w: Math.round(rawW)} : i);
+      itemsRef.current = u; setItems(u);
+    };
+    const onUp = () => { saveItemsNow(itemsRef.current); window.removeEventListener('pointermove', onMM); window.removeEventListener('pointerup', onUp); };
+    window.addEventListener('pointermove', onMM);
+    window.addEventListener('pointerup', onUp);
+  };
+
+  const ungroupGrid = (itemId) => {
+    const grid = itemsRef.current.find(i => i.id === itemId);
+    if (!grid || grid.type !== 'grid') return;
+    pushUndo();
+    const board = boardsRef.current.find(b => b.id === bidRef.current);
+    const dpi   = board?.dpi  || 150;
+    const units = board?.units || 'px';
+    const { gapPx, cellW, rows } = calcGridLayout(grid, photosRef.current, dpi, units);
+    const newItems = [];
+    let rowY = 0;
+    rows.forEach((row, ri) => {
+      if (ri > 0) rowY += rows[ri - 1].h + gapPx;
+      row.ids.forEach((photoId, ci) => {
+        const p = photosRef.current.find(x => x.id === photoId);
+        if (!p) return;
+        newItems.push({
+          id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5) + newItems.length,
+          photoId,
+          x: Math.round(grid.x + ci * (cellW + gapPx)),
+          y: Math.round(grid.y + rowY),
+          w: Math.round(cellW),
+          z: (grid.z || 1) + newItems.length,
+        });
+      });
+    });
+    const nit = [...itemsRef.current.filter(i => i.id !== itemId), ...newItems];
+    itemsRef.current = nit; setItems(nit); saveItemsNow(nit);
+    selRef.current = newItems.map(i => i.id); setSel(selRef.current);
+  };
+
   const deleteItem = id => {
     pushUndo();
     const item = itemsRef.current.find(i => i.id === id);
@@ -4072,7 +4408,9 @@ ${rows}
       fontSize:   lastText?.fontSize   ?? 26,
       textAlign:  lastText?.textAlign  ?? 'center',
       fontFamily: lastText?.fontFamily ?? 'serif',
-      textColor:  lastText?.textColor  || autoColor,
+      fontWeight: lastText?.fontWeight ?? '',
+      fontStyle:  lastText?.fontStyle  ?? '',
+      textColor:  autoColor || lastText?.textColor || '',
       ...(textZone ? { zoneId: textZone.id } : {}),
     };
     const nit = [...itemsRef.current, item];
@@ -4760,6 +5098,10 @@ ${rows}
   };
 
   const getItemH = item => {
+    if (item.type === 'grid') {
+      const board = boardsRef.current.find(b => b.id === bidRef.current);
+      return calcGridLayout(item, photosRef.current, board?.dpi || 150, board?.units || 'px').totalH;
+    }
     if (item.type === 'note' || item.type === 'zone') return item.h || item.w;
     const p = photosRef.current.find(ph => ph.id === item.photoId);
     if (!p) return item.w;
@@ -4812,6 +5154,12 @@ ${rows}
   const handleItemClick = (e, item) => {
     e.stopPropagation();
     if (wasDragged.current) { wasDragged.current = false; return; }
+    if (framePainter && item.photoId) {
+      const {matSize, matColor, frameSize, frameColor} = framePainter;
+      const u = itemsRef.current.map(i => i.id === item.id ? {...i, matSize, matColor, frameSize, frameColor} : i);
+      itemsRef.current = u; setItems(u); saveItemsNow(u);
+      return;
+    }
     setTextFmtPanelId(null);
     const idsToToggle = item.groupId
       ? itemsRef.current.filter(i => i.groupId === item.groupId).map(i => i.id)
@@ -5143,7 +5491,7 @@ ${rows}
   };
 
   return (
-    <div className={`app${presentation ? ' presentation' : ''}`} onClick={() => { selRef.current = []; setSel([]); renaming && setRenaming(null); setThemeOpen(false); setPropsPanelId(null); setTextFmtPanelId(null); }}>
+    <div className={`app${presentation ? ' presentation' : ''}`} onClick={() => { selRef.current = []; setSel([]); renaming && setRenaming(null); setThemeOpen(false); setPropsPanelId(null); setTextFmtPanelId(null); setFramePainter(null); }}>
 
       {updateInfo && !updateDismissed && (
         <div className="update-banner">
@@ -5178,22 +5526,22 @@ ${rows}
           }
         </div>
         <div style={{flex:1}}/>
-        {bid && <button className="btn" style={{fontSize:9}} onClick={() => setPresentation(true)} title={t('presentationBtn')}>{t('presentationBtn')}</button>}
+        {bid && roomView === 'board' && <button className="btn" style={{fontSize:9}} onClick={() => setPresentation(true)} title={t('presentationBtn')}>{t('presentationBtn')}</button>}
         {pid && boards.length > 0 && (
           <button className="btn" style={{fontSize:10}} onClick={() => setModal('memoria')} title={t('reportTitle')}>
             {t('report')}
           </button>
         )}
         {bid && <>
-          <button className={`btn${showGrid?' acc':''}`}
+          {roomView === 'board' && <button className={`btn${showGrid?' acc':''}`}
             style={{fontSize:9,letterSpacing:.3,opacity:(showGrid && gridCellPx*zoom<4)?0.45:1}}
             onClick={e => { if (gridDropOpen) { setGridDropOpen(false); return; } const r = e.currentTarget.getBoundingClientRect(); setGridDropPos({ left: r.left, top: r.bottom + 4 }); setGridDropOpen(true); }}
             title={showGrid && gridCellPx*zoom<4 ? t('gridHiddenZoom') : t('gridToggle')}>
             {t('gridToggle')}{showGrid && snapGrid ? ' ·' : ''}
-          </button>
-          <button className="btn" style={{fontSize:10}} onClick={() => { loadVersions(); setModal('versions'); }} title={t('versionsTitle')}>
+          </button>}
+          {roomView === 'board' && <button className="btn" style={{fontSize:10, color: versions.length > 0 ? 'var(--acc)' : undefined}} onClick={() => { loadVersions(); setModal('versions'); }} title={t('versionsTitle')}>
             ⏱
-          </button>
+          </button>}
           <button className="btn" style={{fontSize:10}} onClick={openBoardConfig} title={t('boardConfig')}>
             {t('config')}
           </button>
@@ -5785,13 +6133,13 @@ ${rows}
             )}
 
             {/* CANVAS */}
-            <div ref={wrapRef} className={`canvas-wrap${libExpanded ? ' lib-expanded' : ''}`}
+            <div ref={wrapRef} className={`canvas-wrap${libExpanded ? ' lib-expanded' : ''}${framePainter ? ' frame-painter' : ''}${spaceDown ? ' panning' : ''}`}
               style={{...(boardPx ? { background: '#1e1e1e', padding: BOARD_PAD } : {}), ...((roomView==='room'||roomView==='3d')?{display:'none'}:{})}}
               onDragOver={e => { e.preventDefault(); setDragOver(true); }}
               onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget)) setDragOver(false); }}
               onDrop={onCanvasDrop}
             >
-              {dragOver && <div className="canvas-drop-hint">{t('dropHint')}</div>}
+              {dragOver && !gridDropTarget && <div className="canvas-drop-hint">{zoneDropTarget ? t('dropHintZone') : t('dropHint')}</div>}
               {sel.length >= 1 && (
                 <div className="align-bar" onClick={e => e.stopPropagation()}>
                   <span className="abt-label">{sel.length}</span>
@@ -5918,11 +6266,13 @@ ${rows}
                   if (item.type === 'zone') {
                     const zClr = ZONE_COLOR_VALS[item.color] || ZONE_COLOR_VALS.blue;
                     return (
-                      <div key={item.id} className={`zitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}${item.locked?' locked':''}`}
+                      <div key={item.id} className={`zitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}${item.locked?' locked':''}${zoneDropTarget===item.id?' drop-target':''}`}
                         style={{ position:'absolute', left: item.x, top: item.y, width: item.w, height: item.h || 320 }}
                         onPointerDown={e => onItemPD(e, item.id)}
                         onClick={e => handleItemClick(e, item)}
                         onContextMenu={e => openCtxMenu(e, item.id)}
+                        onDragOver={e => { if (e.dataTransfer.types.some(t => t === 'tb-photo' || t === 'tb-photos')) { e.preventDefault(); setZoneDropTarget(item.id); } }}
+                        onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget)) setZoneDropTarget(null); }}
                         onMouseEnter={() => showItemInfo('zone', item.label, item.w, item.h||320, {color:item.color, scaleContent:item.scaleContent})}
                         onMouseLeave={clearHoverInfo}
                       >
@@ -5980,7 +6330,9 @@ ${rows}
                     const tFont = TEXT_FONTS.find(f => f.id === (item.fontFamily || 'serif')) || TEXT_FONTS[0];
                     const tFmtOpen = textFmtPanelId === item.id;
                     const autoColor = boardPx ? bgContrast('#ffffff') : '';
-                    const textColor = item.textColor || autoColor || 'var(--text)';
+                    let textColor = item.textColor || autoColor || 'var(--text)';
+                    // Smart override: on a white fixed board, light text would be invisible
+                    if (boardPx && item.textColor?.startsWith('#') && bgContrast(item.textColor) === '#1a1a1a') textColor = '#1a1a1a';
                     const setTextProp = (prop, val) => { const nit = itemsRef.current.map(i => i.id === item.id ? {...i, [prop]: val} : i); setItems(nit); itemsRef.current = nit; saveItemsNow(nit); };
                     return (
                       <div key={item.id} className={`titem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}${item.locked?' locked':''}${item.groupId?' grouped':''}`}
@@ -6002,10 +6354,13 @@ ${rows}
                           <div className="tfmt-panel" onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
                             <div className="tfmt-row">
                               <span className="tfmt-lbl">{t('textFmtSize')}</span>
-                              {TEXT_FONT_SIZES.map(sz => (
-                                <button key={sz} className={`tfmt-btn${(item.fontSize||26)===sz?' on':''}`}
-                                  onClick={() => setTextProp('fontSize', sz)}>{TEXT_FONT_LABEL(sz)}</button>
-                              ))}
+                              <button className="tfmt-btn" onClick={() => setTextProp('fontSize', Math.max(8, (item.fontSize||26) - TEXT_FS_STEP(item.fontSize||26)))}>−</button>
+                              <input type="number" className="tfmt-num" min="8" max="999" value={item.fontSize||26}
+                                onPointerDown={e => e.stopPropagation()}
+                                onChange={e => { const v = parseInt(e.target.value); if (!isNaN(v) && v >= 8 && v <= 999) setTextProp('fontSize', v); }}/>
+                              <button className="tfmt-btn" onClick={() => setTextProp('fontSize', Math.min(999, (item.fontSize||26) + TEXT_FS_STEP(item.fontSize||26)))}>+</button>
+                              <button className={`tfmt-btn${item.fontWeight==='bold'?' on':''}`} style={{fontWeight:'bold',marginLeft:4}} title="Bold" onClick={() => setTextProp('fontWeight', item.fontWeight==='bold'?'':'bold')}>B</button>
+                              <button className={`tfmt-btn${item.fontStyle==='italic'?' on':''}`} style={{fontStyle:'italic'}} title="Italic" onClick={() => setTextProp('fontStyle', item.fontStyle==='italic'?'':'italic')}>I</button>
                             </div>
                             <div className="tfmt-row">
                               <span className="tfmt-lbl">{t('textFmtFont')}</span>
@@ -6037,12 +6392,116 @@ ${rows}
                         </div>
                         <textarea className="titem-txt"
                           value={item.text||''} placeholder={lang==='es'?'Texto…':'Text…'}
-                          style={{ fontSize: item.fontSize || 26, textAlign: item.textAlign || 'center', fontFamily: tFont.family }}
+                          style={{ fontSize: item.fontSize || 26, textAlign: item.textAlign || 'center', fontFamily: tFont.family, fontWeight: item.fontWeight||'normal', fontStyle: item.fontStyle||'normal' }}
                           onChange={e => updateNoteText(item.id, e.target.value)}
                           onFocus={pushUndo} onBlur={saveLabel}
                           onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}
                         />
                         <div className="rh" onPointerDown={e => onResizeNotePD(e, item.id)}/>
+                      </div>
+                    );
+                  }
+
+                  if (item.type === 'grid') {
+                    const board = boards.find(b => b.id === bid);
+                    const layout = calcGridLayout(item, photos, board?.dpi || boardDpi, board?.units || boardUnits);
+                    const { gapPx, cols: gCols, cellW, rows: gRows, totalH } = layout;
+                    const gapStep = (!board || board.units === 'px') ? 1 : board.units === 'mm' ? 1 : board.units === 'cm' ? 0.1 : 0.05;
+                    const updGrid = (changes) => {
+                      pushUndo();
+                      const u = itemsRef.current.map(i => i.id === item.id ? {...i, ...changes} : i);
+                      itemsRef.current = u; setItems(u); saveItemsNow(u);
+                    };
+                    return (
+                      <div key={item.id}
+                        className={`gitem${sel.includes(item.id) ? ' sel' : ''}${sel[0] === item.id ? ' anchor' : ''}`}
+                        style={{ left: item.x, top: item.y, width: item.w, height: totalH, zIndex: item.z || 1 }}
+                        onPointerDown={e => onItemPD(e, item.id)}
+                        onClick={e => handleItemClick(e, item)}
+                        onContextMenu={e => openCtxMenu(e, item.id)}
+                        onDragOver={e => { e.preventDefault(); if (!e.dataTransfer.types.includes('tb-grid-cell')) setGridDropTarget(item.id); }}
+                        onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget)) setGridDropTarget(null); }}
+                        onDragEnd={() => { setGridDropTarget(null); setGridCellDragOver(null); }}
+                        onDrop={e => {
+                          e.preventDefault(); e.stopPropagation(); setGridDropTarget(null); setGridCellDragOver(null); setDragOver(false);
+                          if (e.dataTransfer.getData('tb-grid-cell')) return; // handled by cell
+                          const rawP = e.dataTransfer.getData('tb-photos');
+                          const singP = e.dataTransfer.getData('tb-photo');
+                          const ids = rawP ? JSON.parse(rawP) : singP ? [singP] : [];
+                          if (!ids.length) return;
+                          pushUndo();
+                          const u = itemsRef.current.map(i => i.id === item.id ? {...i, photoIds: [...(i.photoIds||[]), ...ids]} : i);
+                          itemsRef.current = u; setItems(u); saveItemsNow(u); setLibSelection([]); libSelAnchorRef.current = null;
+                        }}
+                      >
+                        {gRows.map((row, ri) => {
+                          const rowY = gRows.slice(0, ri).reduce((s, r) => s + r.h + gapPx, 0);
+                          return row.ids.map((photoId, ci) => {
+                            const flatIdx = ri * gCols + ci;
+                            const p = photos.find(x => x.id === photoId);
+                            const cH = (p && p.w > 0) ? Math.round(cellW * p.h / p.w) : row.h;
+                            const isDragOver = gridCellDragOver?.gridId === item.id && gridCellDragOver?.index === flatIdx;
+                            const isSel = gridCellSel?.gridId === item.id && gridCellSel?.index === flatIdx;
+                            const isSwapTarget = gridCellSel?.gridId === item.id && !isSel;
+                            return (
+                              <div key={`${photoId}-${flatIdx}`}
+                                className={`gitem-cell${isDragOver ? ' drag-over' : ''}${isSel ? ' swap-sel' : ''}${isSwapTarget ? ' swap-target' : ''}`}
+                                style={{ left: Math.round(ci * (cellW + gapPx)), top: Math.round(rowY), width: Math.round(cellW), height: cH }}
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  if (wasDragged.current) { wasDragged.current = false; return; }
+                                  const cur = gridCellSelRef.current;
+                                  if (!cur) {
+                                    gridCellSelRef.current = {gridId: item.id, index: flatIdx};
+                                    setGridCellSel({gridId: item.id, index: flatIdx});
+                                  } else if (cur.gridId === item.id && cur.index === flatIdx) {
+                                    gridCellSelRef.current = null; setGridCellSel(null);
+                                  } else if (cur.gridId === item.id) {
+                                    pushUndo();
+                                    const u = itemsRef.current.map(i => {
+                                      if (i.id !== item.id) return i;
+                                      const arr = [...(i.photoIds||[])];
+                                      [arr[cur.index], arr[flatIdx]] = [arr[flatIdx], arr[cur.index]];
+                                      return {...i, photoIds: arr};
+                                    });
+                                    itemsRef.current = u; setItems(u); saveItemsNow(u);
+                                    gridCellSelRef.current = null; setGridCellSel(null);
+                                  } else {
+                                    gridCellSelRef.current = {gridId: item.id, index: flatIdx};
+                                    setGridCellSel({gridId: item.id, index: flatIdx});
+                                  }
+                                }}
+                                onDragOver={e => { e.preventDefault(); if (e.dataTransfer.types.includes('tb-grid-cell')) { e.stopPropagation(); e.dataTransfer.dropEffect = 'move'; setGridCellDragOver({gridId: item.id, index: flatIdx}); } }}
+                                onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget)) setGridCellDragOver(null); }}
+                                onDrop={e => {
+                                  setGridCellDragOver(null);
+                                  // library drop — bubbles to grid's onDrop
+                                }}
+                                onContextMenu={e => { e.stopPropagation(); e.preventDefault(); gridCellSelRef.current = null; setGridCellSel(null); setGridCellCtx({gridId: item.id, photoId, index: flatIdx, x: e.clientX, y: e.clientY}); }}>
+                                <img src={`/photos/${pid}/${photoId}`} alt={p?.name || ''} draggable={false}
+                                  onError={ev => ev.target.style.opacity = '.3'}/>
+                              </div>
+                            );
+                          });
+                        })}
+                        {gridDropTarget === item.id && <div className="gitem-drop-hint">+ {t('gridItemAddHint')}</div>}
+                        <div className="gitem-outline"/>
+                        <div className="gitem-bar" onPointerDown={e => e.stopPropagation()}>
+                          <button className="ibc fwd" title={t('bringFwdBtn')} onClick={e => { e.stopPropagation(); bringFwd(item.id); }}>↑</button>
+                          <div className="gitem-sep"/>
+                          <span className="gitem-bar-lbl">{t('gridItemCols')}</span>
+                          <button className="ibc" onClick={e => { e.stopPropagation(); updGrid({cols: Math.max(1, gCols - 1)}); }}>−</button>
+                          <span className="gitem-bar-lbl">{gCols}</span>
+                          <button className="ibc" onClick={e => { e.stopPropagation(); updGrid({cols: Math.min((item.photoIds||[]).length || 1, gCols + 1)}); }}>+</button>
+                          <div className="gitem-sep"/>
+                          <span className="gitem-bar-lbl">{t('gridItemGap')}</span>
+                          <button className="ibc" onClick={e => { e.stopPropagation(); const dec = gapStep < 1 ? 2 : 1; updGrid({gap: parseFloat(Math.max(0, (item.gap ?? 5) - gapStep).toFixed(dec))}); }}>−</button>
+                          <span className="gitem-bar-lbl" style={{minWidth:28}}>{parseFloat((item.gap ?? 5).toFixed(2))}</span>
+                          <button className="ibc" onClick={e => { e.stopPropagation(); const dec = gapStep < 1 ? 2 : 1; updGrid({gap: parseFloat(((item.gap ?? 5) + gapStep).toFixed(dec))}); }}>+</button>
+                          <div className="gitem-sep"/>
+                          <button className="ibc del" title={t('deleteBtn')} onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
+                        </div>
+                        <div className="gitem-rh" onPointerDown={e => { e.stopPropagation(); onGridResizePD(e, item.id); }}/>
                       </div>
                     );
                   }
@@ -6174,7 +6633,7 @@ ${rows}
                   const offY = (displayH - naturalH) / 2;
                   return (
                     <div key={item.id} className={`bitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}${item.locked?' locked':''}${item.groupId?' grouped':''}${replaceMode?.itemId===item.id?' replacing':''}${dragSwapTarget===item.id?' swap-target':''}${presentation&&presSwapSel===item.id?' pres-swap-sel':''}`}
-                      style={{ left: item.x, top: item.y, width: item.w, zIndex: item.z||1, ...(item.freeRot ? {transform:`rotate(${item.freeRot}deg)`,transformOrigin:'center center'} : {}) }}
+                      style={{ left: item.x, top: item.y, width: item.w, zIndex: propsPanelId === item.id ? 9999 : item.z||1, ...(item.freeRot ? {transform:`rotate(${item.freeRot}deg)`,transformOrigin:'center center'} : {}) }}
                       onPointerDown={e => onItemPD(e, item.id)}
                       onClick={e => handleItemClick(e, item)}
                       onContextMenu={e => openCtxMenu(e, item.id)}
@@ -6192,27 +6651,45 @@ ${rows}
                         <button className="ibc del" title={t('deleteBtn')}   onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
                       </div>
                       {propsPanelId === item.id && (() => {
-                        const frameUnit = boardUnits !== 'px' ? boardUnits : 'px';
+                        const fu = boardUnits !== 'px' ? boardUnits : 'px';
+                        const step = boardUnits === 'mm' ? 1 : 0.1;
+                        const updFrame = (field, val) => { const u = itemsRef.current.map(i => i.id === item.id ? {...i, [field]: val} : i); itemsRef.current = u; setItems(u); };
                         return (
                           <div className="props-panel" onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
+                            <div className="props-sec">{t('matLabel')} ({fu})</div>
                             <div className="props-row">
-                              <span className="props-lbl">{t('frameLabel')} ({frameUnit})</span>
-                              <input type="number" className="props-inp" value={item.frame || 0} min="0"
-                                step={boardUnits === 'mm' ? 1 : 0.1}
-                                onFocus={pushUndo}
-                                onChange={e => updateItemFrame(item.id, parseFloat(e.target.value) || 0)}
-                                onBlur={saveLabel}
-                                onPointerDown={e => e.stopPropagation()}
-                              />
+                              <span className="props-lbl">{lang==='es'?'Tamaño':'Size'}</span>
+                              <input type="color" className="props-color" value={item.matColor||'#ffffff'} onPointerDown={e=>e.stopPropagation()} onChange={e=>updFrame('matColor',e.target.value)}/>
+                              <input type="number" className="props-inp" value={item.matSize ?? item.frame ?? 0} min="0" step={step}
+                                onFocus={pushUndo} onPointerDown={e=>e.stopPropagation()}
+                                onChange={e=>updFrame('matSize', parseFloat(e.target.value)||0)}
+                                onBlur={saveLabel}/>
+                            </div>
+                            <div className="props-sec">{t('moldingLabel')} ({fu})</div>
+                            <div className="props-row">
+                              <span className="props-lbl">{lang==='es'?'Tamaño':'Size'}</span>
+                              <input type="color" className="props-color" value={item.frameColor||'#5a3e1b'} onPointerDown={e=>e.stopPropagation()} onChange={e=>updFrame('frameColor',e.target.value)}/>
+                              <input type="number" className="props-inp" value={item.frameSize||0} min="0" step={step}
+                                onFocus={pushUndo} onPointerDown={e=>e.stopPropagation()}
+                                onChange={e=>updFrame('frameSize', parseFloat(e.target.value)||0)}
+                                onBlur={saveLabel}/>
                             </div>
                           </div>
                         );
                       })()}
                       {(() => {
-                        const frameInPx = item.frame ? physToPx(item.frame, boardDpi, boardUnits) : 0;
+                        const matPx  = physToPx(item.matSize  ?? item.frame  ?? 0, boardDpi, boardUnits);
+                        const moldPx = physToPx(item.frameSize ?? 0,               boardDpi, boardUnits);
+                        const matC  = item.matColor   || '#ffffff';
+                        const moldC = item.frameColor || '#5a3e1b';
+                        const outerPx = matPx + moldPx;
+                        const shadows = [];
+                        if (matPx  > 0) shadows.push(`0 0 0 ${matPx}px ${matC}`);
+                        if (moldPx > 0) shadows.push(`0 0 0 ${outerPx}px ${moldC}`);
+                        if (outerPx > 0) shadows.push(`0 0 0 ${outerPx + 1}px rgba(0,0,0,.25)`);
                         return (
                       <div className="bitem-img-wrap" style={{ width: item.w, height: displayH,
-                        ...(frameInPx > 0 ? { boxShadow: `0 0 0 ${frameInPx}px #fff, 0 0 0 ${frameInPx + 1}px rgba(0,0,0,.15)` } : {}) }}>
+                        ...(shadows.length ? { boxShadow: shadows.join(', ') } : {}) }}>
                         <img
                           src={`/photos/${pid}/${item.photoId}`}
                           alt={photo?.name || ''}
@@ -6234,20 +6711,86 @@ ${rows}
                       })()}
                       {item.groupId && <div className="group-badge">⊓</div>}
                       {item.zoneId && (() => { const oz = itemsRef.current.find(i => i.id === item.zoneId); const zc = oz ? (ZONE_COLOR_VALS[oz.color] || ZONE_COLOR_VALS.blue) : ZONE_COLOR_VALS.blue; return <div className="zone-badge" style={{background: zc.border}} title={oz?.label || (lang==='es'?'Zona':'Zone')}/>; })()}
-                      <div className="lbl"
-                        style={{ top: displayH + (item.frame ? physToPx(item.frame, boardDpi, boardUnits) : 0) }}
-                        onPointerDown={e => e.stopPropagation()}
-                        onClick={e => { e.stopPropagation(); pushUndo(); labelEditOrigRef.current = item.label || ''; setLabelEditId(item.id); }}
-                      >
-                        {item.label
-                          ? <>{item.label.split('\n')[0]}{item.label.includes('\n') && <span className="lbl-more">…</span>}</>
-                          : <span className="lbl-ph">{t('labelPlaceholder')}</span>
-                        }
-                      </div>
+                      {item.label && <div className="lbl-badge" title={item.label.split('\n')[0]}>✎</div>}
                       {!item.locked && <div className="rh" onPointerDown={e => onResizePD(e, item.id)}/>}
                     </div>
                   );
                 })}
+                {gridPending && bid && (() => {
+                  const board = boards.find(b => b.id === bid);
+                  const dpi = board?.dpi || boardDpi;
+                  const units = board?.units || boardUnits;
+                  const gL = calcGridLayout(gridPending, photos, dpi, units);
+                  const bpx = boardPxRef.current;
+                  const gapStep = !board || units === 'px' ? 1 : units === 'mm' ? 1 : units === 'cm' ? 0.1 : 0.05;
+                  const gapDec = gapStep < 1 ? 2 : 1;
+                  const maxW = bpx ? bpx.w : 2000;
+                  const tooBig = bpx && gL.totalH > bpx.h;
+                  const updGP = patch => setGridPending(p => ({...p, ...patch}));
+                  const onGhostDrag = e => {
+                    if (e.target.closest('.grid-ghost-bar,.grid-ghost-rh')) return;
+                    e.stopPropagation();
+                    const sx = e.clientX, sy = e.clientY;
+                    const gx0 = gridPending.x || 0, gy0 = gridPending.y || 0;
+                    const z = zoomRef.current;
+                    const onMove = ev => {
+                      let nx = Math.max(0, gx0 + (ev.clientX - sx) / z);
+                      let ny = Math.max(0, gy0 + (ev.clientY - sy) / z);
+                      if (bpx) { nx = Math.min(nx, bpx.w - gridPending.w); ny = Math.min(ny, bpx.h - gL.totalH); }
+                      setGridPending(p => ({...p, x: nx, y: ny}));
+                    };
+                    const onUp = () => { window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); };
+                    window.addEventListener('pointermove', onMove);
+                    window.addEventListener('pointerup', onUp);
+                  };
+                  const onRhDrag = e => {
+                    e.stopPropagation();
+                    const sx = e.clientX, sw0 = gridPending.w;
+                    const z = zoomRef.current;
+                    const onMove = ev => setGridPending(p => ({...p, w: Math.max(80, Math.min(maxW, Math.round(sw0 + (ev.clientX - sx) / z)))}));
+                    const onUp = () => { window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); };
+                    window.addEventListener('pointermove', onMove);
+                    window.addEventListener('pointerup', onUp);
+                  };
+                  return (
+                    <div className="grid-ghost"
+                      style={{left: Math.round(gridPending.x||0), top: Math.round(gridPending.y||0), width: gridPending.w, height: gL.totalH, opacity: 0.6}}
+                      onPointerDown={onGhostDrag}>
+                      {gL.rows.map((row, ri) => {
+                        const rowY = gL.rows.slice(0, ri).reduce((s, r) => s + r.h + gL.gapPx, 0);
+                        return row.ids.map((photoId, ci) => {
+                          const p = photos.find(x => x.id === photoId);
+                          const cH = (p && p.w > 0) ? Math.round(gL.cellW * p.h / p.w) : row.h;
+                          return (
+                            <div key={photoId} className="grid-ghost-cell"
+                              style={{left: Math.round(ci*(gL.cellW+gL.gapPx)), top: Math.round(rowY), width: Math.round(gL.cellW), height: cH}}>
+                              <img src={`/photos/${pid}/${photoId}/thumb`} draggable={false} style={{width:'100%',height:'100%',display:'block'}} onError={ev=>ev.target.style.opacity='.2'}/>
+                            </div>
+                          );
+                        });
+                      })}
+                      <div className={`grid-ghost-frame${tooBig?' oversize':''}`}/>
+                      <div className="grid-ghost-rh" onPointerDown={onRhDrag}/>
+                      <div className="grid-ghost-bar" onPointerDown={e => e.stopPropagation()}>
+                        <span style={{fontSize:9,color:'var(--dim)',letterSpacing:'.5px',paddingRight:2}}>{lang==='es'?'Mosaico':'Grid'} · {gridPending.photoIds.length}</span>
+                        <div className="gitem-sep"/>
+                        <span className="gitem-bar-lbl">{t('gridItemCols')}</span>
+                        <button className="ibc" onClick={() => updGP({cols: Math.max(1, gridPending.cols-1)})}>−</button>
+                        <span className="gitem-bar-lbl">{gridPending.cols}</span>
+                        <button className="ibc" onClick={() => updGP({cols: Math.min(gridPending.photoIds.length, gridPending.cols+1)})}>+</button>
+                        <div className="gitem-sep"/>
+                        <span className="gitem-bar-lbl">{t('gridItemGap')}</span>
+                        <button className="ibc" onClick={() => updGP({gap: parseFloat(Math.max(0, gridPending.gap-gapStep).toFixed(gapDec))})}>−</button>
+                        <span className="gitem-bar-lbl" style={{minWidth:20}}>{parseFloat(gridPending.gap.toFixed(gapDec))}</span>
+                        <button className="ibc" onClick={() => updGP({gap: parseFloat((gridPending.gap+gapStep).toFixed(gapDec))})}>+</button>
+                        {tooBig && <><div className="gitem-sep"/><span style={{fontSize:9,color:'var(--danger)'}}>↕ {lang==='es'?'excede alto':'exceeds height'}</span></>}
+                        <div className="gitem-sep"/>
+                        <button className="ibc" title="ESC" onClick={() => setGridPending(null)}>✕</button>
+                        <button className="ibc" style={{background:'var(--acc)',color:'#fff',paddingLeft:4,paddingRight:4,borderRadius:2}} title="Enter" onClick={placeGridPending}>✓</button>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
               );
               })()}
@@ -6287,7 +6830,14 @@ ${rows}
                 .filter(p => rejectedFilter === true ? p.rejected : rejectedFilter === false ? !p.rejected : true)
                 .filter(p => tagFilter.length === 0 || tagFilter.some(t => (p.tags || []).includes(t)))
                 .filter(p => ratingFilter === 0 || (p.rating || 0) >= ratingFilter)
-                .filter(p => !libSearch || p.name.toLowerCase().includes(libSearch.toLowerCase()));
+                .filter(p => !libSearch || p.name.toLowerCase().includes(libSearch.toLowerCase()))
+                .filter(p => {
+                  if (!orientFilter || !p.w || !p.h) return true;
+                  if (orientFilter === 'L') return p.w > p.h;
+                  if (orientFilter === 'P') return p.h > p.w;
+                  if (orientFilter === 'S') return p.w === p.h;
+                  return true;
+                });
               displayedPhotosRef.current = displayedPhotos;
               const toggleLib = () => { const v = !libOpen; setLibOpen(v); localStorage.setItem('libOpen', v); };
               const toggleFilter = (e) => { e.stopPropagation(); const v = photoFilter === 'pending' ? 'all' : 'pending'; setPhotoFilter(v); localStorage.setItem('photoFilter', v); };
@@ -6306,6 +6856,11 @@ ${rows}
                       value={libSearch} onClick={e => e.stopPropagation()}
                       onChange={e => setLibSearch(e.target.value)}/>
                     <button className={`lib-filter${photoFilter === 'pending' ? ' active' : ''}`} onClick={toggleFilter} title={t('filterPending')}>⊘ {t('filterPending')}</button>
+                    <button className={`lib-filter${orientFilter ? ' active' : ''}`}
+                      title={t('orientFilterHint', orientFilter)}
+                      onClick={e => { e.stopPropagation(); setOrientFilter(f => f === null ? 'L' : f === 'L' ? 'P' : f === 'P' ? 'S' : null); }}>
+                      {orientFilter === 'L' ? '▬' : orientFilter === 'P' ? '▮' : orientFilter === 'S' ? '■' : '▬▮'}
+                    </button>
                     {(rejectedCount > 0 || rejectedFilter !== false) && (
                       <button className={`lib-filter${rejectedFilter !== false ? ' active danger' : ''}`}
                         onClick={e => { e.stopPropagation(); setRejectedFilter(f => f === false ? true : f === true ? null : false); }}
@@ -6437,7 +6992,7 @@ ${rows}
                                     setLibSelection([p.id]);
                                   }
                                 } else {
-                                  libSelAnchorRef.current = p.id;
+                                  libSelAnchorRef.current = null;
                                   setLibSelection([]);
                                   clearTimeout(thumbClickTimer.current);
                                   thumbClickTimer.current = setTimeout(() => {
@@ -6520,7 +7075,7 @@ ${rows}
                         <button className="lib-sel-btn" title={t('batchTagBtn')} onClick={e => { const r = e.currentTarget.getBoundingClientRect(); setBatchTagPop(v => v ? null : {x: r.left, y: r.top}); setBatchTagInput(''); setSectBatchPop(null); }}>{t('batchTagBtn')}</button>
                         {sections.length > 0 && <button className="lib-sel-btn" title={t('moveToSection')} onClick={e => { const r = e.currentTarget.getBoundingClientRect(); setSectBatchPop(v => v ? null : {x: r.left, y: r.top}); setBatchTagPop(null); }}>{t('batchMoveSection')}</button>}
                         {bid && <button className="lib-sel-btn" title={t('libSelAddTip')} onClick={addSelectedToCanvas}>{t('libSelAdd')}</button>}
-                        {bid && <button className="lib-sel-btn" onClick={openGridModal}>⊞ {t('gridLayoutBtn')}</button>}
+                        {bid && <button className="lib-sel-btn" onClick={() => createGridItem(libSel)}>⊟ {t('gridItemBtn')}</button>}
                         {bid && <button className="lib-sel-btn" onClick={() => placeAsPairs(2)} title={lang==='es'?'Añadir como parejas en zonas':'Add as pairs in zones'}>⊟ {t('pairsLayoutBtn')}</button>}
                         <button className="lib-sel-btn danger" title={t('libSelDeleteTip')} onClick={deleteSelectedPhotos}>× {t('deleteBtn')}</button>
                       </div>
@@ -6534,8 +7089,32 @@ ${rows}
         </div>
       )}
 
+      {(roomView === 'room' || roomView === '3d') && boardBeforeRoom && boards.find(b => b.id === boardBeforeRoom) && (() => {
+        const boardName = boards.find(b => b.id === boardBeforeRoom)?.name || (lang==='es'?'Tablero':'Board');
+        return (
+          <div className="zoom-ctrl" style={{bottom: (libOpen ? libHeight : 30) + 20, cursor: 'pointer'}}
+            onClick={() => { setBid(boardBeforeRoom); bidRef.current = boardBeforeRoom; setRoomView('board'); setBoardBeforeRoom(null); }}>
+            <div className="zc-room-plan" title={lang==='es'?`Volver al tablero: ${boardName}`:`Back to board: ${boardName}`}>
+              ← {boardName}
+            </div>
+          </div>
+        );
+      })()}
       {bid && roomView === 'board' && (
         <div className="zoom-ctrl" style={{bottom: (libOpen ? libHeight : 30) + 20}}>
+          {(() => {
+            const linkedRoom = rooms.find(r => r.walls?.some(w => w.boardId === bid || w.boardIdBack === bid));
+            if (!linkedRoom) return null;
+            const roomName = linkedRoom.name || (lang==='es'?'Sala':'Room');
+            const goFloor = () => { setBoardBeforeRoom(bid); setRoom(linkedRoom); roomRef.current = linkedRoom; setActiveRoomId(linkedRoom.id); activeRoomIdRef.current = linkedRoom.id; setRoomView('room'); };
+            const go3D = async () => { setBoardBeforeRoom(bid); setRoom(linkedRoom); roomRef.current = linkedRoom; setActiveRoomId(linkedRoom.id); activeRoomIdRef.current = linkedRoom.id; await load3DLibs(); setRoomView('3d'); };
+            return (
+              <div className="zc-room">
+                <div className="zc-room-plan" title={t('goToRoom', roomName)} onClick={goFloor}>🏛 {roomName}</div>
+                <div className="zc-room-3d" title={lang==='es'?`Vista 3D (Shift+R)`:`3D view (Shift+R)`} onClick={go3D}>3D</div>
+              </div>
+            );
+          })()}
           <button className="zc-btn" title="Zoom − (Ctrl+−)" onClick={() => zoomStep(-1)}>−</button>
           <span className="zc-pct" onClick={boardPx ? fitBoard : fitWidth}
             title={boardPx ? `${t('fitView')} (Ctrl+0)` : t('fitWidth')}>
@@ -6559,6 +7138,12 @@ ${rows}
           <button className="replace-banner-close" onClick={() => setReplaceMode(null)}>ESC</button>
         </div>
       )}
+      {framePainter && (
+        <div className="frame-painter-banner">
+          ▣ {t('framePainterHint')}
+        </div>
+      )}
+
       {uploadProgress && (
         <div className="upload-progress">
           <div className="upload-progress-header">
@@ -6869,6 +7454,25 @@ ${rows}
         );
       })()}
 
+      {gridCellCtx && (
+        <>
+          <div style={{position:'fixed',inset:0,zIndex:949}} onClick={() => setGridCellCtx(null)}/>
+          <div className="ctx-menu" style={{left: gridCellCtx.x, top: gridCellCtx.y}}
+            onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()} onContextMenu={e => e.preventDefault()}>
+            <button className="ctx-item ctx-danger" onClick={() => {
+              pushUndo();
+              const u = itemsRef.current.map(i => {
+                if (i.id !== gridCellCtx.gridId) return i;
+                const arr = [...(i.photoIds || [])];
+                arr.splice(gridCellCtx.index, 1);
+                return {...i, photoIds: arr};
+              });
+              itemsRef.current = u; setItems(u); saveItemsNow(u); setGridCellCtx(null);
+            }}>× {t('gridItemRemove')}</button>
+          </div>
+        </>
+      )}
+
       {canvasCtx && (
         <>
           <div style={{position:'fixed',inset:0,zIndex:949}} onClick={() => setCanvasCtx(null)}/>
@@ -6883,6 +7487,27 @@ ${rows}
       {ctxMenu && (() => {
         const ctxItem = items.find(i => i.id === ctxMenu.itemId);
         if (!ctxItem) return null;
+        if (ctxItem.type === 'grid') {
+          return (
+            <div className="ctx-menu" style={{left: ctxMenu.x, top: ctxMenu.y}}
+              onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()} onContextMenu={e => e.preventDefault()}>
+              <button className="ctx-item" onClick={() => { bringFwd(ctxMenu.itemId); setCtxMenu(null); }}>↑ {t('bringFwdBtn')}</button>
+              <div className="ctx-sep"/>
+              <button className="ctx-item" onClick={() => {
+                const sel = libSelRef.current;
+                if (!sel.length) { showToast(lang==='es'?'Selecciona fotos en la biblioteca primero':'Select photos in the library first', true); return; }
+                pushUndo();
+                const u = itemsRef.current.map(i => i.id === ctxMenu.itemId
+                  ? {...i, photoIds: [...(i.photoIds||[]), ...sel]}
+                  : i);
+                itemsRef.current = u; setItems(u); saveItemsNow(u); setCtxMenu(null); setLibSelection([]); libSelAnchorRef.current = null;
+              }}>+ {t('gridItemAddSel')}</button>
+              <button className="ctx-item" onClick={() => { ungroupGrid(ctxMenu.itemId); setCtxMenu(null); }}>⊞ {t('gridItemUngroup')}</button>
+              <div className="ctx-sep"/>
+              <button className="ctx-item ctx-danger" onClick={() => { deleteItem(ctxMenu.itemId); setCtxMenu(null); }}>× {t('deleteBtn')}</button>
+            </div>
+          );
+        }
         if (ctxItem.type === 'zone') {
           const zoneMembers = items.filter(i => i.zoneId === ctxItem.id);
           const hasMembers = zoneMembers.length > 0;
@@ -6925,9 +7550,13 @@ ${rows}
         const isNoteOrText = ctxItem.type === 'note' || ctxItem.type === 'text';
         return (
           <div className="ctx-menu" style={{left: ctxMenu.x, top: ctxMenu.y}}
-            onPointerDown={e => e.stopPropagation()} onContextMenu={e => e.preventDefault()}>
+            onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()} onContextMenu={e => e.preventDefault()}>
             <button className="ctx-item" onClick={() => { bringFwd(ctxMenu.itemId); setCtxMenu(null); }}>↑ {t('bringFwdBtn')}</button>
             {!isNoteOrText && <button className="ctx-item" onClick={() => { setPropsPanelId(id => id === ctxMenu.itemId ? null : ctxMenu.itemId); setCtxMenu(null); }}>▣ {t('frameLabel')}</button>}
+            {!isNoteOrText && <button className="ctx-item" style={{color: framePainter ? 'var(--acc)' : undefined}}
+              onClick={() => { const fp = {matSize: ctxItem.matSize ?? ctxItem.frame ?? 0, matColor: ctxItem.matColor||'#ffffff', frameSize: ctxItem.frameSize||0, frameColor: ctxItem.frameColor||'#5a3e1b'}; setFramePainter(fp); setCtxMenu(null); }}>▣ {t('framePainterCopy')}</button>}
+            {!isNoteOrText && <button className="ctx-item" style={{color: ctxItem?.label ? 'var(--acc)' : undefined}}
+              onClick={() => { pushUndo(); labelEditOrigRef.current = ctxItem?.label || ''; setLabelEditId(ctxMenu.itemId); setCtxMenu(null); }}>✎ {lang==='es'?'Etiqueta':'Label'}</button>}
             {!isNoteOrText && <><div className="ctx-sep"/>
               <button className="ctx-item" onClick={() => { setDefaultW(ctxItem.w); setCtxMenu(null); }}>⊞ {t('setDefaultSize')}</button>
               <button className="ctx-item" onClick={() => { setReplaceMode({ itemId: ctxMenu.itemId }); setCtxMenu(null); if (!libOpen) { setLibOpen(true); localStorage.setItem('libOpen','true'); } }}>⇄ {t('replacePhoto')}</button>
