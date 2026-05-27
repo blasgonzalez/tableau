@@ -1452,13 +1452,12 @@ function App() {
     const initScene = async () => {
       const [boardItemsResults, photosData] = await Promise.all([
         Promise.all(
-          room.walls
-            .filter(w => w.boardId)
-            .map(async w => {
+          [...new Set(room.walls.flatMap(w => [w.boardId, w.boardIdBack].filter(Boolean)))]
+            .map(async boardId => {
               try {
-                const its = await api.get(`/api/boards/${pid}/${w.boardId}/items`);
-                return { boardId: w.boardId, items: its || [] };
-              } catch(e) { return { boardId: w.boardId, items: [] }; }
+                const its = await api.get(`/api/boards/${pid}/${boardId}/items`);
+                return { boardId, items: its || [] };
+              } catch(e) { return { boardId, items: [] }; }
             })
         ),
         api.get(`/api/projects/${pid}/photos`).catch(() => []),
@@ -1619,7 +1618,7 @@ function App() {
         if (!board || !bItems.length) return;
         const bPx = getBoardPx(board);
         if (!bPx) return;
-        const fW = board.fixedW, fH = board.fixedH || wh;
+        const fW = board.fixedW;
         const normX = -dirZ * sideSign, normZ = dirX * sideSign;
 
         bItems.forEach(item => {
@@ -1628,9 +1627,9 @@ function App() {
           const itemH = isText ? (item.h || item.w * 0.3)
                       : photo ? item.w * (photo.h / photo.w) : item.w;
           const iw = item.w / bPx.w * fW;
-          const ih = itemH / bPx.h * fH;
+          const ih = itemH / bPx.h * wh;
           const ix = (item.x + item.w/2) / bPx.w * fW;
-          const iy = fH * (1 - (item.y + itemH/2) / bPx.h);
+          const iy = wh * (1 - (item.y + itemH/2) / bPx.h);
           const pos = { x: x1 + dirX*ix + normX*(wt/2+2), y: iy, z: z1 + dirZ*ix + normZ*(wt/2+2) };
           const pMesh = new THREE.Mesh(
             new THREE.PlaneGeometry(iw, ih),

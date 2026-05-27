@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.7] — 2026-05-27
+### Fixed
+- 3D view: photos placed on walls with a custom height are now positioned correctly (vertical axis uses the physical wall height, not the board's fixedH)
+- 3D view: Side B boards (boardIdBack) now load their items when entering 3D view
+- Room: deleting a vertex that removes walls with linked boards now warns and deletes them; merging two walls no longer discards the Side B board
+
+---
+
 ## [1.8.6] — 2026-05-26
 ### Fixed
 - Room: deleting a vertex that removes walls with linked boards now shows a confirmation dialog listing the affected boards and deletes them on confirm

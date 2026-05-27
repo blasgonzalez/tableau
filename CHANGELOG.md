@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.7] — 2026-05-27
+### Corregido
+- Vista 3D: las fotos colocadas en paredes de altura personalizada se posicionan correctamente (el eje vertical usa la altura física de la pared, no el fixedH del tablero)
+- Vista 3D: los tableros de cara B (boardIdBack) ahora cargan sus items al entrar en la vista 3D
+- Sala: al eliminar un vértice que borra paredes con tableros vinculados, el diálogo avisa y los elimina; al fusionar dos paredes el tablero de cara B ya no se pierde
+
+---
+
 ## [1.8.6] — 2026-05-26
 ### Corregido
 - Sala: al eliminar un vértice que borra paredes con tableros vinculados, el diálogo avisa con los nombres de los tableros afectados y los elimina si se confirma
