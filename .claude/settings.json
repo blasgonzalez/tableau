@@ -21,7 +21,9 @@
       "Bash(dir \"d:\\\\blasg\\\\Pictures\\\\Proyectos\\\\tableau\\\\data\")",
       "Bash(python -c ' *)",
       "Bash(dir \"d:\\\\blasg\\\\Pictures\\\\Proyectos\\\\tableau\\\\dist\" /b)",
-      "Bash(curl -s http://localhost:3000)"
+      "Bash(curl -s http://localhost:3000)",
+      "Bash(git config *)",
+      "Bash(git push *)"
     ],
     "additionalDirectories": [
       "d:\\blasg\\Pictures\\Proyectos\\tableau\\fonts"
