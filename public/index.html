@@ -36,6 +36,7 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .btn:hover{color:var(--text);border-color:var(--acc-dim)}
 .btn.acc{border-color:var(--acc-dim);color:var(--acc)}
 .btn.acc:hover{background:var(--acc-faint)}
+.btn.active{border-color:var(--acc-dim);color:var(--acc);background:var(--acc-faint)}
 .btn:disabled{opacity:.35;cursor:default}
 .update-banner{background:#1e2e0a;border-bottom:1px solid #3a5c14;padding:5px 14px;display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:.4px;color:#a8cc60;flex-shrink:0;z-index:300}
 .update-banner a{color:#c0e070;text-decoration:underline;cursor:pointer}
@@ -217,6 +218,7 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .room-block.sel{stroke:var(--acc);stroke-width:2}
 .room-block:hover{fill:rgba(160,148,136,.55)}
 .room-block-handle{fill:var(--panel2);stroke:var(--acc);stroke-width:1.5;cursor:nwse-resize}
+.room-block-rotate{fill:var(--panel2);stroke:var(--acc);stroke-width:1.5;cursor:grab}
 .room-block-label{font-size:9px;fill:var(--dim);text-anchor:middle;dominant-baseline:middle;pointer-events:none;font-family:'IBM Plex Mono',monospace}
 .block-props{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--border2);padding:8px 12px;display:flex;gap:10px;align-items:center;z-index:5;box-shadow:0 4px 16px rgba(0,0,0,.5);font-size:9px;color:var(--dim)}
 .block-props input[type=number]{width:52px;background:var(--panel);border:1px solid var(--border2);color:var(--text);font-size:9px;padding:2px 4px;text-align:center}
@@ -236,6 +238,7 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .room-wall-name{font-size:10px;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;cursor:text}
 .room-wall-len{font-size:9px;color:var(--muted);flex-shrink:0;font-variant-numeric:tabular-nums}
 .room-wall-warn{font-size:10px;color:#e87528;flex-shrink:0;cursor:default;line-height:1;user-select:none}
+.room-back-btn{padding:8px 10px;border-top:1px solid var(--border);flex-shrink:0}
 .room-wall-rename{font-size:10px;background:var(--input);border:1px solid var(--acc);color:var(--text);padding:1px 5px;border-radius:2px;font-family:inherit;width:80px}
 .room-empty{padding:24px 16px;color:var(--dim);font-size:10px;line-height:1.8;text-align:center}
 .room-no-sala{display:flex;flex:1;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:var(--dim);font-size:10px}
@@ -494,7 +497,7 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 
 /* ── CONTEXT MENU ── */
 .ctx-menu{position:fixed;background:var(--panel);border:1px solid var(--border2);z-index:950;box-shadow:0 6px 20px rgba(0,0,0,.55);min-width:170px;padding:4px 0}
-.ctx-item{display:block;width:100%;background:none;border:none;padding:6px 14px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text);cursor:pointer;text-align:left;letter-spacing:.3px;white-space:nowrap}
+.ctx-item{display:block;width:100%;background:none;border:none;padding:6px 14px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text);cursor:pointer;text-align:left;letter-spacing:.2px;white-space:nowrap}
 .ctx-item:hover{background:var(--surf);color:var(--acc)}
 .ctx-item.ctx-danger{color:#e06060}
 .ctx-item.ctx-danger:hover{color:#ff7070;background:var(--surf)}
@@ -1229,6 +1232,8 @@ function App() {
   const [roomWallCtx,    setRoomWallCtx]   = useState(null); // {wallId, x, y}
   const [roomHovWall,    setRoomHovWall]   = useState(null); // hovered wall id
   const [roomHovSide,    setRoomHovSide]   = useState(null); // {wallId, side:'A'|'B'}
+  const [roomHovBlock,   setRoomHovBlock]  = useState(null); // {blockId, face:'n'|'s'|'e'|'w'|'t'}
+  const [roomFilterBoards, setRoomFilterBoards] = useState(false);
   const room3DCanvasRef = useRef(null);
   const [show3DPerson,     setShow3DPerson]    = useState(false);
   const [personMoveMode,   setPersonMoveMode]  = useState(false);
@@ -1870,6 +1875,7 @@ function App() {
           new THREE.MeshLambertMaterial({color: bColor})
         );
         boxMesh.position.set(block.x + block.w/2, block.h/2, block.y + block.d/2);
+        boxMesh.rotation.y = -(block.rot || 0) * Math.PI / 180;
         boxMesh.userData.isWalkTarget = true;
         scene.add(boxMesh);
         walkTargets.push(boxMesh);
@@ -1944,11 +1950,18 @@ function App() {
         if (!block.faces) return;
         const bx = block.x, by = block.y, bw = block.w, bd = block.d, bh = block.h;
         const hexBlock = block.color || '#b8b0a4';
+        const rotRad = (block.rot || 0) * Math.PI / 180;
+        const cosR = Math.cos(rotRad), sinR = Math.sin(rotRad);
+        const bcx = bx + bw/2, bcz = by + bd/2;
+        const rv = (lx, lz) => [bcx + (lx - bw/2)*cosR - (lz - bd/2)*sinR, bcz + (lx - bw/2)*sinR + (lz - bd/2)*cosR];
+        const [nwx,nwz] = rv(0,0); const [nex,nez] = rv(bw,0);
+        const [sex,sez] = rv(bw,bd); const [swx,swz] = rv(0,bd);
+        const [edirX,edirZ] = [cosR, sinR]; const [fdirX,fdirZ] = [-sinR, cosR];
         const vFaceDefs = {
-          n: { x1: bx,      z1: by,      dirX: 1, dirZ: 0, sideSign: -1, fW: bw },
-          s: { x1: bx,      z1: by + bd, dirX: 1, dirZ: 0, sideSign:  1, fW: bw },
-          e: { x1: bx + bw, z1: by,      dirX: 0, dirZ: 1, sideSign: -1, fW: bd },
-          w: { x1: bx,      z1: by,      dirX: 0, dirZ: 1, sideSign:  1, fW: bd },
+          n: { x1: nwx, z1: nwz, dirX: edirX, dirZ: edirZ, normX:  sinR,  normZ: -cosR, fW: bw },
+          s: { x1: swx, z1: swz, dirX: edirX, dirZ: edirZ, normX: -sinR,  normZ:  cosR, fW: bw },
+          e: { x1: nex, z1: nez, dirX: fdirX, dirZ: fdirZ, normX:  cosR,  normZ:  sinR, fW: bd },
+          w: { x1: nwx, z1: nwz, dirX: fdirX, dirZ: fdirZ, normX: -cosR,  normZ: -sinR, fW: bd },
         };
         ['n','s','e','w'].forEach(face => {
           const faceLink = block.faces[face];
@@ -1959,8 +1972,7 @@ function App() {
           if (!board || !bItems.length) return;
           const bPx = getBoardPx(board);
           if (!bPx) return;
-          const { x1, z1, dirX, dirZ, sideSign, fW } = vFaceDefs[face];
-          const normX = -dirZ * sideSign, normZ = dirX * sideSign;
+          const { x1, z1, dirX, dirZ, normX, normZ, fW } = vFaceDefs[face];
           const rotY = Math.atan2(-dirZ, dirX);
           bItems.forEach(item => {
             const isText = item.type === 'text', isNote = item.type === 'note';
@@ -2005,38 +2017,49 @@ function App() {
           const bItems = rawItems.filter(i => !i.type || i.type === 'photo' || i.type === 'text' || i.type === 'note');
           if (board && bItems.length) {
             const bPx = getBoardPx(board);
-            if (bPx) bItems.forEach(item => {
-              const isText = item.type === 'text', isNote = item.type === 'note';
-              const photo = (!isText && !isNote) ? photoMap[item.photoId] : null;
-              const itemH = isText ? (item.h || item.w * 0.3) : isNote ? (item.h || item.w) : photo ? item.w * (photo.h / photo.w) : item.w;
-              const iw = item.w / bPx.w * bw;
-              const ih = itemH / bPx.h * bd;
-              const ix = (item.x + item.w/2) / bPx.w * bw;
-              const iz = (item.y + itemH/2) / bPx.h * bd;
-              const topRot = -((item.rot || 0) + (item.freeRot || 0)) * Math.PI / 180;
-              if (!isText && !isNote) {
-                const matPx  = physToPx(item.matSize  ?? item.frame  ?? 0, board.dpi, board.units);
-                const moldPx = physToPx(item.frameSize ?? 0, board.dpi, board.units);
-                [[matPx+moldPx, item.frameColor||'#5a3e1b', 1.5],[matPx, item.matColor||'#ffffff', 1.0]]
-                  .filter(([px]) => px > 0)
-                  .forEach(([px, col, back]) => {
-                    const fw = (item.w + 2*px) / bPx.w * bw;
-                    const fh = (itemH + 2*px) / bPx.h * bd;
-                    const fm = new THREE.Mesh(new THREE.PlaneGeometry(fw, fh), new THREE.MeshLambertMaterial({color:col,side:THREE.DoubleSide}));
-                    fm.position.set(bx + ix, bh + BFOFF - back, by + iz);
-                    fm.rotation.x = -Math.PI / 2; fm.rotation.z = topRot; scene.add(fm);
-                  });
-              }
-              const pMesh = new THREE.Mesh(
-                new THREE.PlaneGeometry(iw, ih),
-                new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, transparent: true })
-              );
-              pMesh.position.set(bx + ix, bh + BFOFF, by + iz);
-              pMesh.rotation.x = -Math.PI / 2;
-              pMesh.rotation.z = topRot;
-              scene.add(pMesh);
-              applyBlockItemMat(pMesh, item, itemH, hexBlock);
-            });
+            if (bPx) {
+              // One group per block top face: handles block rotation cleanly
+              // keeping the planes always horizontal (rotation.y of group spins in XZ plane)
+              const topGroup = new THREE.Group();
+              topGroup.position.set(bcx, bh + BFOFF, bcz);
+              topGroup.rotation.y = -rotRad;
+              scene.add(topGroup);
+              bItems.forEach(item => {
+                const isText = item.type === 'text', isNote = item.type === 'note';
+                const photo = (!isText && !isNote) ? photoMap[item.photoId] : null;
+                // For rotated photos (90°/270°) the display height uses the swapped aspect ratio
+                const isSwapped = photo && ((item.rot || 0) % 180 !== 0);
+                const itemH = isText ? (item.h || item.w * 0.3) : isNote ? (item.h || item.w)
+                  : photo ? item.w * (isSwapped ? photo.w / photo.h : photo.h / photo.w) : item.w;
+                const iw = item.w / bPx.w * bw;
+                const ih = itemH / bPx.h * bd;
+                // Local position within group (block-local coords, centered on block center)
+                const lx = (item.x + item.w/2) / bPx.w * bw - bw/2;
+                const lz = (item.y + itemH/2) / bPx.h * bd - bd/2;
+                const mkFlat = (m, yOff) => {
+                  m.position.set(lx, yOff, lz);
+                  m.rotation.x = -Math.PI / 2;
+                  topGroup.add(m);
+                };
+                if (!isText && !isNote) {
+                  const matPx  = physToPx(item.matSize  ?? item.frame  ?? 0, board.dpi, board.units);
+                  const moldPx = physToPx(item.frameSize ?? 0, board.dpi, board.units);
+                  [[matPx+moldPx, item.frameColor||'#5a3e1b', 1.5],[matPx, item.matColor||'#ffffff', 1.0]]
+                    .filter(([px]) => px > 0)
+                    .forEach(([px, col, back]) => {
+                      const fw = (item.w + 2*px) / bPx.w * bw;
+                      const fh = (itemH + 2*px) / bPx.h * bd;
+                      mkFlat(new THREE.Mesh(new THREE.PlaneGeometry(fw, fh), new THREE.MeshLambertMaterial({color:col,side:THREE.DoubleSide})), -back);
+                    });
+                }
+                const pMesh = new THREE.Mesh(
+                  new THREE.PlaneGeometry(iw, ih),
+                  new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, transparent: true })
+                );
+                mkFlat(pMesh, 0);
+                applyBlockItemMat(pMesh, item, itemH, hexBlock);
+              });
+            }
           }
         }
       });
@@ -4832,6 +4855,7 @@ ${rows}
     setActiveRoomId(rid); activeRoomIdRef.current = rid;
     if (r) { setRoomCeilH(r.ceilingHeight || 280); setRoomWallThick(r.wallThickness ?? 15); setRoomName(r.name || ''); }
     setRoomDrawing(false); setRoomTempVerts([]); setRoomCursor(null);
+    setBoardBeforeRoom(null);
     setRoomView('room');
   };
 
@@ -4930,6 +4954,31 @@ ${rows}
         api.put(`/api/projects/${pidRef.current}/rooms/${roomRef.current.id}`, roomRef.current);
         if (hasFaceBoards) showToast(lang === 'es' ? 'Tableros vinculados pueden estar desincronizados' : 'Linked boards may be out of sync', true);
       }
+    };
+    window.addEventListener('pointermove', onMM);
+    window.addEventListener('pointerup', onMU);
+  };
+
+  const onBlockRotatePD = (e, blockId) => {
+    e.stopPropagation(); e.preventDefault();
+    const block = getBlocks(roomRef.current).find(b => b.id === blockId);
+    if (!block) return;
+    const cx = block.x + block.w/2, cy = block.y + block.d/2;
+    const onMM = e2 => {
+      const p = roomSvgPt(e2);
+      let angle = Math.atan2(p.y - cy, p.x - cx) * 180 / Math.PI + 90;
+      if (e2.shiftKey) angle = Math.round(angle / 15) * 15;
+      angle = ((angle % 360) + 360) % 360;
+      const upd = {...block, rot: Math.round(angle * 10) / 10};
+      const blocks = getBlocks(roomRef.current).map(b => b.id === blockId ? upd : b);
+      const nr = {...roomRef.current, blocks};
+      setRoom(nr); roomRef.current = nr;
+      setRooms(rs => rs.map(x => x.id === nr.id ? nr : x));
+    };
+    const onMU = () => {
+      window.removeEventListener('pointermove', onMM);
+      window.removeEventListener('pointerup', onMU);
+      api.put(`/api/projects/${pidRef.current}/rooms/${roomRef.current.id}`, roomRef.current);
     };
     window.addEventListener('pointermove', onMM);
     window.addEventListener('pointerup', onMU);
@@ -6217,12 +6266,12 @@ ${rows}
                               stroke={hov?'var(--acc)':(linked?'var(--acc)':'var(--dim)')}
                               strokeWidth={hov?sw+3:sw} opacity={hov?1:linked?1:0.8}
                               strokeDasharray={isTabique?`${sw*2.5} ${sw*.8}`:undefined}/>
-                            <text x={mx} y={my+svgFontSz*(isTabique?-.1:.4)} textAnchor="middle" fontSize={svgFontSz*.85}
-                              fill={hov?'var(--acc)':'var(--sub)'} stroke="var(--bg)" strokeWidth={2.5} paintOrder="stroke"
+                            <text x={mx} y={my+svgFontSz*(isTabique?-.1:.4)} textAnchor="middle" fontSize={svgFontSz}
+                              fill={hov?'var(--acc)':'var(--text)'} stroke="var(--bg)" strokeWidth={3} paintOrder="stroke"
                               style={{pointerEvents:'none'}}>{cmLabel(len)}</text>
                             {isTabique && (
-                              <text x={mx} y={my+svgFontSz*1.1} textAnchor="middle" fontSize={svgFontSz*.75}
-                                fill={hov?'var(--acc)':'var(--muted)'} stroke="var(--bg)" strokeWidth={2} paintOrder="stroke"
+                              <text x={mx} y={my+svgFontSz*1.2} textAnchor="middle" fontSize={svgFontSz*.85}
+                                fill={hov?'var(--acc)':'var(--sub)'} stroke="var(--bg)" strokeWidth={2.5} paintOrder="stroke"
                                 style={{pointerEvents:'none'}}>h {cmLabel(wall.height)}</text>
                             )}
                             {hovSide && (()=>{
@@ -6282,8 +6331,10 @@ ${rows}
                           {id:'w',  cx:block.x,           cy:block.y+block.d/2},
                         ] : [];
                         const hr = svgFontSz * 0.55;
+                        const bcx = block.x + block.w/2, bcy = block.y + block.d/2;
+                        const rotTransform = block.rot ? `rotate(${block.rot},${bcx},${bcy})` : undefined;
                         return (
-                          <g key={block.id}>
+                          <g key={block.id} transform={rotTransform}>
                             <rect
                               className={`room-block${isSel?' sel':''}`}
                               x={block.x} y={block.y} width={block.w} height={block.d}
@@ -6291,7 +6342,7 @@ ${rows}
                               onClick={e => { e.stopPropagation(); setSelBlock(block.id); selBlockRef.current = block.id; }}
                             />
                             {block.label && (
-                              <text className="room-block-label" x={block.x+block.w/2} y={block.y+block.d/2}>
+                              <text className="room-block-label" x={bcx} y={bcy}>
                                 {block.label}
                               </text>
                             )}
@@ -6303,9 +6354,39 @@ ${rows}
                                 onPointerDown={e => onBlockHandlePD(e, block.id, h.id)}
                               />
                             ))}
+                            {isSel && (
+                              <circle className="room-block-rotate"
+                                cx={bcx} cy={block.y - hr*2.5} r={hr}
+                                onPointerDown={e => onBlockRotatePD(e, block.id)}/>
+                            )}
                           </g>
                         );
                       })}
+
+                      {/* Block face hover highlight */}
+                      {roomHovBlock && room && (() => {
+                        const bl = getBlocks(room).find(b => b.id === roomHovBlock.blockId);
+                        if (!bl) return null;
+                        const f = roomHovBlock.face;
+                        const ac = 'var(--acc)'; const sw = 3;
+                        const rotRad = (bl.rot || 0) * Math.PI / 180;
+                        const cosR = Math.cos(rotRad), sinR = Math.sin(rotRad);
+                        const cx = bl.x + bl.w/2, cz = bl.y + bl.d/2;
+                        const rv = (lx, lz) => [cx + (lx-bl.w/2)*cosR - (lz-bl.d/2)*sinR, cz + (lx-bl.w/2)*sinR + (lz-bl.d/2)*cosR];
+                        const edges = {
+                          n: [rv(0,0),      rv(bl.w,0)],
+                          s: [rv(0,bl.d),   rv(bl.w,bl.d)],
+                          e: [rv(bl.w,0),   rv(bl.w,bl.d)],
+                          w: [rv(0,0),      rv(0,bl.d)],
+                        };
+                        if (f === 't') {
+                          const pts = [rv(0,0),rv(bl.w,0),rv(bl.w,bl.d),rv(0,bl.d)].map(p=>p.join(',')).join(' ');
+                          return <polygon points={pts} fill="none" stroke={ac} strokeWidth={sw} strokeDasharray="4 2" style={{pointerEvents:'none'}}/>;
+                        }
+                        const [p1, p2] = edges[f] || [];
+                        if (!p1) return null;
+                        return <line x1={p1[0]} y1={p1[1]} x2={p2[0]} y2={p2[1]} stroke={ac} strokeWidth={sw} style={{pointerEvents:'none'}}/>;
+                      })()}
 
                       {/* Block draw preview */}
                       {blockDraw && (
@@ -6387,6 +6468,9 @@ ${rows}
                         <div className="block-props" onClick={e => e.stopPropagation()}>
                           <label>{t('blockLabel')}: <input type="text" value={block.label||''} onChange={e => updateBlock({label:e.target.value})}/></label>
                           <label>{t('blockHeight')}: <input type="number" value={block.h} min="1" max="9999" onChange={e => { const v=parseInt(e.target.value); if(!isNaN(v)&&v>0) updateBlock({h:v}); }}/></label>
+                          <label>↻: <input type="number" value={Math.round((block.rot||0)*10)/10} min="0" max="359" step="1"
+                            style={{width:44}}
+                            onChange={e => { const v=parseFloat(e.target.value); if(!isNaN(v)) updateBlock({rot:((v%360)+360)%360}); }}/></label>
                           <div style={{width:1,height:18,background:'var(--border2)'}}/>
                           <span style={{fontSize:8,color:'var(--muted)'}}>CARAS</span>
                           {faceKeys.map(face => {
@@ -6471,7 +6555,12 @@ ${rows}
                         </span>
                       )}
                     </div>
-                    <div className="room-panel-hd" style={{fontSize:8,paddingTop:6,paddingBottom:6}}>{t('salaWallsHd')}</div>
+                    <div className="room-panel-hd" style={{fontSize:8,paddingTop:6,paddingBottom:6,display:'flex',alignItems:'center',gap:6}}>
+                      <span style={{flex:1}}>{t('salaWallsHd')}</span>
+                      <button className={`btn${roomFilterBoards?' acc':''}`} style={{fontSize:7,padding:'1px 5px',letterSpacing:.3,textTransform:'none'}}
+                        title={lang==='es'?'Solo paredes con tablero':'Walls with board only'}
+                        onClick={()=>setRoomFilterBoards(v=>!v)}>▶</button>
+                    </div>
                     <div className="room-cfg">
                       <label>{t('salaCeilLbl')}</label>
                       <input type="number" min="100" max="2000" step="10"
@@ -6497,7 +6586,7 @@ ${rows}
                     <div className="room-walls">
                       {!room ? (
                         <div className="room-empty">{t('salaNoWalls')}</div>
-                      ) : <>{room.walls.map(wall => {
+                      ) : <>{room.walls.filter(wall => !roomFilterBoards || wall.boardId || wall.boardIdBack).map(wall => {
                         const len = roomWallLen(wall, room.vertices);
                         const boardA = wall.boardId     ? boards.find(b=>b.id===wall.boardId)     : null;
                         const boardB = wall.boardIdBack ? boards.find(b=>b.id===wall.boardIdBack) : null;
@@ -6509,7 +6598,7 @@ ${rows}
                         const sideBtn = (side, board, mismatch, color) => (
                           <div style={{display:'flex',alignItems:'center',gap:1,flexShrink:0}}>
                             {mismatch && <span className="room-wall-warn" title={t('salaWallMismatch')} style={{fontSize:9}}>⚠</span>}
-                            <button className="btn" style={{fontSize:8,padding:'1px 4px',flexShrink:0,borderLeft:`3px solid ${color}`}}
+                            <button className={`btn${board?' acc':''}`} style={{fontSize:8,padding:'1px 4px',flexShrink:0,borderLeft:`3px solid ${color}`}}
                               onMouseEnter={()=>setRoomHovSide({wallId:wall.id,side})}
                               onMouseLeave={()=>setRoomHovSide(null)}
                               onClick={()=>{ if(board){setBid(board.id);bidRef.current=board.id;setRoomView('board');} else createRoomBoardSide(wall.id,side); }}>
@@ -6548,13 +6637,15 @@ ${rows}
                           </div>
                         );
                       })}
-                      {getBlocks(room).length > 0 && <>
+                      {getBlocks(room).some(bl => !roomFilterBoards || Object.values(bl.faces||{}).some(Boolean)) && <>
                         <div style={{fontSize:7,color:'var(--muted)',letterSpacing:1,padding:'8px 10px 4px',textTransform:'uppercase',borderTop:'1px solid var(--border)'}}>
                           {lang==='es'?'Bloques':'Blocks'}
                         </div>
                         {getBlocks(room).flatMap(block => {
                           const fl = {n:t('blockFaceN'),s:t('blockFaceS'),e:t('blockFaceE'),w:t('blockFaceW'),t:t('blockFaceTop')};
-                          return ['n','s','e','w','t'].map(face => {
+                          return ['n','s','e','w','t']
+                            .filter(face => !roomFilterBoards || block.faces?.[face]?.boardId)
+                            .map(face => {
                             const linked = block.faces?.[face];
                             const board = linked?.boardId ? boards.find(b => b.id === linked.boardId) : null;
                             const faceW = face==='t' ? block.w : (face==='n'||face==='s') ? block.w : block.d;
@@ -6562,12 +6653,34 @@ ${rows}
                             const mm = board && board.fixed && board.units==='cm' && (Math.abs(board.fixedW-faceW)>0.5 || Math.abs((board.fixedH||0)-faceH)>0.5);
                             const faceName = `${block.label || (lang==='es'?'Bloque':'Block')} ${fl[face]}`;
                             return (
-                              <div key={`${block.id}-${face}`} className="room-wall-row">
+                              <div key={`${block.id}-${face}`} className="room-wall-row"
+                                onMouseEnter={()=>setRoomHovBlock({blockId:block.id,face})}
+                                onMouseLeave={()=>setRoomHovBlock(null)}>
                                 <span className="room-wall-name">{faceName}</span>
                                 <span className="room-wall-len">{cmLabel(faceW)}</span>
                                 <div style={{display:'flex',alignItems:'center',gap:1,flexShrink:0}}>
                                   {mm && <span className="room-wall-warn" title={t('salaWallMismatch')} style={{fontSize:9}}>⚠</span>}
-                                  <button className="btn" style={{fontSize:8,padding:'1px 4px',flexShrink:0}}
+                                  {mm && board && (
+                                    <button className="btn" style={{fontSize:8,padding:'1px 4px',flexShrink:0,color:'#e87528',borderColor:'#e87528'}}
+                                      onClick={async () => {
+                                        const newW = Math.round(faceW * 10) / 10;
+                                        const newH = Math.round(faceH * 10) / 10;
+                                        const newBPx = getBoardPx({...board, fixedW: newW, fixedH: newH});
+                                        if (!newBPx) return;
+                                        const items = await api.get(`/api/boards/${pidRef.current}/${board.id}/items`);
+                                        const overflow = (items || []).some(item => {
+                                          if (item.type === 'note' || item.type === 'zone') return false;
+                                          return (item.x || 0) + (item.w || 0) > newBPx.w;
+                                        });
+                                        if (overflow) { showToast(t('salaWallSyncOverflow'), true); return; }
+                                        await api.patch(`/api/projects/${pidRef.current}/boards/${board.id}`, {fixedW: newW, fixedH: newH});
+                                        setBoards(bs => bs.map(b => b.id === board.id ? {...b, fixedW: newW, fixedH: newH} : b));
+                                        showToast(t('salaWallSyncOk'));
+                                      }}>
+                                      {t('salaWallSync')}
+                                    </button>
+                                  )}
+                                  <button className={`btn${board?' acc':''}`} style={{fontSize:8,padding:'1px 4px',flexShrink:0}}
                                     onClick={async () => {
                                       if (board) {
                                         setBid(board.id); bidRef.current = board.id; setRoomView('board');
@@ -6599,6 +6712,14 @@ ${rows}
                       </>}
                     </>}
                     </div>
+                    {boardBeforeRoom && boards.find(b => b.id === boardBeforeRoom) && (
+                      <div className="room-back-btn">
+                        <button className="btn" style={{width:'100%',textAlign:'left',fontSize:10}}
+                          onClick={() => { setBid(boardBeforeRoom); bidRef.current = boardBeforeRoom; setRoomView('board'); setBoardBeforeRoom(null); }}>
+                          ← {boards.find(b => b.id === boardBeforeRoom)?.name || (lang==='es'?'Tablero':'Board')}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
@@ -6674,6 +6795,14 @@ ${rows}
                       ))
                     )}
                   </div>
+                  {boardBeforeRoom && boards.find(b => b.id === boardBeforeRoom) && (
+                    <div className="room-back-btn">
+                      <button className="btn" style={{width:'100%',textAlign:'left',fontSize:10}}
+                        onClick={() => { setBid(boardBeforeRoom); bidRef.current = boardBeforeRoom; setRoomView('board'); setBoardBeforeRoom(null); }}>
+                        ← {boards.find(b => b.id === boardBeforeRoom)?.name || (lang==='es'?'Tablero':'Board')}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -7634,17 +7763,6 @@ ${rows}
         </div>
       )}
 
-      {(roomView === 'room' || roomView === '3d') && boardBeforeRoom && boards.find(b => b.id === boardBeforeRoom) && (() => {
-        const boardName = boards.find(b => b.id === boardBeforeRoom)?.name || (lang==='es'?'Tablero':'Board');
-        return (
-          <div className="zoom-ctrl" style={{bottom: (libOpen ? libHeight : 30) + 20, cursor: 'pointer'}}
-            onClick={() => { setBid(boardBeforeRoom); bidRef.current = boardBeforeRoom; setRoomView('board'); setBoardBeforeRoom(null); }}>
-            <div className="zc-room-plan" title={lang==='es'?`Volver al tablero: ${boardName}`:`Back to board: ${boardName}`}>
-              ← {boardName}
-            </div>
-          </div>
-        );
-      })()}
       {bid && roomView === 'board' && (
         <div className="zoom-ctrl" style={{bottom: (libOpen ? libHeight : 30) + 20}}>
           {(() => {

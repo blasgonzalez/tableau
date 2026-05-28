@@ -128,7 +128,9 @@
         "v1": "vmplit24cwiv",
         "v2": "vmplit4n9zvf",
         "name": "Pared 10",
-        "boardId": "29f6bcbc64"
+        "boardId": "29f6bcbc64",
+        "colorBack": "#e62dd7",
+        "boardIdBack": "1847233890"
       }
     ],
     "closed": false,
@@ -137,8 +139,8 @@
         "id": "mpp8gre18tq",
         "x": 598,
         "y": 309,
-        "w": 162,
-        "d": 235,
+        "w": 151,
+        "d": 205,
         "h": 100,
         "color": "#b8b0a4",
         "label": "",
@@ -146,13 +148,16 @@
           "n": {
             "boardId": "9adf6326d4"
           },
-          "s": null,
+          "s": {
+            "boardId": "1f4166c231"
+          },
           "e": null,
           "w": null,
           "t": {
-            "boardId": "21e34126df"
+            "boardId": "853c23925f"
           }
-        }
+        },
+        "rot": 330.1
       }
     ]
   },

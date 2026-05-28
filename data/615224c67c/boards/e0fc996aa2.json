@@ -101,6 +101,7 @@
     "z": 8,
     "label": "",
     "rot": 0,
-    "frame": 0
+    "frame": 0,
+    "freeRot": -23
   }
 ]

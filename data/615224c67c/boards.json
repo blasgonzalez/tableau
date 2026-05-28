@@ -126,25 +126,47 @@
     "defaultW": 1739
   },
   {
-    "id": "21e34126df",
-    "name": "Bloque Superior",
-    "created": 1779957057899,
-    "units": "cm",
-    "dpi": 62.7,
-    "fixed": true,
-    "fixedW": 162,
-    "fixedH": 235,
-    "defaultW": 1481
-  },
-  {
     "id": "9adf6326d4",
     "name": "Bloque Norte",
     "created": 1779957106208,
     "units": "cm",
     "dpi": 62.7,
     "fixed": true,
-    "fixedW": 162,
+    "fixedW": 151,
     "fixedH": 100,
     "defaultW": 1481
+  },
+  {
+    "id": "1847233890",
+    "name": "Pared 10 B",
+    "created": 1779982078553,
+    "units": "cm",
+    "dpi": 23.1,
+    "fixed": true,
+    "fixedW": 440,
+    "fixedH": 280,
+    "defaultW": 546
+  },
+  {
+    "id": "853c23925f",
+    "name": "Bloque Superior",
+    "created": 1779982727401,
+    "units": "cm",
+    "dpi": 67.3,
+    "fixed": true,
+    "fixedW": 151,
+    "fixedH": 205,
+    "defaultW": 1590
+  },
+  {
+    "id": "1f4166c231",
+    "name": "Bloque Sur",
+    "created": 1779983315797,
+    "units": "cm",
+    "dpi": 67.3,
+    "fixed": true,
+    "fixedW": 151,
+    "fixedH": 100,
+    "defaultW": 1590
   }
 ]
