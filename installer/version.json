@@ -1,6 +1,6 @@
 {
-  "version": "1.9.0",
+  "version": "1.9.1",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-05-27",
-  "notes": "Texto: tamaño libre (8–999 px), negrita e itálica. Vista 3D: notas y texto multilínea. Mosaico: corrección al quitar celdas. Fotos en zona: ajuste automático de dimensiones. Indicador de arrastre diferenciado."
+  "releaseDate": "2026-05-28",
+  "notes": "Bloques sólidos en sala: tableros por cara (N/S/E/O/Superior), panel lateral y vista 3D con fotos y marcos. Vista 3D: marcos (paspartú + moldura) visibles en paredes."
 }

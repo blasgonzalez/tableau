@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.9.1] — 2026-05-28
+### Añadido
+- Sala: bloques sólidos con etiqueta, color y dimensiones configurables desde el menú contextual del plano
+- Sala: cada cara del bloque (N, S, E, O, Superior) puede vincularse a un tablero propio
+- Sala: los tableros de caras de bloque aparecen anidados bajo su sala en el panel lateral
+- Vista 3D: las fotos colocadas en tableros de caras de bloque se renderizan sobre el bloque
+- Vista 3D: marcos (paspartú + moldura) se muestran en paredes y caras de bloque
+
+### Corregido
+- Vista 3D: la rotación de fotos en la cara superior del bloque ahora se muestra correctamente
+
+---
+
 ## [1.9.0] — 2026-05-27
 ### Añadido
 - Texto: tamaño libre (8–999 px) con botones de incremento inteligente, en lugar de tallas fijas S/M/L/XL

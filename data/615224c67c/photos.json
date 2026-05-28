@@ -16,7 +16,9 @@
       "g": 142,
       "b": 145
     },
-    "created": 1779346716054
+    "created": 1779346716054,
+    "rejected": false,
+    "rating": 2
   },
   {
     "id": "df2e695951d5",
@@ -75,7 +77,7 @@
       "b": 36
     },
     "created": 1779368355221,
-    "rejected": true
+    "rejected": false
   },
   {
     "id": "8f0be225fd96",
@@ -113,7 +115,8 @@
       "g": 141,
       "b": 141
     },
-    "created": 1779372342302
+    "created": 1779372342302,
+    "rating": 1
   },
   {
     "id": "f47687df6125",
@@ -132,7 +135,9 @@
       "g": 63,
       "b": 63
     },
-    "created": 1779372342998
+    "created": 1779372342998,
+    "rejected": false,
+    "rating": 1
   },
   {
     "id": "dc24d7673f51",

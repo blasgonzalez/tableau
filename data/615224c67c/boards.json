@@ -124,5 +124,27 @@
     "fixedW": 138,
     "fixedH": 280,
     "defaultW": 1739
+  },
+  {
+    "id": "21e34126df",
+    "name": "Bloque Superior",
+    "created": 1779957057899,
+    "units": "cm",
+    "dpi": 62.7,
+    "fixed": true,
+    "fixedW": 162,
+    "fixedH": 235,
+    "defaultW": 1481
+  },
+  {
+    "id": "9adf6326d4",
+    "name": "Bloque Norte",
+    "created": 1779957106208,
+    "units": "cm",
+    "dpi": 62.7,
+    "fixed": true,
+    "fixedW": 162,
+    "fixedH": 100,
+    "defaultW": 1481
   }
 ]

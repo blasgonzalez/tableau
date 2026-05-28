@@ -8,6 +8,8 @@
     "z": 1,
     "label": "",
     "rot": 0,
-    "frame": 0
+    "frame": 0,
+    "frameSize": 2.7,
+    "matSize": 6
   }
 ]

@@ -762,8 +762,11 @@ app.get('/api/boards/:pid/:bid/export', async (req, res) => {
 
   let rawW, rawH, getLeft, getTop;
   if (fixedMode) {
-    rawW    = board.fixedW;
-    rawH    = board.fixedH;
+    const u   = board.units || 'cm';
+    const dpi = board.dpi || 300;
+    const toPx = v => u === 'px' ? v : u === 'cm' ? Math.round(v / 2.54 * dpi) : u === 'mm' ? Math.round(v / 25.4 * dpi) : Math.round(v * dpi);
+    rawW    = Math.max(1, toPx(board.fixedW));
+    rawH    = Math.max(1, toPx(board.fixedH));
     getLeft = (cl) => cl;
     getTop  = (ct) => ct;
   } else {
@@ -974,6 +977,14 @@ app.post('/api/projects/import/:tempId/confirm', (req, res) => {
           ...wall,
           ...(wall.boardId     ? { boardId:     boardIdMap[wall.boardId]     || wall.boardId     } : {}),
           ...(wall.boardIdBack ? { boardIdBack: boardIdMap[wall.boardIdBack] || wall.boardIdBack } : {}),
+        })),
+        blocks: (room.blocks || []).map(block => ({
+          ...block,
+          faces: Object.fromEntries(
+            Object.entries(block.faces || {}).map(([k, v]) => [
+              k, v?.boardId ? { ...v, boardId: boardIdMap[v.boardId] || v.boardId } : v
+            ])
+          ),
         })),
       }));
       writeJSON(roomsFile(newPid), newRooms);

@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.9.1] — 2026-05-28
+### Added
+- Room: solid blocks with configurable label, color and dimensions via floor plan context menu
+- Room: each block face (N, S, E, W, Top) can be linked to its own board
+- Room: block face boards are nested under their room in the side panel
+- 3D view: photos placed on block face boards are rendered on the block surface
+- 3D view: frames (mat + molding) are now shown on walls and block faces
+
+### Fixed
+- 3D view: photo rotation on the block top face now displays correctly
+
+---
+
 ## [1.9.0] — 2026-05-27
 ### Added
 - Text: free font size (8–999 px) with smart increment buttons, replacing fixed S/M/L/XL sizes

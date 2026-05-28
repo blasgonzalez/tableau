@@ -131,7 +131,30 @@
         "boardId": "29f6bcbc64"
       }
     ],
-    "closed": false
+    "closed": false,
+    "blocks": [
+      {
+        "id": "mpp8gre18tq",
+        "x": 598,
+        "y": 309,
+        "w": 162,
+        "d": 235,
+        "h": 100,
+        "color": "#b8b0a4",
+        "label": "",
+        "faces": {
+          "n": {
+            "boardId": "9adf6326d4"
+          },
+          "s": null,
+          "e": null,
+          "w": null,
+          "t": {
+            "boardId": "21e34126df"
+          }
+        }
+      }
+    ]
   },
   {
     "id": "rmpkteaxz",

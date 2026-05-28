@@ -213,6 +213,16 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .room-toolbar-3d .btn:hover{color:#fff;border-color:rgba(255,255,255,.4);background:rgba(0,0,0,.72)}
 .room-toolbar-3d .btn.active{color:#fff;border-color:rgba(196,137,74,.7);background:rgba(196,137,74,.25)}
 .room-hint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);font-size:9px;letter-spacing:.5px;color:var(--muted);background:var(--panel);border:1px solid var(--border);padding:4px 12px;border-radius:3px;pointer-events:none;white-space:nowrap}
+.room-block{fill:rgba(160,148,136,.35);stroke:#a09080;stroke-width:1.5;cursor:pointer}
+.room-block.sel{stroke:var(--acc);stroke-width:2}
+.room-block:hover{fill:rgba(160,148,136,.55)}
+.room-block-handle{fill:var(--panel2);stroke:var(--acc);stroke-width:1.5;cursor:nwse-resize}
+.room-block-label{font-size:9px;fill:var(--dim);text-anchor:middle;dominant-baseline:middle;pointer-events:none;font-family:'IBM Plex Mono',monospace}
+.block-props{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--border2);padding:8px 12px;display:flex;gap:10px;align-items:center;z-index:5;box-shadow:0 4px 16px rgba(0,0,0,.5);font-size:9px;color:var(--dim)}
+.block-props input[type=number]{width:52px;background:var(--panel);border:1px solid var(--border2);color:var(--text);font-size:9px;padding:2px 4px;text-align:center}
+.block-props input[type=text]{width:80px;background:var(--panel);border:1px solid var(--border2);color:var(--text);font-size:9px;padding:2px 4px}
+.block-face-btn{font-size:8px;padding:2px 6px;background:var(--panel);border:1px solid var(--border2);color:var(--dim);cursor:pointer;letter-spacing:.3px}
+.block-face-btn.linked{border-color:var(--acc);color:var(--acc)}
 .room-panel{width:260px;flex-shrink:0;background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
 .room-panel-hd{padding:12px 14px 8px;font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border);flex-shrink:0}
 .room-cfg{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
@@ -423,9 +433,8 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .thumb-rejected{position:absolute;inset:0;background:rgba(196,80,80,.35);display:flex;align-items:center;justify-content:center;z-index:5;pointer-events:none}
 .thumb-rejected-label{background:rgba(196,80,80,.85);color:#fff;font-size:6px;letter-spacing:1.5px;padding:2px 5px;font-family:'IBM Plex Mono',monospace}
 .thumb.rejected-thumb{opacity:.55}
-.thumb-reject-btn{position:absolute;bottom:20px;right:2px;width:18px;height:18px;background:rgba(0,0,0,.65);border:1px solid rgba(196,80,80,.5);color:rgba(196,80,80,.8);cursor:pointer;font-size:10px;display:none;align-items:center;justify-content:center;z-index:6;line-height:1;padding:0}
-.thumb:hover .thumb-reject-btn{display:flex}
-.thumb-reject-btn:hover{color:#ff7070;border-color:#ff7070}
+.thumb-reject-hint{position:absolute;bottom:21px;right:3px;font-size:7px;color:rgba(196,80,80,.65);font-family:'IBM Plex Mono',monospace;letter-spacing:.3px;display:none;pointer-events:none;background:rgba(0,0,0,.55);padding:1px 3px;z-index:6}
+.thumb:hover .thumb-reject-hint{display:block}
 .lib-star-filter{display:flex;align-items:center;gap:1px;padding:0 2px}
 .lib-star-filter button{background:none;border:none;padding:0 1px;font-size:11px;cursor:pointer;line-height:1;color:var(--dim);outline:none;transition:color .1s}
 .lib-star-filter button:hover{color:var(--acc)}
@@ -435,7 +444,7 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .lib-scroll:has(.lib-empty){align-items:center;justify-content:center}
 .lib-scroll > *{flex-shrink:0}
 .lib-photo-row{display:flex;flex-wrap:wrap;align-items:flex-start;align-content:flex-start;gap:8px;padding:5px 0 8px 0}
-.lib-muted .thumb-stars,.lib-muted .thumb-tag-badge,.lib-muted .thumb-color,.lib-muted .thumb-reject-btn,.lib-muted .thumb-tag,.lib-muted .thumb-x,.lib-muted .thumb-cp,.lib-muted .thumb-rejected{display:none !important}
+.lib-muted .thumb-stars,.lib-muted .thumb-tag-badge,.lib-muted .thumb-color,.lib-muted .thumb-reject-hint,.lib-muted .thumb-tag,.lib-muted .thumb-x,.lib-muted .thumb-cp,.lib-muted .thumb-rejected{display:none !important}
 .lib-muted .thumb.in-board{border-color:var(--border2)}
 .lib-muted .thumb.in-board::before{display:none}
 .lib-mute-btn{background:none;border:1px solid var(--border2);color:var(--dim);cursor:pointer;font-size:9px;padding:1px 5px;font-family:'IBM Plex Mono',monospace;transition:all .12s;flex-shrink:0;letter-spacing:.3px}
@@ -979,6 +988,8 @@ const I18N = {
     presentationBtn:'Presentación', exitPresentation:'Salir · ESC', addText:'+ Texto',
     textFmtSize:'Tamaño', textFmtFont:'Fuente', textFmtAlign:'Alinear', textFmtColor:'Color',
     rejectBtn:'Rechazar', unrejectBtn:'Recuperar', filterRejected:'Rechazadas', filterRejectedHide:'Ocultar rechazadas',
+    rejectToast: n => n === 1 ? 'Foto rechazada' : `${n} fotos rechazadas`,
+    unrejectToast: n => n === 1 ? 'Foto recuperada' : `${n} fotos recuperadas`,
     rejectedLabel:'RECHAZADA',
     replacePhoto:'Reemplazar foto', replaceModeHint:'Selecciona la foto nueva en la librería · ESC cancela', replaceDone:'Foto reemplazada',
     pinnedPreviewHint:'Clic para fijar · ESC cierra',
@@ -988,6 +999,7 @@ const I18N = {
     libMuteOn:'◎ Silenciar', libMuteOff:'◎ Silenciada',
     exportPadLabel:'Borde exterior al exportar (px)',
     exportPadHint:'Espacio en blanco alrededor de las fotos en el JPEG',
+    addBlock:'+ Bloque', blockLabel:'Nombre', blockHeight:'Alto (cm)', blockFaceN:'Norte', blockFaceS:'Sur', blockFaceE:'Este', blockFaceW:'Oeste', blockFaceTop:'Superior', blockFaceLink:'Vincular tablero', blockFaceUnlink:'Desvincular', blockSyncWarn:'Este bloque tiene tableros vinculados. Redimensionar puede desincronizarlos. ¿Continuar?', blockDelete:'Eliminar bloque',
   },
   en: {
     upload:'↑ Upload', uploadPhotos:'Photos', report:'≡ Report', config:'⚙ Config', exportJpeg:'Export JPEG',
@@ -1115,6 +1127,8 @@ const I18N = {
     presentationBtn:'Present', exitPresentation:'Exit · ESC', addText:'+ Text',
     textFmtSize:'Size', textFmtFont:'Font', textFmtAlign:'Align', textFmtColor:'Color',
     rejectBtn:'Reject', unrejectBtn:'Recover', filterRejected:'Rejected', filterRejectedHide:'Hide rejected',
+    rejectToast: n => n === 1 ? 'Photo rejected' : `${n} photos rejected`,
+    unrejectToast: n => n === 1 ? 'Photo recovered' : `${n} photos recovered`,
     rejectedLabel:'REJECTED',
     replacePhoto:'Replace photo', replaceModeHint:'Select the new photo in the library · ESC to cancel', replaceDone:'Photo replaced',
     pinnedPreviewHint:'Click to pin · ESC closes',
@@ -1124,6 +1138,7 @@ const I18N = {
     libMuteOn:'◎ Mute', libMuteOff:'◎ Muted',
     exportPadLabel:'Export border (px)',
     exportPadHint:'White space around photos in the exported JPEG',
+    addBlock:'+ Block', blockLabel:'Name', blockHeight:'Height (cm)', blockFaceN:'North', blockFaceS:'South', blockFaceE:'East', blockFaceW:'West', blockFaceTop:'Top', blockFaceLink:'Link board', blockFaceUnlink:'Unlink', blockSyncWarn:'This block has linked boards. Resizing may desync them. Continue?', blockDelete:'Delete block',
   },
 };
 
@@ -1203,6 +1218,11 @@ function App() {
   const gridPendingRef = useRef(null);
   const [roomDrawing,    setRoomDrawing]   = useState(false);
   const [roomAppending,  setRoomAppending] = useState(false);
+  const [blockDrawing, setBlockDrawing] = useState(false);
+  const [blockDraw,    setBlockDraw]    = useState(null);
+  const [selBlock,     setSelBlock]     = useState(null);
+  const selBlockRef = useRef(null);
+  const blockDrawingRef = useRef(false);
   const [roomVertCtx,    setRoomVertCtx]   = useState(null); // {id, x, y}
   const [roomColCtx,     setRoomColCtx]    = useState(null); // {id, x, y}
   const [roomSvgCtx,     setRoomSvgCtx]    = useState(null); // {x, y, svgX, svgY}
@@ -1544,7 +1564,10 @@ function App() {
     const initScene = async () => {
       const [boardItemsResults, photosData] = await Promise.all([
         Promise.all(
-          [...new Set(room.walls.flatMap(w => [w.boardId, w.boardIdBack].filter(Boolean)))]
+          [...new Set([
+            ...room.walls.flatMap(w => [w.boardId, w.boardIdBack].filter(Boolean)),
+            ...(room.blocks||[]).flatMap(bl => Object.values(bl.faces||{}).map(f => f?.boardId).filter(Boolean)),
+          ])]
             .map(async boardId => {
               try {
                 const its = await api.get(`/api/boards/${pid}/${boardId}/items`);
@@ -1731,6 +1754,19 @@ function App() {
           const ix = (item.x + item.w/2) / bPx.w * fW;
           const iy = wh * (1 - (item.y + itemH/2) / bPx.h);
           const pos = { x: x1 + dirX*ix + normX*(wt/2+2), y: iy, z: z1 + dirZ*ix + normZ*(wt/2+2) };
+          if (!isText && !isNote) {
+            const matPx  = physToPx(item.matSize  ?? item.frame  ?? 0, board.dpi, board.units);
+            const moldPx = physToPx(item.frameSize ?? 0, board.dpi, board.units);
+            [[matPx+moldPx, item.frameColor||'#5a3e1b', 1.5],[matPx, item.matColor||'#ffffff', 1.0]]
+              .filter(([px]) => px > 0)
+              .forEach(([px, col, back]) => {
+                const fw = (item.w + 2*px) / bPx.w * fW;
+                const fh = (itemH + 2*px) / bPx.h * wh;
+                const fp = { x: x1+dirX*ix+normX*(wt/2+2-back), y: iy, z: z1+dirZ*ix+normZ*(wt/2+2-back) };
+                const fm = new THREE.Mesh(new THREE.PlaneGeometry(fw, fh), new THREE.MeshLambertMaterial({color:col,side:THREE.DoubleSide}));
+                fm.position.set(fp.x, fp.y, fp.z); fm.rotation.y = rotY; scene.add(fm);
+              });
+          }
           const pMesh = new THREE.Mesh(
             new THREE.PlaneGeometry(finalIw, finalIh),
             new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, transparent: true })
@@ -1824,6 +1860,185 @@ function App() {
         );
         cMesh.position.set(col.x + col.w/2, ch/2, col.y + col.d/2);
         scene.add(cMesh);
+      });
+
+      // Solid blocks
+      getBlocks(room).forEach(block => {
+        const bColor = block.color || '#b8b0a4';
+        const boxMesh = new THREE.Mesh(
+          new THREE.BoxGeometry(block.w, block.h, block.d),
+          new THREE.MeshLambertMaterial({color: bColor})
+        );
+        boxMesh.position.set(block.x + block.w/2, block.h/2, block.y + block.d/2);
+        boxMesh.userData.isWalkTarget = true;
+        scene.add(boxMesh);
+        walkTargets.push(boxMesh);
+      });
+
+      // Block face photos — items on linked boards rendered onto block faces
+      const BFOFF = 2;
+      const applyBlockItemMat = (pMesh, item, itemH, bgHex) => {
+        const isText = item.type === 'text';
+        const isNote = item.type === 'note';
+        if (isText) {
+          const SCALE = 2;
+          const cvW = Math.max(1, Math.round(item.w * SCALE));
+          const cvH = Math.max(1, Math.round(itemH * SCALE));
+          const cvs = document.createElement('canvas');
+          cvs.width = cvW; cvs.height = cvH;
+          const ctx2 = cvs.getContext('2d');
+          const tFont = TEXT_FONTS.find(f => f.id === (item.fontFamily || 'serif')) || TEXT_FONTS[0];
+          const fs = (item.fontSize || 40) * SCALE;
+          const bold = item.fontWeight === 'bold' ? 'bold ' : '';
+          const italic = item.fontStyle === 'italic' ? 'italic ' : '';
+          ctx2.clearRect(0, 0, cvW, cvH);
+          ctx2.font = `${italic}${bold}${fs}px ${tFont.family}`;
+          const fallback = bgContrast(bgHex);
+          let textCol = item.textColor || fallback;
+          if (textCol.startsWith('#') && bgContrast(textCol) === bgContrast(bgHex)) textCol = fallback;
+          ctx2.fillStyle = textCol;
+          ctx2.textAlign = item.textAlign || 'left';
+          ctx2.textBaseline = 'alphabetic';
+          const tx = item.textAlign === 'right' ? cvW - 4*SCALE : item.textAlign === 'center' ? cvW/2 : 4*SCALE;
+          const lines = (item.text || '').split('\n');
+          const lineH = fs * 1.35;
+          const totalH = lines.length * lineH;
+          const startY = (cvH - totalH) / 2 + fs * 0.85;
+          lines.forEach((ln, i) => ctx2.fillText(ln, tx, startY + i * lineH));
+          const tex = new THREE.CanvasTexture(cvs);
+          pMesh.material = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, transparent: true, alphaTest: 0.01 });
+        } else if (isNote) {
+          const SCALE = 2;
+          const cvW = Math.max(1, Math.round(item.w * SCALE));
+          const cvH = Math.max(1, Math.round(itemH * SCALE));
+          const cvs = document.createElement('canvas');
+          cvs.width = cvW; cvs.height = cvH;
+          const ctx2 = cvs.getContext('2d');
+          const noteBg = item.noteColor && NOTE_COLOR_VALS[item.noteColor] ? NOTE_COLOR_VALS[item.noteColor][0] : '#e8e0c8';
+          ctx2.fillStyle = noteBg;
+          ctx2.fillRect(0, 0, cvW, cvH);
+          const noteFg = bgContrast(noteBg);
+          ctx2.fillStyle = noteFg;
+          ctx2.textAlign = 'left';
+          ctx2.textBaseline = 'top';
+          if (item.title) {
+            ctx2.font = `bold ${14*SCALE}px 'IBM Plex Mono',monospace`;
+            ctx2.fillText(item.title, 7*SCALE, 7*SCALE);
+          }
+          if (item.text) {
+            ctx2.font = `${11*SCALE}px 'IBM Plex Mono',monospace`;
+            const lines = item.text.split('\n').slice(0, 10);
+            lines.forEach((ln, i) => ctx2.fillText(ln, 7*SCALE, ((item.title ? 26 : 7) + i * 14) * SCALE));
+          }
+          const tex = new THREE.CanvasTexture(cvs);
+          pMesh.material = new THREE.MeshLambertMaterial({ map: tex, side: THREE.DoubleSide });
+        } else if (item.photoId) {
+          loader.load(`/photos/${pid}/${item.photoId}/thumb`, tex => {
+            if (cancelled) return;
+            tex.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
+            pMesh.material = new THREE.MeshLambertMaterial({ map: tex, side: THREE.DoubleSide });
+          });
+        }
+      };
+      getBlocks(room).forEach(block => {
+        if (!block.faces) return;
+        const bx = block.x, by = block.y, bw = block.w, bd = block.d, bh = block.h;
+        const hexBlock = block.color || '#b8b0a4';
+        const vFaceDefs = {
+          n: { x1: bx,      z1: by,      dirX: 1, dirZ: 0, sideSign: -1, fW: bw },
+          s: { x1: bx,      z1: by + bd, dirX: 1, dirZ: 0, sideSign:  1, fW: bw },
+          e: { x1: bx + bw, z1: by,      dirX: 0, dirZ: 1, sideSign: -1, fW: bd },
+          w: { x1: bx,      z1: by,      dirX: 0, dirZ: 1, sideSign:  1, fW: bd },
+        };
+        ['n','s','e','w'].forEach(face => {
+          const faceLink = block.faces[face];
+          if (!faceLink?.boardId) return;
+          const board = boards.find(b => b.id === faceLink.boardId);
+          const rawItems = boardItemsMap[faceLink.boardId] || [];
+          const bItems = rawItems.filter(i => !i.type || i.type === 'photo' || i.type === 'text' || i.type === 'note');
+          if (!board || !bItems.length) return;
+          const bPx = getBoardPx(board);
+          if (!bPx) return;
+          const { x1, z1, dirX, dirZ, sideSign, fW } = vFaceDefs[face];
+          const normX = -dirZ * sideSign, normZ = dirX * sideSign;
+          const rotY = Math.atan2(-dirZ, dirX);
+          bItems.forEach(item => {
+            const isText = item.type === 'text', isNote = item.type === 'note';
+            const photo = (!isText && !isNote) ? photoMap[item.photoId] : null;
+            const itemH = isText ? (item.h || item.w * 0.3) : isNote ? (item.h || item.w) : photo ? item.w * (photo.h / photo.w) : item.w;
+            const iw = item.w / bPx.w * fW;
+            const ih = itemH / bPx.h * bh;
+            const minH = (isText || isNote) ? bh * 0.03 : 0;
+            const sizeScale = (minH > 0 && ih > 0 && ih < minH) ? minH / ih : 1;
+            const finalIw = iw * sizeScale, finalIh = Math.max(ih, minH);
+            const ix = (item.x + item.w/2) / bPx.w * fW;
+            const iy = bh * (1 - (item.y + itemH/2) / bPx.h);
+            const pos = { x: x1 + dirX*ix + normX*BFOFF, y: iy, z: z1 + dirZ*ix + normZ*BFOFF };
+            if (!isText && !isNote) {
+              const matPx  = physToPx(item.matSize  ?? item.frame  ?? 0, board.dpi, board.units);
+              const moldPx = physToPx(item.frameSize ?? 0, board.dpi, board.units);
+              [[matPx+moldPx, item.frameColor||'#5a3e1b', 1.5],[matPx, item.matColor||'#ffffff', 1.0]]
+                .filter(([px]) => px > 0)
+                .forEach(([px, col, back]) => {
+                  const fw = (item.w + 2*px) / bPx.w * fW;
+                  const fh = (itemH + 2*px) / bPx.h * bh;
+                  const fp = { x: x1+dirX*ix+normX*(BFOFF-back), y: iy, z: z1+dirZ*ix+normZ*(BFOFF-back) };
+                  const fm = new THREE.Mesh(new THREE.PlaneGeometry(fw, fh), new THREE.MeshLambertMaterial({color:col,side:THREE.DoubleSide}));
+                  fm.position.set(fp.x, fp.y, fp.z); fm.rotation.y = rotY; scene.add(fm);
+                });
+            }
+            const pMesh = new THREE.Mesh(
+              new THREE.PlaneGeometry(finalIw, finalIh),
+              new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, transparent: true })
+            );
+            pMesh.position.set(pos.x, pos.y, pos.z);
+            pMesh.rotation.y = rotY;
+            scene.add(pMesh);
+            applyBlockItemMat(pMesh, item, itemH, hexBlock);
+          });
+        });
+        // Top face
+        const topLink = block.faces.t;
+        if (topLink?.boardId) {
+          const board = boards.find(b => b.id === topLink.boardId);
+          const rawItems = boardItemsMap[topLink.boardId] || [];
+          const bItems = rawItems.filter(i => !i.type || i.type === 'photo' || i.type === 'text' || i.type === 'note');
+          if (board && bItems.length) {
+            const bPx = getBoardPx(board);
+            if (bPx) bItems.forEach(item => {
+              const isText = item.type === 'text', isNote = item.type === 'note';
+              const photo = (!isText && !isNote) ? photoMap[item.photoId] : null;
+              const itemH = isText ? (item.h || item.w * 0.3) : isNote ? (item.h || item.w) : photo ? item.w * (photo.h / photo.w) : item.w;
+              const iw = item.w / bPx.w * bw;
+              const ih = itemH / bPx.h * bd;
+              const ix = (item.x + item.w/2) / bPx.w * bw;
+              const iz = (item.y + itemH/2) / bPx.h * bd;
+              const topRot = -((item.rot || 0) + (item.freeRot || 0)) * Math.PI / 180;
+              if (!isText && !isNote) {
+                const matPx  = physToPx(item.matSize  ?? item.frame  ?? 0, board.dpi, board.units);
+                const moldPx = physToPx(item.frameSize ?? 0, board.dpi, board.units);
+                [[matPx+moldPx, item.frameColor||'#5a3e1b', 1.5],[matPx, item.matColor||'#ffffff', 1.0]]
+                  .filter(([px]) => px > 0)
+                  .forEach(([px, col, back]) => {
+                    const fw = (item.w + 2*px) / bPx.w * bw;
+                    const fh = (itemH + 2*px) / bPx.h * bd;
+                    const fm = new THREE.Mesh(new THREE.PlaneGeometry(fw, fh), new THREE.MeshLambertMaterial({color:col,side:THREE.DoubleSide}));
+                    fm.position.set(bx + ix, bh + BFOFF - back, by + iz);
+                    fm.rotation.x = -Math.PI / 2; fm.rotation.z = topRot; scene.add(fm);
+                  });
+              }
+              const pMesh = new THREE.Mesh(
+                new THREE.PlaneGeometry(iw, ih),
+                new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, transparent: true })
+              );
+              pMesh.position.set(bx + ix, bh + BFOFF, by + iz);
+              pMesh.rotation.x = -Math.PI / 2;
+              pMesh.rotation.z = topRot;
+              scene.add(pMesh);
+              applyBlockItemMat(pMesh, item, itemH, hexBlock);
+            });
+          }
+        }
       });
 
       // Person scale reference — 175 cm, LatheGeometry torso for organic shape
@@ -2262,8 +2477,47 @@ function App() {
       if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey && gridPendingRef.current) {
         e.preventDefault(); placeGridPending(); return;
       }
+      if ((e.key === 'x' || e.key === 'X') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        const hov = hoveredThumbRef.current;
+        const sel = libSelRef.current;
+        if (hov || sel.length > 0) {
+          e.preventDefault();
+          const targets = sel.length > 0
+            ? sel.map(id => photosRef.current.find(p => p.id === id)).filter(Boolean)
+            : [photosRef.current.find(p => p.id === hov)].filter(Boolean);
+          const toReject = targets.filter(p => !p.rejected);
+          toReject.forEach(p => toggleRejected(p.id));
+          if (toReject.length) showToast(t('rejectToast', toReject.length));
+        }
+      }
+      if ((e.key === 'u' || e.key === 'U') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        const hov = hoveredThumbRef.current;
+        const sel = libSelRef.current;
+        if (hov || sel.length > 0) {
+          e.preventDefault();
+          const targets = sel.length > 0
+            ? sel.map(id => photosRef.current.find(p => p.id === id)).filter(Boolean)
+            : [photosRef.current.find(p => p.id === hov)].filter(Boolean);
+          const toUnreject = targets.filter(p => p.rejected);
+          toUnreject.forEach(p => toggleRejected(p.id));
+          if (toUnreject.length) showToast(t('unrejectToast', toUnreject.length));
+        }
+      }
+      if (!e.ctrlKey && !e.metaKey && !e.altKey && hoveredThumbRef.current) {
+        const n = parseInt(e.key);
+        if (!isNaN(n) && n >= 0 && n <= 5) {
+          e.preventDefault();
+          const hovered = hoveredThumbRef.current;
+          const sel = libSelRef.current;
+          if (sel.length > 1 && sel.includes(hovered)) setRatingBatch(sel, n);
+          else setRating(hovered, n);
+        }
+      }
       if ((e.key === 'r' || e.key === 'R') && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        const linkedRoom = roomsRef.current.find(r => r.walls?.some(w => w.boardId === bidRef.current || w.boardIdBack === bidRef.current));
+        const linkedRoom = roomsRef.current.find(r =>
+          r.walls?.some(w => w.boardId === bidRef.current || w.boardIdBack === bidRef.current) ||
+          r.blocks?.some(bl => bl.faces && Object.values(bl.faces).some(f => f?.boardId === bidRef.current))
+        );
         if (linkedRoom) {
           e.preventDefault();
           setBoardBeforeRoom(bidRef.current);
@@ -2319,6 +2573,21 @@ function App() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [roomDrawing, roomTempVerts, roomAppending]);
+
+  useEffect(() => { blockDrawingRef.current = blockDrawing; }, [blockDrawing]);
+
+  useEffect(() => {
+    const onKey = e => {
+      const tag = document.activeElement?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      if (e.key === 'Escape') {
+        if (blockDrawingRef.current) { setBlockDrawing(false); blockDrawingRef.current = false; setBlockDraw(null); }
+        if (selBlockRef.current) { setSelBlock(null); selBlockRef.current = null; }
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   const saveItemsNow = useCallback((its) => {
     const p = pidRef.current, b = bidRef.current;
@@ -3227,22 +3496,6 @@ ${rows}
     setBatchTagInput('');
   };
 
-  useEffect(() => {
-    const handler = e => {
-      if (!hoveredThumbRef.current) return;
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-      if (e.ctrlKey || e.metaKey || e.altKey) return;
-      const n = parseInt(e.key);
-      if (!isNaN(n) && n >= 0 && n <= 5) {
-        const hovered = hoveredThumbRef.current;
-        const sel = libSelRef.current;
-        if (sel.length > 1 && sel.includes(hovered)) setRatingBatch(sel, n);
-        else setRating(hovered, n);
-      }
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, []);
 
   useEffect(() => {
     const handler = e => {
@@ -4216,23 +4469,40 @@ ${rows}
     const units = board?.units || 'px';
     const gap = !board || units === 'px' ? 10 : units === 'mm' ? 5 : units === 'cm' ? 0.5 : 0.2;
     let cols = Math.min(Math.max(1, Math.round(Math.sqrt(photoIds.length))), photoIds.length, 5);
-    let w = bpx ? Math.round(bpx.w * 0.85) : Math.min(900, photoIds.length * 220);
-    if (bpx) {
-      // Increase cols until grid fits board height
+    // Cap initial width to the smaller of 85% board width and 80% visible viewport width
+    const maxWBoard = bpx ? Math.round(bpx.w * 0.85) : Infinity;
+    const maxWView  = wrap ? Math.round(wrap.clientWidth  * 0.80 / z) : Infinity;
+    let w = Math.min(maxWBoard, maxWView, photoIds.length * 220);
+    w = Math.max(80, w);
+    // Height budget: smaller of 90% board height and 80% visible viewport height
+    const maxHBoard = bpx  ? bpx.h  * 0.90 : Infinity;
+    const maxHView  = wrap ? wrap.clientHeight * 0.80 / z : Infinity;
+    const maxH = Math.min(maxHBoard, maxHView);
+    if (isFinite(maxH)) {
+      // Increase cols until grid fits height budget
       while (cols < photoIds.length) {
         const lay = calcGridLayout({photoIds, cols, gap, w}, photosRef.current, dpi, units);
-        if (lay.totalH <= bpx.h) break;
+        if (lay.totalH <= maxH) break;
         cols++;
       }
       // If still too tall, shrink width proportionally
       const lay = calcGridLayout({photoIds, cols, gap, w}, photosRef.current, dpi, units);
-      if (lay.totalH > bpx.h && lay.totalH > 0)
-        w = Math.max(80, Math.round(w * (bpx.h * 0.95) / lay.totalH));
+      if (lay.totalH > maxH && lay.totalH > 0)
+        w = Math.max(80, Math.round(w * maxH / lay.totalH));
     }
     const lay = calcGridLayout({photoIds, cols, gap, w}, photosRef.current, dpi, units);
-    const cx = wrap ? Math.round((wrap.scrollLeft + wrap.clientWidth  / 2 - pad) / z - w / 2) : 100;
-    const cy = wrap ? Math.round((wrap.scrollTop  + wrap.clientHeight / 2 - pad) / z - lay.totalH / 2) : 100;
-    setGridPending({ photoIds: [...photoIds], cols, gap, w, x: Math.max(0, cx), y: Math.max(0, cy) });
+    // If the whole board fits in the viewport (no scroll needed), center on the board;
+    // otherwise center on the visible viewport area (user has scrolled to a region).
+    const boardFitsW = bpx && wrap ? (bpx.w * z + pad * 2) <= wrap.clientWidth  : false;
+    const boardFitsH = bpx && wrap ? (bpx.h * z + pad * 2) <= wrap.clientHeight : false;
+    const cx = boardFitsW && bpx
+      ? Math.round(bpx.w / 2 - w / 2)
+      : wrap ? Math.round((wrap.scrollLeft + wrap.clientWidth  / 2 - pad) / z - w / 2) : 100;
+    const cy = boardFitsH && bpx
+      ? Math.round(bpx.h / 2 - lay.totalH / 2)
+      : wrap ? Math.round((wrap.scrollTop  + wrap.clientHeight / 2 - pad) / z - lay.totalH / 2) : 100;
+    const barRoom = Math.ceil(28 / z); // leave room for gitem-bar above
+    setGridPending({ photoIds: [...photoIds], cols, gap, w, x: Math.max(0, cx), y: Math.max(barRoom, cy) });
   };
 
   const placeGridPending = () => {
@@ -4541,6 +4811,13 @@ ${rows}
     return Math.sqrt((v2.x-v1.x)**2+(v2.y-v1.y)**2);
   };
 
+  const getBlocks = r => r?.blocks || [];
+
+  const saveRoomBlocks = (blocks) => {
+    const r = {...roomRef.current, blocks};
+    saveRoom(r);
+  };
+
   const cmLabel = cm => cm >= 100 ? `${(cm/100).toFixed(2).replace('.',',')} m` : `${Math.round(cm)} cm`;
 
   const saveRoom = r => {
@@ -4625,6 +4902,71 @@ ${rows}
     window.addEventListener('pointerup', onMU);
   };
 
+  const onBlockPD = (e, blockId) => {
+    if (blockDrawing) return;
+    e.stopPropagation(); e.preventDefault();
+    setSelBlock(blockId); selBlockRef.current = blockId;
+    const r = roomRef.current;
+    const block = getBlocks(r).find(b => b.id === blockId);
+    if (!block) return;
+    const pt0 = roomSvgPt(e);
+    const ox = block.x - pt0.x, oy = block.y - pt0.y;
+    let moved = false;
+    const hasFaceBoards = block.faces && Object.values(block.faces).some(Boolean);
+    const onMM = e2 => {
+      moved = true;
+      const p = roomSvgPt(e2);
+      const nx = Math.round(p.x + ox), ny = Math.round(p.y + oy);
+      const upd = {...block, x: nx, y: ny};
+      const blocks = getBlocks(roomRef.current).map(b => b.id === blockId ? upd : b);
+      const nr = {...roomRef.current, blocks};
+      setRoom(nr); roomRef.current = nr;
+      setRooms(rs => rs.map(x => x.id === nr.id ? nr : x));
+    };
+    const onMU = () => {
+      window.removeEventListener('pointermove', onMM);
+      window.removeEventListener('pointerup', onMU);
+      if (moved) {
+        api.put(`/api/projects/${pidRef.current}/rooms/${roomRef.current.id}`, roomRef.current);
+        if (hasFaceBoards) showToast(lang === 'es' ? 'Tableros vinculados pueden estar desincronizados' : 'Linked boards may be out of sync', true);
+      }
+    };
+    window.addEventListener('pointermove', onMM);
+    window.addEventListener('pointerup', onMU);
+  };
+
+  const onBlockHandlePD = (e, blockId, corner) => {
+    e.stopPropagation(); e.preventDefault();
+    const r = roomRef.current;
+    const block = getBlocks(r).find(b => b.id === blockId);
+    if (!block) return;
+    const hasFaceBoards = block.faces && Object.values(block.faces).some(Boolean);
+    const pt0 = roomSvgPt(e);
+    const orig = {...block};
+    const onMM = e2 => {
+      const p = roomSvgPt(e2);
+      const dx = p.x - pt0.x, dy = p.y - pt0.y;
+      let {x, y, w, d} = orig;
+      if (corner.includes('e')) w = Math.max(10, orig.w + dx);
+      if (corner.includes('w')) { w = Math.max(10, orig.w - dx); x = orig.x + orig.w - w; }
+      if (corner.includes('s')) d = Math.max(10, orig.d + dy);
+      if (corner.includes('n')) { d = Math.max(10, orig.d - dy); y = orig.y + orig.d - d; }
+      const upd = {...block, x: Math.round(x), y: Math.round(y), w: Math.round(w), d: Math.round(d)};
+      const blocks = getBlocks(roomRef.current).map(b => b.id === blockId ? upd : b);
+      const nr = {...roomRef.current, blocks};
+      setRoom(nr); roomRef.current = nr;
+      setRooms(rs => rs.map(x => x.id === nr.id ? nr : x));
+    };
+    const onMU = () => {
+      window.removeEventListener('pointermove', onMM);
+      window.removeEventListener('pointerup', onMU);
+      api.put(`/api/projects/${pidRef.current}/rooms/${roomRef.current.id}`, roomRef.current);
+      if (hasFaceBoards) showToast(lang === 'es' ? 'Tableros vinculados pueden estar desincronizados' : 'Linked boards may be out of sync', true);
+    };
+    window.addEventListener('pointermove', onMM);
+    window.addEventListener('pointerup', onMU);
+  };
+
   const _finishDrawing = (verts, closed, append) => {
     const r = roomRef.current;
     const baseVerts = (append && r) ? r.vertices : [];
@@ -4663,7 +5005,10 @@ ${rows}
   const finishOpenPolygon = (verts, append) => { if (verts.length >= 2) _finishDrawing(verts, false, append); };
 
   const onRoomSvgClick = e => {
-    if (!roomDrawing) return;
+    if (!roomDrawing) {
+      if (selBlockRef.current) { setSelBlock(null); selBlockRef.current = null; }
+      return;
+    }
     const raw = roomSvgPt(e);
     const pt = roomSnapPt(roomTempVerts, raw, e.shiftKey);
     if (pt.nearClose && roomTempVerts.length >= 3) { closeRoomPolygon(roomTempVerts, roomAppending); return; }
@@ -4692,6 +5037,40 @@ ${rows}
   };
 
   const onRoomSvgPD = e => {
+    if (blockDrawingRef.current) {
+      e.stopPropagation(); e.preventDefault();
+      const pt = roomSvgPt(e);
+      setBlockDraw({x0: pt.x, y0: pt.y, x1: pt.x, y1: pt.y});
+      const onMM = e2 => {
+        const p2 = roomSvgPt(e2);
+        setBlockDraw(bd => bd ? {...bd, x1: p2.x, y1: p2.y} : null);
+      };
+      const onMU = e2 => {
+        window.removeEventListener('pointermove', onMM);
+        window.removeEventListener('pointerup', onMU);
+        const p2 = roomSvgPt(e2);
+        const x = Math.min(pt.x, p2.x), y = Math.min(pt.y, p2.y);
+        const w = Math.abs(p2.x - pt.x), d = Math.abs(p2.y - pt.y);
+        setBlockDraw(null);
+        if (w < 5 || d < 5) return;
+        const r = roomRef.current;
+        const newBlock = {
+          id: Date.now().toString(36) + Math.random().toString(36).slice(2,5),
+          x: Math.round(x), y: Math.round(y),
+          w: Math.round(w), d: Math.round(d),
+          h: r?.ceilingHeight || 280,
+          color: '#b8b0a4', label: '',
+          faces: {n: null, s: null, e: null, w: null}
+        };
+        const blocks = [...getBlocks(r), newBlock];
+        saveRoomBlocks(blocks);
+        setSelBlock(newBlock.id); selBlockRef.current = newBlock.id;
+        setBlockDrawing(false); blockDrawingRef.current = false;
+      };
+      window.addEventListener('pointermove', onMM);
+      window.addEventListener('pointerup', onMU);
+      return;
+    }
     if (roomDrawing) return;
     if (e.button !== 0 && e.button !== 1) return;
     e.preventDefault();
@@ -5285,7 +5664,10 @@ ${rows}
     }
     const { photo, status, thumbSrc, itemW, itemH } = hoverInfo;
     const boardNames = photo?.id ? photoBoardNames(photo.id) : [];
-    const currentBoardRoom = rooms.find(r => r.walls?.some(w => w.boardId === bid || w.boardIdBack === bid));
+    const currentBoardRoom = rooms.find(r =>
+      r.walls?.some(w => w.boardId === bid || w.boardIdBack === bid) ||
+      r.blocks?.some(bl => bl.faces && Object.values(bl.faces).some(f => f?.boardId === bid))
+    );
     const rating = photo?.rating || 0;
     const tags = photo?.tags || [];
     const mc = photo?.meanColor;
@@ -5682,7 +6064,10 @@ ${rows}
                             </div>
                           </div>
                           {isActive && (() => {
-                            const roomOfBoard = b => rooms.find(r => r.walls?.some(w => w.boardId === b.id || w.boardIdBack === b.id));
+                            const roomOfBoard = b => rooms.find(r =>
+                              r.walls?.some(w => w.boardId === b.id || w.boardIdBack === b.id) ||
+                              r.blocks?.some(bl => bl.faces && Object.values(bl.faces).some(f => f?.boardId === b.id))
+                            );
                             const roomBoards = {};
                             const unassigned = [];
                             boards.forEach(b => {
@@ -5883,6 +6268,54 @@ ${rows}
                           fill={i===0?'var(--acc)':'var(--text)'} stroke="var(--bg)" strokeWidth={1.5}/>
                       ))}
 
+                      {/* Blocks */}
+                      {room && getBlocks(room).map(block => {
+                        const isSel = selBlock === block.id;
+                        const handles = isSel ? [
+                          {id:'nw', cx:block.x,           cy:block.y},
+                          {id:'ne', cx:block.x+block.w,   cy:block.y},
+                          {id:'se', cx:block.x+block.w,   cy:block.y+block.d},
+                          {id:'sw', cx:block.x,           cy:block.y+block.d},
+                          {id:'n',  cx:block.x+block.w/2, cy:block.y},
+                          {id:'s',  cx:block.x+block.w/2, cy:block.y+block.d},
+                          {id:'e',  cx:block.x+block.w,   cy:block.y+block.d/2},
+                          {id:'w',  cx:block.x,           cy:block.y+block.d/2},
+                        ] : [];
+                        const hr = svgFontSz * 0.55;
+                        return (
+                          <g key={block.id}>
+                            <rect
+                              className={`room-block${isSel?' sel':''}`}
+                              x={block.x} y={block.y} width={block.w} height={block.d}
+                              onPointerDown={e => onBlockPD(e, block.id)}
+                              onClick={e => { e.stopPropagation(); setSelBlock(block.id); selBlockRef.current = block.id; }}
+                            />
+                            {block.label && (
+                              <text className="room-block-label" x={block.x+block.w/2} y={block.y+block.d/2}>
+                                {block.label}
+                              </text>
+                            )}
+                            {handles.map(h => (
+                              <rect key={h.id}
+                                className="room-block-handle"
+                                x={h.cx - hr} y={h.cy - hr} width={hr*2} height={hr*2}
+                                style={{cursor: ['n','s'].includes(h.id) ? 'ns-resize' : ['e','w'].includes(h.id) ? 'ew-resize' : 'nwse-resize'}}
+                                onPointerDown={e => onBlockHandlePD(e, block.id, h.id)}
+                              />
+                            ))}
+                          </g>
+                        );
+                      })}
+
+                      {/* Block draw preview */}
+                      {blockDraw && (
+                        <rect
+                          x={Math.min(blockDraw.x0,blockDraw.x1)} y={Math.min(blockDraw.y0,blockDraw.y1)}
+                          width={Math.abs(blockDraw.x1-blockDraw.x0)} height={Math.abs(blockDraw.y1-blockDraw.y0)}
+                          fill="rgba(160,148,136,.25)" stroke="var(--acc)" strokeWidth="1.5" strokeDasharray="5 3" pointerEvents="none"
+                        />
+                      )}
+
                       {/* Columns */}
                       {room && (room.columns||[]).map(col=>(
                         <rect key={col.id} x={col.x} y={col.y} width={col.w} height={col.d}
@@ -5939,6 +6372,69 @@ ${rows}
                       {roomCursor?.snapped && !roomCursor?.nearClose && ` · ${t('salaSnapHint')}`}
                     </div>}
                     {!roomDrawing && !room && <div className="room-hint">{lang==='es'?'Pulsa "Dibujar planta" para empezar':'Click "Draw floor plan" to start'}</div>}
+                    {blockDrawing && <div className="room-hint">{lang==='es'?'Arrastra para dibujar un bloque · Esc para cancelar':'Drag to draw a block · Esc to cancel'}</div>}
+
+                    {selBlock && (() => {
+                      const block = getBlocks(room).find(b => b.id === selBlock);
+                      if (!block) return null;
+                      const updateBlock = (patch) => {
+                        const blocks = getBlocks(roomRef.current).map(b => b.id === selBlockRef.current ? {...b, ...patch} : b);
+                        saveRoomBlocks(blocks);
+                      };
+                      const faceKeys = ['n','s','e','w','t'];
+                      const faceLabels = {n:t('blockFaceN'),s:t('blockFaceS'),e:t('blockFaceE'),w:t('blockFaceW'),t:t('blockFaceTop')};
+                      return (
+                        <div className="block-props" onClick={e => e.stopPropagation()}>
+                          <label>{t('blockLabel')}: <input type="text" value={block.label||''} onChange={e => updateBlock({label:e.target.value})}/></label>
+                          <label>{t('blockHeight')}: <input type="number" value={block.h} min="1" max="9999" onChange={e => { const v=parseInt(e.target.value); if(!isNaN(v)&&v>0) updateBlock({h:v}); }}/></label>
+                          <div style={{width:1,height:18,background:'var(--border2)'}}/>
+                          <span style={{fontSize:8,color:'var(--muted)'}}>CARAS</span>
+                          {faceKeys.map(face => {
+                            const linked = block.faces?.[face];
+                            return (
+                              <button key={face} className={`block-face-btn${linked?' linked':''}`}
+                                title={linked ? t('blockFaceUnlink') : t('blockFaceLink')}
+                                onClick={async () => {
+                                  const cur = getBlocks(roomRef.current).find(b => b.id === selBlockRef.current);
+                                  if (linked) {
+                                    updateBlock({faces:{...(cur?.faces),[face]:null}});
+                                  } else {
+                                    const faceW = face==='t' ? block.w : (face==='n'||face==='s') ? block.w : block.d;
+                                    const faceH = face==='t' ? block.d : block.h;
+                                    const dpi = Math.max(1, Math.round(4000 / faceW * 2.54 * 10) / 10);
+                                    const defaultW = Math.round(60 / 2.54 * dpi);
+                                    const label = `${block.label||(lang==='es'?'Bloque':'Block')} ${faceLabels[face]}`;
+                                    const brd = await api.post(`/api/projects/${pidRef.current}/boards`, {name:label});
+                                    await api.patch(`/api/projects/${pidRef.current}/boards/${brd.id}`, {
+                                      fixed:true, fixedW:Math.round(faceW), fixedH:Math.round(faceH), dpi, units:'cm', defaultW
+                                    });
+                                    const fullB = {...brd, fixed:true, fixedW:Math.round(faceW), fixedH:Math.round(faceH), dpi, units:'cm', defaultW};
+                                    setBoards(bs=>[...bs, fullB]);
+                                    const latestBlock = getBlocks(roomRef.current).find(b => b.id === selBlockRef.current);
+                                    updateBlock({faces:{...(latestBlock?.faces),[face]:{boardId:brd.id}}});
+                                    setBid(brd.id); bidRef.current = brd.id;
+                                    setRoomView('board');
+                                    showToast(lang==='es'?`Tablero "${label}" creado`:`Board "${label}" created`);
+                                  }
+                                }}
+                              >{faceLabels[face]}</button>
+                            );
+                          })}
+                          <div style={{width:1,height:18,background:'var(--border2)'}}/>
+                          <button className="block-face-btn" style={{color:'var(--danger)',borderColor:'var(--danger)'}}
+                            onClick={() => {
+                              const hasFaceBoards = block.faces && Object.values(block.faces).some(Boolean);
+                              const doDelete = () => {
+                                saveRoomBlocks(getBlocks(roomRef.current).filter(b => b.id !== selBlock));
+                                setSelBlock(null); selBlockRef.current = null;
+                              };
+                              if (hasFaceBoards) showConfirm(lang==='es'?'Este bloque tiene tableros vinculados. ¿Eliminar el bloque? Los tableros se mantendrán.':'This block has linked boards. Delete block? Boards will be kept.', doDelete);
+                              else doDelete();
+                            }}
+                          >× {t('blockDelete')}</button>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Wall panel */}
@@ -6001,7 +6497,7 @@ ${rows}
                     <div className="room-walls">
                       {!room ? (
                         <div className="room-empty">{t('salaNoWalls')}</div>
-                      ) : room.walls.map(wall => {
+                      ) : <>{room.walls.map(wall => {
                         const len = roomWallLen(wall, room.vertices);
                         const boardA = wall.boardId     ? boards.find(b=>b.id===wall.boardId)     : null;
                         const boardB = wall.boardIdBack ? boards.find(b=>b.id===wall.boardIdBack) : null;
@@ -6052,6 +6548,56 @@ ${rows}
                           </div>
                         );
                       })}
+                      {getBlocks(room).length > 0 && <>
+                        <div style={{fontSize:7,color:'var(--muted)',letterSpacing:1,padding:'8px 10px 4px',textTransform:'uppercase',borderTop:'1px solid var(--border)'}}>
+                          {lang==='es'?'Bloques':'Blocks'}
+                        </div>
+                        {getBlocks(room).flatMap(block => {
+                          const fl = {n:t('blockFaceN'),s:t('blockFaceS'),e:t('blockFaceE'),w:t('blockFaceW'),t:t('blockFaceTop')};
+                          return ['n','s','e','w','t'].map(face => {
+                            const linked = block.faces?.[face];
+                            const board = linked?.boardId ? boards.find(b => b.id === linked.boardId) : null;
+                            const faceW = face==='t' ? block.w : (face==='n'||face==='s') ? block.w : block.d;
+                            const faceH = face==='t' ? block.d : block.h;
+                            const mm = board && board.fixed && board.units==='cm' && (Math.abs(board.fixedW-faceW)>0.5 || Math.abs((board.fixedH||0)-faceH)>0.5);
+                            const faceName = `${block.label || (lang==='es'?'Bloque':'Block')} ${fl[face]}`;
+                            return (
+                              <div key={`${block.id}-${face}`} className="room-wall-row">
+                                <span className="room-wall-name">{faceName}</span>
+                                <span className="room-wall-len">{cmLabel(faceW)}</span>
+                                <div style={{display:'flex',alignItems:'center',gap:1,flexShrink:0}}>
+                                  {mm && <span className="room-wall-warn" title={t('salaWallMismatch')} style={{fontSize:9}}>⚠</span>}
+                                  <button className="btn" style={{fontSize:8,padding:'1px 4px',flexShrink:0}}
+                                    onClick={async () => {
+                                      if (board) {
+                                        setBid(board.id); bidRef.current = board.id; setRoomView('board');
+                                      } else {
+                                        const dpi = Math.max(1, Math.round(4000 / faceW * 2.54 * 10) / 10);
+                                        const defaultW = Math.round(60 / 2.54 * dpi);
+                                        const brd = await api.post(`/api/projects/${pidRef.current}/boards`, {name: faceName});
+                                        await api.patch(`/api/projects/${pidRef.current}/boards/${brd.id}`, {
+                                          fixed:true, fixedW:Math.round(faceW), fixedH:Math.round(faceH), dpi, units:'cm', defaultW
+                                        });
+                                        const fullB = {...brd, fixed:true, fixedW:Math.round(faceW), fixedH:Math.round(faceH), dpi, units:'cm', defaultW};
+                                        setBoards(bs => [...bs, fullB]);
+                                        const blocks = getBlocks(roomRef.current).map(bl =>
+                                          bl.id === block.id ? {...bl, faces:{...bl.faces,[face]:{boardId:brd.id}}} : bl
+                                        );
+                                        saveRoomBlocks(blocks);
+                                        setBid(brd.id); bidRef.current = brd.id;
+                                        setRoomView('board');
+                                        showToast(lang==='es'?`Tablero "${faceName}" creado`:`Board "${faceName}" created`);
+                                      }
+                                    }}>
+                                    {board ? '▶' : '+'}
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          });
+                        })}
+                      </>}
+                    </>}
                     </div>
                   </div>
                 </div>
@@ -6486,7 +7032,7 @@ ${rows}
                         })}
                         {gridDropTarget === item.id && <div className="gitem-drop-hint">+ {t('gridItemAddHint')}</div>}
                         <div className="gitem-outline"/>
-                        <div className="gitem-bar" onPointerDown={e => e.stopPropagation()}>
+                        <div className="gitem-bar" style={item.y * zoom < 32 ? {bottom:'auto',top:'100%',marginTop:2} : {marginBottom:2}} onPointerDown={e => e.stopPropagation()}>
                           <button className="ibc fwd" title={t('bringFwdBtn')} onClick={e => { e.stopPropagation(); bringFwd(item.id); }}>↑</button>
                           <div className="gitem-sep"/>
                           <span className="gitem-bar-lbl">{t('gridItemCols')}</span>
@@ -7009,8 +7555,7 @@ ${rows}
                               {p.brightness != null && <span className="thumb-color" style={{background:`rgb(${Math.round(p.brightness*255)},${Math.round(p.brightness*255)},${Math.round(p.brightness*255)})`}}/>}
                               {(p.tags||[]).length > 0 && <span className="thumb-tag-badge">{p.tags.length}</span>}
                               <div className="thumb-stars">{[1,2,3,4,5].map(n => n <= (p.rating||0) ? <span key={n}>★</span> : <span key={n} className="thumb-star-empty">★</span>)}</div>
-                              <button className="thumb-reject-btn" title={p.rejected ? t('unrejectBtn') : t('rejectBtn')}
-                                onClick={e => { e.stopPropagation(); toggleRejected(p.id); }}>✕</button>
+                              <span className="thumb-reject-hint">{p.rejected ? '[u]' : '[x]'}</span>
                               <button className="thumb-tag" title={t('tagPopHd')} onClick={e => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setTagPopover(v => v?.photoId === p.id ? null : {photoId:p.id, x:r.left, y:r.top}); setTagInput(''); }}>#</button>
                               <button className="thumb-x" onClick={e => { e.stopPropagation(); deletePhoto(p.id); }}>×</button>
                               <button className="thumb-cp" title={t('copyToProject')}
@@ -7103,7 +7648,10 @@ ${rows}
       {bid && roomView === 'board' && (
         <div className="zoom-ctrl" style={{bottom: (libOpen ? libHeight : 30) + 20}}>
           {(() => {
-            const linkedRoom = rooms.find(r => r.walls?.some(w => w.boardId === bid || w.boardIdBack === bid));
+            const linkedRoom = rooms.find(r =>
+              r.walls?.some(w => w.boardId === bid || w.boardIdBack === bid) ||
+              r.blocks?.some(bl => bl.faces && Object.values(bl.faces).some(f => f?.boardId === bid))
+            );
             if (!linkedRoom) return null;
             const roomName = linkedRoom.name || (lang==='es'?'Sala':'Room');
             const goFloor = () => { setBoardBeforeRoom(bid); setRoom(linkedRoom); roomRef.current = linkedRoom; setActiveRoomId(linkedRoom.id); activeRoomIdRef.current = linkedRoom.id; setRoomView('room'); };
@@ -7342,6 +7890,9 @@ ${rows}
           <button className="ctx-item" onClick={()=>{addColumn(roomSvgCtx.svgX, roomSvgCtx.svgY);setRoomSvgCtx(null);}}>
             {t('salaAddCol')}
           </button>
+          {room && <button className="ctx-item" onClick={()=>{setBlockDrawing(true);blockDrawingRef.current=true;setBlockDraw(null);setSelBlock(null);selBlockRef.current=null;setRoomSvgCtx(null);}}>
+            {t('addBlock')}
+          </button>}
         </div>
       )}
 
