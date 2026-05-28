@@ -399,6 +399,29 @@ app.delete('/api/projects/:pid/rooms/:rid', (req, res) => {
   res.json({ ok: true });
 });
 
+app.post('/api/projects/:pid/rooms/:rid/duplicate', (req, res) => {
+  const { pid, rid } = req.params;
+  const rooms = readJSON(roomsFile(pid), []);
+  const original = rooms.find(r => r.id === rid);
+  if (!original) return res.status(404).json({ error: 'not found' });
+  const copy = {
+    ...original,
+    id: `r${Date.now().toString(36)}`,
+    name: original.name + (req.body?.lang === 'en' ? ' (copy)' : ' (copia)'),
+    walls:  (original.walls  || []).map(({ boardId, boardIdBack, ...w }) => w),
+    blocks: (original.blocks || []).map(b => ({
+      ...b,
+      faces: Object.fromEntries(
+        Object.entries(b.faces || {}).map(([k, v]) => [k, v ? { ...v, boardId: undefined } : v])
+      ),
+    })),
+  };
+  const idx = rooms.findIndex(r => r.id === rid);
+  rooms.splice(idx + 1, 0, copy);
+  writeJSON(roomsFile(pid), rooms);
+  res.json(copy);
+});
+
 // ── Room geometry (legacy single-room — kept for compatibility) ───────────────
 app.get('/api/projects/:pid/room', (req, res) => {
   const f = roomFile(req.params.pid);

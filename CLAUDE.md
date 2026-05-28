@@ -29,12 +29,20 @@ data/
   {pid}/
     photos.json              [{id, name, w, h, size}]
     boards.json              [{id, name, dpi, units, fixed, fixedW, fixedH, defaultFrame}]
+    rooms.json               [{id, name, walls:[…], blocks:[…], columns:[…]}]
     photos/{id}.jpg
     photos/{id}_thumb.jpg
     boards/{bid}.json        [{id, type, photoId, x, y, w, z, rot, label, frame}]
 ```
 
-Board items with `type: 'note'` are floating text notes; items without a type (or `type` absent) are photos.
+Board items: `type: 'photo'` (or absent) = photo, `type: 'text'` = free text, `type: 'note'` = post-it (internal-only, never rendered in 3D).
+
+Room model:
+- `walls`: segments of a closed polygon. Each wall has `boardId` (interior, side A) and/or `boardIdBack` (exterior, side B).
+- `blocks`: axis-aligned solids `{id, x, y, w, d, h, color, label, rot, faces:{n,s,e,w,t}}`. Each `faces.{dir}` may have `{boardId}` linking it to a board. `rot` is rotation around the vertical axis in degrees (SVG convention: positive = clockwise viewed from above).
+- `columns`: pillars with their own dimensions.
+
+When a wall length or block face dimensions change, the linked board's `fixedW`/`fixedH` go out of sync. The UI surfaces a sync button; the actual resize is performed client-side via the standard board update API.
 
 ### React state pattern
 
@@ -49,6 +57,19 @@ The app uses a **state + ref dual pattern** throughout. Every piece of state use
 The canvas uses the CSS `zoom` property (not `transform: scale`). A `--canvas-zoom` CSS variable is set on the canvas element so that UI overlays (`.bitem-bar`, `.dim-tag`, `.rh`, `.props-panel`) can counter-scale with `zoom: calc(1 / var(--canvas-zoom, 1))` and adjusted absolute positions, keeping them readable at any zoom level.
 
 `getBoardPx(board)` returns `{w, h}` in pixels for fixed-size boards, or `null` for variable boards.
+
+### Room floor plan ↔ 3D viewport coordinates
+
+The room editor renders the floor plan in **SVG** (top-down) and the 3D view in **Three.js**. These two systems disagree on rotation sign and Y axis, and getting this wrong causes meshes to drift off their planes:
+
+- SVG `rotate(θ)` with `θ > 0` rotates **clockwise** (Y points down on screen).
+- Three.js `rotation.y = θ` with `θ > 0` rotates **counter-clockwise** viewed from above (Y points up, right-hand rule).
+
+So when a block's `rot` is the SVG angle, the Three.js `BoxGeometry` and any group anchoring face-mesh children must use `rotation.y = -rot * π/180`. The block's face board planes are positioned via the same rotated-corner formula used in SVG so they line up.
+
+For the **top face** of a rotated block, the face boards/frames are children of a `THREE.Group` placed at the block center with `group.rotation.y = -rotRad`. Children are flat planes (`rotation.x = -π/2` only — never add `rotation.y` to the child or it tilts out of horizontal). Item rotation (`item.rot` + `item.freeRot`) goes on the child's `rotation.z`.
+
+For photos with `item.rot` of 90° or 270° on a top-face board, the display height uses the **swapped aspect ratio** (`photo.w / photo.h` instead of `photo.h / photo.w`) so the centering math matches what the canvas shows.
 
 ### Server auto-shutdown
 

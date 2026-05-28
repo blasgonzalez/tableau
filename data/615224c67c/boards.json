@@ -82,17 +82,6 @@
     "created": 1779691778450
   },
   {
-    "id": "29f6bcbc64",
-    "name": "Pared 10",
-    "created": 1779732558083,
-    "units": "cm",
-    "dpi": 23.1,
-    "fixed": true,
-    "fixedW": 440,
-    "fixedH": 280,
-    "defaultW": 546
-  },
-  {
     "id": "79232cba09",
     "name": "Pared 9",
     "created": 1779732694339,
@@ -115,17 +104,6 @@
     "defaultW": 6154
   },
   {
-    "id": "400103d2ba",
-    "name": "Pared 20",
-    "created": 1779795100319,
-    "units": "cm",
-    "dpi": 73.6,
-    "fixed": true,
-    "fixedW": 138,
-    "fixedH": 280,
-    "defaultW": 1739
-  },
-  {
     "id": "9adf6326d4",
     "name": "Bloque Norte",
     "created": 1779957106208,
@@ -135,17 +113,6 @@
     "fixedW": 151,
     "fixedH": 100,
     "defaultW": 1481
-  },
-  {
-    "id": "1847233890",
-    "name": "Pared 10 B",
-    "created": 1779982078553,
-    "units": "cm",
-    "dpi": 23.1,
-    "fixed": true,
-    "fixedW": 440,
-    "fixedH": 280,
-    "defaultW": 546
   },
   {
     "id": "853c23925f",
@@ -168,5 +135,38 @@
     "fixedW": 151,
     "fixedH": 100,
     "defaultW": 1590
+  },
+  {
+    "id": "61154d070f",
+    "name": "Bloque1 Norte",
+    "created": 1780004933864,
+    "units": "cm",
+    "dpi": 67.3,
+    "fixed": true,
+    "fixedW": 151,
+    "fixedH": 100,
+    "defaultW": 1590
+  },
+  {
+    "id": "c8212d04f2",
+    "name": "Pared 1",
+    "created": 1780006303143,
+    "units": "cm",
+    "dpi": 26.5,
+    "fixed": true,
+    "fixedW": 384,
+    "fixedH": 280,
+    "defaultW": 626
+  },
+  {
+    "id": "bfdb901081",
+    "name": "Pared 10 B",
+    "created": 1780006463310,
+    "units": "cm",
+    "dpi": 23.1,
+    "fixed": true,
+    "fixedW": 440,
+    "fixedH": 280,
+    "defaultW": 546
   }
 ]

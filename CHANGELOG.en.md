@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.9.4] — 2026-05-29
+### Added
+- Room: individual color per block face (N, S, E, W, Top) with picker in the block floating panel
+- Room: duplicate room from side panel (copies geometry, clears board links)
+- Room: create and manage rooms from the side menu, same as boards
+- Room: rename and delete room from side panel with hover action buttons
+- Room: when deleting a room, optional checkbox (unchecked by default) to also delete linked boards
+- Room: wall color visible in the 2D floor plan when a custom color is assigned
+- Blocks: face buttons navigate to the board if it exists, or create it if not; unlink option removed
+- 3D view: photo rotation (item.rot and freeRot) correctly applied on vertical faces of walls and blocks
+- 3D view: photos rotated 90°/270° on vertical faces with correct dimensions and position
+- 3D view: grids (mosaics) on wall boards rendered in 3D
+- 3D view: notes excluded from rendering (only photos and text items)
+
+### Fixed
+- 3D view: wall color assigned in the floor plan now correctly shown in 3D
+- 3D view: block rotation in the floor plan correctly reflected in 3D
+- Room: A/B side visual indicator with contrast halo, visible over any wall color
+- Room: hovering block face buttons highlights the face in the floor plan
+- Room: duplicate room button visible on hover in the side panel
+- Wall context menu: removed "Unlink board" option
+- Dark themes: improved text contrast (--muted and --dim with ≥4:1 ratio)
+- Dark Cool theme: visually differentiated from Dark Amber with more blue-tinted surfaces
+
+---
+
 ## [1.9.1] — 2026-05-28
 ### Added
 - Room: solid blocks with configurable label, color and dimensions via floor plan context menu

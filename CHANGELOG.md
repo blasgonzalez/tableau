@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.9.4] — 2026-05-29
+### Añadido
+- Sala: color individual por cara de bloque (N, S, E, O, Superior) con selector en el panel flotante del bloque
+- Sala: duplicar sala desde el panel lateral (copia geometría, elimina vínculos de tableros)
+- Sala: crear y gestionar salas desde el menú lateral, igual que los tableros
+- Sala: renombrar y eliminar sala desde el panel lateral con botones de acción en hover
+- Sala: al eliminar sala, opción (desmarcada por defecto) para eliminar también los tableros vinculados
+- Sala: color de paredes visible en el plano 2D cuando se asigna un color personalizado
+- Bloques: los botones de cara navegan al tablero si existe, o lo crean si no; eliminada la opción de desvincular
+- Vista 3D: rotación de fotos (item.rot y freeRot) aplicada correctamente en caras verticales de paredes y bloques
+- Vista 3D: fotos giradas 90°/270° en caras verticales con dimensiones y posición correctas
+- Vista 3D: grids (mosaicos) en tableros de pared renderizados en 3D
+- Vista 3D: notas excluidas del renderizado (solo fotos y textos)
+
+### Corregido
+- Vista 3D: el color asignado a una pared ahora se muestra en la vista 3D
+- Vista 3D: la rotación de bloques en el plano se refleja correctamente en la vista 3D
+- Sala: señalización visual de lado A/B con halo de contraste, visible sobre cualquier color de pared
+- Sala: hover sobre botones de cara del bloque señala la cara en el plano
+- Sala: botón de duplicar sala visible al hacer hover en el panel lateral
+- Menú contextual de pared: eliminada la opción «Desvincular tablero»
+- Temas oscuros: contraste de texto mejorado (--muted y --dim con ratio ≥4:1)
+- Tema Oscuro·Frío: diferenciado visualmente del Oscuro·Ámbar con fondos más azules
+
+---
+
 ## [1.9.1] — 2026-05-28
 ### Añadido
 - Sala: bloques sólidos con etiqueta, color y dimensiones configurables desde el menú contextual del plano

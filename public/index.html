@@ -13,10 +13,10 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0d0c0b;--surf:#161412;--panel:#1c1916;--panel2:#252018;--deep:#111009;
-  --border:#2a231a;--border2:#3d3020;
+  --bg:#0d0c0b;--surf:#171412;--panel:#1e1a14;--panel2:#27211a;--deep:#110f0c;
+  --border:#2e261c;--border2:#443420;
   --acc:#c4894a;--acc-dim:#8a5f2e;--acc-faint:rgba(196,137,74,0.1);
-  --text:#e0d4c0;--sub:#b0a090;--dim:#8a7c6e;--muted:#5a4e42;--danger:#c45050;
+  --text:#e2d6c2;--sub:#b6a694;--dim:#9a8a78;--muted:#7e7060;--danger:#c45050;
   --sb-w:252px;
 }
 html,body,#root{height:100%;overflow:hidden;background:var(--bg)}
@@ -76,7 +76,7 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .nproj-name{font-size:11px;color:var(--sub);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .nproj-row.active .nproj-name{color:var(--text)}
 .nrow-acts{display:flex;gap:1px;opacity:0;transition:opacity .1s;flex-shrink:0}
-.nproj-row:hover .nrow-acts,.nboard-row:hover .nrow-acts{opacity:1}
+.nproj-row:hover .nrow-acts,.nboard-row:hover .nrow-acts,.nsala-row:hover .nrow-acts{opacity:1}
 .nact{width:17px;height:17px;border:none;background:transparent;color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;transition:color .1s;flex-shrink:0}
 .nact.edit:hover{color:var(--sub)}
 .nact.del:hover{color:var(--danger)}
@@ -223,6 +223,7 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .block-props{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--border2);padding:8px 12px;display:flex;gap:10px;align-items:center;z-index:5;box-shadow:0 4px 16px rgba(0,0,0,.5);font-size:9px;color:var(--dim)}
 .block-props input[type=number]{width:52px;background:var(--panel);border:1px solid var(--border2);color:var(--text);font-size:9px;padding:2px 4px;text-align:center}
 .block-props input[type=text]{width:80px;background:var(--panel);border:1px solid var(--border2);color:var(--text);font-size:9px;padding:2px 4px}
+.block-props input[type=color]{width:20px;height:18px;padding:0;border:1px solid var(--border2);cursor:pointer;background:none}
 .block-face-btn{font-size:8px;padding:2px 6px;background:var(--panel);border:1px solid var(--border2);color:var(--dim);cursor:pointer;letter-spacing:.3px}
 .block-face-btn.linked{border-color:var(--acc);color:var(--acc)}
 .room-panel{width:260px;flex-shrink:0;background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
@@ -687,10 +688,10 @@ const THEMES = {
     label: 'Oscuro · Ámbar',
     bg: '#0d0c0b', acc: '#c4894a',
     vars: {
-      '--bg':'#0d0c0b','--surf':'#161412','--panel':'#1c1916','--panel2':'#252018','--deep':'#111009',
-      '--border':'#2a231a','--border2':'#3d3020',
+      '--bg':'#0d0c0b','--surf':'#171412','--panel':'#1e1a14','--panel2':'#27211a','--deep':'#110f0c',
+      '--border':'#2e261c','--border2':'#443420',
       '--acc':'#c4894a','--acc-dim':'#8a5f2e','--acc-faint':'rgba(196,137,74,0.1)',
-      '--text':'#e0d4c0','--sub':'#b0a090','--dim':'#8a7c6e','--muted':'#5a4e42','--danger':'#c45050',
+      '--text':'#e2d6c2','--sub':'#b6a694','--dim':'#9a8a78','--muted':'#7e7060','--danger':'#c45050',
       '--grid':'rgba(255,255,255,0.07)',
     }
   },
@@ -707,23 +708,23 @@ const THEMES = {
   },
   'dark-cool': {
     label: 'Oscuro · Frío',
-    bg: '#0c0e12', acc: '#7a9fd4',
+    bg: '#0a0d14', acc: '#7aaee0',
     vars: {
-      '--bg':'#0c0e12','--surf':'#141820','--panel':'#1a1e2a','--panel2':'#22283c','--deep':'#0e1018',
-      '--border':'#202840','--border2':'#2a3550',
-      '--acc':'#7a9fd4','--acc-dim':'#4d6fa8','--acc-faint':'rgba(122,159,212,0.1)',
-      '--text':'#ccd4e4','--sub':'#8898b8','--dim':'#6070a0','--muted':'#3a4870','--danger':'#d06070',
+      '--bg':'#0a0d14','--surf':'#121826','--panel':'#18203a','--panel2':'#1e2a4a','--deep':'#080b12',
+      '--border':'#1e2e4e','--border2':'#2c3e64',
+      '--acc':'#7aaee0','--acc-dim':'#4d78b0','--acc-faint':'rgba(122,174,224,0.1)',
+      '--text':'#c8d8f2','--sub':'#90aacc','--dim':'#7090bc','--muted':'#6878a8','--danger':'#d06878',
       '--grid':'rgba(255,255,255,0.06)',
     }
   },
   'high-contrast': {
     label: 'Alto Contraste',
-    bg: '#000000', acc: '#ffcc33',
+    bg: '#000000', acc: '#ffd040',
     vars: {
-      '--bg':'#000000','--surf':'#0d0d0d','--panel':'#141414','--panel2':'#1c1c1c','--deep':'#080808',
-      '--border':'#2a2a2a','--border2':'#444444',
-      '--acc':'#ffcc33','--acc-dim':'#cc9900','--acc-faint':'rgba(255,204,51,0.12)',
-      '--text':'#ffffff','--sub':'#e0e0e0','--dim':'#b0b0b0','--muted':'#606060','--danger':'#ff5555',
+      '--bg':'#000000','--surf':'#0e0e0e','--panel':'#161616','--panel2':'#202020','--deep':'#080808',
+      '--border':'#323232','--border2':'#505050',
+      '--acc':'#ffd040','--acc-dim':'#cc9900','--acc-faint':'rgba(255,208,64,0.12)',
+      '--text':'#ffffff','--sub':'#e8e8e8','--dim':'#c0c0c0','--muted':'#909090','--danger':'#ff5a5a',
       '--grid':'rgba(255,255,255,0.10)',
     }
   },
@@ -955,7 +956,7 @@ const I18N = {
     invalidDims: 'Las dimensiones deben ser mayores que cero',
     pxPreview: (w, h) => `${w} × ${h} px`,
     gridToggle: 'Guías', gridHiddenZoom: 'Guías activas — zoom demasiado bajo para mostrarlas', gridAuto: 'Auto', fitView: 'Ajustar', fitWidth: 'Ajustar al ancho (Ctrl+0)', snapGrid: 'Imán', addNote: '+ Nota', addZone: '+ Zona', zoneColor: 'Color de zona', zoneScaleContent: 'Escalar contenido al redimensionar', copyZoneToBoard: 'Copiar a nuevo tablero', moveZoneToBoard: 'Mover a nuevo tablero', zoneLabelPh: 'Nombre de zona…', zoneCaptureBtn: 'Capturar contenido', gridWrapZone: 'Envolver en zona escalable',
-    salaBtn:'🏛 Sala', salaCreate:'Crear sala', salaDelete:'Eliminar sala', salaDraw:'Dibujar planta', salaEdit:'Editar planta', salaAddSection:'+ Añadir segmento', salaCancel:'Cancelar', salaFinish:'Finalizar', salaCeilLbl:'Altura del techo', salaCeilUnit:'cm', salaWallsHd:'PAREDES', salaNoWalls:'Dibuja la planta para ver las paredes aquí', salaCreateBoard:'+ Tablero', salaWallBoard:'Ver tablero →', salaDrawHint:'Clic → añadir punto · 1er punto → cerrar · Esc/Finalizar → guardar · ⌫ → deshacer · ⇧ → ángulo recto', salaSnapHint:'⊾ enganchado', salaDeleteWall:'Desvincular tablero', salaWallRename:'Renombrar pared', salaAddCol:'+ Columna', salaWallMismatch:'El tablero es más ancho que la pared', salaWallSync:'Sincronizar', salaWallSyncOk:'Tablero sincronizado con la pared', salaWallSyncOverflow:'Hay fotos fuera del nuevo ancho. Mueve o elimina las fotos en el tablero primero.',
+    salaBtn:'🏛 Sala', salaCreate:'Crear sala', salaDelete:'Eliminar sala', salaDuplicate:'Duplicar sala', salaAdd:'+ Sala', salaDraw:'Dibujar planta', salaEdit:'Editar planta', salaAddSection:'+ Añadir segmento', salaCancel:'Cancelar', salaFinish:'Finalizar', salaCeilLbl:'Altura del techo', salaCeilUnit:'cm', salaWallsHd:'PAREDES', salaNoWalls:'Dibuja la planta para ver las paredes aquí', salaCreateBoard:'+ Tablero', salaWallBoard:'Ver tablero →', salaDrawHint:'Clic → añadir punto · 1er punto → cerrar · Esc/Finalizar → guardar · ⌫ → deshacer · ⇧ → ángulo recto', salaSnapHint:'⊾ enganchado', salaDeleteWall:'Desvincular tablero', salaWallRename:'Renombrar pared', salaAddCol:'+ Columna', salaWallMismatch:'El tablero es más ancho que la pared', salaWallSync:'Sincronizar', salaWallSyncOk:'Tablero sincronizado con la pared', salaWallSyncOverflow:'Hay fotos fuera del nuevo ancho. Mueve o elimina las fotos en el tablero primero.',
     reportHeading:'Tableau — Memoria del Proyecto',
     noScaleConfigured:'sin escala configurada',
     reportDate: d => `Memoria del proyecto · ${d}`,
@@ -1094,7 +1095,7 @@ const I18N = {
     invalidDims: 'Dimensions must be greater than zero',
     pxPreview: (w, h) => `${w} × ${h} px`,
     gridToggle: 'Grid', gridHiddenZoom: 'Grid active — zoom too low to display', gridAuto: 'Auto', fitView: 'Fit', fitWidth: 'Fit to width (Ctrl+0)', snapGrid: 'Snap', addNote: '+ Note', addZone: '+ Zone', zoneColor: 'Zone color', zoneScaleContent: 'Scale content on resize', copyZoneToBoard: 'Copy to new board', moveZoneToBoard: 'Move to new board', zoneLabelPh: 'Zone name…', zoneCaptureBtn: 'Capture content', gridWrapZone: 'Wrap in scalable zone',
-    salaBtn:'🏛 Room', salaCreate:'Create room', salaDelete:'Delete room', salaDraw:'Draw floor plan', salaEdit:'Edit floor plan', salaAddSection:'+ Add section', salaCancel:'Cancel', salaFinish:'Finish', salaCeilLbl:'Ceiling height', salaCeilUnit:'cm', salaWallsHd:'WALLS', salaNoWalls:'Draw the floor plan to see walls here', salaCreateBoard:'+ Board', salaWallBoard:'Go to board →', salaDrawHint:'Click → add point · 1st point → close · Esc/Finish → save · ⌫ → undo · ⇧ → right angle', salaSnapHint:'⊾ snapped', salaDeleteWall:'Unlink board', salaWallRename:'Rename wall', salaAddCol:'+ Column', salaWallMismatch:'Board is wider than the wall', salaWallSync:'Sync', salaWallSyncOk:'Board synced to wall', salaWallSyncOverflow:'Photos would overflow the new width. Move or remove them in the board editor first.',
+    salaBtn:'🏛 Room', salaCreate:'Create room', salaDelete:'Delete room', salaDuplicate:'Duplicate room', salaAdd:'+ Room', salaDraw:'Draw floor plan', salaEdit:'Edit floor plan', salaAddSection:'+ Add section', salaCancel:'Cancel', salaFinish:'Finish', salaCeilLbl:'Ceiling height', salaCeilUnit:'cm', salaWallsHd:'WALLS', salaNoWalls:'Draw the floor plan to see walls here', salaCreateBoard:'+ Board', salaWallBoard:'Go to board →', salaDrawHint:'Click → add point · 1st point → close · Esc/Finish → save · ⌫ → undo · ⇧ → right angle', salaSnapHint:'⊾ snapped', salaDeleteWall:'Unlink board', salaWallRename:'Rename wall', salaAddCol:'+ Column', salaWallMismatch:'Board is wider than the wall', salaWallSync:'Sync', salaWallSyncOk:'Board synced to wall', salaWallSyncOverflow:'Photos would overflow the new width. Move or remove them in the board editor first.',
     reportHeading:'Tableau — Project Report',
     noScaleConfigured:'no scale configured',
     reportDate: d => `Project report · ${d}`,
@@ -1397,7 +1398,8 @@ function App() {
   const roomsRef        = useRef([]);
   const activeRoomIdRef = useRef(null);
   const roomVboxRef     = useRef({x:-50,y:-50,w:1300,h:900});
-  const importRoomRef   = useRef(null);
+  const importRoomRef        = useRef(null);
+  const deleteRoomBoardsRef  = useRef(false);
   const reset3DViewRef       = useRef(null);
   const snapshot3DRef        = useRef(null);
   const toggle3DPersonRef    = useRef(null);
@@ -1667,6 +1669,7 @@ function App() {
       const d2 = new THREE.DirectionalLight(0xffffff, 0.25);
       d2.position.set(cx - span * 0.5, ch * 0.5, cz + span); scene.add(d2);
 
+
       // Floor grid
       const gridSize = Math.max(2000, span * 2);
       const gridDivs = Math.round(gridSize / 100);
@@ -1696,7 +1699,7 @@ function App() {
         if (!pv1 || !pv2) return;
         const pwh = wall.height ?? ch;
         const pwt = wall.thickness ?? (room.wallThickness ?? 15);
-        const pc  = wall.color || '#d0c8bc';
+        const pc  = wall.color || wall.colorBack || '#d0c8bc';
         for (const [vid, vx, vz] of [[wall.v1, pv1.x, pv1.y], [wall.v2, pv2.x, pv2.y]]) {
           const ex = vertexPosts.get(vid);
           if (!ex) vertexPosts.set(vid, {x:vx, z:vz, wt:pwt, wh:pwh, color:pc, n:1});
@@ -1717,7 +1720,7 @@ function App() {
         const wh = wall.height ?? ch;
         const wt = wall.thickness ?? (room.wallThickness ?? 15);
 
-        const wColor = wall.color || '#d0c8bc';
+        const wColor = wall.color || wall.colorBack || '#d0c8bc';
         const wMesh = new THREE.Mesh(
           new THREE.BoxGeometry(len, wh, wt),
           new THREE.MeshLambertMaterial({color: wColor})
@@ -1734,7 +1737,7 @@ function App() {
         wallSides.forEach(({boardId, sideSign}) => {
         const board = boards.find(b => b.id === boardId);
         const rawItems = boardItemsMap[boardId] || [];
-        const bItems = rawItems.filter(i => !i.type || i.type === 'photo' || i.type === 'text' || i.type === 'note');
+        const bItems = rawItems.filter(i => !i.type || i.type === 'photo' || i.type === 'text' || i.type === 'grid');
         if (!board || !bItems.length) return;
         const bPx = getBoardPx(board);
         if (!bPx) return;
@@ -1742,24 +1745,45 @@ function App() {
         const normX = -dirZ * sideSign, normZ = dirX * sideSign;
         const hexWall = wColor.startsWith('#') ? wColor : '#d0c8bc';
 
-        bItems.forEach(item => {
+        // Expand grid items into individual photo pseudo-items
+        const photosArr = Object.values(photoMap);
+        const renderItems = [];
+        bItems.forEach(it => {
+          if (it.type === 'grid') {
+            const layout = calcGridLayout(it, photosArr, board.dpi, board.units);
+            let rowY = it.y;
+            layout.rows.forEach(row => {
+              row.ids.forEach((photoId, c) => {
+                if (photoId) renderItems.push({ photoId, x: it.x + c*(layout.cellW+layout.gapPx), y: rowY, w: layout.cellW });
+              });
+              rowY += row.h + layout.gapPx;
+            });
+          } else {
+            renderItems.push(it);
+          }
+        });
+
+        renderItems.forEach(item => {
           const isText = item.type === 'text';
-          const isNote = item.type === 'note';
-          const photo = (!isText && !isNote) ? photoMap[item.photoId] : null;
+          const photo = !isText ? photoMap[item.photoId] : null;
+          const isSwapped = photo && ((item.rot || 0) % 180 !== 0);
           const itemH = isText ? (item.h || item.w * 0.3)
-                      : isNote ? (item.h || item.w)
-                      : photo ? item.w * (photo.h / photo.w) : item.w;
+                      : photo ? item.w * (isSwapped ? photo.w / photo.h : photo.h / photo.w) : item.w;
           const iw = item.w / bPx.w * fW;
           const ih = itemH / bPx.h * wh;
-          // Enforce minimum readable size for text/note items regardless of board DPI
-          const minH = (isText || isNote) ? wh * 0.03 : 0;
+          const minH = isText ? wh * 0.03 : 0;
           const sizeScale = (minH > 0 && ih > 0 && ih < minH) ? minH / ih : 1;
           const finalIw = iw * sizeScale;
           const finalIh = Math.max(ih, minH);
           const ix = (item.x + item.w/2) / bPx.w * fW;
           const iy = wh * (1 - (item.y + itemH/2) / bPx.h);
+          const itemRotRad = -((item.rot || 0) + (item.freeRot || 0)) * Math.PI / 180;
           const pos = { x: x1 + dirX*ix + normX*(wt/2+2), y: iy, z: z1 + dirZ*ix + normZ*(wt/2+2) };
-          if (!isText && !isNote) {
+          const faceGroup = new THREE.Group();
+          faceGroup.position.set(pos.x, pos.y, pos.z);
+          faceGroup.rotation.y = rotY;
+          scene.add(faceGroup);
+          if (!isText) {
             const matPx  = physToPx(item.matSize  ?? item.frame  ?? 0, board.dpi, board.units);
             const moldPx = physToPx(item.frameSize ?? 0, board.dpi, board.units);
             [[matPx+moldPx, item.frameColor||'#5a3e1b', 1.5],[matPx, item.matColor||'#ffffff', 1.0]]
@@ -1767,19 +1791,17 @@ function App() {
               .forEach(([px, col, back]) => {
                 const fw = (item.w + 2*px) / bPx.w * fW;
                 const fh = (itemH + 2*px) / bPx.h * wh;
-                const fp = { x: x1+dirX*ix+normX*(wt/2+2-back), y: iy, z: z1+dirZ*ix+normZ*(wt/2+2-back) };
-                const fm = new THREE.Mesh(new THREE.PlaneGeometry(fw, fh), new THREE.MeshLambertMaterial({color:col,side:THREE.DoubleSide}));
-                fm.position.set(fp.x, fp.y, fp.z); fm.rotation.y = rotY; scene.add(fm);
+                const fm = new THREE.Mesh(new THREE.PlaneGeometry(isSwapped ? fh : fw, isSwapped ? fw : fh), new THREE.MeshLambertMaterial({color:col,side:THREE.DoubleSide}));
+                fm.position.set(0, 0, -back); fm.rotation.z = itemRotRad; faceGroup.add(fm);
               });
           }
           const pMesh = new THREE.Mesh(
-            new THREE.PlaneGeometry(finalIw, finalIh),
+            new THREE.PlaneGeometry(isSwapped ? finalIh : finalIw, isSwapped ? finalIw : finalIh),
             new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, transparent: true })
           );
-          pMesh.position.set(pos.x, pos.y, pos.z);
-          pMesh.rotation.y = rotY;
+          pMesh.rotation.z = itemRotRad;
           pMesh.userData.isWalkTarget = true;
-          scene.add(pMesh);
+          faceGroup.add(pMesh);
           walkTargets.push(pMesh);
           if (isText) {
             const SCALE = 2;
@@ -1810,31 +1832,6 @@ function App() {
             }
             const tex = new THREE.CanvasTexture(cvs);
             pMesh.material = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, transparent: true, alphaTest: 0.01 });
-          } else if (isNote) {
-            const SCALE = 2;
-            const cvW = Math.max(1, Math.round(item.w * SCALE));
-            const cvH = Math.max(1, Math.round(itemH * SCALE));
-            const cvs = document.createElement('canvas');
-            cvs.width = cvW; cvs.height = cvH;
-            const ctx2 = cvs.getContext('2d');
-            const noteBg = item.noteColor && NOTE_COLOR_VALS[item.noteColor] ? NOTE_COLOR_VALS[item.noteColor][0] : '#e8e0c8';
-            ctx2.fillStyle = noteBg;
-            ctx2.fillRect(0, 0, cvW, cvH);
-            const noteFg = bgContrast(noteBg);
-            ctx2.fillStyle = noteFg;
-            ctx2.textAlign = 'left';
-            ctx2.textBaseline = 'top';
-            if (item.title) {
-              ctx2.font = `bold ${14*SCALE}px 'IBM Plex Mono',monospace`;
-              ctx2.fillText(item.title, 7*SCALE, 7*SCALE);
-            }
-            if (item.text) {
-              ctx2.font = `${11*SCALE}px 'IBM Plex Mono',monospace`;
-              const lines = item.text.split('\n').slice(0, 10);
-              lines.forEach((ln, i) => ctx2.fillText(ln, 7*SCALE, ((item.title ? 26 : 7) + i * 14) * SCALE));
-            }
-            const tex = new THREE.CanvasTexture(cvs);
-            pMesh.material = new THREE.MeshLambertMaterial({ map: tex, side: THREE.DoubleSide });
           } else if (item.photoId) {
             loader.load(`/photos/${pid}/${item.photoId}/thumb`, tex => {
               if (cancelled) return;
@@ -1870,9 +1867,13 @@ function App() {
       // Solid blocks
       getBlocks(room).forEach(block => {
         const bColor = block.color || '#b8b0a4';
+        const fc = block.faceColors || {};
+        // BoxGeometry material order: +X(e) -X(w) +Y(t) -Y(bottom) +Z(s) -Z(n)
         const boxMesh = new THREE.Mesh(
           new THREE.BoxGeometry(block.w, block.h, block.d),
-          new THREE.MeshLambertMaterial({color: bColor})
+          [fc.e,fc.w,fc.t,null,fc.s,fc.n].map(c =>
+            new THREE.MeshLambertMaterial({color: c || bColor})
+          )
         );
         boxMesh.position.set(block.x + block.w/2, block.h/2, block.y + block.d/2);
         boxMesh.rotation.y = -(block.rot || 0) * Math.PI / 180;
@@ -1885,7 +1886,6 @@ function App() {
       const BFOFF = 2;
       const applyBlockItemMat = (pMesh, item, itemH, bgHex) => {
         const isText = item.type === 'text';
-        const isNote = item.type === 'note';
         if (isText) {
           const SCALE = 2;
           const cvW = Math.max(1, Math.round(item.w * SCALE));
@@ -1913,31 +1913,6 @@ function App() {
           lines.forEach((ln, i) => ctx2.fillText(ln, tx, startY + i * lineH));
           const tex = new THREE.CanvasTexture(cvs);
           pMesh.material = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, transparent: true, alphaTest: 0.01 });
-        } else if (isNote) {
-          const SCALE = 2;
-          const cvW = Math.max(1, Math.round(item.w * SCALE));
-          const cvH = Math.max(1, Math.round(itemH * SCALE));
-          const cvs = document.createElement('canvas');
-          cvs.width = cvW; cvs.height = cvH;
-          const ctx2 = cvs.getContext('2d');
-          const noteBg = item.noteColor && NOTE_COLOR_VALS[item.noteColor] ? NOTE_COLOR_VALS[item.noteColor][0] : '#e8e0c8';
-          ctx2.fillStyle = noteBg;
-          ctx2.fillRect(0, 0, cvW, cvH);
-          const noteFg = bgContrast(noteBg);
-          ctx2.fillStyle = noteFg;
-          ctx2.textAlign = 'left';
-          ctx2.textBaseline = 'top';
-          if (item.title) {
-            ctx2.font = `bold ${14*SCALE}px 'IBM Plex Mono',monospace`;
-            ctx2.fillText(item.title, 7*SCALE, 7*SCALE);
-          }
-          if (item.text) {
-            ctx2.font = `${11*SCALE}px 'IBM Plex Mono',monospace`;
-            const lines = item.text.split('\n').slice(0, 10);
-            lines.forEach((ln, i) => ctx2.fillText(ln, 7*SCALE, ((item.title ? 26 : 7) + i * 14) * SCALE));
-          }
-          const tex = new THREE.CanvasTexture(cvs);
-          pMesh.material = new THREE.MeshLambertMaterial({ map: tex, side: THREE.DoubleSide });
         } else if (item.photoId) {
           loader.load(`/photos/${pid}/${item.photoId}/thumb`, tex => {
             if (cancelled) return;
@@ -1949,7 +1924,8 @@ function App() {
       getBlocks(room).forEach(block => {
         if (!block.faces) return;
         const bx = block.x, by = block.y, bw = block.w, bd = block.d, bh = block.h;
-        const hexBlock = block.color || '#b8b0a4';
+        const bColorDefault = block.color || '#b8b0a4';
+        const hexBlock = face => (block.faceColors?.[face]) || bColorDefault;
         const rotRad = (block.rot || 0) * Math.PI / 180;
         const cosR = Math.cos(rotRad), sinR = Math.sin(rotRad);
         const bcx = bx + bw/2, bcz = by + bd/2;
@@ -1968,25 +1944,32 @@ function App() {
           if (!faceLink?.boardId) return;
           const board = boards.find(b => b.id === faceLink.boardId);
           const rawItems = boardItemsMap[faceLink.boardId] || [];
-          const bItems = rawItems.filter(i => !i.type || i.type === 'photo' || i.type === 'text' || i.type === 'note');
+          const bItems = rawItems.filter(i => !i.type || i.type === 'photo' || i.type === 'text');
           if (!board || !bItems.length) return;
           const bPx = getBoardPx(board);
           if (!bPx) return;
           const { x1, z1, dirX, dirZ, normX, normZ, fW } = vFaceDefs[face];
           const rotY = Math.atan2(-dirZ, dirX);
           bItems.forEach(item => {
-            const isText = item.type === 'text', isNote = item.type === 'note';
-            const photo = (!isText && !isNote) ? photoMap[item.photoId] : null;
-            const itemH = isText ? (item.h || item.w * 0.3) : isNote ? (item.h || item.w) : photo ? item.w * (photo.h / photo.w) : item.w;
+            const isText = item.type === 'text';
+            const photo = !isText ? photoMap[item.photoId] : null;
+            const isSwapped = photo && ((item.rot || 0) % 180 !== 0);
+            const itemH = isText ? (item.h || item.w * 0.3)
+              : photo ? item.w * (isSwapped ? photo.w / photo.h : photo.h / photo.w) : item.w;
             const iw = item.w / bPx.w * fW;
             const ih = itemH / bPx.h * bh;
-            const minH = (isText || isNote) ? bh * 0.03 : 0;
+            const minH = isText ? bh * 0.03 : 0;
             const sizeScale = (minH > 0 && ih > 0 && ih < minH) ? minH / ih : 1;
             const finalIw = iw * sizeScale, finalIh = Math.max(ih, minH);
             const ix = (item.x + item.w/2) / bPx.w * fW;
             const iy = bh * (1 - (item.y + itemH/2) / bPx.h);
+            const itemRotRad = -((item.rot || 0) + (item.freeRot || 0)) * Math.PI / 180;
             const pos = { x: x1 + dirX*ix + normX*BFOFF, y: iy, z: z1 + dirZ*ix + normZ*BFOFF };
-            if (!isText && !isNote) {
+            const faceGroup = new THREE.Group();
+            faceGroup.position.set(pos.x, pos.y, pos.z);
+            faceGroup.rotation.y = rotY;
+            scene.add(faceGroup);
+            if (!isText) {
               const matPx  = physToPx(item.matSize  ?? item.frame  ?? 0, board.dpi, board.units);
               const moldPx = physToPx(item.frameSize ?? 0, board.dpi, board.units);
               [[matPx+moldPx, item.frameColor||'#5a3e1b', 1.5],[matPx, item.matColor||'#ffffff', 1.0]]
@@ -1994,19 +1977,17 @@ function App() {
                 .forEach(([px, col, back]) => {
                   const fw = (item.w + 2*px) / bPx.w * fW;
                   const fh = (itemH + 2*px) / bPx.h * bh;
-                  const fp = { x: x1+dirX*ix+normX*(BFOFF-back), y: iy, z: z1+dirZ*ix+normZ*(BFOFF-back) };
-                  const fm = new THREE.Mesh(new THREE.PlaneGeometry(fw, fh), new THREE.MeshLambertMaterial({color:col,side:THREE.DoubleSide}));
-                  fm.position.set(fp.x, fp.y, fp.z); fm.rotation.y = rotY; scene.add(fm);
+                  const fm = new THREE.Mesh(new THREE.PlaneGeometry(isSwapped ? fh : fw, isSwapped ? fw : fh), new THREE.MeshLambertMaterial({color:col,side:THREE.DoubleSide}));
+                  fm.position.set(0, 0, -back); fm.rotation.z = itemRotRad; faceGroup.add(fm);
                 });
             }
             const pMesh = new THREE.Mesh(
-              new THREE.PlaneGeometry(finalIw, finalIh),
+              new THREE.PlaneGeometry(isSwapped ? finalIh : finalIw, isSwapped ? finalIw : finalIh),
               new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, transparent: true })
             );
-            pMesh.position.set(pos.x, pos.y, pos.z);
-            pMesh.rotation.y = rotY;
-            scene.add(pMesh);
-            applyBlockItemMat(pMesh, item, itemH, hexBlock);
+            pMesh.rotation.z = itemRotRad;
+            faceGroup.add(pMesh);
+            applyBlockItemMat(pMesh, item, itemH, hexBlock(face));
           });
         });
         // Top face
@@ -2014,7 +1995,7 @@ function App() {
         if (topLink?.boardId) {
           const board = boards.find(b => b.id === topLink.boardId);
           const rawItems = boardItemsMap[topLink.boardId] || [];
-          const bItems = rawItems.filter(i => !i.type || i.type === 'photo' || i.type === 'text' || i.type === 'note');
+          const bItems = rawItems.filter(i => !i.type || i.type === 'photo' || i.type === 'text');
           if (board && bItems.length) {
             const bPx = getBoardPx(board);
             if (bPx) {
@@ -2057,7 +2038,7 @@ function App() {
                   new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, transparent: true })
                 );
                 mkFlat(pMesh, 0);
-                applyBlockItemMat(pMesh, item, itemH, hexBlock);
+                applyBlockItemMat(pMesh, item, itemH, hexBlock('t'));
               });
             }
           }
@@ -3150,6 +3131,14 @@ ${rows}
     if (type === 'project') {
       await api.patch(`/api/projects/${id}`, { name });
       setProjects(ps => ps.map(p => p.id === id ? { ...p, name } : p));
+    } else if (type === 'room') {
+      const r = roomsRef.current.find(x => x.id === id);
+      if (!r) return;
+      const updated = { ...r, name };
+      saveRoom(updated);
+      setRooms(rs => rs.map(x => x.id === id ? updated : x));
+      roomsRef.current = roomsRef.current.map(x => x.id === id ? updated : x);
+      if (activeRoomIdRef.current === id) { setRoomName(name); roomRef.current = updated; }
     } else {
       await api.patch(`/api/projects/${pidRef.current}/boards/${id}`, { name });
       setBoards(bs => bs.map(b => b.id === id ? { ...b, name } : b));
@@ -4874,6 +4863,16 @@ ${rows}
     });
   };
 
+  const duplicateRoom = async (id, e) => {
+    e?.stopPropagation();
+    const copy = await api.post(`/api/projects/${pidRef.current}/rooms/${id}/duplicate`, { lang });
+    const next = [...roomsRef.current];
+    const idx = next.findIndex(r => r.id === id);
+    next.splice(idx + 1, 0, copy);
+    setRooms(next); roomsRef.current = next;
+    switchRoom(copy.id);
+  };
+
   // Auto-fit viewbox whenever switching to room view
   useEffect(() => {
     if (roomView !== 'room') return;
@@ -5271,11 +5270,6 @@ ${rows}
   };
   const createRoomBoard = wallId => createRoomBoardSide(wallId, 'A');
 
-  const unlinkRoomBoard = wallId => {
-    const r = roomRef.current; if (!r) return;
-    saveRoom({...r, walls:r.walls.map(w=>w.id===wallId?{...w,boardId:null}:w)});
-  };
-
   const syncWallBoard = async (wall, board) => {
     const r = roomRef.current; if (!r) return;
     const len = roomWallLen(wall, r.vertices);
@@ -5296,15 +5290,50 @@ ${rows}
 
   const deleteRoom = () => {
     const r = roomRef.current; if (!r) return;
-    showConfirm(lang==='es'?'¿Eliminar la sala? Se perderá la geometría de la planta.':'Delete the room? The floor plan geometry will be lost.', () => {
-      api.del(`/api/projects/${pidRef.current}/rooms/${r.id}`);
-      const next = roomsRef.current.filter(x => x.id !== r.id);
-      setRooms(next); roomsRef.current = next;
-      const fallback = next[0] || null;
-      setRoom(fallback); roomRef.current = fallback;
-      setActiveRoomId(fallback?.id || null); activeRoomIdRef.current = fallback?.id || null;
-      if (fallback) { setRoomCeilH(fallback.ceilingHeight || 280); setRoomWallThick(fallback.wallThickness ?? 15); setRoomName(fallback.name || ''); }
-      else setRoomView('board');
+    const linkedIds = [...new Set([
+      ...(r.walls||[]).flatMap(w => [w.boardId, w.boardIdBack].filter(Boolean)),
+      ...(r.blocks||[]).flatMap(b => Object.values(b.faces||{}).map(f => f?.boardId).filter(Boolean)),
+    ])];
+    deleteRoomBoardsRef.current = false;
+    const extra = linkedIds.length ? (
+      <label style={{display:'flex',alignItems:'center',gap:7,cursor:'pointer',fontSize:10,color:'var(--sub)',userSelect:'none'}}>
+        <input type="checkbox" defaultChecked={false} style={{accentColor:'var(--acc)',cursor:'pointer'}}
+          onChange={e => { deleteRoomBoardsRef.current = e.target.checked; }}/>
+        {lang==='es'
+          ? `Eliminar también ${linkedIds.length} tablero${linkedIds.length!==1?'s':''} vinculado${linkedIds.length!==1?'s':''}`
+          : `Also delete ${linkedIds.length} linked board${linkedIds.length!==1?'s':''}`}
+      </label>
+    ) : null;
+    setConfirmModal({
+      message: lang==='es'?'¿Eliminar la sala? Se perderá la geometría de la planta.':'Delete the room? The floor plan geometry will be lost.',
+      danger: true,
+      extra,
+      onConfirm: async () => {
+        if (deleteRoomBoardsRef.current && linkedIds.length) {
+          for (const bid of linkedIds) {
+            await api.del(`/api/projects/${pidRef.current}/boards/${bid}`);
+          }
+          setBoards(bs => bs.filter(b => !linkedIds.includes(b.id)));
+          setAllBoardItems(prev => {
+            const next = {...prev};
+            linkedIds.forEach(id => delete next[id]);
+            return next;
+          });
+          if (linkedIds.includes(bidRef.current)) {
+            const remaining = boardsRef.current.filter(b => !linkedIds.includes(b.id));
+            const nb = remaining[0]?.id || null;
+            setBid(nb); bidRef.current = nb;
+          }
+        }
+        api.del(`/api/projects/${pidRef.current}/rooms/${r.id}`);
+        const next = roomsRef.current.filter(x => x.id !== r.id);
+        setRooms(next); roomsRef.current = next;
+        const fallback = next[0] || null;
+        setRoom(fallback); roomRef.current = fallback;
+        setActiveRoomId(fallback?.id || null); activeRoomIdRef.current = fallback?.id || null;
+        if (fallback) { setRoomCeilH(fallback.ceilingHeight || 280); setRoomWallThick(fallback.wallThickness ?? 15); setRoomName(fallback.name || ''); }
+        else setRoomView('board');
+      }
     });
   };
 
@@ -6170,15 +6199,31 @@ ${rows}
                                         })}>
                                         {collapsedRooms.has(r.id)?'›':'⌄'}
                                       </span>
-                                      <span style={{flex:1}} onClick={() => switchRoom(r.id)}>
-                                        🏛 {r.name || (lang==='es'?'Sala':'Room')}
-                                      </span>
+                                      {renaming?.type==='room' && renaming.id===r.id ? (
+                                        <input className="n-rename" autoFocus value={renaming.value}
+                                          style={{flex:1}}
+                                          onChange={e => setRenaming(rv => ({...rv, value:e.target.value}))}
+                                          onKeyDown={e => { if (e.key==='Enter') submitRename(); if (e.key==='Escape') setRenaming(null); }}
+                                          onBlur={submitRename} onClick={e => e.stopPropagation()}/>
+                                      ) : (
+                                        <span style={{flex:1}} onDoubleClick={e=>{e.stopPropagation();startRename('room',r.id,r.name,e);}} onClick={() => switchRoom(r.id)}>
+                                          🏛 {r.name || (lang==='es'?'Sala':'Room')}
+                                        </span>
+                                      )}
+                                      <div className="nrow-acts">
+                                        <button className="nact edit" title={t('renameBtn')}       onClick={e=>startRename('room',r.id,r.name,e)}>✎</button>
+                                        <button className="nact edit" title={t('salaDuplicate')}   onClick={e=>duplicateRoom(r.id,e)}>⧉</button>
+                                        <button className="nact del"  title={t('salaDelete')}      onClick={e=>{e.stopPropagation();switchRoom(r.id);setTimeout(deleteRoom,0);}}>×</button>
+                                      </div>
                                     </div>
                                     {!collapsedRooms.has(r.id) && (roomBoards[r.id]||[]).map(b => renderBoard(b, true))}
                                   </React.Fragment>
                                 ))}
                                 <div className="nboard-add" onClick={() => { setNameVal(''); setModal('board'); }}>
                                   {t('addBoard')}
+                                </div>
+                                <div className="nsala-add" onClick={addRoom}>
+                                  {t('salaAdd')}
                                 </div>
                               </div>
                             );
@@ -6263,8 +6308,8 @@ ${rows}
                             {/* Wide invisible hit area for easier hover */}
                             <line x1={v1.x} y1={v1.y} x2={v2.x} y2={v2.y} stroke="transparent" strokeWidth={Math.max(svgFontSz*1.4, sw*2)} style={{pointerEvents:'stroke'}}/>
                             <line x1={v1.x} y1={v1.y} x2={v2.x} y2={v2.y}
-                              stroke={hov?'var(--acc)':(linked?'var(--acc)':'var(--dim)')}
-                              strokeWidth={hov?sw+3:sw} opacity={hov?1:linked?1:0.8}
+                              stroke={hov?'var(--acc)':(wall.color||wall.colorBack?wall.color||wall.colorBack:linked?'var(--acc)':'var(--dim)')}
+                              strokeWidth={hov?sw+3:sw} opacity={hov?1:(wall.color||wall.colorBack)?0.9:linked?1:0.8}
                               strokeDasharray={isTabique?`${sw*2.5} ${sw*.8}`:undefined}/>
                             <text x={mx} y={my+svgFontSz*(isTabique?-.1:.4)} textAnchor="middle" fontSize={svgFontSz}
                               fill={hov?'var(--acc)':'var(--text)'} stroke="var(--bg)" strokeWidth={3} paintOrder="stroke"
@@ -6280,10 +6325,18 @@ ${rows}
                               const nx=-dy/l, ny=dx/l;
                               const sign = hovSide==='A' ? 1 : -1;
                               const wt2 = (wall.thickness??(room.wallThickness??15))/2;
-                              const ox=nx*sign*wt2, oy=ny*sign*wt2;
-                              const fc = hovSide==='A' ? '#e03030' : '#2288ee';
-                              return <line x1={v1.x+ox} y1={v1.y+oy} x2={v2.x+ox} y2={v2.y+oy}
-                                stroke={fc} strokeWidth={4} opacity={1} style={{pointerEvents:'none'}}/>;
+                              // Push indicator clearly outside the wall stroke + scale with zoom
+                              const lw = Math.max(svgFontSz * 0.45, 3);
+                              const extraOff = svgFontSz * 0.55;
+                              const ox = nx*sign*(wt2+extraOff), oy = ny*sign*(wt2+extraOff);
+                              const fc = hovSide==='A' ? '#ff3f3f' : '#38b0ff';
+                              return <>
+                                {/* Halo using --text (light on dark themes, dark on light) for contrast against any wall color */}
+                                <line x1={v1.x+ox} y1={v1.y+oy} x2={v2.x+ox} y2={v2.y+oy}
+                                  stroke="var(--text)" strokeWidth={lw*2.4} strokeLinecap="round" style={{pointerEvents:'none'}}/>
+                                <line x1={v1.x+ox} y1={v1.y+oy} x2={v2.x+ox} y2={v2.y+oy}
+                                  stroke={fc} strokeWidth={lw} strokeLinecap="round" style={{pointerEvents:'none'}}/>
+                              </>;
                             })()}
                           </g>
                         );
@@ -6439,7 +6492,6 @@ ${rows}
                         </button>
                       )}
                       {room && !roomDrawing && <button className="btn" onClick={openRoom3D}>{lang==='es'?'Vista 3D':'3D View'}</button>}
-                      {!roomDrawing && rooms.length === 0 && <button className="btn" onClick={addRoom}>+ {lang==='es'?'Nueva sala':'New room'}</button>}
                       {room && !roomDrawing && <button className="btn" onClick={exportRoom} title={lang==='es'?'Exportar sala':'Export room'}><SvgExport size={11}/></button>}
                       {!roomDrawing && <button className="btn" onClick={()=>importRoomRef.current?.click()} title={lang==='es'?'Importar sala':'Import room'}><SvgImport size={11}/></button>}
                       <input ref={importRoomRef} type="file" accept=".json" style={{display:'none'}} onChange={importRoom}/>
@@ -6471,37 +6523,51 @@ ${rows}
                           <label>↻: <input type="number" value={Math.round((block.rot||0)*10)/10} min="0" max="359" step="1"
                             style={{width:44}}
                             onChange={e => { const v=parseFloat(e.target.value); if(!isNaN(v)) updateBlock({rot:((v%360)+360)%360}); }}/></label>
+                          <input type="color" value={block.color||'#b8b0a4'} title={lang==='es'?'Color del bloque':'Block color'}
+                            onPointerDown={e=>e.stopPropagation()}
+                            onChange={e=>updateBlock({color:e.target.value})}/>
                           <div style={{width:1,height:18,background:'var(--border2)'}}/>
                           <span style={{fontSize:8,color:'var(--muted)'}}>CARAS</span>
                           {faceKeys.map(face => {
                             const linked = block.faces?.[face];
+                            const board = linked?.boardId ? boards.find(b=>b.id===linked.boardId) : null;
+                            const faceColor = block.faceColors?.[face] || block.color || '#b8b0a4';
                             return (
-                              <button key={face} className={`block-face-btn${linked?' linked':''}`}
-                                title={linked ? t('blockFaceUnlink') : t('blockFaceLink')}
-                                onClick={async () => {
-                                  const cur = getBlocks(roomRef.current).find(b => b.id === selBlockRef.current);
-                                  if (linked) {
-                                    updateBlock({faces:{...(cur?.faces),[face]:null}});
-                                  } else {
-                                    const faceW = face==='t' ? block.w : (face==='n'||face==='s') ? block.w : block.d;
-                                    const faceH = face==='t' ? block.d : block.h;
-                                    const dpi = Math.max(1, Math.round(4000 / faceW * 2.54 * 10) / 10);
-                                    const defaultW = Math.round(60 / 2.54 * dpi);
-                                    const label = `${block.label||(lang==='es'?'Bloque':'Block')} ${faceLabels[face]}`;
-                                    const brd = await api.post(`/api/projects/${pidRef.current}/boards`, {name:label});
-                                    await api.patch(`/api/projects/${pidRef.current}/boards/${brd.id}`, {
-                                      fixed:true, fixedW:Math.round(faceW), fixedH:Math.round(faceH), dpi, units:'cm', defaultW
-                                    });
-                                    const fullB = {...brd, fixed:true, fixedW:Math.round(faceW), fixedH:Math.round(faceH), dpi, units:'cm', defaultW};
-                                    setBoards(bs=>[...bs, fullB]);
-                                    const latestBlock = getBlocks(roomRef.current).find(b => b.id === selBlockRef.current);
-                                    updateBlock({faces:{...(latestBlock?.faces),[face]:{boardId:brd.id}}});
-                                    setBid(brd.id); bidRef.current = brd.id;
-                                    setRoomView('board');
-                                    showToast(lang==='es'?`Tablero "${label}" creado`:`Board "${label}" created`);
-                                  }
-                                }}
-                              >{faceLabels[face]}</button>
+                              <div key={face} style={{display:'flex',gap:1,alignItems:'stretch'}}
+                                onMouseEnter={()=>setRoomHovBlock({blockId:block.id,face})}
+                                onMouseLeave={()=>setRoomHovBlock(null)}>
+                                <button className={`block-face-btn${board?' linked':''}`}
+                                  style={{borderLeft:`3px solid ${faceColor}`}}
+                                  title={board ? (lang==='es'?'Ver tablero →':'Go to board →') : t('blockFaceLink')}
+                                  onClick={async () => {
+                                    if (board) {
+                                      setBid(board.id); bidRef.current = board.id; setRoomView('board');
+                                    } else {
+                                      const faceW = face==='t' ? block.w : (face==='n'||face==='s') ? block.w : block.d;
+                                      const faceH = face==='t' ? block.d : block.h;
+                                      const dpi = Math.max(1, Math.round(4000 / faceW * 2.54 * 10) / 10);
+                                      const defaultW = Math.round(60 / 2.54 * dpi);
+                                      const label = `${block.label||(lang==='es'?'Bloque':'Block')} ${faceLabels[face]}`;
+                                      const brd = await api.post(`/api/projects/${pidRef.current}/boards`, {name:label});
+                                      await api.patch(`/api/projects/${pidRef.current}/boards/${brd.id}`, {
+                                        fixed:true, fixedW:Math.round(faceW), fixedH:Math.round(faceH), dpi, units:'cm', defaultW
+                                      });
+                                      const fullB = {...brd, fixed:true, fixedW:Math.round(faceW), fixedH:Math.round(faceH), dpi, units:'cm', defaultW};
+                                      setBoards(bs=>[...bs, fullB]);
+                                      const latestBlock = getBlocks(roomRef.current).find(b => b.id === selBlockRef.current);
+                                      updateBlock({faces:{...(latestBlock?.faces),[face]:{boardId:brd.id}}});
+                                      setBid(brd.id); bidRef.current = brd.id;
+                                      setRoomView('board');
+                                      showToast(lang==='es'?`Tablero "${label}" creado`:`Board "${label}" created`);
+                                    }
+                                  }}
+                                >{faceLabels[face]}{board?' ▶':' +'}</button>
+                                <input type="color" value={faceColor}
+                                  style={{width:12,padding:0,border:'1px solid var(--border2)',cursor:'pointer',flexShrink:0,background:'none'}}
+                                  title={lang==='es'?`Color ${faceLabels[face]}`:`${faceLabels[face]} color`}
+                                  onPointerDown={e=>e.stopPropagation()}
+                                  onChange={e=>updateBlock({faceColors:{...(block.faceColors||{}),[face]:e.target.value}})}/>
+                              </div>
                             );
                           })}
                           <div style={{width:1,height:18,background:'var(--border2)'}}/>
@@ -6523,10 +6589,10 @@ ${rows}
 
                   {/* Wall panel */}
                   <div className="room-panel">
-                    {/* Room tabs — always shown so the + button is accessible */}
-                    {rooms.length >= 1 && (
+                    {/* Room tabs — only shown when there are multiple rooms */}
+                    {rooms.length > 1 && (
                       <div style={{display:'flex',flexWrap:'wrap',gap:3,padding:'6px 8px',borderBottom:'1px solid var(--border)',flexShrink:0}}>
-                        {rooms.length > 1 && rooms.map(r => (
+                        {rooms.map(r => (
                           <button key={r.id}
                             className={`btn${r.id===activeRoomId?' active':''}`}
                             style={{fontSize:9,padding:'2px 7px'}}
@@ -6534,7 +6600,6 @@ ${rows}
                             {r.name || (lang==='es'?'Sala':'Room')}
                           </button>
                         ))}
-                        <button className="btn" style={{fontSize:9,padding:'2px 7px'}} onClick={addRoom}>+ {lang==='es'?'Nueva sala':'New room'}</button>
                       </div>
                     )}
                     <div className="room-panel-hd" style={{display:'flex',alignItems:'center',gap:6}}>
@@ -7827,6 +7892,7 @@ ${rows}
         <div className="overlay" onClick={() => setConfirmModal(null)}>
           <div className="confirm-dialog" onClick={e => e.stopPropagation()}>
             <div className="confirm-msg">{confirmModal.message}</div>
+            {confirmModal.extra && <div style={{marginTop:8}}>{confirmModal.extra}</div>}
             <div className="confirm-row">
               <button className="btn" onClick={() => setConfirmModal(null)}>{lang === 'es' ? 'Cancelar' : 'Cancel'}</button>
               <button className={`btn${confirmModal.danger ? ' danger' : ' acc'}`}
@@ -7987,8 +8053,10 @@ ${rows}
           <button className="ctx-item" onClick={() => {
             const id = projCtxMenu.id;
             setProjCtxMenu(null);
-            if (id === pidRef.current) { setRoomView('room'); }
-            else { pendingRoomViewRef.current = true; setPid(id); }
+            if (id === pidRef.current) {
+              if (roomsRef.current.length === 0) addRoom();
+              else setRoomView('room');
+            } else { pendingRoomViewRef.current = true; setPid(id); }
           }}>{t('salaBtn')}</button>
         </div>
       )}
@@ -8036,7 +8104,7 @@ ${rows}
           <div style={{padding:'3px 10px 2px',fontSize:8,color:'var(--muted)',letterSpacing:1,textTransform:'uppercase',borderTop:'1px solid var(--border)',display:'flex',alignItems:'center',gap:6,userSelect:'none'}}
             onMouseEnter={()=>setRoomHovSide({wallId:cw.id,side})}
             onMouseLeave={()=>setRoomHovSide(null)}>
-            <span style={{flex:1,color:side==='A'?'#e03030':'#2288ee',fontWeight:600}}>{sideLabel(side)}</span>
+            <span style={{flex:1,color:side==='A'?'#ff3f3f':'#38b0ff',fontWeight:600}}>{sideLabel(side)}</span>
             <input type="color" value={colorVal}
               style={{width:20,height:16,padding:0,border:'1px solid var(--border2)',borderRadius:2,cursor:'pointer',flexShrink:0}}
               onPointerDown={e=>e.stopPropagation()}
@@ -8048,16 +8116,12 @@ ${rows}
               ⚠ {t('salaWallSync')}
             </button>
           )}
-          {board ? (<>
+          {board ? (
             <button className="ctx-item"
               onClick={()=>{setBid(board.id);bidRef.current=board.id;setRoomView('board');setRoomWallCtx(null);}}>
               {t('salaWallBoard')}
             </button>
-            <button className="ctx-item ctx-danger"
-              onClick={()=>{saveWallFn(w=>{const f=side==='A'?'boardId':'boardIdBack';const{[f]:_,...r}=w;return r;});setRoomWallCtx(null);}}>
-              {t('salaDeleteWall')}
-            </button>
-          </>) : (
+          ) : (
             <button className="ctx-item"
               onClick={()=>{createRoomBoardSide(cw.id,side);setRoomWallCtx(null);}}>
               {t('salaCreateBoard')}
