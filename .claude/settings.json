@@ -23,7 +23,8 @@
       "Bash(dir \"d:\\\\blasg\\\\Pictures\\\\Proyectos\\\\tableau\\\\dist\" /b)",
       "Bash(curl -s http://localhost:3000)",
       "Bash(git config *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(curl -s \"https://raw.githubusercontent.com/blasgonzalez/tableau/main/installer/version.json\")"
     ],
     "additionalDirectories": [
       "d:\\blasg\\Pictures\\Proyectos\\tableau\\fonts"
