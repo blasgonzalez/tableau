@@ -15,7 +15,7 @@
       "edificio",
       "Color"
     ],
-    "sectionId": "mp9dl89on3b"
+    "sectionId": "mp9dllqeth9"
   },
   {
     "id": "ca790c30f072",
@@ -34,7 +34,7 @@
       "Color",
       "edificio"
     ],
-    "sectionId": "mp9dl89on3b"
+    "sectionId": "mp9dllqeth9"
   },
   {
     "id": "5d43c345bf0b",
@@ -53,7 +53,7 @@
       "Color"
     ],
     "rejected": false,
-    "sectionId": "mp9dl89on3b"
+    "sectionId": "mp9dllqeth9"
   },
   {
     "id": "175037ef4e80",
@@ -72,7 +72,7 @@
       "Color",
       "edificio"
     ],
-    "sectionId": "mp9dl89on3b"
+    "sectionId": "mp9dllqeth9"
   },
   {
     "id": "a291a63819ee",
@@ -87,8 +87,8 @@
       "b": 248
     },
     "rating": 5,
-    "sectionId": "mp9dl89on3b",
-    "rejected": false
+    "rejected": false,
+    "sectionId": "mp9dllqeth9"
   },
   {
     "id": "8febc52d726d",

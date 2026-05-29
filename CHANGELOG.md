@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.9.5] — 2026-05-29
+### Añadido
+- Biblioteca: separador visual (línea punteada) entre la última sección y las fotos sin sección
+- Biblioteca: arrastrar fotos entre secciones; la zona "sin sección" también es drop target
+- Biblioteca: menú contextual con selección múltiple aplica "mover a sección" a todas las fotos seleccionadas; indica sección activa si todas comparten la misma
+- Biblioteca: botón ☑ de seleccionar-todo en cada cabecera de sección
+- Biblioteca: menú contextual incluye "Ver en pantalla completa" (solo selección individual)
+- Visor pantalla completa: panel de info completo — dimensiones, tamaño, rating, tags, EXIF completo y tableros donde aparece la foto con navegación directa
+- Tablero: "Ver en pantalla completa" disponible en el menú contextual de fotos colocadas en el tablero
+
+### Corregido
+- Biblioteca: deseleccionar (✕) ya limpia el anchor de Shift-click, evitando rangos inesperados en la siguiente selección
+- Biblioteca: eliminado el badge de número de tags en las miniaturas
+
+---
+
 ## [1.9.4] — 2026-05-29
 ### Añadido
 - Sala: color individual por cara de bloque (N, S, E, O, Superior) con selector en el panel flotante del bloque

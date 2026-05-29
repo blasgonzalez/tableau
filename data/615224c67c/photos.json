@@ -161,5 +161,24 @@
       "sala"
     ],
     "sectionId": "mpfl5di3z5d"
+  },
+  {
+    "id": "7d6aacbafd36",
+    "name": "sala_2026-05-29T07-47-34.jpg",
+    "w": 1800,
+    "h": 1273,
+    "size": 66191,
+    "dominant": {
+      "r": 24,
+      "g": 24,
+      "b": 24
+    },
+    "brightness": 0.24,
+    "meanColor": {
+      "r": 61,
+      "g": 63,
+      "b": 54
+    },
+    "created": 1780040854859
   }
 ]

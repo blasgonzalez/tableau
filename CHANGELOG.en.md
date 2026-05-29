@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.9.5] — 2026-05-29
+### Added
+- Library: visual separator (dashed line) between the last section and unsectioned photos
+- Library: drag photos between sections; the "no section" zone is also a drop target
+- Library: context menu with multiple selection applies "move to section" to all selected photos; shows active section if all share the same one
+- Library: ☑ select-all button in each section header
+- Library: context menu includes "View fullscreen" (single selection only)
+- Fullscreen viewer: full info panel — dimensions, size, rating, tags, complete EXIF and boards where the photo appears with direct navigation
+- Board: "View fullscreen" available in the context menu of photos placed on the board
+
+### Fixed
+- Library: deselect (✕) now clears the Shift-click anchor, preventing unexpected ranges on the next selection
+- Library: removed tag count badge from thumbnails
+
+---
+
 ## [1.9.4] — 2026-05-29
 ### Added
 - Room: individual color per block face (N, S, E, W, Top) with picker in the block floating panel

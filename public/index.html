@@ -413,6 +413,7 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .library.lib-drop-active .lib-body{outline:2px dashed var(--acc-dim);outline-offset:-3px;background:color-mix(in srgb,var(--acc) 6%,transparent)}
 .sect-drop-active{background:color-mix(in srgb,var(--acc) 8%,transparent);border-radius:3px}
 .sect-drop-active .sect-header{border-bottom-color:var(--acc)}
+.sect-none-sep{width:100%;border-top:1px dashed var(--border);margin:4px 0 0 0;flex-shrink:0}
 .lib-snap-btn{width:22px;height:22px;border:1px solid var(--border2);background:transparent;color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;transition:all .15s}
 .lib-snap-btn:hover{color:var(--text);border-color:var(--acc-dim)}
 .lib-header{height:30px;display:flex;align-items:center;gap:7px;padding:0 10px 0 8px;flex-shrink:0;cursor:pointer;border-bottom:1px solid var(--border);user-select:none}
@@ -635,9 +636,22 @@ select.inp{cursor:pointer;appearance:none;padding-right:28px;background-image:ur
 .fullscreen-nav.next{right:0}
 .fullscreen-close{position:fixed;top:12px;right:16px;background:none;border:none;color:rgba(255,255,255,.4);font-size:22px;cursor:pointer;line-height:1;padding:4px 8px}
 .fullscreen-close:hover{color:#fff}
-.fullscreen-meta{position:fixed;bottom:0;left:0;right:0;padding:10px 20px;background:linear-gradient(transparent,rgba(0,0,0,.7));display:flex;align-items:flex-end;justify-content:space-between;pointer-events:none}
-.fullscreen-name{font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.6);letter-spacing:.3px}
-.fullscreen-exif{font-size:10px;color:rgba(255,255,255,.4);letter-spacing:.2px;text-align:right;line-height:1.7}
+.fullscreen-meta{position:fixed;bottom:0;left:0;right:0;padding:12px 70px 12px 20px;background:linear-gradient(transparent,rgba(0,0,0,.82));display:flex;align-items:flex-end;justify-content:space-between;gap:20px;pointer-events:none}
+.fullscreen-info-left{display:flex;flex-direction:column;gap:4px;pointer-events:auto}
+.fullscreen-info-right{display:flex;flex-direction:column;gap:3px;align-items:flex-end;pointer-events:auto;flex-shrink:0}
+.fullscreen-name{font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.7);letter-spacing:.3px}
+.fullscreen-dims{font-size:9px;color:rgba(255,255,255,.3);font-family:'IBM Plex Mono',monospace;letter-spacing:.2px}
+.fullscreen-rating{font-size:13px;line-height:1}
+.fullscreen-rating span{color:rgba(255,255,255,.18);cursor:default}
+.fullscreen-rating span.on{color:var(--acc)}
+.fullscreen-ftags{display:flex;flex-wrap:wrap;gap:3px}
+.fullscreen-ftag{font-size:8px;color:rgba(255,255,255,.35);font-family:'IBM Plex Mono',monospace;background:rgba(255,255,255,.07);padding:1px 5px;letter-spacing:.2px}
+.fullscreen-boards{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px}
+.fullscreen-board-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.5);font-size:9px;font-family:'IBM Plex Mono',monospace;padding:2px 7px;cursor:pointer;letter-spacing:.2px;transition:all .15s}
+.fullscreen-board-btn:hover{background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.35)}
+.fullscreen-board-btn.cur{border-color:var(--acc);color:var(--acc)}
+.fullscreen-no-board{font-size:9px;color:rgba(255,255,255,.2);font-family:'IBM Plex Mono',monospace;font-style:italic}
+.fullscreen-exif{font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.2px;text-align:right;line-height:1.8;font-family:'IBM Plex Mono',monospace}
 .fullscreen-counter{position:fixed;top:14px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,.3);font-family:'IBM Plex Mono',monospace;letter-spacing:.5px;pointer-events:none}
 .lib-preview{position:fixed;background:var(--panel);border:1px solid var(--border2);z-index:700;box-shadow:0 6px 24px rgba(0,0,0,.6);pointer-events:none;padding:4px}
 .lib-preview.pinned{z-index:710;border-color:var(--acc-dim);box-shadow:0 8px 32px rgba(0,0,0,.75);position:fixed;padding-top:4px}
@@ -997,6 +1011,7 @@ const I18N = {
     rejectedLabel:'RECHAZADA',
     replacePhoto:'Reemplazar foto', replaceModeHint:'Selecciona la foto nueva en la librería · ESC cancela', replaceDone:'Foto reemplazada',
     pinnedPreviewHint:'Clic para fijar · ESC cierra',
+    viewFullscreen:'Ver en pantalla completa',
     addSection:'+ Sección', newSection:'Nueva sección', sectRename:'Renombrar sección', sectDelete:'Eliminar sección', uploadToSection:'Subir fotos a esta sección',
     moveToSection:'Mover a sección', noSection:'Sin sección', batchMoveSection:'⊞ Sección',
     confirmDeleteSection: n => n > 0 ? `Esta sección tiene ${n} foto${n!==1?'s':''}. ¿Eliminarla igualmente? Las fotos no se borran.` : '¿Eliminar esta sección?',
@@ -1136,6 +1151,7 @@ const I18N = {
     rejectedLabel:'REJECTED',
     replacePhoto:'Replace photo', replaceModeHint:'Select the new photo in the library · ESC to cancel', replaceDone:'Photo replaced',
     pinnedPreviewHint:'Click to pin · ESC closes',
+    viewFullscreen:'View fullscreen',
     addSection:'+ Section', newSection:'New section', sectRename:'Rename section', sectDelete:'Delete section', uploadToSection:'Upload photos to this section',
     moveToSection:'Move to section', noSection:'No section', batchMoveSection:'⊞ Section',
     confirmDeleteSection: n => n > 0 ? `This section has ${n} photo${n!==1?'s':''}. Delete it anyway? Photos are kept.` : 'Delete this section?',
@@ -2185,8 +2201,8 @@ function App() {
         walkYaw   = Math.atan2(dir.x, -dir.z);
         walkPitch = Math.asin(Math.max(-0.99, Math.min(0.99, dir.y)));
         camera.position.y = EYE_H;
-        personParts.forEach(m => { m.visible = false; });
-        setShow3DPerson(false);
+        // Keep person visible if already shown — just exit move mode if active
+        if (inMoveMode) exitMoveMode();
         setWalkMode3D(true);
         setWalkLocked(false);
         setWalkStarted(false);
@@ -2268,8 +2284,8 @@ function App() {
         animId = requestAnimationFrame(animate);
         if (walkActive) {
           const TURN_SPEED = 0.03;
-          if (walkKeys['ArrowLeft']  || walkKeys['KeyA']) walkYaw += TURN_SPEED;
-          if (walkKeys['ArrowRight'] || walkKeys['KeyD']) walkYaw -= TURN_SPEED;
+          if (walkKeys['ArrowLeft']  || walkKeys['KeyA']) walkYaw -= TURN_SPEED;
+          if (walkKeys['ArrowRight'] || walkKeys['KeyD']) walkYaw += TURN_SPEED;
           const fwdX = Math.sin(walkYaw), fwdZ = -Math.cos(walkYaw);
           const pos = camera.position;
           if (walkKeys['KeyW'] || walkKeys['ArrowUp'])   { pos.x += fwdX * WALK_SPEED; pos.z += fwdZ * WALK_SPEED; }
@@ -2885,6 +2901,11 @@ ${rows}
       .filter(b => (allBoardItemsRef.current[b.id] || []).some(i => i.photoId === photoId))
       .map(b => b.name);
 
+  const photoBoardsDetailed = (photoId) =>
+    boardsRef.current
+      .filter(b => (allBoardItemsRef.current[b.id] || []).some(i => i.photoId === photoId))
+      .map(b => ({ id: b.id, name: b.name }));
+
   // ── canvas coordinate normalizer (keeps all items ≥ 0) ───────────────────
   const normalizeItems = (its) => {
     if (!its.length) return { items: its, dx: 0, dy: 0 };
@@ -3343,17 +3364,14 @@ ${rows}
     }
   };
 
-  const movePhotoToSection = async (photoId, sectionId) => {
-    await api.patch(`/api/projects/${pidRef.current}/photos/${photoId}/section`, { sectionId: sectionId || null });
-    setPhotos(ps => ps.map(p => p.id === photoId ? { ...p, sectionId: sectionId || undefined } : p));
-    setSectCtxMenu(null);
-  };
-
-  const moveSelectionToSection = async (sectionId) => {
-    const ids = libSelRef.current;
+  const movePhotosToSection = async (ids, sectionId) => {
     await Promise.all(ids.map(id => api.patch(`/api/projects/${pidRef.current}/photos/${id}/section`, { sectionId: sectionId || null })));
     setPhotos(ps => ps.map(p => ids.includes(p.id) ? { ...p, sectionId: sectionId || undefined } : p));
     setLibSelection([]); libSelAnchorRef.current = null;
+  };
+
+  const moveSelectionToSection = async (sectionId) => {
+    await movePhotosToSection(libSelRef.current, sectionId);
     setSectBatchPop(null);
   };
 
@@ -5895,7 +5913,7 @@ ${rows}
     if (files.length) uploadFiles(files);
   };
   const onSectDragOver = (e, sectId) => {
-    if (!e.dataTransfer.types.includes('Files')) return;
+    if (!e.dataTransfer.types.includes('Files') && !e.dataTransfer.types.includes('tb-photos')) return;
     e.preventDefault(); e.stopPropagation();
     setLibDragOverSect(sectId); setLibDragOver(false);
   };
@@ -5906,8 +5924,10 @@ ${rows}
     e.preventDefault(); e.stopPropagation();
     setLibDragOverSect(null); setLibDragOver(false);
     if (!pidRef.current) return;
+    const tbPhotos = e.dataTransfer.getData('tb-photos');
+    if (tbPhotos) { movePhotosToSection(JSON.parse(tbPhotos), sectId === '__none__' ? null : sectId); return; }
     const files = [...e.dataTransfer.files].filter(f => f.type.startsWith('image/'));
-    if (files.length) uploadFiles(files, null, sectId);
+    if (files.length) uploadFiles(files, null, sectId === '__none__' ? null : sectId);
   };
 
   const onSplitterPD = e => {
@@ -7677,7 +7697,7 @@ ${rows}
                             <div key={p.id} className={`thumb${inBoard?' in-board':''}${isSel?' lib-sel':''}${p.rejected?' rejected-thumb':''}`}
                               style={{width:thumbSize,height:thumbSize}}
                               draggable onDragStart={e => onLibDS(e, p.id)}
-                              onContextMenu={e => { e.preventDefault(); e.stopPropagation(); setSectCtxMenu({ photoId: p.id, x: e.clientX, y: e.clientY }); }}
+                              onContextMenu={e => { e.preventDefault(); e.stopPropagation(); const photoIds = libSelRef.current.includes(p.id) && libSelRef.current.length > 1 ? libSelRef.current : [p.id]; setSectCtxMenu({ photoIds, originId: p.id, x: e.clientX, y: e.clientY }); }}
                               onMouseEnter={e => {
                                 showPhotoInfo(p, inBoard?'board':'proj', `/photos/${pid}/${p.id}/thumb`);
                                 hoveredThumbRef.current = p.id;
@@ -7747,7 +7767,6 @@ ${rows}
                               <img src={`/photos/${pid}/${p.id}/thumb`} alt={p.name}/>
                               {p.rejected && <div className="thumb-rejected"><span className="thumb-rejected-label">{t('rejectedLabel')}</span></div>}
                               {p.brightness != null && <span className="thumb-color" style={{background:`rgb(${Math.round(p.brightness*255)},${Math.round(p.brightness*255)},${Math.round(p.brightness*255)})`}}/>}
-                              {(p.tags||[]).length > 0 && <span className="thumb-tag-badge">{p.tags.length}</span>}
                               <div className="thumb-stars">{[1,2,3,4,5].map(n => n <= (p.rating||0) ? <span key={n}>★</span> : <span key={n} className="thumb-star-empty">★</span>)}</div>
                               <span className="thumb-reject-hint">{p.rejected ? '[u]' : '[x]'}</span>
                               <button className="thumb-tag" title={t('tagPopHd')} onClick={e => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setTagPopover(v => v?.photoId === p.id ? null : {photoId:p.id, x:r.left, y:r.top}); setTagInput(''); }}>#</button>
@@ -7788,6 +7807,7 @@ ${rows}
                                     : <span className="sect-name">{s.name}</span>
                                   }
                                   <span className="sect-count">{cnt}</span>
+                                  {!collapsed && cnt > 0 && <button className="lib-sel-all-hdr" title={t('libSelectAll')} onClick={e => { e.stopPropagation(); const ids = (bySection[s.id]||[]).map(p => p.id); setLibSelection(ids); libSelAnchorRef.current = ids[0] ?? null; }}>☑</button>}
                                   <div className="sect-actions" onClick={e => e.stopPropagation()}>
                                     <button className="sect-btn" title={t('uploadToSection')} onClick={e => { e.stopPropagation(); uploadSectRef.current = s.id; uploadSectInput.current?.click(); }}>↑</button>
                                     <button className="sect-btn" title={t('sectRename')} onClick={() => setRenamingSect(s.id)}>✎</button>
@@ -7798,18 +7818,21 @@ ${rows}
                               </div>
                             );
                           })}
-                          {bySection['__none__'].length > 0 && (
-                            <div style={{width:'100%'}}>
-                              <div className="lib-photo-row">{bySection['__none__'].map(renderThumb)}</div>
-                            </div>
-                          )}
+                          <div style={{width:'100%'}}
+                            className={libDragOverSect === '__none__' ? 'sect-drop-active' : ''}
+                            onDragOver={e => onSectDragOver(e, '__none__')}
+                            onDragLeave={onSectDragLeave}
+                            onDrop={e => onSectDrop(e, '__none__')}>
+                            <div className="sect-none-sep"/>
+                            {bySection['__none__'].length > 0 && <div className="lib-photo-row">{bySection['__none__'].map(renderThumb)}</div>}
+                          </div>
                         </>;
                       })()}
                     </div>
                     {libSel.length > 0 && (
                       <div className="lib-sel-bar" onClick={e => e.stopPropagation()}>
                         <span className="lib-sel-count">{libSel.length} {t('selected')}</span>
-                        <button className="lib-sel-btn" title={t('libSelClearTip')} onClick={() => { setLibSelection([]); setBatchTagPop(null); setSectBatchPop(null); }}>✕</button>
+                        <button className="lib-sel-btn" title={t('libSelClearTip')} onClick={() => { setLibSelection([]); libSelAnchorRef.current = null; setBatchTagPop(null); setSectBatchPop(null); }}>✕</button>
                         {libSel.length < displayedPhotosRef.current.length && <button className="lib-sel-btn" title={t('libSelectAll')} onClick={() => { const all = displayedPhotosRef.current.map(p => p.id); setLibSelection(all); libSelAnchorRef.current = all[0] ?? null; }}>☑ {t('libSelectAll')}</button>}
                         <button className="lib-sel-btn" title={t('batchTagBtn')} onClick={e => { const r = e.currentTarget.getBoundingClientRect(); setBatchTagPop(v => v ? null : {x: r.left, y: r.top}); setBatchTagInput(''); setSectBatchPop(null); }}>{t('batchTagBtn')}</button>
                         {sections.length > 0 && <button className="lib-sel-btn" title={t('moveToSection')} onClick={e => { const r = e.currentTarget.getBoundingClientRect(); setSectBatchPop(v => v ? null : {x: r.left, y: r.top}); setBatchTagPop(null); }}>{t('batchMoveSection')}</button>}
@@ -8035,14 +8058,40 @@ ${rows}
             <img className="fullscreen-img" src={`/photos/${pid}/${photo.id}`} alt={photo.name} onClick={e => e.stopPropagation()}/>
             {index > 0 && <button className="fullscreen-nav prev" onClick={e => { e.stopPropagation(); setFullscreenPhoto({ photo: photos_[index-1], index: index-1 }); }}>‹</button>}
             {index < total-1 && <button className="fullscreen-nav next" onClick={e => { e.stopPropagation(); setFullscreenPhoto({ photo: photos_[index+1], index: index+1 }); }}>›</button>}
-            <div className="fullscreen-meta">
-              <div className="fullscreen-name">{photo.name}</div>
-              {photo.exif && <div className="fullscreen-exif">
-                {photo.exif.model && <div>{photo.exif.model}</div>}
-                <div>{[photo.exif.focalLength && `${photo.exif.focalLength}mm`, photo.exif.aperture && `f/${photo.exif.aperture}`, photo.exif.shutter, photo.exif.iso && `ISO ${photo.exif.iso}`].filter(Boolean).join('  ·  ')}</div>
-                {photo.exif.dateTaken && <div>{fmtExifDate(photo.exif.dateTaken)}</div>}
-              </div>}
-            </div>
+            {(() => {
+              const photoBoards = photoBoardsDetailed(photo.id);
+              const rating = photo.rating || 0;
+              const tags = photo.tags || [];
+              return (
+                <div className="fullscreen-meta" onClick={e => e.stopPropagation()}>
+                  <div className="fullscreen-info-left">
+                    <div className="fullscreen-name">{photo.name}</div>
+                    {photo.w > 0 && <div className="fullscreen-dims">{photo.w} × {photo.h} px{photo.size > 0 ? `  ·  ${fmtSize(photo.size)}` : ''}</div>}
+                    <div className="fullscreen-rating">{[1,2,3,4,5].map(n => <span key={n} className={n <= rating ? 'on' : ''}>★</span>)}</div>
+                    {tags.length > 0 && <div className="fullscreen-ftags">{tags.map(tag => <span key={tag} className="fullscreen-ftag">#{tag}</span>)}</div>}
+                    <div className="fullscreen-boards">
+                      {photoBoards.length === 0
+                        ? <span className="fullscreen-no-board">{t('notInAnyBoard')}</span>
+                        : photoBoards.map(b => (
+                          <button key={b.id} className={`fullscreen-board-btn${b.id === bid ? ' cur' : ''}`}
+                            onClick={() => { setFullscreenPhoto(null); setBid(b.id); bidRef.current = b.id; }}>
+                            {b.name}
+                          </button>
+                        ))
+                      }
+                    </div>
+                  </div>
+                  <div className="fullscreen-info-right">
+                    {photo.exif && <div className="fullscreen-exif">
+                      {(photo.exif.make || photo.exif.model) && <div>{[photo.exif.make, photo.exif.model].filter(Boolean).join(' ')}</div>}
+                      {photo.exif.lens && <div>{photo.exif.lens}</div>}
+                      <div>{[photo.exif.focalLength && `${photo.exif.focalLength}mm`, photo.exif.aperture && `f/${photo.exif.aperture}`, photo.exif.shutter, photo.exif.iso && `ISO ${photo.exif.iso}`].filter(Boolean).join('  ·  ')}</div>
+                      {photo.exif.dateTaken && <div>{fmtExifDate(photo.exif.dateTaken)}</div>}
+                    </div>}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         );
       })()}
@@ -8291,6 +8340,7 @@ ${rows}
             {!isNoteOrText && <button className="ctx-item" style={{color: ctxItem?.label ? 'var(--acc)' : undefined}}
               onClick={() => { pushUndo(); labelEditOrigRef.current = ctxItem?.label || ''; setLabelEditId(ctxMenu.itemId); setCtxMenu(null); }}>✎ {lang==='es'?'Etiqueta':'Label'}</button>}
             {!isNoteOrText && <><div className="ctx-sep"/>
+              <button className="ctx-item" onClick={() => { setCtxMenu(null); const ph = photos.find(p => p.id === ctxItem.photoId); if (ph) { const dp = displayedPhotosRef.current; const idx = dp.findIndex(x => x.id === ph.id); setFullscreenPhoto({ photo: ph, index: idx >= 0 ? idx : 0 }); } }}>{t('viewFullscreen')}</button>
               <button className="ctx-item" onClick={() => { setDefaultW(ctxItem.w); setCtxMenu(null); }}>⊞ {t('setDefaultSize')}</button>
               <button className="ctx-item" onClick={() => { setReplaceMode({ itemId: ctxMenu.itemId }); setCtxMenu(null); if (!libOpen) { setLibOpen(true); localStorage.setItem('libOpen','true'); } }}>⇄ {t('replacePhoto')}</button>
               <button className="ctx-item" onClick={() => { flipItem(ctxMenu.itemId, 'flipH'); setCtxMenu(null); }}>↔ {t('flipH')}</button>
@@ -8478,22 +8528,35 @@ ${rows}
         <>
           <div style={{position:'fixed',inset:0,zIndex:599}} onClick={() => setSectCtxMenu(null)}/>
           <div className="sect-ctx" style={{left:sectCtxMenu.x, top:sectCtxMenu.y, transform: sectCtxMenu.y > window.innerHeight - 200 ? 'translateY(-100%)' : 'none'}}>
-            <div className="sect-ctx-item" style={{fontSize:9,color:'var(--dim)',cursor:'default',pointerEvents:'none'}}>{t('moveToSection')}</div>
+            {sectCtxMenu.photoIds.length === 1 && <>
+              <button className="sect-ctx-item" onClick={() => { setSectCtxMenu(null); const dp = displayedPhotosRef.current; const idx = dp.findIndex(x => x.id === sectCtxMenu.originId); if (idx !== -1) setFullscreenPhoto({ photo: dp[idx], index: idx }); }}>{t('viewFullscreen')}</button>
+              <div className="sect-ctx-sep"/>
+            </>}
+            <div className="sect-ctx-item" style={{fontSize:9,color:'var(--dim)',cursor:'default',pointerEvents:'none'}}>
+              {sectCtxMenu.photoIds.length > 1 ? `${sectCtxMenu.photoIds.length} ${t('selected')} · ` : ''}{t('moveToSection')}
+            </div>
             <div className="sect-ctx-sep"/>
-            {sections.map(s => {
-              const active = photos.find(p => p.id === sectCtxMenu.photoId)?.sectionId === s.id;
-              return (
-                <button key={s.id} className={`sect-ctx-item${active?' active':''}`}
-                  onClick={() => movePhotoToSection(sectCtxMenu.photoId, active ? null : s.id)}>
-                  {active ? '● ' : '○ '}{s.name}
+            {(() => {
+              const ids = sectCtxMenu.photoIds;
+              const sids = ids.map(id => photos.find(p => p.id === id)?.sectionId || null);
+              const commonSect = sids.every(s => s === sids[0]) ? sids[0] : undefined;
+              return <>
+                {sections.map(s => {
+                  const active = commonSect === s.id;
+                  return (
+                    <button key={s.id} className={`sect-ctx-item${active?' active':''}`}
+                      onClick={() => { movePhotosToSection(ids, active ? null : s.id); setSectCtxMenu(null); }}>
+                      {active ? '● ' : '○ '}{s.name}
+                    </button>
+                  );
+                })}
+                {sections.length > 0 && <div className="sect-ctx-sep"/>}
+                <button className={`sect-ctx-item${commonSect === null?' active':''}`}
+                  onClick={() => { movePhotosToSection(ids, null); setSectCtxMenu(null); }}>
+                  {commonSect === null ? '● ' : '○ '}{t('noSection')}
                 </button>
-              );
-            })}
-            {sections.length > 0 && <div className="sect-ctx-sep"/>}
-            <button className={`sect-ctx-item${!photos.find(p => p.id === sectCtxMenu.photoId)?.sectionId?' active':''}`}
-              onClick={() => movePhotoToSection(sectCtxMenu.photoId, null)}>
-              {!photos.find(p => p.id === sectCtxMenu.photoId)?.sectionId ? '● ' : '○ '}{t('noSection')}
-            </button>
+              </>;
+            })()}
           </div>
         </>
       )}

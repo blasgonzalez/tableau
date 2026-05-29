@@ -1,6 +1,6 @@
 {
-  "version": "1.9.4",
+  "version": "1.9.5",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-05-29",
-  "notes": "Sala: color por cara de bloque, duplicar sala, gestión de salas desde menú lateral. Vista 3D: rotación de fotos en caras verticales, grids en paredes, notas excluidas. UI: señalización de caras mejorada, temas oscuros con mayor contraste."
+  "notes": "Biblioteca: separador visual entre secciones y fotos sin sección, arrastrar fotos entre secciones, menú contextual opera sobre toda la selección, seleccionar-todo por sección. Visor pantalla completa: info completa (dimensiones, EXIF, tags, rating, tableros con navegación), accesible desde menú contextual."
 }
