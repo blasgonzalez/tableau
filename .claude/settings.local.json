@@ -5,7 +5,10 @@
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
       "Bash(git tag *)",
-      "Bash(npm start *)"
+      "Bash(npm start *)",
+      "Bash(curl -s https://raw.githubusercontent.com/blasgonzalez/tableau/main/installer/version.json)",
+      "Bash(curl -s http://localhost:3000/api/update)",
+      "PowerShell(Get-ChildItem \"d:\\\\blasg\\\\Pictures\\\\Proyectos\\\\tableau\\\\dist\" | Where-Object { $_.Name -notmatch \"1\\\\.9\\\\.[45]\" } | Remove-Item -Force -Confirm:$false)"
     ]
   }
 }

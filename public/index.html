@@ -1497,7 +1497,9 @@ function App() {
     const onVisible = () => { if (document.visibilityState === 'visible') hb(); };
     document.addEventListener('visibilitychange', onVisible);
     api.get('/api/version').then(d => setAppVersion(d.version || '')).catch(() => {});
-    api.get('/api/update').then(d => { if (d.update) setUpdateInfo(d.update); }).catch(() => {});
+    const pollUpdate = () => api.get('/api/update').then(d => { if (d.update) setUpdateInfo(d.update); }).catch(() => {});
+    pollUpdate();
+    const updateInterval = setInterval(pollUpdate, 5 * 60 * 1000);
     api.get('/api/templates').then(ts => { if (Array.isArray(ts)) setTemplates(ts); }).catch(() => {});
     api.get('/api/projects').then(ps => {
       setProjects(ps);
@@ -1507,7 +1509,7 @@ function App() {
       }
       setReady(true);
     }).catch(() => setReady(true));
-    return () => { clearInterval(hbInterval); document.removeEventListener('visibilitychange', onVisible); };
+    return () => { clearInterval(hbInterval); clearInterval(updateInterval); document.removeEventListener('visibilitychange', onVisible); };
   }, []);
 
   useEffect(() => {
