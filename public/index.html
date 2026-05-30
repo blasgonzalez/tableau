@@ -5709,32 +5709,40 @@ ${rows}
     if (!anchor) return;
     const anchorH = getItemH(anchor);
     const others  = selIt.filter(i => i.id !== ids[0] && !i.locked);
+    // frame px per side (mat + molding) — symmetric, so it shifts visual edges but not centers
+    const fPx = it => physToPx(it.matSize ?? it.frame ?? 0, boardDpi, boardUnits)
+                    + physToPx(it.frameSize ?? 0, boardDpi, boardUnits);
+    const anchorFPx = fPx(anchor);
     let nit = [...itemsRef.current];
     const upd = (id, patch) => { nit = nit.map(i => i.id === id ? { ...i, ...patch } : i); };
     switch (type) {
-      case 'left':   others.forEach(i => upd(i.id, {x: anchor.x})); break;
-      case 'right':  others.forEach(i => upd(i.id, {x: anchor.x + anchor.w - i.w})); break;
+      case 'left':   others.forEach(i => upd(i.id, {x: anchor.x - anchorFPx + fPx(i)})); break;
+      case 'right':  others.forEach(i => upd(i.id, {x: anchor.x + anchor.w + anchorFPx - i.w - fPx(i)})); break;
       case 'ch':     others.forEach(i => upd(i.id, {x: Math.round(anchor.x + anchor.w/2 - i.w/2)})); break;
-      case 'top':    others.forEach(i => upd(i.id, {y: anchor.y})); break;
-      case 'bottom': others.forEach(i => upd(i.id, {y: anchor.y + anchorH - getItemH(i)})); break;
+      case 'top':    others.forEach(i => upd(i.id, {y: anchor.y - anchorFPx + fPx(i)})); break;
+      case 'bottom': others.forEach(i => upd(i.id, {y: anchor.y + anchorH + anchorFPx - getItemH(i) - fPx(i)})); break;
       case 'cv':     others.forEach(i => upd(i.id, {y: Math.round(anchor.y + anchorH/2 - getItemH(i)/2)})); break;
       case 'eqw':    others.forEach(i => upd(i.id, {w: anchor.w})); break;
       case 'dh': {
-        const sorted = [...selIt].filter(i => !i.locked).sort((a,b)=>a.x-b.x);
+        const sorted = [...selIt].filter(i => !i.locked).sort((a,b) => (a.x - fPx(a)) - (b.x - fPx(b)));
         if (sorted.length < 3) return;
-        const span = sorted[sorted.length-1].x + sorted[sorted.length-1].w - sorted[0].x;
-        const gap  = (span - sorted.reduce((s,i)=>s+i.w,0)) / (sorted.length-1);
-        let cx = sorted[0].x + sorted[0].w + gap;
-        sorted.slice(1,-1).forEach(i => { upd(i.id,{x:Math.round(cx)}); cx += i.w + gap; });
+        const first = sorted[0], last = sorted[sorted.length-1];
+        const span  = (last.x + last.w + fPx(last)) - (first.x - fPx(first));
+        const totalW = sorted.reduce((s,i) => s + i.w + 2*fPx(i), 0);
+        const gap   = (span - totalW) / (sorted.length - 1);
+        let cx = first.x + first.w + fPx(first) + gap; // visual left of next item
+        sorted.slice(1,-1).forEach(i => { upd(i.id, {x: Math.round(cx + fPx(i))}); cx += i.w + 2*fPx(i) + gap; });
         break;
       }
       case 'dv': {
-        const sorted = [...selIt].filter(i => !i.locked).sort((a,b)=>a.y-b.y);
+        const sorted = [...selIt].filter(i => !i.locked).sort((a,b) => (a.y - fPx(a)) - (b.y - fPx(b)));
         if (sorted.length < 3) return;
-        const span = sorted[sorted.length-1].y + getItemH(sorted[sorted.length-1]) - sorted[0].y;
-        const gap  = (span - sorted.reduce((s,i)=>s+getItemH(i),0)) / (sorted.length-1);
-        let cy = sorted[0].y + getItemH(sorted[0]) + gap;
-        sorted.slice(1,-1).forEach(i => { upd(i.id,{y:Math.round(cy)}); cy += getItemH(i) + gap; });
+        const first = sorted[0], last = sorted[sorted.length-1];
+        const span  = (last.y + getItemH(last) + fPx(last)) - (first.y - fPx(first));
+        const totalH = sorted.reduce((s,i) => s + getItemH(i) + 2*fPx(i), 0);
+        const gap   = (span - totalH) / (sorted.length - 1);
+        let cy = first.y + getItemH(first) + fPx(first) + gap; // visual top of next item
+        sorted.slice(1,-1).forEach(i => { upd(i.id, {y: Math.round(cy + fPx(i))}); cy += getItemH(i) + 2*fPx(i) + gap; });
         break;
       }
     }

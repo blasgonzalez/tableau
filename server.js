@@ -759,6 +759,12 @@ app.get('/api/boards/:pid/:bid/export', async (req, res) => {
       const pFile = path.join(photoDir(pid), `${item.photoId}.jpg`);
       if (!fs.existsSync(pFile)) return null;
 
+      const dpi   = board?.dpi   || 96;
+      const units = board?.units || 'px';
+      const toItemPx = v => { if (!v || units === 'px') return Math.round(v || 0); const f = units === 'cm' ? 2.54 : units === 'mm' ? 25.4 : 1; return Math.round((v / f) * dpi); };
+      const matPx  = toItemPx(item.matSize ?? item.frame ?? 0);
+      const moldPx = toItemPx(item.frameSize ?? 0);
+
       const rot       = item.rot || 0;
       const freeRot   = item.freeRot || 0;
       const isSwapped = rot % 180 !== 0;
@@ -766,12 +772,19 @@ app.get('/api/boards/:pid/:bid/export', async (req, res) => {
       const resizeH   = isSwapped ? item.w : Math.round(item.w * photo.h / photo.w);
       const displayH  = isSwapped ? resizeW : resizeH;
 
+      // Step 1: resize, flip, 90° rotation
       let sharpChain = sharp(pFile).resize(resizeW, resizeH, { fit: 'fill' });
       if (item.flipH) sharpChain = sharpChain.flop();
       if (item.flipV) sharpChain = sharpChain.flip();
       sharpChain = sharpChain.rotate(rot, { background: { r: 255, g: 255, b: 255 } });
-      if (freeRot) sharpChain = sharpChain.rotate(freeRot, { background: { r: 255, g: 255, b: 255 } });
-      const imgBuf = await sharpChain.png({ compressionLevel: 1 }).toBuffer();
+      let imgBuf = await sharpChain.png({ compressionLevel: 1 }).toBuffer();
+
+      // Step 2: mat (paspartú) then molding borders — symmetric, so center stays at cx/cy
+      if (matPx  > 0) imgBuf = await sharp(imgBuf).extend({ top: matPx,  bottom: matPx,  left: matPx,  right: matPx,  background: item.matColor   || '#ffffff' }).png({ compressionLevel: 1 }).toBuffer();
+      if (moldPx > 0) imgBuf = await sharp(imgBuf).extend({ top: moldPx, bottom: moldPx, left: moldPx, right: moldPx, background: item.frameColor || '#5a3e1b' }).png({ compressionLevel: 1 }).toBuffer();
+
+      // Step 3: free rotation on the framed photo
+      if (freeRot) imgBuf = await sharp(imgBuf).rotate(freeRot, { background: { r: 255, g: 255, b: 255 } }).png({ compressionLevel: 1 }).toBuffer();
 
       const { width: rw, height: rh } = await sharp(imgBuf).metadata();
       const cx = item.x + item.w   / 2;

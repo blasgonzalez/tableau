@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.9.8] — 2026-05-30
+### Añadido
+- Windows: lanzador VBScript sin ventana de consola — la app abre directamente en el navegador
+
+### Corregido
+- Canvas: la alineación y distribución uniforme ya tienen en cuenta los marcos (paspartú y moldura) de cada foto
+- Exportación JPEG: los marcos (paspartú y moldura) se renderizan correctamente en la imagen exportada
+
+---
+
 ## [1.9.7] — 2026-05-30
 ### Añadido
 - Pantalla de carga animada al arrancar (desaparece en cuanto React termina de compilar)

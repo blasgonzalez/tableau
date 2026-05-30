@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.9.8] — 2026-05-30
+### Added
+- Windows: VBScript launcher with no console window — the app opens directly in the browser
+
+### Fixed
+- Canvas: alignment and uniform distribution now account for each photo's frame (mat and molding)
+- JPEG export: frames (mat and molding) are now correctly rendered in the exported image
+
+---
+
 ## [1.9.7] — 2026-05-30
 ### Added
 - Animated loading screen on startup (disappears once React finishes compiling)

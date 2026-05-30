@@ -9,7 +9,7 @@
 ; ═══════════════════════════════════════════════════════════════════════════════
 
 #define MyAppName      "Tableau"
-#define MyAppVersion   "1.9.7"
+#define MyAppVersion   "1.9.8"
 #define MyAppPublisher "Blas González"
 #define MyAppURL       "https://github.com/blasgonzalez/tableau"
 
@@ -63,19 +63,20 @@ Source: "fonts\*.ttf";                  DestDir: "{app}\fonts";        Flags: ig
 Source: "installer\icons\tableau.ico";  DestDir: "{app}";              Flags: ignoreversion
 
 ; Launcher
+Source: "installer\launch.vbs";         DestDir: "{app}";              Flags: ignoreversion
 Source: "installer\launch.bat";         DestDir: "{app}";              Flags: ignoreversion
 
 [Icons]
 ; Acceso directo en el menú inicio
-Name: "{group}\{#MyAppName}";                        Filename: "{app}\launch.bat"; WorkingDir: "{app}"; IconFilename: "{app}\tableau.ico"
+Name: "{group}\{#MyAppName}";                        Filename: "{app}\launch.vbs"; WorkingDir: "{app}"; IconFilename: "{app}\tableau.ico"
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}";  Filename: "{uninstallexe}"
 
 ; Acceso directo en el escritorio (opcional)
-Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\launch.bat"; WorkingDir: "{app}"; IconFilename: "{app}\tableau.ico"; Tasks: desktopicon
+Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\launch.vbs"; WorkingDir: "{app}"; IconFilename: "{app}\tableau.ico"; Tasks: desktopicon
 
 [Run]
 ; Ofrecer abrir la app al terminar la instalación
-Filename: "{app}\launch.bat"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; \
+Filename: "wscript.exe"; Parameters: """{app}\launch.vbs"""; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; \
   WorkingDir: "{app}"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]

@@ -1,6 +1,6 @@
 {
-  "version": "1.9.7",
+  "version": "1.9.8",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-05-30",
-  "notes": "Pantalla de carga al arrancar. Plantillas: gestión completa en panel lateral (acordeón), edición directa en canvas, añadir y redimensionar contenedores, config de plantilla. Biblioteca: indicador de ajuste de ratio al rellenar contenedores. Botón Crear deshabilitado sin nombre. Correcciones: creación de tablero desde plantilla, cambios en plantilla no persistían."
+  "notes": "Windows: lanzador sin ventana de consola. Canvas: alineación y distribución tienen en cuenta los marcos (paspartú y moldura). Exportación JPEG: los marcos se renderizan en la imagen exportada."
 }
