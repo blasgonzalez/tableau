@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.9.9] — 2026-05-30
+### Corregido
+- Windows: el lanzador VBScript no establecía el directorio de trabajo correcto — la aplicación ya abre sin error
+
+---
+
 ## [1.9.8] — 2026-05-30
 ### Añadido
 - Windows: lanzador VBScript sin ventana de consola — la app abre directamente en el navegador

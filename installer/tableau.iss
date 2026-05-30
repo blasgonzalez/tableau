@@ -9,7 +9,7 @@
 ; ═══════════════════════════════════════════════════════════════════════════════
 
 #define MyAppName      "Tableau"
-#define MyAppVersion   "1.9.8"
+#define MyAppVersion   "1.9.9"
 #define MyAppPublisher "Blas González"
 #define MyAppURL       "https://github.com/blasgonzalez/tableau"
 

@@ -1,6 +1,6 @@
 {
-  "version": "1.9.8",
+  "version": "1.9.9",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-05-30",
-  "notes": "Windows: lanzador sin ventana de consola. Canvas: alineación y distribución tienen en cuenta los marcos (paspartú y moldura). Exportación JPEG: los marcos se renderizan en la imagen exportada."
+  "notes": "Windows: lanzador corregido (la aplicación ya abre correctamente al hacer doble clic)."
 }

@@ -30,6 +30,7 @@ Set oExec = Nothing
 If alreadyRunning Then
     objShell.Run "http://localhost:3000", 1, False
 Else
+    objShell.CurrentDirectory = scriptDir
     objShell.Run """" & nodeExe & """ """ & serverJs & """", 0, False
 
     Dim i, http, ready
