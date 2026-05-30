@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.9.7] — 2026-05-30
+### Added
+- Animated loading screen on startup (disappears once React finishes compiling)
+- Templates: sidebar section with accordion behaviour (one section open at a time)
+- Templates: direct canvas editing — click a template in the panel to open it, click a board to exit
+- Templates: add containers from the library (photo is automatically converted to a placeholder)
+- Templates: resize containers while preserving their aspect ratio
+- Templates: configuration modal (units, DPI, fixed dimensions) specific to the template
+- Templates: deletion with confirmation; management only from the sidebar panel (the «New board» picker is selection-only)
+- Library: aspect-ratio fit indicator when assigning a photo to a container (green border = great fit, amber = moderate crop)
+- Board: «Create» button disabled until a name is entered
+
+### Fixed
+- Templates: edits made while editing a template were not persisted on re-entry
+- Templates: creating a board from a template did not load items (race condition)
+- Topbar: irrelevant buttons (Report, Versions, Export…) hidden during template editing; Grid remains visible
+
+---
+
 ## [1.9.6] — 2026-05-30
 ### Added
 - Library: reject photos via context menu (only photos not placed on any board); supports multiple selection

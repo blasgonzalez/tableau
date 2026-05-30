@@ -570,8 +570,11 @@ app.post('/api/templates', (req, res) => {
 });
 
 app.patch('/api/templates/:tid', (req, res) => {
-  const { name } = req.body;
-  const templates = readJSON(templatesFile()).map(t => t.id === req.params.tid ? { ...t, name: name.trim() } : t);
+  const { name, items } = req.body;
+  const templates = readJSON(templatesFile()).map(t => {
+    if (t.id !== req.params.tid) return t;
+    return { ...t, ...(name !== undefined ? { name: name.trim() } : {}), ...(items !== undefined ? { items } : {}) };
+  });
   writeJSON(templatesFile(), templates);
   res.json({ ok: true });
 });

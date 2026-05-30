@@ -1,6 +1,6 @@
 {
-  "version": "1.9.6",
+  "version": "1.9.7",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-05-30",
-  "notes": "Biblioteca: rechazar fotos desde el menú contextual (con soporte de selección múltiple), botón visual para recuperar en la vista de rechazadas, contador [n] en cabeceras de sección y biblioteca, alineación de sección igual que biblioteca, botón +Sección oculto en vista plana. Tablero: opción «Enviar atrás» en menú contextual. Correcciones: EXIF no se guardaba al importar fotos (doble bug en servidor), mensaje de bienvenida sin proyectos corregido."
+  "notes": "Pantalla de carga al arrancar. Plantillas: gestión completa en panel lateral (acordeón), edición directa en canvas, añadir y redimensionar contenedores, config de plantilla. Biblioteca: indicador de ajuste de ratio al rellenar contenedores. Botón Crear deshabilitado sin nombre. Correcciones: creación de tablero desde plantilla, cambios en plantilla no persistían."
 }

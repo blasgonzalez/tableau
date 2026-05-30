@@ -56,7 +56,15 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 /* sidebar sections */
 .sb-sec{display:flex;flex-direction:column;min-height:0}
 .sb-sec.nav{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+.sb-sec.nav.collapsed{flex:0 0 auto}
 .sb-sec.info{flex-shrink:0;border-top:1px solid var(--border)}
+.sb-sec.tmpl{flex-shrink:0;border-top:1px solid var(--border);display:flex;flex-direction:column;max-height:220px}
+.sb-sec.tmpl .sb-scroll{overflow-y:auto;flex:1}
+.tmpl-row{display:flex;align-items:center;gap:5px;padding:3px 8px 3px 10px;min-height:38px;cursor:default}
+.tmpl-row:hover{background:var(--hover)}
+.tmpl-row:hover .nrow-acts{opacity:1}
+.tmpl-row-name{flex:1;font-size:10px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.sb-tmpl-add{padding:4px 10px 6px;display:flex;gap:4px;align-items:center}
 .sb-sec-hd{height:32px;display:flex;align-items:center;gap:5px;padding:0 8px 0 10px;border-bottom:1px solid var(--border);background:var(--deep);flex-shrink:0}
 .sb-sec-title{font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:var(--dim);flex:1}
 .sb-sec-btn{width:18px;height:18px;border:1px solid var(--border2);background:transparent;color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;transition:all .12s;line-height:1}
@@ -141,11 +149,12 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .ph-item{width:100%;background:var(--border);border:2px dashed var(--dim);box-sizing:border-box;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:2px;transition:background .15s}
 .ph-item:hover{background:var(--border2)}
 .ph-icon{color:var(--dim);pointer-events:none;user-select:none;font-size:28px;line-height:1}
-.tmpl-pick{display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:3px;cursor:pointer;font-size:10px;color:var(--sub);border:1px solid var(--border);transition:background .12s,border-color .12s}
+.tmpl-pick{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:3px;cursor:pointer;font-size:10px;color:var(--sub);border:1px solid var(--border);transition:background .12s,border-color .12s}
 .tmpl-pick:hover{background:var(--hover)}
 .tmpl-pick.sel{background:var(--acc-dim);border-color:var(--acc);color:var(--text)}
-.tmpl-pick-del{background:none;border:none;cursor:pointer;color:var(--dim);padding:0 2px;font-size:12px;line-height:1;margin-left:auto}
+.tmpl-pick-del{background:none;border:none;cursor:pointer;color:var(--dim);padding:0 2px;font-size:12px;line-height:1;margin-left:auto;flex-shrink:0}
 .tmpl-pick-del:hover{color:var(--danger)}
+.tmpl-thumb{flex-shrink:0;border-radius:2px;overflow:hidden;background:var(--deep);border:1px solid var(--border2)}
 
 /* ── PRESENTATION MODE ── */
 .app.presentation .topbar,.app.presentation .update-banner,.app.presentation .sidebar,.app.presentation .lib-splitter,.app.presentation .library,.app.presentation .zoom-ctrl,.app.presentation .align-bar{display:none !important}
@@ -459,6 +468,13 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .lib-scroll::-webkit-scrollbar-thumb{background:var(--border2)}
 .thumb{flex-shrink:0;width:84px;height:84px;cursor:grab;position:relative;overflow:hidden;border:2px solid var(--border2);transition:border-color .15s}
 .thumb:hover{border-color:var(--acc-dim)}
+.thumb.fit-great{border-color:#4caf7d}
+.thumb.fit-great:hover{border-color:#6dd49a}
+.thumb.fit-ok{border-color:#c4a43a}
+.thumb.fit-ok:hover{border-color:#e0bf4a}
+.thumb-fit-badge{position:absolute;top:3px;left:3px;font-size:6px;font-family:'IBM Plex Mono',monospace;padding:1px 4px;border-radius:2px;pointer-events:none;z-index:6;letter-spacing:.3px}
+.thumb.fit-great .thumb-fit-badge{background:rgba(76,175,125,.9);color:#fff}
+.thumb.fit-ok .thumb-fit-badge{background:rgba(196,164,58,.9);color:#fff}
 .thumb:active{cursor:grabbing}
 .thumb img{width:100%;height:100%;object-fit:cover;pointer-events:none;display:block}
 .thumb.in-board{border-color:var(--acc)}
@@ -692,9 +708,20 @@ select.btn option,select.inp option{background:var(--panel);color:var(--text)}
 .zc-room-3d{display:flex;align-items:center;padding:0 7px;height:100%;font-size:9px;letter-spacing:.3px;color:var(--dim);cursor:pointer;border-left:1px solid var(--border2);white-space:nowrap}
 .zc-room-3d:hover{color:var(--acc);background:var(--acc-faint)}
 .resize-tip{position:fixed;background:rgba(13,12,11,.96);border:1px solid var(--border2);color:var(--acc);font-size:11px;padding:5px 11px;letter-spacing:.3px;pointer-events:none;z-index:9999;white-space:nowrap;box-shadow:0 2px 10px rgba(0,0,0,.5)}
+#splash{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999;transition:opacity .35s ease}
+#splash.fade{opacity:0;pointer-events:none}
+.splash-logo{font-family:'Playfair Display',serif;font-size:28px;color:var(--acc);letter-spacing:6px;animation:splash-breathe 2s ease-in-out infinite}
+.splash-dots{display:flex;gap:7px;margin-top:20px}
+.splash-dots span{width:4px;height:4px;border-radius:50%;background:var(--acc-dim);animation:splash-dot 1.2s ease-in-out infinite}
+.splash-dots span:nth-child(2){animation-delay:.2s}
+.splash-dots span:nth-child(3){animation-delay:.4s}
+@keyframes splash-breathe{0%,100%{opacity:.35}50%{opacity:.9}}
+@keyframes splash-dot{0%,80%,100%{transform:scale(.5);opacity:.3}40%{transform:scale(1);opacity:1}}
 </style>
 </head>
 <body>
+<script>(function(){var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
+<div id="splash"><div class="splash-logo">TABLEAU</div><div class="splash-dots"><span></span><span></span><span></span></div></div>
 <div id="root"></div>
 <script type="text/babel">
 const { useState, useEffect, useLayoutEffect, useRef, useCallback } = React;
@@ -1207,6 +1234,11 @@ const SvgExport  = ({size=14}) => <svg viewBox="0 0 16 16" width={size} height={
 const SvgImport  = ({size=14}) => <svg viewBox="0 0 16 16" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="4,10 8,6 12,10"/><line x1="8" y1="14" x2="8" y2="6"/><rect x="2" y="2" width="12" height="2" fill="currentColor" stroke="none" rx=".5"/></svg>;
 
 function App() {
+  React.useEffect(() => {
+    const el = document.getElementById('splash');
+    if (el) { el.classList.add('fade'); setTimeout(() => el.remove(), 380); }
+  }, []);
+
   const [projects,      setProjects]      = useState([]);
   const [pid,           setPid]           = useState(null);
   const [boards,        setBoards]        = useState([]);
@@ -1315,6 +1347,12 @@ function App() {
   const [uploadDropOpen, setUploadDropOpen] = useState(false);
   const [templates,      setTemplates]      = useState([]);
   const [tmplNameInput,  setTmplNameInput]  = useState(null); // null = oculto, string = activo
+  const [sbNavOpen,      setSbNavOpen]      = useState(true);
+  const [sbTemplOpen,    setSbTemplOpen]    = useState(() => localStorage.getItem('sbTemplOpen') === 'true');
+  const [renamingTmpl,   setRenamingTmpl]   = useState(null); // {id, value}
+  const [sbTmplInput,    setSbTmplInput]    = useState(null); // null | string — inline save en sidebar
+  const [tmplEditMode,   setTmplEditMode]   = useState(null); // null | {id, name}
+  const tmplEditModeRef  = useRef(null);
   const [selectedTemplate,  setSelectedTemplate]  = useState(null);
   const [copyBoardInput,    setCopyBoardInput]    = useState(null); // null=oculto, string=activo
   const [fillPlaceholder,setFillPlaceholder]= useState(null); // {itemId}
@@ -2614,6 +2652,12 @@ function App() {
   }, []);
 
   const saveItemsNow = useCallback((its) => {
+    if (tmplEditModeRef.current) {
+      const tid = tmplEditModeRef.current.id;
+      api.patch(`/api/templates/${tid}`, { items: its }).catch(() => {});
+      setTemplates(ts => ts.map(t => t.id === tid ? { ...t, items: its } : t));
+      return;
+    }
     const p = pidRef.current, b = bidRef.current;
     if (!p || !b) return;
     const msg = (I18N[langRef.current] || I18N.es).saveError;
@@ -2679,17 +2723,30 @@ function App() {
   const changeGridStep = v => { setGridStep(v); localStorage.setItem('tb-gridstep', String(v)); };
 
   const openBoardConfig = () => {
-    setCfgUnits(activeBoardMeta?.units || 'cm');
-    setCfgDpi(String(activeBoardMeta?.dpi || 300));
-    setCfgFixed(activeBoardMeta?.fixed || false);
-    setCfgBoardW(activeBoardMeta?.fixedW != null ? String(activeBoardMeta.fixedW) : '');
-    setCfgBoardH(activeBoardMeta?.fixedH != null ? String(activeBoardMeta.fixedH) : '');
-    setCfgDefaultFrame(String(activeBoardMeta?.defaultFrame || 0));
-    setCfgExportPad(String(activeBoardMeta?.exportPad ?? 60));
+    const meta = tmplEditModeRef.current ? tmplEditModeRef.current.boardMeta : activeBoardMeta;
+    setCfgUnits(meta?.units || 'cm');
+    setCfgDpi(String(meta?.dpi || 300));
+    setCfgFixed(meta?.fixed || false);
+    setCfgBoardW(meta?.fixedW != null ? String(meta.fixedW) : '');
+    setCfgBoardH(meta?.fixedH != null ? String(meta.fixedH) : '');
+    setCfgDefaultFrame(String(meta?.defaultFrame || 0));
+    setCfgExportPad(String(meta?.exportPad ?? 60));
     setModal('boardcfg');
   };
 
   const saveBoardConfig = async () => {
+    if (tmplEditModeRef.current) {
+      const dpi = parseInt(cfgDpi) || 300;
+      const fixedW = cfgFixed ? parseFloat(cfgBoardW) || null : null;
+      const fixedH = cfgFixed ? parseFloat(cfgBoardH) || null : null;
+      const boardMeta = { units: cfgUnits, dpi, fixed: cfgFixed, fixedW, fixedH, defaultFrame: parseFloat(cfgDefaultFrame) || 0 };
+      await api.patch(`/api/templates/${tmplEditModeRef.current.id}`, { boardMeta });
+      tmplEditModeRef.current = { ...tmplEditModeRef.current, boardMeta };
+      setTmplEditMode(m => ({ ...m, boardMeta }));
+      setTemplates(ts => ts.map(t => t.id === tmplEditModeRef.current?.id ? { ...t, boardMeta } : t));
+      setModal(null); showToast(t('configSaved'));
+      return;
+    }
     const dpi = parseInt(cfgDpi) || 300;
     let fixedW = null, fixedH = null;
     const doSave = async () => {
@@ -3034,12 +3091,10 @@ ${rows}
       x = Math.round(placedZone.x + (placedZone.w - w) / 2);
       y = Math.round(placedZone.y + ZONE_HDR + ZONE_PAD + (Math.max(0, availH - h2) / 2));
     }
-    const item = {
-      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
-      photoId: photo.id, x, y, w, z: maxZ + 1, label: '', rot: 0,
-      frame: boardsRef.current.find(b => b.id === bidRef.current)?.defaultFrame || 0,
-      ...(placedZone ? { zoneId: placedZone.id } : {}),
-    };
+    const finalH = Math.round(w * photo.h / photo.w);
+    const item = tmplEditModeRef.current
+      ? { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), type: 'placeholder', x, y, w, h: finalH, z: maxZ + 1, rot: 0 }
+      : { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), photoId: photo.id, x, y, w, z: maxZ + 1, label: '', rot: 0, frame: boardsRef.current.find(b => b.id === bidRef.current)?.defaultFrame || 0, ...(placedZone ? { zoneId: placedZone.id } : {}) };
     const nit = [...itemsRef.current, item];
     const norm = applyNormalized(nit);
     selRef.current = [item.id]; setSel([item.id]);
@@ -3130,15 +3185,16 @@ ${rows}
     if (!nameVal.trim() || !pidRef.current) return;
     const b = await api.post(`/api/projects/${pidRef.current}/boards`, { name: nameVal.trim() });
     setBoards(bs => [...bs, b]);
-    setBid(b.id);
     if (selectedTemplate) {
       const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
       const newItems = selectedTemplate.items.map(item => ({ ...item, id: uid() }));
       await api.put(`/api/boards/${pidRef.current}/${b.id}/items`, newItems);
+      setItems(newItems); itemsRef.current = newItems;
       setAllBoardItems(prev => ({ ...prev, [b.id]: newItems }));
     } else {
       setAllBoardItems(prev => ({ ...prev, [b.id]: [] }));
     }
+    setBid(b.id); bidRef.current = b.id;
     setNameVal(''); setSelectedTemplate(null); setModal(null);
   };
 
@@ -3417,9 +3473,9 @@ ${rows}
   };
 
   // ── Templates ────────────────────────────────────────────────────────────────
-  const saveAsTemplate = async (name) => {
+  const saveAsTemplate = async (name, fromSidebar = false) => {
     if (!name?.trim()) return;
-    setTmplNameInput(null);
+    if (!fromSidebar) setTmplNameInput(null);
     const templateItems = itemsRef.current.map(item => {
       if (item.type === 'note' || item.type === 'zone' || item.type === 'text' || item.type === 'placeholder') return item;
       const photo = photosRef.current.find(p => p.id === item.photoId);
@@ -3435,13 +3491,54 @@ ${rows}
       const tmpl = await api.post('/api/templates', { name: name.trim(), boardMeta, items: templateItems });
       setTemplates(ts => [...ts, tmpl]);
       showToast(t('templateSaved'));
-      setModal(null);
+      if (!fromSidebar) setModal(null);
     } catch { showToast(t('templateError'), true); }
   };
 
-  const deleteTemplate = async (tid) => {
-    await api.del(`/api/templates/${tid}`);
-    setTemplates(ts => ts.filter(t => t.id !== tid));
+  const deleteTemplate = (tid, name) => {
+    showConfirm(lang === 'es' ? `¿Eliminar la plantilla «${name}»?` : `Delete template «${name}»?`, async () => {
+      await api.del(`/api/templates/${tid}`);
+      setTemplates(ts => ts.filter(t => t.id !== tid));
+      if (selectedTemplate?.id === tid) setSelectedTemplate(null);
+    }, true);
+  };
+
+  const enterTmplEdit = (tmpl) => {
+    tmplEditModeRef.current = { id: tmpl.id, name: tmpl.name, boardMeta: tmpl.boardMeta || {} };
+    setTmplEditMode({ id: tmpl.id, name: tmpl.name, boardMeta: tmpl.boardMeta || {} });
+    const its = (tmpl.items || []).map(i => ({ ...i }));
+    setItems(its); itemsRef.current = its;
+    undoStack.current = []; redoStack.current = [];
+    setSel([]); selRef.current = [];
+  };
+
+  const exitTmplEdit = () => {
+    tmplEditModeRef.current = null;
+    setTmplEditMode(null);
+    if (pidRef.current && bidRef.current) {
+      api.get(`/api/boards/${pidRef.current}/${bidRef.current}/items`).then(it => {
+        setItems(it); itemsRef.current = it;
+      });
+    } else {
+      setItems([]); itemsRef.current = [];
+    }
+    undoStack.current = []; redoStack.current = [];
+    setSel([]); selRef.current = [];
+  };
+
+  const renameTmpl = async (id, value) => {
+    const name = value?.trim();
+    setRenamingTmpl(null);
+    if (!name) return;
+    await api.patch(`/api/templates/${id}`, { name });
+    setTemplates(ts => ts.map(t => t.id === id ? { ...t, name } : t));
+  };
+
+  const saveFromSidebar = async () => {
+    if (!sbTmplInput?.trim()) return;
+    const name = sbTmplInput.trim();
+    setSbTmplInput(null);
+    await saveAsTemplate(name, true);
   };
 
   const applyTemplate = (tmpl) => {
@@ -4286,6 +4383,7 @@ ${rows}
     let rawCw = ow; // accumulates movementX — immune to canvas scroll drift
     let cw = ow;
     const photo = photosRef.current.find(p => p.id === it.photoId);
+    const placeholderRatio = (!photo && it.h && it.w) ? it.h / it.w : null;
     const isSwapped = (it.rot || 0) % 180 !== 0;
     const activeMeta = boardsRef.current.find(b => b.id === bidRef.current);
     const rdpi = activeMeta?.dpi || null;
@@ -4326,9 +4424,12 @@ ${rows}
         setSnapGuides(guides);
       }
 
-      setItems(its => its.map(i => i.id === itemId ? { ...i, w: cw } : i));
+      const newH = photo
+        ? (isSwapped ? Math.round(cw * photo.w / photo.h) : Math.round(cw * photo.h / photo.w))
+        : placeholderRatio ? Math.round(cw * placeholderRatio) : null;
+      setItems(its => its.map(i => i.id === itemId ? { ...i, w: cw, ...(newH ? { h: newH } : {}) } : i));
       const rw = Math.round(cw);
-      const rh = photo ? (isSwapped ? Math.round(cw * photo.w / photo.h) : Math.round(cw * photo.h / photo.w)) : rw;
+      const rh = newH || rw;
       setResizeDim({ x: e.clientX + 16, y: e.clientY - 44, label: dimLabel(rw, rh, rdpi, runits, rframe) });
     };
     const onMU = () => {
@@ -4336,8 +4437,12 @@ ${rows}
       window.removeEventListener('pointerup',   onMU);
       setSnapGuides({ h: [], v: [] });
       setResizeDim(null);
-      const nit = itemsRef.current.map(i => i.id === itemId ? { ...i, w: Math.round(cw) } : i);
-      if (Math.round(cw) !== ow) {
+      const finalW = Math.round(cw);
+      const finalH = photo
+        ? (isSwapped ? Math.round(finalW * photo.w / photo.h) : Math.round(finalW * photo.h / photo.w))
+        : placeholderRatio ? Math.round(finalW * placeholderRatio) : null;
+      const nit = itemsRef.current.map(i => i.id === itemId ? { ...i, w: finalW, ...(finalH ? { h: finalH } : {}) } : i);
+      if (finalW !== ow) {
         undoStack.current = [...undoStack.current.slice(-49), beforeResize];
         redoStack.current = [];
       }
@@ -6002,7 +6107,13 @@ ${rows}
         <div className="logo">Tableau</div>
         <div className="vsep"/>
         <div className="breadcrumb">
-          {activeProject
+          {tmplEditMode
+            ? <>
+                <span className="bc-seg" style={{color:'var(--acc)'}}>{t('templatesSection')}</span>
+                <span className="bc-arrow">›</span>
+                <span className="bc-seg">{tmplEditMode.name}</span>
+              </>
+            : activeProject
             ? <>
                 <span className="bc-seg">{activeProject.name}</span>
                 {activeBoard && <>
@@ -6017,25 +6128,23 @@ ${rows}
           }
         </div>
         <div style={{flex:1}}/>
-        {bid && roomView === 'board' && <button className="btn" style={{fontSize:9}} onClick={() => setPresentation(true)} title={t('presentationBtn')}>{t('presentationBtn')}</button>}
-        {pid && boards.length > 0 && (
+        {!tmplEditMode && bid && roomView === 'board' && <button className="btn" style={{fontSize:9}} onClick={() => setPresentation(true)} title={t('presentationBtn')}>{t('presentationBtn')}</button>}
+        {!tmplEditMode && pid && boards.length > 0 && (
           <button className="btn" style={{fontSize:10}} onClick={() => setModal('memoria')} title={t('reportTitle')}>
             {t('report')}
           </button>
         )}
-        {bid && <>
-          {roomView === 'board' && <button className={`btn${showGrid?' acc':''}`}
+        {bid && roomView === 'board' && <button className={`btn${showGrid?' acc':''}`}
             style={{fontSize:9,letterSpacing:.3,opacity:(showGrid && gridCellPx*zoom<4)?0.45:1}}
             onClick={e => { if (gridDropOpen) { setGridDropOpen(false); return; } const r = e.currentTarget.getBoundingClientRect(); setGridDropPos({ left: r.left, top: r.bottom + 4 }); setGridDropOpen(true); }}
             title={showGrid && gridCellPx*zoom<4 ? t('gridHiddenZoom') : t('gridToggle')}>
             {t('gridToggle')}{showGrid && snapGrid ? ' ·' : ''}
           </button>}
+        {(tmplEditMode || bid) && <button className="btn" style={{fontSize:10}} onClick={openBoardConfig} title={t('boardConfig')}>{t('config')}</button>}
+        {!tmplEditMode && bid && <>
           {roomView === 'board' && <button className="btn" style={{fontSize:10, color: versions.length > 0 ? 'var(--acc)' : undefined}} onClick={() => { loadVersions(); setModal('versions'); }} title={t('versionsTitle')}>
             ⏱
           </button>}
-          <button className="btn" style={{fontSize:10}} onClick={openBoardConfig} title={t('boardConfig')}>
-            {t('config')}
-          </button>
           <button className="btn" style={{fontSize:10,gap:5}} title={t('exportJpeg')}
             onClick={e => {
               if (exportDropOpen) { setExportDropOpen(false); return; }
@@ -6132,19 +6241,20 @@ ${rows}
               <div className="sb-inner">
 
                 {/* NAV: Projects & Boards */}
-                <div className="sb-sec nav">
-                  <div className="sb-sec-hd">
+                <div className={`sb-sec nav${sbNavOpen ? '' : ' collapsed'}`}>
+                  <div className="sb-sec-hd" style={{cursor:'pointer'}} onClick={() => { setSbNavOpen(v => { if (!v) setSbTemplOpen(false); return !v; }); }}>
                     <span className="sb-sec-title">{t('projBoards')}</span>
-                    <button className="sb-sec-btn" title={t('newProject')}
-                      onClick={() => { setNameVal(''); setModal('project'); }}>+</button>
-                    <button className="sb-sec-btn" title={t('importProjectBtn')}
-                      onClick={() => importInputRef.current?.click()}><SvgImport size={12}/></button>
+                    {sbNavOpen && <button className="sb-sec-btn" title={t('newProject')}
+                      onClick={e => { e.stopPropagation(); setNameVal(''); setModal('project'); }}>+</button>}
+                    {sbNavOpen && <button className="sb-sec-btn" title={t('importProjectBtn')}
+                      onClick={e => { e.stopPropagation(); importInputRef.current?.click(); }}><SvgImport size={12}/></button>}
                     <input ref={importInputRef} type="file" accept=".zip" style={{display:'none'}}
                       onChange={e => { handleImportFile(e.target.files[0]); e.target.value = ''; }} />
-                    <button className="sb-sec-btn" title={t('collapsePanel')} style={{marginLeft:2}}
-                      onClick={() => setSbOpen(false)}>◀</button>
+                    <button className="sb-sec-btn" style={{marginLeft:2}}>{sbNavOpen ? '▾' : '›'}</button>
+                    <button className="sb-sec-btn" title={t('collapsePanel')}
+                      onClick={e => { e.stopPropagation(); setSbOpen(false); }}>◀</button>
                   </div>
-                  <div className="sb-scroll">
+                  {sbNavOpen && <div className="sb-scroll">
                     {projects.length === 0 ? (
                       <div className="nav-empty">
                         {t('noProjectsYet')}<br/>
@@ -6186,8 +6296,8 @@ ${rows}
                             });
                             const renderBoard = (b, sub) => (
                               <div key={b.id}
-                                className={`nboard-row${sub?' nboard-sub':''}${b.id===bid&&roomView==='board'?' active':''}${boardDragOver===b.id?' drag-over':''}`}
-                                onClick={() => { setBid(b.id); setRoomView('board'); }}
+                                className={`nboard-row${sub?' nboard-sub':''}${b.id===bid&&roomView==='board'&&!tmplEditMode?' active':''}${boardDragOver===b.id?' drag-over':''}`}
+                                onClick={() => { if (tmplEditModeRef.current) exitTmplEdit(); setBid(b.id); setRoomView('board'); }}
                                 draggable
                                 onDragStart={e => { e.dataTransfer.effectAllowed='move'; setBoardDragId(b.id); }}
                                 onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect='move'; setBoardDragOver(b.id); }}
@@ -6215,7 +6325,7 @@ ${rows}
                                 </div>
                               </div>
                             );
-                            const isSalaActive = r => roomView === 'room' && activeRoomId === r.id;
+                            const isSalaActive = r => roomView === 'room' && activeRoomId === r.id && !tmplEditMode;
                             return (
                               <div className="nboards">
                                 {unassigned.map(b => renderBoard(b, false))}
@@ -6262,7 +6372,62 @@ ${rows}
                         </div>
                       );
                     })}
+                  </div>}
+                </div>
+
+                {/* PLANTILLAS */}
+                <div className="sb-sec tmpl">
+                  <div className="sb-sec-hd" style={{cursor:'pointer'}} onClick={() => { const v = !sbTemplOpen; setSbTemplOpen(v); localStorage.setItem('sbTemplOpen', String(v)); if (v) setSbNavOpen(false); }}>
+                    <span className="sb-sec-title">{t('templatesSection')}</span>
+                    {bid && sbTemplOpen && <button className="sb-sec-btn" title={t('saveAsTemplate')}
+                      onClick={e => { e.stopPropagation(); setSbTmplInput(v => v === null ? (activeBoardMeta?.name || '') : null); }}>+</button>}
+                    <button className="sb-sec-btn" style={{marginLeft:2}}>{sbTemplOpen ? '▾' : '›'}</button>
                   </div>
+                  {sbTemplOpen && (
+                    <div className="sb-scroll">
+                      {sbTmplInput !== null && (
+                        <div className="sb-tmpl-add">
+                          <input autoFocus className="n-rename" style={{flex:1}}
+                            placeholder={t('templateNamePh')} value={sbTmplInput}
+                            onChange={e => setSbTmplInput(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter') saveFromSidebar(); if (e.key === 'Escape') setSbTmplInput(null); }}/>
+                          <button className="nact edit" onClick={saveFromSidebar}>✓</button>
+                          <button className="nact" onClick={() => setSbTmplInput(null)}>✕</button>
+                        </div>
+                      )}
+                      {templates.length === 0 && sbTmplInput === null && (
+                        <div className="nav-empty">{t('noTemplates')}</div>
+                      )}
+                      {templates.map(tmpl => {
+                        const isEditing = tmplEditMode?.id === tmpl.id;
+                        return (
+                          <div key={tmpl.id} className="tmpl-row" style={isEditing ? {background:'var(--acc-faint)'} : {}}
+                            onClick={() => { if (!renamingTmpl) enterTmplEdit(tmpl); }}>
+                            {isEditing && <span style={{fontSize:8,color:'var(--acc)',flexShrink:0}}>▶</span>}
+                            {renamingTmpl?.id === tmpl.id ? (
+                              <input className="n-rename" autoFocus value={renamingTmpl.value}
+                                onChange={e => setRenamingTmpl(r => ({...r, value: e.target.value}))}
+                                onKeyDown={e => { if (e.key === 'Enter') renameTmpl(tmpl.id, renamingTmpl.value); if (e.key === 'Escape') setRenamingTmpl(null); }}
+                                onBlur={() => renameTmpl(tmpl.id, renamingTmpl.value)}
+                                onClick={e => e.stopPropagation()}/>
+                            ) : (
+                              <span className="tmpl-row-name" title={tmpl.name}
+                                style={isEditing ? {color:'var(--acc)'} : {}}
+                                onDoubleClick={e => { e.stopPropagation(); setRenamingTmpl({id: tmpl.id, value: tmpl.name}); }}>
+                                {tmpl.name}
+                              </span>
+                            )}
+                            <div className="nrow-acts">
+                              <button className="nact edit" title={lang==='es'?'Renombrar':'Rename'}
+                                onClick={e => { e.stopPropagation(); setRenamingTmpl({id: tmpl.id, value: tmpl.name}); }}>✎</button>
+                              <button className="nact del" title={t('deleteBtn')}
+                                onClick={e => { e.stopPropagation(); deleteTemplate(tmpl.id, tmpl.name); }}>×</button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 {/* INFO */}
@@ -7285,12 +7450,13 @@ ${rows}
                       onContextMenu={e => openCtxMenu(e, item.id)}
                     >
                       <div className="ph-item" style={{height: item.h || item.w}}
-                        onClick={e => { e.stopPropagation(); if (sel.length === 1 && sel[0] === item.id) { setFillPlaceholder({itemId: item.id}); if (!libOpen) { setLibOpen(true); localStorage.setItem('libOpen','true'); } } }}>
+                        onClick={e => { e.stopPropagation(); if (tmplEditModeRef.current) return; if (sel.length === 1 && sel[0] === item.id) { setFillPlaceholder({itemId: item.id}); if (!libOpen) { setLibOpen(true); localStorage.setItem('libOpen','true'); } } }}>
                         <span className="ph-icon">+</span>
                       </div>
                       <div className="bitem-bar" onPointerDown={e => e.stopPropagation()} style={item.y * zoom < 40 ? {bottom:'auto',top:'100%'} : undefined}>
                         <button className="ibc del" title={t('deleteBtn')} onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
                       </div>
+                      <div className="rh" onPointerDown={e => onResizePD(e, item.id)}/>
                       {item.groupId && <div className="group-badge">⊓</div>}
                       {item.zoneId && (() => { const oz = itemsRef.current.find(i => i.id === item.zoneId); const zc = oz ? (ZONE_COLOR_VALS[oz.color] || ZONE_COLOR_VALS.blue) : ZONE_COLOR_VALS.blue; return <div className="zone-badge" style={{background: zc.border}} title={oz?.label || (lang==='es'?'Zona':'Zone')}/>; })()}
                     </div>
@@ -7701,11 +7867,18 @@ ${rows}
                           <span style={{fontSize:9,color:'var(--muted)'}}>{t('dragFilesHint')}</span>
                         </div>
                       ) : (() => {
+                        const plItem = fillPlaceholder ? items.find(i => i.id === fillPlaceholder.itemId) : null;
+                        const targetRatio = plItem ? plItem.h / plItem.w : null;
                         const renderThumb = p => {
                           const inBoard = items.some(i => i.photoId === p.id);
                           const isSel = libSel.includes(p.id);
+                          let fitClass = '';
+                          if (targetRatio && p.w && p.h) {
+                            const delta = Math.abs((p.h / p.w) - targetRatio) / targetRatio;
+                            fitClass = delta < 0.10 ? ' fit-great' : delta < 0.30 ? ' fit-ok' : '';
+                          }
                           return (
-                            <div key={p.id} className={`thumb${inBoard?' in-board':''}${isSel?' lib-sel':''}${p.rejected?' rejected-thumb':''}`}
+                            <div key={p.id} className={`thumb${inBoard?' in-board':''}${isSel?' lib-sel':''}${p.rejected?' rejected-thumb':''}${fitClass}`}
                               style={{width:thumbSize,height:thumbSize}}
                               draggable onDragStart={e => onLibDS(e, p.id)}
                               onContextMenu={e => { e.preventDefault(); e.stopPropagation(); const photoIds = libSelRef.current.includes(p.id) && libSelRef.current.length > 1 ? libSelRef.current : [p.id]; setSectCtxMenu({ photoIds, originId: p.id, x: e.clientX, y: e.clientY }); }}
@@ -7767,7 +7940,7 @@ ${rows}
                                   setLibSelection([]);
                                   clearTimeout(thumbClickTimer.current);
                                   thumbClickTimer.current = setTimeout(() => {
-                                    if (!bid) return showToast(t('createBoardFirst'), true);
+                                    if (!bid && !tmplEditModeRef.current) return showToast(t('createBoardFirst'), true);
                                     addToCenter(p.id);
                                   }, 250);
                                 }
@@ -7776,6 +7949,7 @@ ${rows}
                               onDoubleClick={e => { e.stopPropagation(); clearTimeout(thumbClickTimer.current); const idx = displayedPhotos.indexOf(p); setFullscreenPhoto({ photo: p, index: idx >= 0 ? idx : 0 }); }}
                             >
                               <img src={`/photos/${pid}/${p.id}/thumb`} alt={p.name}/>
+                              {fitClass && <span className="thumb-fit-badge">{fitClass === ' fit-great' ? '✓' : '~'}</span>}
                               {p.rejected && <div className="thumb-rejected"><span className="thumb-rejected-label">{t('rejectedLabel')}</span></div>}
                               {p.rejected && rejectedFilter === true && <button className="thumb-unreject-btn" onClick={e => { e.stopPropagation(); toggleRejected(p.id); showToast(t('unrejectToast', 1)); }}>{t('unrejectBtn')}</button>}
                               {p.brightness != null && <span className="thumb-color" style={{background:`rgb(${Math.round(p.brightness*255)},${Math.round(p.brightness*255)},${Math.round(p.brightness*255)})`}}/>}
@@ -8723,16 +8897,14 @@ ${rows}
                 {templates.map(tmpl => (
                   <div key={tmpl.id} className={`tmpl-pick${selectedTemplate?.id===tmpl.id?' sel':''}`}
                     onClick={() => setSelectedTemplate(tmpl)}>
-                    <span style={{flex:1}}>{tmpl.name}</span>
-                    <button className="tmpl-pick-del" title={t('deleteBtn')}
-                      onClick={e => { e.stopPropagation(); deleteTemplate(tmpl.id); if (selectedTemplate?.id===tmpl.id) setSelectedTemplate(null); }}>×</button>
+                    {tmpl.name}
                   </div>
                 ))}
               </div>
             )}
             <div className="modal-row">
               <button className="btn" onClick={() => { setModal(null); setSelectedTemplate(null); }}>{t('cancel')}</button>
-              <button className="btn acc" onClick={createBoard}>{t('create')}</button>
+              <button className="btn acc" onClick={createBoard} disabled={!nameVal.trim()} style={{opacity: nameVal.trim() ? 1 : 0.35, cursor: nameVal.trim() ? 'pointer' : 'default'}}>{t('create')}</button>
             </div>
           </div>
         </div>
@@ -8840,7 +9012,7 @@ ${rows}
               {t('boardConfigNote').split('\n').map((s,i,a) => <React.Fragment key={i}>{s}{i<a.length-1&&<br/>}</React.Fragment>)}
             </div>
             {/* ── Guardar como plantilla ── */}
-            <div style={{borderTop:'1px solid var(--border)',paddingTop:10,marginTop:4}}>
+            {!tmplEditMode && <div style={{borderTop:'1px solid var(--border)',paddingTop:10,marginTop:4}}>
               {tmplNameInput === null ? (
                 <button className="btn" style={{fontSize:9,width:'100%'}}
                   onClick={() => setTmplNameInput(activeBoardMeta?.name || '')}>
@@ -8860,7 +9032,7 @@ ${rows}
                     onClick={() => setTmplNameInput(null)}>✕</button>
                 </div>
               )}
-            </div>
+            </div>}
             <div className="modal-row">
               <button className="btn" onClick={() => setModal(null)}>{t('cancel')}</button>
               <button className="btn acc" onClick={saveBoardConfig}>{t('save')}</button>

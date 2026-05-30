@@ -1,0 +1,59 @@
+[
+  {
+    "id": "mps7o9cyvkf",
+    "x": 192,
+    "y": 125,
+    "w": 177,
+    "z": 1,
+    "label": "",
+    "rot": 0,
+    "frame": 0,
+    "matSize": 0.3,
+    "matColor": "#ffffff",
+    "frameSize": 0.1,
+    "frameColor": "#5a3e1b",
+    "photoId": "e6c9433b54ed"
+  },
+  {
+    "id": "mps7oif02fp",
+    "x": 449.5279862617299,
+    "y": 228,
+    "w": 177,
+    "z": 2,
+    "label": "",
+    "rot": 0,
+    "frame": 0,
+    "matSize": 0.3,
+    "matColor": "#ffffff",
+    "frameSize": 0.1,
+    "frameColor": "#5a3e1b",
+    "photoId": "8e3e229c8497"
+  },
+  {
+    "id": "mps7ojrdjxt",
+    "x": 707.0559725234598,
+    "y": 228,
+    "w": 177,
+    "z": 3,
+    "label": "",
+    "rot": 0,
+    "frame": 0,
+    "matSize": 0.3,
+    "matColor": "#ffffff",
+    "frameSize": 0.1,
+    "frameColor": "#5a3e1b",
+    "photoId": "6ec45798de82"
+  },
+  {
+    "id": "mps7qb105tj",
+    "x": 964.5839587851897,
+    "y": 184.00000000000003,
+    "w": 177,
+    "z": 4,
+    "label": "",
+    "rot": 0,
+    "frame": 0.3,
+    "frameSize": 0.1,
+    "photoId": "e016379fe24a"
+  }
+]

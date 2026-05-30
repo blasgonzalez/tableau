@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.9.7] — 2026-05-30
+### Añadido
+- Pantalla de carga animada al arrancar (desaparece en cuanto React termina de compilar)
+- Plantillas: sección en el panel lateral con comportamiento de acordeón (una sección abierta a la vez)
+- Plantillas: edición directa en el canvas — clic en la plantilla del panel para abrirla, clic en un tablero para salir
+- Plantillas: añadir contenedores desde la biblioteca (la foto se convierte automáticamente en placeholder)
+- Plantillas: redimensionar contenedores manteniendo su ratio
+- Plantillas: modal de configuración (unidades, DPI, dimensiones fijas) específico para la plantilla
+- Plantillas: eliminación con confirmación; gestión solo desde el panel lateral (el picker de «Nuevo tablero» es solo selección)
+- Biblioteca: indicador de ajuste de ratio al asignar foto a un contenedor (borde verde = encaja bien, ámbar = recorte moderado)
+- Tablero: botón «Crear» deshabilitado hasta que se introduce un nombre
+
+### Corregido
+- Plantillas: los cambios al editar una plantilla no se persistían al volver a entrarla
+- Plantillas: crear tablero desde plantilla no cargaba los items (race condition)
+- Topbar: botones irrelevantes (Memoria, Versiones, Exportar…) ocultos durante la edición de plantilla; Cuadrícula permanece visible
+
+---
+
 ## [1.9.6] — 2026-05-30
 ### Añadido
 - Biblioteca: rechazar fotos desde el menú contextual (solo fotos no colocadas en ningún tablero); soporta selección múltiple
