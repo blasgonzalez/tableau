@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.9.10] — 2026-05-30
+### Fixed
+- Windows: launcher incorrectly detected the server as running after it was closed — now always starts correctly
+
+---
+
 ## [1.9.9] — 2026-05-30
 ### Fixed
 - Windows: VBScript launcher did not set the correct working directory — the app now opens without error

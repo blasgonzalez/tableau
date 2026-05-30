@@ -1,6 +1,6 @@
 Option Explicit
 
-Dim objShell, objFSO, scriptDir, nodeExe, serverJs, dataDir, updateUrl
+Dim objShell, objFSO, scriptDir, nodeExe, serverJs, dataDir
 
 Set objShell = CreateObject("WScript.Shell")
 Set objFSO   = CreateObject("Scripting.FileSystemObject")
@@ -9,44 +9,41 @@ scriptDir = objFSO.GetParentFolderName(WScript.ScriptFullName)
 nodeExe   = scriptDir & "\runtime\node.exe"
 serverJs  = scriptDir & "\server.js"
 dataDir   = objShell.ExpandEnvironmentStrings("%LOCALAPPDATA%") & "\Tableau\data"
-updateUrl = "https://raw.githubusercontent.com/blasgonzalez/tableau/main/installer/version.json"
 
 If Not objFSO.FolderExists(dataDir) Then
     objFSO.CreateFolder dataDir
 End If
 
 objShell.Environment("PROCESS")("TABLEAU_DATA_DIR") = dataDir
-objShell.Environment("PROCESS")("TABLEAU_UPDATE_URL") = updateUrl
+objShell.Environment("PROCESS")("TABLEAU_UPDATE_URL") = _
+    "https://raw.githubusercontent.com/blasgonzalez/tableau/main/installer/version.json"
 
-Dim oExec, netOut, alreadyRunning
-alreadyRunning = False
+' Comprobar si el servidor ya esta en marcha (ambas condiciones en la misma linea)
+Dim oExec, netOut, lines, alreadyRunning, idx
 Set oExec = objShell.Exec("netstat -aon")
 netOut = oExec.StdOut.ReadAll()
-If InStr(netOut, ":3000 ") > 0 And InStr(netOut, "LISTENING") > 0 Then
-    alreadyRunning = True
-End If
 Set oExec = Nothing
+
+alreadyRunning = False
+lines = Split(netOut, vbCrLf)
+For idx = 0 To UBound(lines)
+    If InStr(lines(idx), ":3000 ") > 0 And InStr(lines(idx), "LISTENING") > 0 Then
+        alreadyRunning = True
+        Exit For
+    End If
+Next
 
 If alreadyRunning Then
     objShell.Run "http://localhost:3000", 1, False
 Else
-    objShell.CurrentDirectory = scriptDir
+    ' Arrancar servidor Node (oculto)
     objShell.Run """" & nodeExe & """ """ & serverJs & """", 0, False
 
-    Dim i, http, ready
-    ready = False
-    For i = 1 To 30
-        WScript.Sleep 1000
-        On Error Resume Next
-        Set http = CreateObject("MSXML2.XMLHTTP")
-        http.Open "GET", "http://localhost:3000", False
-        http.Send
-        If Err.Number = 0 And http.Status > 0 Then ready = True
-        Set http = Nothing
-        Err.Clear
-        On Error GoTo 0
-        If ready Then Exit For
-    Next
-
-    objShell.Run "http://localhost:3000", 1, False
+    ' PowerShell en background: espera hasta que el servidor responda y abre el navegador
+    Dim psCmd
+    psCmd = "powershell -WindowStyle Hidden -NoProfile -Command """ & _
+        "for($i=0;$i-lt30;$i++){try{" & _
+        "Invoke-WebRequest 'http://localhost:3000' -TimeoutSec 1 -UseBasicParsing -ErrorAction Stop|Out-Null;break" & _
+        "}catch{Start-Sleep 1}};Start-Process 'http://localhost:3000'" & """"
+    objShell.Run psCmd, 0, False
 End If

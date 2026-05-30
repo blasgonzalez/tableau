@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.9.10] — 2026-05-30
+### Corregido
+- Windows: el lanzador detectaba incorrectamente el servidor como activo tras cerrarlo — ya arranca siempre correctamente
+
+---
+
 ## [1.9.9] — 2026-05-30
 ### Corregido
 - Windows: el lanzador VBScript no establecía el directorio de trabajo correcto — la aplicación ya abre sin error

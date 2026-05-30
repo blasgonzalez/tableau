@@ -1,6 +1,6 @@
 {
-  "version": "1.9.9",
+  "version": "1.9.10",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-05-30",
-  "notes": "Windows: lanzador corregido (la aplicación ya abre correctamente al hacer doble clic)."
+  "notes": "Windows: lanzador corregido — arranca correctamente siempre, incluso tras cerrar el servidor manualmente."
 }
