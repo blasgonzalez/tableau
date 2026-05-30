@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.9.6] — 2026-05-30
+### Añadido
+- Biblioteca: rechazar fotos desde el menú contextual (solo fotos no colocadas en ningún tablero); soporta selección múltiple
+- Biblioteca: botón visual «Recuperar» en cada miniatura cuando la vista está filtrada a «Rechazadas»
+- Biblioteca: contador de fotos con formato `[n]` en cabeceras de biblioteca, sección y botón de rechazadas
+- Biblioteca: cabecera de sección alineada igual que la de biblioteca — nombre y `[n]` a la izquierda, botones a la derecha
+- Biblioteca: el botón `+ Sección` se oculta en modo vista plana
+- Tablero: opción «Enviar atrás» en el menú contextual de fotos, textos y mosaicos
+
+### Corregido
+- Servidor: el EXIF de las fotos no se guardaba al importar (faltaba extraer el campo en el endpoint de subida)
+- Servidor: el parser EXIF fallaba silenciosamente porque sharp incluye el prefijo `Exif\0\0` antes del TIFF header
+- Biblioteca: el mensaje de la barra superior ya no dice «crea uno en el panel izquierdo» cuando no hay ningún proyecto creado aún
+
+---
+
 ## [1.9.5] — 2026-05-29
 ### Añadido
 - Biblioteca: separador visual (línea punteada) entre la última sección y las fotos sin sección

@@ -474,7 +474,7 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .sect-header{width:100%;display:flex;align-items:center;gap:5px;padding:3px 4px 3px 2px;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;min-height:24px;flex-shrink:0}
 .sect-header:hover .sect-actions{opacity:1}
 .sect-toggle{font-size:9px;color:var(--dim);width:14px;flex-shrink:0}
-.sect-name{font-size:10px;font-weight:700;color:var(--dim);flex:1;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sect-name{font-size:10px;font-weight:700;color:var(--dim);letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .sect-name-input{flex:1;background:var(--surf);border:1px solid var(--acc-dim);color:var(--text);font-size:10px;font-weight:700;font-family:'IBM Plex Mono',monospace;padding:1px 4px;outline:none;letter-spacing:.3px}
 .sect-count{font-size:8px;color:var(--muted);flex-shrink:0}
 .sect-actions{opacity:0;display:flex;gap:2px;flex-shrink:0;transition:opacity .15s}
@@ -608,6 +608,8 @@ select.inp{cursor:pointer;appearance:none;padding-right:28px;background-image:ur
 .thumb:hover .thumb-cp{display:flex}
 .thumb-cp:hover{color:#fff;background:rgba(0,0,0,.82)}
 .thumb-color{position:absolute;bottom:4px;left:4px;width:9px;height:9px;border-radius:50%;border:1.5px solid rgba(255,255,255,.6);pointer-events:none;z-index:2;box-shadow:0 1px 3px rgba(0,0,0,.5)}
+.thumb-unreject-btn{position:absolute;bottom:2px;left:2px;background:rgba(196,80,80,.9);color:#fff;border:none;cursor:pointer;font-size:7px;font-family:'IBM Plex Mono',monospace;padding:2px 6px;letter-spacing:.5px;z-index:7;border-radius:2px}
+.thumb-unreject-btn:hover{background:rgba(220,80,80,1)}
 .thumb-tag{position:absolute;bottom:2px;right:42px;width:18px;height:18px;background:rgba(0,0,0,.62);color:rgba(255,255,255,.82);border:1px solid rgba(255,255,255,.18);cursor:pointer;font-size:9px;border-radius:2px;display:none;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;line-height:1;z-index:2}
 .thumb:hover .thumb-tag{display:flex}
 .thumb-tag:hover{color:#fff;background:rgba(0,0,0,.82)}
@@ -883,7 +885,7 @@ const I18N = {
   es: {
     upload:'↑ Subir', uploadPhotos:'Fotos', report:'≡ Memoria', config:'⚙ Config', exportJpeg:'Exportar JPEG',
     showPanel:'▶ Panel', preferences:'Preferencias', themeLabel:'Tema', langLabel:'Idioma',
-    noProjHint:'Sin proyecto — crea uno en el panel izquierdo',
+    noProjHint:'Sin proyecto — crea uno en el panel izquierdo', noProjHintEmpty:'Sin proyecto',
     projBoards:'Proyectos y Tableros', newProject:'Nuevo proyecto', collapsePanel:'Colapsar panel',
     noProjectsYet:'No hay proyectos aún.', clickToCreate:'Pulsa + para crear uno.',
     newBoard:'Nuevo tablero', addBoard:'+ Nuevo tablero',
@@ -901,7 +903,7 @@ const I18N = {
     dragHint2:'o desde el repositorio (panel izquierdo)',
     dragHint3:'o suelta imágenes desde el explorador de archivos',
     dropHint:'Suelta para añadir al tablero', dropHintGrid:'Suelta para añadir al mosaico', dropHintZone:'Suelta para añadir a la zona',
-    labelPlaceholder:'etiqueta…', rotateBtn:'Rotar 90°', bringFwdBtn:'Al frente', deleteBtn:'Eliminar', lockBtn:'Bloquear', unlockBtn:'Desbloquear',
+    labelPlaceholder:'etiqueta…', rotateBtn:'Rotar 90°', bringFwdBtn:'Al frente', sendBackBtn:'Enviar atrás', deleteBtn:'Eliminar', lockBtn:'Bloquear', unlockBtn:'Desbloquear',
     noteTitlePh:'título…', noteInMemoryBtn:'Incluir en memoria', noteExcludeMemBtn:'Excluir de memoria', notesSectionTitle:'Notas',
     renameBtn:'Renombrar',
     projectPhotosL1:'Fotos del', projectPhotosL2:'proyecto',
@@ -1023,7 +1025,7 @@ const I18N = {
   en: {
     upload:'↑ Upload', uploadPhotos:'Photos', report:'≡ Report', config:'⚙ Config', exportJpeg:'Export JPEG',
     showPanel:'▶ Panel', preferences:'Preferences', themeLabel:'Theme', langLabel:'Language',
-    noProjHint:'No project — create one in the left panel',
+    noProjHint:'No project — create one in the left panel', noProjHintEmpty:'No project',
     projBoards:'Projects & Boards', newProject:'New project', collapsePanel:'Collapse panel',
     noProjectsYet:'No projects yet.', clickToCreate:'Click + to create one.',
     newBoard:'New board', addBoard:'+ New board',
@@ -1041,7 +1043,7 @@ const I18N = {
     dragHint2:'or from the repository (left panel)',
     dragHint3:'or drop images from the file explorer',
     dropHint:'Drop to add to board', dropHintGrid:'Drop to add to grid', dropHintZone:'Drop to add to zone',
-    labelPlaceholder:'label…', rotateBtn:'Rotate 90°', bringFwdBtn:'Bring forward', deleteBtn:'Delete', lockBtn:'Lock', unlockBtn:'Unlock',
+    labelPlaceholder:'label…', rotateBtn:'Rotate 90°', bringFwdBtn:'Bring forward', sendBackBtn:'Send backward', deleteBtn:'Delete', lockBtn:'Lock', unlockBtn:'Unlock',
     noteTitlePh:'title…', noteInMemoryBtn:'Include in report', noteExcludeMemBtn:'Exclude from report', notesSectionTitle:'Notes',
     renameBtn:'Rename',
     projectPhotosL1:'Project', projectPhotosL2:'photos',
@@ -4623,6 +4625,13 @@ ${rows}
     const nit = itemsRef.current.map(i => i.id === id ? { ...i, z: maxZ + 1 } : i);
     setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
   };
+  const sendBack = id => {
+    pushUndo();
+    const others = itemsRef.current.filter(i => i.id !== id);
+    const minZ = others.length ? Math.min(...others.map(i => i.z || 0)) : 0;
+    const nit = itemsRef.current.map(i => i.id === id ? { ...i, z: minZ - 1 } : i);
+    setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
+  };
   const updateLabel     = (id, v) => { const u = itemsRef.current.map(i => i.id === id ? { ...i, label: v } : i); itemsRef.current = u; setItems(u); };
   const updateItemFrame  = (id, v) => { const u = itemsRef.current.map(i => i.id === id ? { ...i, frame:  v } : i); itemsRef.current = u; setItems(u); };
   const updateItemLocked = (id, v) => { const u = itemsRef.current.map(i => i.id === id ? { ...i, locked: v } : i); itemsRef.current = u; setItems(u); saveItemsNow(u); };
@@ -6004,7 +6013,7 @@ ${rows}
                   )}
                 </>}
               </>
-            : <span className="bc-none">{t('noProjHint')}</span>
+            : <span className="bc-none">{projects.length === 0 ? t('noProjHintEmpty') : t('noProjHint')}</span>
           }
         </div>
         <div style={{flex:1}}/>
@@ -7610,7 +7619,7 @@ ${rows}
                   <button className="lib-toggle-btn" onClick={e => { e.stopPropagation(); toggleLib(); }} title={libOpen ? t('collapsePanel') : t('openPanel')}>{libOpen ? '▼' : '▲'}</button>
                   <button className="lib-snap-btn" onClick={snapLib} title={libHeightRef.current > window.innerHeight * 0.40 ? t('libSnapCollapse') : t('libSnapExpand')}>{libHeightRef.current > window.innerHeight * 0.40 ? '⊟' : '⊞'}</button>
                   <span className="lib-title">{t('libTitle')}</span>
-                  <span className="lib-count">{displayedPhotos.length < photos.length ? `${displayedPhotos.length}/${photos.length}` : photos.length}</span>
+                  <span className="lib-count">{displayedPhotos.length < photos.length ? `[${displayedPhotos.length}/${photos.length}]` : `[${photos.length}]`}</span>
                   {libOpen && displayedPhotos.length > 0 && libSel.length === 0 && <button className="lib-sel-all-hdr" title={t('libSelectAll')} onClick={e => { e.stopPropagation(); const all = displayedPhotos.map(p => p.id); setLibSelection(all); libSelAnchorRef.current = all[0] ?? null; }}>☑</button>}
                   <span className="lib-spacer"/>
                   {pid && <>
@@ -7627,7 +7636,7 @@ ${rows}
                       <button className={`lib-filter${rejectedFilter !== false ? ' active danger' : ''}`}
                         onClick={e => { e.stopPropagation(); setRejectedFilter(f => f === false ? true : f === true ? null : false); }}
                         title={rejectedFilter === true ? t('filterRejectedHide') : t('filterRejected')}>
-                        ✕ {t('filterRejected')}{rejectedCount > 0 && <span style={{marginLeft:3,opacity:.7}}>{rejectedCount}</span>}
+                        ✕ {t('filterRejected')}{rejectedCount > 0 && <span style={{marginLeft:3,opacity:.7}}>[{rejectedCount}]</span>}
                       </button>
                     )}
                     <div className="lib-star-filter" title={t('ratingFilterHint')}>
@@ -7665,7 +7674,7 @@ ${rows}
                       onChange={e => { uploadFiles(e.target.files, null, uploadSectRef.current); e.target.value = ''; uploadSectRef.current = null; }}
                     />
                     {sections.length > 0 && <button className={`lib-filter${libFlatView?' active':''}`} onClick={e => { e.stopPropagation(); const v = !libFlatView; setLibFlatView(v); localStorage.setItem('libFlatView', v); }} title={libFlatView ? t('libSectionViewBtn') : t('libFlatViewBtn')}>≡</button>}
-                    <button className="sect-add-btn" onClick={e => { e.stopPropagation(); addSection(); }} title={t('addSection')}>{t('addSection')}</button>
+                    {!libFlatView && <button className="sect-add-btn" onClick={e => { e.stopPropagation(); addSection(); }} title={t('addSection')}>{t('addSection')}</button>}
                     <button className={`lib-mute-btn${libMuted?' active':''}`} onClick={e => { e.stopPropagation(); setLibMuted(v => !v); }} title={libMuted ? t('libMuteOff') : t('libMuteOn')}>{libMuted ? t('libMuteOff') : t('libMuteOn')}</button>
                     <button className="btn acc" style={{fontSize:9}} onClick={e => {
                         e.stopPropagation();
@@ -7768,6 +7777,7 @@ ${rows}
                             >
                               <img src={`/photos/${pid}/${p.id}/thumb`} alt={p.name}/>
                               {p.rejected && <div className="thumb-rejected"><span className="thumb-rejected-label">{t('rejectedLabel')}</span></div>}
+                              {p.rejected && rejectedFilter === true && <button className="thumb-unreject-btn" onClick={e => { e.stopPropagation(); toggleRejected(p.id); showToast(t('unrejectToast', 1)); }}>{t('unrejectBtn')}</button>}
                               {p.brightness != null && <span className="thumb-color" style={{background:`rgb(${Math.round(p.brightness*255)},${Math.round(p.brightness*255)},${Math.round(p.brightness*255)})`}}/>}
                               <div className="thumb-stars">{[1,2,3,4,5].map(n => n <= (p.rating||0) ? <span key={n}>★</span> : <span key={n} className="thumb-star-empty">★</span>)}</div>
                               <span className="thumb-reject-hint">{p.rejected ? '[u]' : '[x]'}</span>
@@ -7808,8 +7818,9 @@ ${rows}
                                       />
                                     : <span className="sect-name">{s.name}</span>
                                   }
-                                  <span className="sect-count">{cnt}</span>
+                                  <span className="sect-count">[{cnt}]</span>
                                   {!collapsed && cnt > 0 && <button className="lib-sel-all-hdr" title={t('libSelectAll')} onClick={e => { e.stopPropagation(); const ids = (bySection[s.id]||[]).map(p => p.id); setLibSelection(ids); libSelAnchorRef.current = ids[0] ?? null; }}>☑</button>}
+                                  {renamingSect !== s.id && <span style={{flex:1}}/>}
                                   <div className="sect-actions" onClick={e => e.stopPropagation()}>
                                     <button className="sect-btn" title={t('uploadToSection')} onClick={e => { e.stopPropagation(); uploadSectRef.current = s.id; uploadSectInput.current?.click(); }}>↑</button>
                                     <button className="sect-btn" title={t('sectRename')} onClick={() => setRenamingSect(s.id)}>✎</button>
@@ -8276,6 +8287,7 @@ ${rows}
             <div className="ctx-menu" style={{left: ctxMenu.x, top: ctxMenu.y}}
               onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()} onContextMenu={e => e.preventDefault()}>
               <button className="ctx-item" onClick={() => { bringFwd(ctxMenu.itemId); setCtxMenu(null); }}>↑ {t('bringFwdBtn')}</button>
+              <button className="ctx-item" onClick={() => { sendBack(ctxMenu.itemId); setCtxMenu(null); }}>↓ {t('sendBackBtn')}</button>
               <div className="ctx-sep"/>
               <button className="ctx-item" onClick={() => {
                 const sel = libSelRef.current;
@@ -8336,6 +8348,7 @@ ${rows}
           <div className="ctx-menu" style={{left: ctxMenu.x, top: ctxMenu.y}}
             onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()} onContextMenu={e => e.preventDefault()}>
             <button className="ctx-item" onClick={() => { bringFwd(ctxMenu.itemId); setCtxMenu(null); }}>↑ {t('bringFwdBtn')}</button>
+            <button className="ctx-item" onClick={() => { sendBack(ctxMenu.itemId); setCtxMenu(null); }}>↓ {t('sendBackBtn')}</button>
             {!isNoteOrText && <button className="ctx-item" onClick={() => { setPropsPanelId(id => id === ctxMenu.itemId ? null : ctxMenu.itemId); setCtxMenu(null); }}>▣ {t('frameLabel')}</button>}
             {!isNoteOrText && <button className="ctx-item" style={{color: framePainter ? 'var(--acc)' : undefined}}
               onClick={() => { const fp = {matSize: ctxItem.matSize ?? ctxItem.frame ?? 0, matColor: ctxItem.matColor||'#ffffff', frameSize: ctxItem.frameSize||0, frameColor: ctxItem.frameColor||'#5a3e1b'}; setFramePainter(fp); setCtxMenu(null); }}>▣ {t('framePainterCopy')}</button>}
@@ -8534,6 +8547,20 @@ ${rows}
               <button className="sect-ctx-item" onClick={() => { setSectCtxMenu(null); const dp = displayedPhotosRef.current; const idx = dp.findIndex(x => x.id === sectCtxMenu.originId); if (idx !== -1) setFullscreenPhoto({ photo: dp[idx], index: idx }); }}>{t('viewFullscreen')}</button>
               <div className="sect-ctx-sep"/>
             </>}
+            {(() => {
+              const rejectable = sectCtxMenu.photoIds
+                .map(id => photos.find(p => p.id === id))
+                .filter(p => p && !p.rejected && photoBoardNames(p.id).length === 0);
+              if (!rejectable.length) return null;
+              return <>
+                <button className="sect-ctx-item" onClick={() => {
+                  rejectable.forEach(p => toggleRejected(p.id));
+                  showToast(t('rejectToast', rejectable.length));
+                  setSectCtxMenu(null);
+                }}>{t('rejectBtn')}</button>
+                <div className="sect-ctx-sep"/>
+              </>;
+            })()}
             <div className="sect-ctx-item" style={{fontSize:9,color:'var(--dim)',cursor:'default',pointerEvents:'none'}}>
               {sectCtxMenu.photoIds.length > 1 ? `${sectCtxMenu.photoIds.length} ${t('selected')} · ` : ''}{t('moveToSection')}
             </div>

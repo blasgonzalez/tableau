@@ -95,6 +95,9 @@ function newId(len = 10) {
 function parseExifBuffer(buf) {
   if (!buf || buf.length < 8) return null;
   try {
+    // Sharp includes the "Exif\0\0" APP1 prefix before the TIFF header
+    if (buf[0] === 0x45 && buf[1] === 0x78 && buf[2] === 0x69 && buf[3] === 0x66) buf = buf.slice(6);
+    if (buf.length < 8) return null;
     const le = buf[0] === 0x49;
     const u16 = o => le ? buf.readUInt16LE(o) : buf.readUInt16BE(o);
     const u32 = o => le ? buf.readUInt32LE(o) : buf.readUInt32BE(o);
@@ -449,9 +452,9 @@ app.post('/api/projects/:pid/photos', upload.single('photo'), async (req, res) =
   const { pid } = req.params;
   if (!req.file) return res.status(400).json({ error: 'No se recibió ningún fichero' });
   try {
-    const { id, w, h, size, dominant, brightness, meanColor } = await processImage(req.file.buffer, pid);
+    const { id, w, h, size, dominant, brightness, meanColor, exif } = await processImage(req.file.buffer, pid);
     const photos = readJSON(photosMeta(pid));
-    const p = { id, name: req.file.originalname, w, h, size, dominant, brightness, meanColor, created: Date.now() };
+    const p = { id, name: req.file.originalname, w, h, size, dominant, brightness, meanColor, created: Date.now(), ...(exif ? { exif } : {}) };
     photos.push(p);
     writeJSON(photosMeta(pid), photos);
     res.json(p);

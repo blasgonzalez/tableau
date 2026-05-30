@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.9.6] — 2026-05-30
+### Added
+- Library: reject photos via context menu (only photos not placed on any board); supports multiple selection
+- Library: visual «Recover» button on each thumbnail when the view is filtered to «Rejected»
+- Library: photo count formatted as `[n]` in library header, section headers, and rejected filter button
+- Library: section header aligned like the library header — name and `[n]` on the left, action buttons on the right
+- Library: `+ Section` button hidden in flat view mode
+- Board: «Send backward» option in the context menu for photos, text items, and grids
+
+### Fixed
+- Server: photo EXIF was not saved on import (missing field extraction in the upload endpoint)
+- Server: EXIF parser silently failed because sharp prepends an `Exif\0\0` prefix before the TIFF header
+- Library: the top bar message no longer says «create one in the left panel» when no projects exist yet
+
+---
+
 ## [1.9.5] — 2026-05-29
 ### Added
 - Library: visual separator (dashed line) between the last section and unsectioned photos

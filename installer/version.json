@@ -1,6 +1,6 @@
 {
-  "version": "1.9.5",
+  "version": "1.9.6",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-05-29",
-  "notes": "Biblioteca: separador visual entre secciones y fotos sin sección, arrastrar fotos entre secciones, menú contextual opera sobre toda la selección, seleccionar-todo por sección. Visor pantalla completa: info completa (dimensiones, EXIF, tags, rating, tableros con navegación), accesible desde menú contextual."
+  "releaseDate": "2026-05-30",
+  "notes": "Biblioteca: rechazar fotos desde el menú contextual (con soporte de selección múltiple), botón visual para recuperar en la vista de rechazadas, contador [n] en cabeceras de sección y biblioteca, alineación de sección igual que biblioteca, botón +Sección oculto en vista plana. Tablero: opción «Enviar atrás» en menú contextual. Correcciones: EXIF no se guardaba al importar fotos (doble bug en servidor), mensaje de bienvenida sin proyectos corregido."
 }
