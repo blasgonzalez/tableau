@@ -22,7 +22,14 @@ jobs:
 
       - name: Get version
         id: ver
-        run: echo "v=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.tag }}"
+          else
+            TAG="$GITHUB_REF_NAME"
+          fi
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "v=${TAG#v}" >> $GITHUB_OUTPUT
 
       - name: Download portable Node.js (macOS ARM64)
         run: |
@@ -73,7 +80,7 @@ jobs:
       - name: Upload to release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "$GITHUB_REF_NAME" "tableau-mac-${{ steps.ver.outputs.v }}.dmg"
+        run: gh release upload "${{ steps.ver.outputs.tag }}" "tableau-mac-${{ steps.ver.outputs.v }}.dmg"
 
   linux:
     runs-on: ubuntu-latest
@@ -84,7 +91,14 @@ jobs:
 
       - name: Get version
         id: ver
-        run: echo "v=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.tag }}"
+          else
+            TAG="$GITHUB_REF_NAME"
+          fi
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "v=${TAG#v}" >> $GITHUB_OUTPUT
 
       - name: Download portable Node.js (Linux x64)
         run: |
@@ -110,4 +124,4 @@ jobs:
       - name: Upload to release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "$GITHUB_REF_NAME" "tableau-linux-${{ steps.ver.outputs.v }}.zip"
+        run: gh release upload "${{ steps.ver.outputs.tag }}" "tableau-linux-${{ steps.ver.outputs.v }}.zip"
