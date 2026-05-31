@@ -1,0 +1,43 @@
+cmd /c installer\build.bat
+
+
+git add -A
+git commit -m "Instalación 1.3.5"
+git push
+installer\build.bat
+
+gh release create v1.9.4 \
+  dist/tableau-installer-1.9.4.exe \
+  dist/tableau-mac-1.9.4.zip \
+  dist/tableau-linux-1.9.4.zip \
+  --title "Tableau 1.9.4" \
+  --notes "Sala: color por cara de bloque, duplicar sala, gestion desde menu lateral. Vista 3D: rotacion de fotos en caras verticales, grids en paredes, notas excluidas. Correcciones: color de pared en 3D, rotacion de bloques, contraste de temas oscuros."
+
+
+
+
+El proceso de ahora en adelante:
+
+Claude hace primero (tú no tocas nada todavía):
+
+Actualiza la versión en los 5 archivos
+Escribe el CHANGELOG
+Hace el commit "Version X.Y.Z"
+Tú haces, en orden:
+
+
+git push origin main
+
+installer\build.bat
+
+gh release create vX.Y.Z dist\tableau-installer-X.Y.Z.exe --title "Tableau X.Y.Z" --notes "- Cambio 1
+- Cambio 2"
+Eso es todo. GitHub Actions arranca solo y en ~2 minutos aparecen Mac (Silicon + Intel) y Linux en el release. No hay que hacer nada más.
+
+Si el upload del .exe falla (conexión cortada), plan B:
+
+
+gh release create vX.Y.Z --title "Tableau X.Y.Z" --notes "- Cambio 1"
+gh release upload vX.Y.Z dist\tableau-installer-X.Y.Z.exe
+
+

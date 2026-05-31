@@ -8,7 +8,14 @@
       "Bash(npm start *)",
       "Bash(curl -s https://raw.githubusercontent.com/blasgonzalez/tableau/main/installer/version.json)",
       "Bash(curl -s http://localhost:3000/api/update)",
-      "PowerShell(Get-ChildItem \"d:\\\\blasg\\\\Pictures\\\\Proyectos\\\\tableau\\\\dist\" | Where-Object { $_.Name -notmatch \"1\\\\.9\\\\.[45]\" } | Remove-Item -Force -Confirm:$false)"
+      "PowerShell(Get-ChildItem \"d:\\\\blasg\\\\Pictures\\\\Proyectos\\\\tableau\\\\dist\" | Where-Object { $_.Name -notmatch \"1\\\\.9\\\\.[45]\" } | Remove-Item -Force -Confirm:$false)",
+      "Bash(gh run *)",
+      "Bash(git ls-remote *)",
+      "Bash(dir \"d:\\\\blasg\\\\Pictures\\\\Proyectos\\\\tableau\\\\dist\\\\tableau-installer-1.9.10.exe\")",
+      "Bash(gh auth *)",
+      "Bash(curl -s -X POST -H 'Authorization: token __TRACKED_VAR__' -H 'Content-Type: application/octet-stream' --data-binary @dist/tableau-installer-1.9.10.exe https://uploads.github.com/repos/blasgonzalez/tableau/releases/331999876/assets?name=tableau-installer-1.9.10.exe)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d.get\\('name', d.get\\('message','error'\\)\\)\\)\")",
+      "Bash(gh workflow *)"
     ]
   }
 }
