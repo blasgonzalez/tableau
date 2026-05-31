@@ -80,7 +80,7 @@ jobs:
       - name: Upload to release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "${{ steps.ver.outputs.tag }}" "tableau-mac-${{ steps.ver.outputs.v }}.dmg"
+        run: gh release upload "${{ steps.ver.outputs.tag }}" "tableau-mac-${{ steps.ver.outputs.v }}.dmg" --clobber
 
   linux:
     runs-on: ubuntu-latest
@@ -124,4 +124,4 @@ jobs:
       - name: Upload to release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "${{ steps.ver.outputs.tag }}" "tableau-linux-${{ steps.ver.outputs.v }}.zip"
+        run: gh release upload "${{ steps.ver.outputs.tag }}" "tableau-linux-${{ steps.ver.outputs.v }}.zip" --clobber
