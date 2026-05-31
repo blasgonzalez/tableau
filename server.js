@@ -154,6 +154,13 @@ async function processImage(input, pid, existingId = null) {
   const origMeta = await sharp(input).metadata();
   const exif = origMeta.exif ? parseExifBuffer(origMeta.exif) : null;
 
+  // Original pixel dimensions (corrected for EXIF orientation)
+  const swapDims = origMeta.orientation >= 5 && origMeta.orientation <= 8;
+  const origW = swapDims ? origMeta.height : origMeta.width;
+  const origH = swapDims ? origMeta.width  : origMeta.height;
+  const rawDpi   = origMeta.density || null;
+  const origDpi  = rawDpi ? Math.round(origMeta.densityUnit === 'cm' ? rawDpi * 2.54 : rawDpi) : null;
+
   const resized = await sharp(input)
     .rotate()                    // aplica rotación EXIF automáticamente
     .resize(RESIZE_PX, RESIZE_PX, { fit: 'inside', withoutEnlargement: true })
@@ -177,7 +184,7 @@ async function processImage(input, pid, existingId = null) {
   const ch = stats.channels;
   const brightness = Math.round((0.299 * ch[0].mean + 0.587 * ch[1].mean + 0.114 * ch[2].mean) / 255 * 100) / 100;
   const meanColor = { r: Math.round(ch[0].mean), g: Math.round(ch[1].mean), b: Math.round(ch[2].mean) };
-  return { id, w: meta.width, h: meta.height, size: resized.length, dominant: stats.dominant, brightness, meanColor, ...(exif && { exif }) };
+  return { id, w: meta.width, h: meta.height, size: resized.length, dominant: stats.dominant, brightness, meanColor, origW, origH, ...(origDpi && { origDpi }), ...(exif && { exif }) };
 }
 
 // ── Middleware ───────────────────────────────────────────────────────────────
@@ -301,7 +308,7 @@ app.post('/api/projects/:pid/boards', (req, res) => {
   const { name } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: 'Nombre requerido' });
   const boards = readJSON(boardsMeta(pid));
-  const b = { id: newId(), name: name.trim(), created: Date.now() };
+  const b = { id: newId(), name: name.trim(), created: Date.now(), units: 'cm', dpi: 150 };
   boards.push(b);
   writeJSON(boardsMeta(pid), boards);
   writeJSON(boardFile(pid, b.id), []);
@@ -452,9 +459,9 @@ app.post('/api/projects/:pid/photos', upload.single('photo'), async (req, res) =
   const { pid } = req.params;
   if (!req.file) return res.status(400).json({ error: 'No se recibió ningún fichero' });
   try {
-    const { id, w, h, size, dominant, brightness, meanColor, exif } = await processImage(req.file.buffer, pid);
+    const { id, w, h, size, dominant, brightness, meanColor, origW, origH, origDpi, exif } = await processImage(req.file.buffer, pid);
     const photos = readJSON(photosMeta(pid));
-    const p = { id, name: req.file.originalname, w, h, size, dominant, brightness, meanColor, created: Date.now(), ...(exif ? { exif } : {}) };
+    const p = { id, name: req.file.originalname, w, h, size, dominant, brightness, meanColor, created: Date.now(), origW, origH, ...(origDpi ? { origDpi } : {}), ...(exif ? { exif } : {}) };
     photos.push(p);
     writeJSON(photosMeta(pid), photos);
     res.json(p);
@@ -471,8 +478,8 @@ app.put('/api/projects/:pid/photos/:id/file', upload.single('photo'), async (req
   const idx = photos.findIndex(p => p.id === id);
   if (idx === -1) return res.status(404).json({ error: 'Foto no encontrada' });
   try {
-    const { w, h, size, dominant, brightness, meanColor, exif } = await processImage(req.file.buffer, pid, id);
-    const updated = { ...photos[idx], w, h, size, dominant, brightness, meanColor, ...(exif ? { exif } : {}) };
+    const { w, h, size, dominant, brightness, meanColor, origW, origH, origDpi, exif } = await processImage(req.file.buffer, pid, id);
+    const updated = { ...photos[idx], w, h, size, dominant, brightness, meanColor, origW, origH, ...(origDpi ? { origDpi } : {}), ...(exif ? { exif } : {}) };
     photos[idx] = updated;
     writeJSON(photosMeta(pid), photos);
     res.json(updated);
@@ -676,6 +683,13 @@ app.post('/api/boards/:pid/:bid/versions', (req, res) => {
   res.json({ ts, itemCount: items.length });
 });
 
+app.get('/api/boards/:pid/:bid/versions/:ts', (req, res) => {
+  const { pid, bid, ts } = req.params;
+  const file = path.join(boardVersionsDir(pid, bid), `${ts}.json`);
+  if (!fs.existsSync(file)) return res.status(404).json({ error: 'Versión no encontrada' });
+  res.json(readJSON(file, []));
+});
+
 app.post('/api/boards/:pid/:bid/versions/:ts/restore', (req, res) => {
   const { pid, bid, ts } = req.params;
   const file = path.join(boardVersionsDir(pid, bid), `${ts}.json`);
@@ -704,19 +718,41 @@ app.get('/api/boards/:pid/:bid/export', async (req, res) => {
 
   if (!boardItems.length) return res.status(400).json({ error: 'El tablero está vacío' });
 
-  const PAD    = padParam != null ? Math.max(0, parseInt(padParam) || 0) : 60;
+  const PAD      = padParam != null ? Math.max(0, parseInt(padParam) || 0) : 60;
+  const boardDpi = board?.dpi || 150;
+  const exportDpi = Math.min(600, Math.max(72, parseInt(req.query.exportDpi) || boardDpi));
+  const exportScale = exportDpi / boardDpi;  // scale all pixel values to target resolution
   const sorted = [...boardItems].sort((a, b) => (a.z || 0) - (b.z || 0));
 
+  // Expand grid items into individual photo pseudo-items (at export scale)
+  const gUnits = board?.units || 'px';
+  const gPhysToPx = v => { if (!v || gUnits === 'px') return Math.round(v * exportScale || 0); const f = gUnits === 'cm' ? 2.54 : gUnits === 'mm' ? 25.4 : 1; return Math.round((v / f) * exportDpi); };
+  const expanded = [];
+  for (const item of sorted) {
+    if (item.type !== 'grid') { expanded.push(item); continue; }
+    const cols = Math.max(1, item.cols || 3);
+    const gapPx = gPhysToPx(item.gap ?? 5);
+    const cellW = Math.max(10, (item.w * exportScale - gapPx * (cols - 1)) / cols);
+    const pIds = item.photoIds || [];
+    let rowY = Math.round(item.y * exportScale);
+    for (let r = 0; r * cols < pIds.length; r++) {
+      const rowIds = pIds.slice(r * cols, (r + 1) * cols);
+      const rowH = Math.max(...rowIds.map(id => { const p = photosData.find(x => x.id === id); return (p && p.w > 0) ? Math.round(cellW * p.h / p.w) : Math.round(cellW); }), 10);
+      rowIds.forEach((photoId, ci) => { if (photoId) expanded.push({ photoId, x: Math.round(item.x * exportScale + ci * (cellW + gapPx)), y: rowY, w: Math.round(cellW), z: item.z }); });
+      rowY += rowH + gapPx;
+    }
+  }
+
   // Process each item: resize + flip + rotate → get final pixel buffer + canvas position
-  const layers = (await Promise.all(sorted.map(async item => {
+  const layers = (await Promise.all(expanded.map(async item => {
     if (item.type === 'note' || item.type === 'placeholder' || item.type === 'zone') return null;
 
     if (item.type === 'text') {
       try {
         if (!item.text?.trim()) return null;
-        const tw = Math.round(item.w);
-        const th = Math.round(item.h || 130);
-        const fontSize = item.fontSize || 26;
+        const tw = Math.round(item.w * exportScale);
+        const th = Math.round((item.h || 130) * exportScale);
+        const fontSize = Math.round((item.fontSize || 26) * exportScale);
         const color = item.textColor || '#111111';
         const fontId = item.fontFamily || 'serif';
         const fontDef = EXPORT_FONTS[fontId] || EXPORT_FONTS.serif;
@@ -744,8 +780,8 @@ app.get('/api/boards/:pid/:bid/export', async (req, res) => {
         const freeRot = item.freeRot || 0;
         if (freeRot) buf = await sharp(buf).rotate(freeRot, { background: { r: 0, g: 0, b: 0, alpha: 0 } }).png({ compressionLevel: 1 }).toBuffer();
         const { width: rw, height: rh } = await sharp(buf).metadata();
-        const cx = item.x + tw / 2;
-        const cy = item.y + th / 2;
+        const cx = item.x * exportScale + tw / 2;
+        const cy = item.y * exportScale + th / 2;
         return { input: buf, cl: Math.round(cx - rw / 2), ct: Math.round(cy - rh / 2), rw, rh };
       } catch (err) {
         console.error('Text layer render error:', err.message);
@@ -759,20 +795,20 @@ app.get('/api/boards/:pid/:bid/export', async (req, res) => {
       const pFile = path.join(photoDir(pid), `${item.photoId}.jpg`);
       if (!fs.existsSync(pFile)) return null;
 
-      const dpi   = board?.dpi   || 96;
       const units = board?.units || 'px';
-      const toItemPx = v => { if (!v || units === 'px') return Math.round(v || 0); const f = units === 'cm' ? 2.54 : units === 'mm' ? 25.4 : 1; return Math.round((v / f) * dpi); };
+      const toItemPx = v => { if (!v || units === 'px') return Math.round(v * exportScale || 0); const f = units === 'cm' ? 2.54 : units === 'mm' ? 25.4 : 1; return Math.round((v / f) * exportDpi); };
       const matPx  = toItemPx(item.matSize ?? item.frame ?? 0);
       const moldPx = toItemPx(item.frameSize ?? 0);
 
       const rot       = item.rot || 0;
       const freeRot   = item.freeRot || 0;
       const isSwapped = rot % 180 !== 0;
-      const resizeW   = isSwapped ? Math.round(item.w * photo.w / photo.h) : item.w;
-      const resizeH   = isSwapped ? item.w : Math.round(item.w * photo.h / photo.w);
+      const scaledW   = Math.round(item.w * exportScale);
+      const resizeW   = isSwapped ? Math.round(scaledW * photo.w / photo.h) : scaledW;
+      const resizeH   = isSwapped ? scaledW : Math.round(scaledW * photo.h / photo.w);
       const displayH  = isSwapped ? resizeW : resizeH;
 
-      // Step 1: resize, flip, 90° rotation
+      // Step 1: resize (at export resolution), flip, 90° rotation
       let sharpChain = sharp(pFile).resize(resizeW, resizeH, { fit: 'fill' });
       if (item.flipH) sharpChain = sharpChain.flop();
       if (item.flipV) sharpChain = sharpChain.flip();
@@ -787,8 +823,8 @@ app.get('/api/boards/:pid/:bid/export', async (req, res) => {
       if (freeRot) imgBuf = await sharp(imgBuf).rotate(freeRot, { background: { r: 255, g: 255, b: 255 } }).png({ compressionLevel: 1 }).toBuffer();
 
       const { width: rw, height: rh } = await sharp(imgBuf).metadata();
-      const cx = item.x + item.w   / 2;
-      const cy = item.y + displayH / 2;
+      const cx = item.x * exportScale + scaledW  / 2;
+      const cy = item.y * exportScale + displayH / 2;
 
       return { input: imgBuf, cl: Math.round(cx - rw / 2), ct: Math.round(cy - rh / 2), rw, rh };
     } catch (err) {
@@ -804,9 +840,8 @@ app.get('/api/boards/:pid/:bid/export', async (req, res) => {
 
   let rawW, rawH, getLeft, getTop;
   if (fixedMode) {
-    const u   = board.units || 'cm';
-    const dpi = board.dpi || 300;
-    const toPx = v => u === 'px' ? v : u === 'cm' ? Math.round(v / 2.54 * dpi) : u === 'mm' ? Math.round(v / 25.4 * dpi) : Math.round(v * dpi);
+    const u = board.units || 'cm';
+    const toPx = v => u === 'px' ? Math.round(v * exportScale) : u === 'cm' ? Math.round(v / 2.54 * exportDpi) : u === 'mm' ? Math.round(v / 25.4 * exportDpi) : Math.round(v * exportDpi);
     rawW    = Math.max(1, toPx(board.fixedW));
     rawH    = Math.max(1, toPx(board.fixedH));
     getLeft = (cl) => cl;

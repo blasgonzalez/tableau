@@ -8,6 +8,9 @@ mkdir -p "$DATA_DIR"
 export TABLEAU_DATA_DIR="$DATA_DIR"
 export TABLEAU_UPDATE_URL="https://raw.githubusercontent.com/blasgonzalez/tableau/main/installer/version.json"
 
+# Eliminar cuarentena si quedó algún atributo tras la instalacion manual
+xattr -dr com.apple.quarantine "$APP_DIR/.." 2>/dev/null || true
+
 # Si el servidor ya está en marcha solo abrir el navegador
 if lsof -ti:3000 > /dev/null 2>&1; then
     open "http://localhost:3000"

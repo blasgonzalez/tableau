@@ -20,20 +20,30 @@
 
 ---
 
-## Mac: "La aplicación no puede abrirse" / Gatekeeper block
+## Mac: Icono en gris / "La aplicación no puede abrirse" / Gatekeeper block
 
-**Symptom:** macOS shows "Tableau no puede abrirse porque Apple no puede comprobar si contiene software malicioso."
+**Symptom:** The app icon appears grayed out, or macOS shows "Tableau no puede abrirse porque Apple no puede comprobar si contiene software malicioso."
 
-**Root cause:** The app is not signed with an Apple Developer certificate (normal for free software distributed outside the App Store).
+**Root cause:** macOS applies a quarantine attribute to apps downloaded from the internet that are not signed with an Apple Developer certificate.
 
-### Solution (one-time, first launch only)
+### Solution A — Recommended (uses the installer script in the DMG)
 
-1. In Finder → Applications, **right-click** Tableau → **Open**
-2. Click **Open** in the warning dialog
+1. Re-open the `.dmg`
+2. **Right-click** on **"Instalar Tableau"** → **Open**
+3. Confirm in the security dialog
+4. The script copies the app, removes quarantine and opens Tableau automatically
 
-After this, double-click works normally.
+### Solution B — Terminal (if the DMG is no longer available)
 
-**Alternative:** System Settings → Privacy & Security → scroll down → click **"Open Anyway"** (appears a few seconds after the first blocked attempt).
+Open Terminal and run:
+```
+xattr -cr /Applications/Tableau.app
+```
+Then double-click Tableau normally.
+
+### Solution C — System Settings
+
+System Settings → Privacy & Security → scroll down → click **"Open Anyway"** (appears a few seconds after the first blocked attempt).
 
 ---
 

@@ -84,6 +84,8 @@ jobs:
           SUFFIX="${{ matrix.suffix }}"
           mkdir dmg-stage
           cp -r Tableau.app dmg-stage/
+          cp installer/install-mac.command "dmg-stage/Instalar Tableau.command"
+          chmod +x "dmg-stage/Instalar Tableau.command"
           ln -s /Applications dmg-stage/Applications
           hdiutil create -volname "Tableau $V" -srcfolder dmg-stage -ov -format UDZO "tableau-mac${SUFFIX}-${V}.dmg"
 

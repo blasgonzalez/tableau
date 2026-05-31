@@ -1,6 +1,6 @@
 {
-  "version": "1.9.10",
+  "version": "1.10.0",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-05-30",
-  "notes": "Windows: lanzador corregido — arranca correctamente siempre, incluso tras cerrar el servidor manualmente."
+  "releaseDate": "2026-05-31",
+  "notes": "Dimensiones reales de fotos al importar, colocación a tamaño nativo en el tablero, zoom mejorado en tableros variables, instalador Mac automatizado."
 }

@@ -57,7 +57,7 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .sb-sec{display:flex;flex-direction:column;min-height:0}
 .sb-sec.nav{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
 .sb-sec.nav.collapsed{flex:0 0 auto}
-.sb-sec.info{flex-shrink:0;border-top:1px solid var(--border)}
+.sb-sec.info{flex-shrink:0;border-top:1px solid var(--border);margin-top:auto}
 .sb-sec.tmpl{flex-shrink:0;border-top:1px solid var(--border);display:flex;flex-direction:column;max-height:220px}
 .sb-sec.tmpl .sb-scroll{overflow-y:auto;flex:1}
 .tmpl-row{display:flex;align-items:center;gap:5px;padding:3px 8px 3px 10px;min-height:38px;cursor:default}
@@ -784,7 +784,7 @@ const THEMES = {
   },
 };
 
-const ZOOM_STEPS = [0.25, 0.33, 0.5, 0.67, 0.75, 1.0, 1.25, 1.5, 2.0];
+const ZOOM_STEPS = [0.125, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 4, 6, 8, 12, 16];
 
 const NOTE_FONT_CYCLE = [null, 9, 14, 18]; // null = default M (11px)
 const NOTE_FONT_LABEL = v => v === 9 ? 'S' : v === 14 ? 'L' : v === 18 ? 'XL' : 'M';
@@ -921,7 +921,7 @@ const I18N = {
     openPanel:'Abrir panel', panelLabel:'Panel',
     infoTitle:'Información', infoEmpty1:'Pasa el ratón sobre', infoEmpty2:'una foto para ver sus datos',
     saveAsTemplate:'Guardar como plantilla', templateNamePh:'Nombre de la plantilla', templateSaved:'Plantilla guardada', templateError:'Error al guardar', applyTemplateBtn:'Aplicar', confirmApplyTemplate:'Aplicar la plantilla reemplazará todos los elementos del tablero actual. ¿Continuar?', templateApplied:'Plantilla aplicada', noTemplates:'Sin plantillas', templatesSection:'Plantillas',
-    versionsTitle:'Versiones del tablero', saveVersion:'Guardar versión', versionSaved:'Versión guardada', versionRestored:'Versión restaurada', versionDeleted:'Versión eliminada', restoreVersion:'Restaurar', confirmRestore:'¿Restaurar esta versión? El estado actual se perderá.', noVersions:'Sin versiones guardadas', versionItems:(n) => `${n} elemento${n!==1?'s':''}`,
+    versionsTitle:'Versiones del tablero', saveVersion:'Guardar versión', versionSaved:'Versión guardada', versionRestored:'Versión restaurada', versionDeleted:'Versión eliminada', restoreVersion:'Restaurar', confirmRestore:'¿Restaurar esta versión? El estado actual se perderá.', confirmDeleteVersion:'¿Eliminar esta versión?', noVersions:'Sin versiones guardadas', versionItems:(n) => `${n} elemento${n!==1?'s':''}`,
     fillPlaceholderHint:'Haz clic en una foto de la biblioteca para asignarla al marco',
     original:'Original:', inTableau:'En tableau:', notInAnyBoard:'No está en ningún tablero',
     noBoard:'Sin tablero', createBoardHint:'Crea un tablero en el panel izquierdo',
@@ -1061,7 +1061,7 @@ const I18N = {
     openPanel:'Open panel', panelLabel:'Panel',
     infoTitle:'Info', infoEmpty1:'Hover over a photo', infoEmpty2:'to see its details',
     saveAsTemplate:'Save as template', templateNamePh:'Template name', templateSaved:'Template saved', templateError:'Save error', applyTemplateBtn:'Apply', confirmApplyTemplate:'Applying the template will replace all elements on the current board. Continue?', templateApplied:'Template applied', noTemplates:'No templates', templatesSection:'Templates',
-    versionsTitle:'Board versions', saveVersion:'Save version', versionSaved:'Version saved', versionRestored:'Version restored', versionDeleted:'Version deleted', restoreVersion:'Restore', confirmRestore:'Restore this version? Current state will be lost.', noVersions:'No saved versions', versionItems:(n) => `${n} item${n!==1?'s':''}`,
+    versionsTitle:'Board versions', saveVersion:'Save version', versionSaved:'Version saved', versionRestored:'Version restored', versionDeleted:'Version deleted', restoreVersion:'Restore', confirmRestore:'Restore this version? Current state will be lost.', confirmDeleteVersion:'Delete this version?', noVersions:'No saved versions', versionItems:(n) => `${n} item${n!==1?'s':''}`,
     fillPlaceholderHint:'Click a photo in the library to assign it to this frame',
     original:'Original:', inTableau:'In tableau:', notInAnyBoard:'Not in any board',
     noBoard:'No board', createBoardHint:'Create a board in the left panel',
@@ -1361,6 +1361,8 @@ function App() {
   const [gridDropOpen,   setGridDropOpen]   = useState(false);
   const [gridDropPos,    setGridDropPos]    = useState({left:0,top:0});
   const [versions,       setVersions]       = useState([]); // [{ts, itemCount}]
+  const [verPreviewTs,   setVerPreviewTs]   = useState(null);
+  const [verPreviewItems,setVerPreviewItems]= useState([]);
   const [exportDropPos,  setExportDropPos]  = useState({right:0,top:0});
   const [uploadDropPos,  setUploadDropPos]  = useState({right:0,top:0});
   const [gridModal,  setGridModal]  = useState(false);
@@ -1440,6 +1442,7 @@ function App() {
   const itemsRef        = useRef([]);
   const selRef          = useRef([]);
   const zoomRef         = useRef(1);
+  const fitZoomRef      = useRef(1);
   const pidRef          = useRef(null);
   const bidRef          = useRef(null);
   const photosRef       = useRef([]);
@@ -1553,6 +1556,7 @@ function App() {
   }, []);
 
   useEffect(() => {
+    setHoverInfo(null);
     if (!pid) { setBoards([]); setBid(null); setPhotos([]); setItems([]); setAllBoardItems({}); return; }
     Promise.all([
       api.get(`/api/projects/${pid}/boards`),
@@ -1582,7 +1586,7 @@ function App() {
   useEffect(() => { gridCellSelRef.current = gridCellSel; }, [gridCellSel]);
   useEffect(() => { setGridDropTarget(null); setGridCellDragOver(null); setGridCellCtx(null); setGridCellSel(null); setZoneDropTarget(null); }, [bid]);
   useEffect(() => {
-    setVersions([]);
+    setVersions([]); setVerPreviewTs(null); setVerPreviewItems([]);
     if (!pid || !bid) return;
     api.get(`/api/boards/${pid}/${bid}/versions`).then(vs => setVersions(Array.isArray(vs) ? vs : [])).catch(() => {});
   }, [bid, pid]);
@@ -2399,7 +2403,7 @@ function App() {
       boardHistoryRef.current[prevBid] = { undo: undoStack.current, redo: redoStack.current };
     }
     previousBidRef.current = bid;
-    if (!bid || !pid) { setItems([]); itemsRef.current = []; undoStack.current = []; redoStack.current = []; return; }
+    if (!bid || !pid) { setItems([]); itemsRef.current = []; undoStack.current = []; redoStack.current = []; setSel([]); selRef.current = []; setHoverInfo(null); return; }
     // Restore history for this board, or start fresh
     const saved = boardHistoryRef.current[bid];
     if (saved) { undoStack.current = saved.undo; redoStack.current = saved.redo; }
@@ -2433,10 +2437,10 @@ function App() {
     setZoom(z => {
       if (dir > 0) {
         const above = ZOOM_STEPS.filter(s => s > z + 0.001);
-        return above.length ? above[0] : Math.min(4, z * 1.2);
+        return above.length ? above[0] : Math.min(20, z * 1.25);
       } else {
         const below = ZOOM_STEPS.filter(s => s < z - 0.001);
-        return below.length ? below[below.length - 1] : Math.max(0.05, z / 1.2);
+        return below.length ? below[below.length - 1] : Math.max(0.001, z / 1.25);
       }
     });
   }, []);
@@ -2447,7 +2451,7 @@ function App() {
       if (!wrapRef.current?.contains(e.target)) return;
       e.preventDefault();
       const factor = e.deltaY < 0 ? 1.1 : 1 / 1.1;
-      setZoom(z => Math.max(0.05, Math.min(4, z * factor)));
+      setZoom(z => Math.max(0.001, Math.min(20, z * factor)));
     };
     window.addEventListener('wheel', onWheel, { passive: false });
     return () => window.removeEventListener('wheel', onWheel);
@@ -2747,7 +2751,7 @@ function App() {
       setModal(null); showToast(t('configSaved'));
       return;
     }
-    const dpi = parseInt(cfgDpi) || 300;
+    const dpi = parseInt(cfgDpi) || 150;
     let fixedW = null, fixedH = null;
     const doSave = async () => {
       const patch = { units: cfgUnits, dpi, fixed: cfgFixed, fixedW: cfgFixed ? fixedW : null, fixedH: cfgFixed ? fixedH : null, defaultFrame: parseFloat(cfgDefaultFrame) || 0, exportPad: cfgFixed ? null : Math.max(0, parseInt(cfgExportPad) || 0) };
@@ -2760,16 +2764,6 @@ function App() {
       fixedW = parseFloat(cfgBoardW);
       fixedH = parseFloat(cfgBoardH);
       if (!fixedW || !fixedH || fixedW <= 0 || fixedH <= 0) return showToast(t('invalidDims'), true);
-      const newBp = getBoardPx({ fixed: true, fixedW, fixedH, units: cfgUnits, dpi });
-      const overflow = itemsRef.current.some(item => {
-        const h = (item.type === 'note' || item.type === 'zone') ? (item.h || item.w) : (() => {
-          const p = photosRef.current.find(ph => ph.id === item.photoId);
-          if (!p) return item.w;
-          return (item.rot || 0) % 180 !== 0 ? Math.round(item.w * p.w / p.h) : Math.round(item.w * p.h / p.w);
-        })();
-        return item.x + item.w > newBp.w || item.y + h > newBp.h;
-      });
-      if (overflow) { showConfirm(t('confirmOverflow'), doSave, false); return; }
     }
     await doSave();
   };
@@ -2813,7 +2807,24 @@ function App() {
       const units = board.units || 'px';
       const hasPhys = dpi && units !== 'px';
       const bPx = getBoardPx(board);
-      const photoItemsPr = boardIt.filter(i => i.type !== 'note' && i.type !== 'text' && i.type !== 'zone').map(item => {
+      // Expand grids into individual photo pseudo-items for the preview header
+      const expandedForPreview = [];
+      boardIt.forEach(item => {
+        if (item.type === 'note' || item.type === 'text' || item.type === 'zone') return;
+        if (item.type === 'grid') {
+          const layout = calcGridLayout(item, photosRef.current, dpi || 150, units);
+          let rowY = item.y;
+          layout.rows.forEach(row => {
+            row.ids.forEach((photoId, ci) => {
+              if (photoId) expandedForPreview.push({ ...item, id: item.id + '_' + photoId, photoId, x: item.x + ci * (layout.cellW + layout.gapPx), y: rowY, w: layout.cellW, rot: 0, freeRot: 0 });
+            });
+            rowY += row.h + layout.gapPx;
+          });
+        } else {
+          expandedForPreview.push(item);
+        }
+      });
+      const photoItemsPr = expandedForPreview.map(item => {
         const photo = photosRef.current.find(p => p.id === item.photoId);
         const rot = item.rot || 0; const freeRot = item.freeRot || 0;
         const isSwapped = rot % 180 !== 0;
@@ -2844,8 +2855,11 @@ function App() {
           const rot = item.rot || 0; const freeRot = item.freeRot || 0;
           const iL = Math.round((item.x - minXpr) * sc); const iT = Math.round((item.y - minYpr) * sc);
           const iW = Math.round(item.w * sc); const iH = Math.round(item.displayH * sc);
-          const fPx = item.frame > 0 ? Math.max(1, Math.round(physToPx(item.frame, dpi, units) * sc)) : 0;
-          const frameStyle = fPx > 0 ? `outline:${fPx}px solid #c8c8c8;` : '';
+          const matSz = item.matSize ?? item.frame ?? 0; const moldSz = item.frameSize ?? 0;
+          const matPxS = matSz > 0 ? Math.max(1, Math.round(physToPx(matSz, dpi, units) * sc)) : 0;
+          const moldPxS = moldSz > 0 ? Math.max(1, Math.round(physToPx(moldSz, dpi, units) * sc)) : 0;
+          const matClr = item.matColor || '#ffffff'; const moldClr = item.frameColor || '#5a3e1b';
+          const frameStyle = (matPxS || moldPxS) ? `box-shadow:0 0 0 ${matPxS}px ${matClr},0 0 0 ${matPxS+moldPxS}px ${moldClr};` : '';
           const freeRotStyle = freeRot ? `transform:rotate(${freeRot}deg);transform-origin:center;` : '';
           const imgW = Math.round(item.naturalW * sc); const imgH = Math.round(item.naturalH * sc);
           const imgL = Math.round(item.offX * sc); const imgT = Math.round(item.offY * sc);
@@ -2873,21 +2887,38 @@ function App() {
       if (!boardIt.length) { rows += `<p class="empty">${t('emptyBoardMem')}</p></section>`; return; }
       rows += previewHtml;
       rows += `<table><thead><tr><th>${hdr[0]}</th><th></th><th>${hdr[1]}</th><th>${hdr[2]}</th><th>${hdr[4]}</th></tr></thead><tbody>`;
-      boardIt.forEach((item, i) => {
+      let rowNum = 0;
+      boardIt.forEach(item => {
         if (item.type === 'note' || item.type === 'zone' || item.type === 'text') return;
+        const mat = item.matSize ?? item.frame ?? 0; const mold = item.frameSize ?? 0;
+        const totalFrame = mat + mold;
+        const u = hasPhys ? units : 'px';
+        const frameParts = [];
+        if (mat) frameParts.push(`${mat}${u} ${lang==='es'?'paspartú':'mat'}${item.matColor&&item.matColor!=='#ffffff'?' ('+item.matColor+')':''}`);
+        if (mold) frameParts.push(`${mold}${u} ${lang==='es'?'moldura':'molding'}${item.frameColor&&item.frameColor!=='#5a3e1b'?' ('+item.frameColor+')':''}`);
+        const frameNote = frameParts.length ? `<small>${frameParts.join(' + ')}</small>` : '';
+        if (item.type === 'grid') {
+          const layout = calcGridLayout(item, photosRef.current, dpi || 150, units);
+          const gLabel = item.label ? ` "${item.label}"` : '';
+          rows += `<tr class="grid-hdr"><td colspan="5">${lang==='es'?'Grid':'Grid'} ${layout.cols}×${layout.rows.length}${gLabel} · ${dimLabel(item.w, layout.totalH, dpi, units)}</td></tr>`;
+          layout.rows.forEach(row => {
+            row.ids.forEach(photoId => {
+              if (!photoId) return;
+              rowNum++;
+              const photo = photosRef.current.find(p => p.id === photoId);
+              rows += `<tr><td class="n">${rowNum}</td><td class="thumb"><img src="/photos/${pid}/${photoId}/thumb" alt="" /></td><td>${photo?.name || photoId}</td><td class="dim">${dimLabel(layout.cellW, row.h, dpi, units)}</td><td class="lbl"></td></tr>`;
+            });
+          });
+          return;
+        }
+        rowNum++;
         const photo = photosRef.current.find(p => p.id === item.photoId);
-        const h = photo
-          ? ((item.rot || 0) % 180 !== 0
-            ? Math.round(item.w * photo.w / photo.h)
-            : Math.round(item.w * photo.h / photo.w))
-          : item.w;
-        const physW = hasPhys ? pxToPhys(item.w, dpi, units) : null;
-        const physH = hasPhys ? pxToPhys(h, dpi, units) : null;
+        const h = photo ? ((item.rot||0)%180!==0 ? Math.round(item.w*photo.w/photo.h) : Math.round(item.w*photo.h/photo.w)) : item.w;
         rows += `<tr>
-          <td class="n">${i + 1}</td>
+          <td class="n">${rowNum}</td>
           <td class="thumb"><img src="/photos/${pid}/${item.photoId}/thumb" alt="" /></td>
           <td>${photo?.name || item.photoId}</td>
-          <td class="dim">${dimLabel(item.w, h, dpi, units, item.frame)}${item.frame > 0 ? `<small>(incl. ${item.frame} ${hasPhys ? units : 'px'} ${lang === 'en' ? 'frame' : 'de marco'})</small>` : ''}</td>
+          <td class="dim">${dimLabel(item.w, h, dpi, units, totalFrame)}${frameNote}</td>
           <td class="lbl">${item.label || ''}</td>
         </tr>`;
       });
@@ -2923,6 +2954,7 @@ function App() {
   td.dim{white-space:nowrap;font-weight:600}
   td.dim small{display:block;font-size:8px;font-weight:400;color:#999;margin-top:1px}
   td.lbl{color:#777;font-style:italic}
+  tr.grid-hdr td{font-size:8px;text-transform:uppercase;letter-spacing:.8px;color:#888;background:#fafafa;border-top:1px solid #e0e0e0;padding:4px 6px}
   .preview-wrap{margin:10px 0 16px}
   .preview-box{position:relative;overflow:hidden}
   .preview-box > img{position:absolute;object-fit:cover}
@@ -2967,15 +2999,13 @@ ${rows}
       .filter(b => (allBoardItemsRef.current[b.id] || []).some(i => i.photoId === photoId))
       .map(b => ({ id: b.id, name: b.name }));
 
-  // ── canvas coordinate normalizer (keeps all items ≥ 0) ───────────────────
+  // ── canvas coordinate normalizer (always anchors content to origin) ────────
   const normalizeItems = (its) => {
     if (!its.length) return { items: its, dx: 0, dy: 0 };
     const minX = Math.min(...its.map(i => i.x));
     const minY = Math.min(...its.map(i => i.y));
-    const dx = minX < 0 ? -minX : 0;
-    const dy = minY < 0 ? -minY : 0;
-    if (!dx && !dy) return { items: its, dx: 0, dy: 0 };
-    return { items: its.map(i => ({ ...i, x: i.x + dx, y: i.y + dy })), dx, dy };
+    if (!minX && !minY) return { items: its, dx: 0, dy: 0 };
+    return { items: its.map(i => ({ ...i, x: i.x - minX, y: i.y - minY })), dx: minX, dy: minY };
   };
 
   const applyNormalized = (its) => {
@@ -2986,8 +3016,9 @@ ${rows}
     const { items: norm, dx, dy } = normalizeItems(its);
     setItems(norm); itemsRef.current = norm;
     if ((dx || dy) && wrapRef.current) {
-      wrapRef.current.scrollLeft -= dx * zoomRef.current;
-      wrapRef.current.scrollTop  -= dy * zoomRef.current;
+      const wr = wrapRef.current;
+      wr.scrollLeft = Math.max(0, wr.scrollLeft - dx * zoomRef.current);
+      wr.scrollTop  = Math.max(0, wr.scrollTop  - dy * zoomRef.current);
     }
     return norm;
   };
@@ -3055,21 +3086,20 @@ ${rows}
   const placePhoto = (photo, cx, cy) => {
     pushUndo();
     const board = boardsRef.current.find(b => b.id === bidRef.current);
-    let w = board?.defaultW || 320;
-    // Inherit width from last placed photo if same aspect ratio (within 3%)
-    const photoItems = itemsRef.current.filter(i => i.photoId);
-    if (photoItems.length > 0) {
-      const lastItem = photoItems.reduce((a, b) => ((a.z||0) > (b.z||0) ? a : b));
-      const lastPhoto = photosRef.current.find(p => p.id === lastItem.photoId);
-      if (lastPhoto) {
-        const norm = (pw, ph) => pw > ph ? pw / ph : ph / pw;
-        if (Math.abs(norm(lastPhoto.w, lastPhoto.h) - norm(photo.w, photo.h)) / norm(lastPhoto.w, lastPhoto.h) < 0.03) {
-          w = lastItem.w;
-        }
-      }
-    }
+    const bDpi   = board?.dpi   || 150;
+    const bUnits = board?.units || 'cm';
+    // origW pixels map 1:1 to board pixels; board DPI defines physical scale
+    const ow = photo.origW || photo.w;
+    let w = board?.defaultW || ow;
     const bp = boardPxRef.current;
-    if (bp) w = Math.min(w, bp.w);
+    if (bp) {
+      // Cap to fit within fixed board (both dimensions)
+      const hFromW = Math.round(w * photo.h / photo.w);
+      const scaleW = w > bp.w ? bp.w / w : 1;
+      const scaleH = hFromW > bp.h ? bp.h / hFromW : 1;
+      w = Math.round(w * Math.min(scaleW, scaleH));
+    }
+    const wasEmpty = !bp && itemsRef.current.length === 0;
     const maxZ = itemsRef.current.length ? Math.max(...itemsRef.current.map(i => i.z || 0)) : 0;
     const h = Math.round(w * photo.h / photo.w);
     let x = Math.round(cx - w / 2);
@@ -3099,6 +3129,7 @@ ${rows}
     const norm = applyNormalized(nit);
     selRef.current = [item.id]; setSel([item.id]);
     saveItemsNow(norm);
+    if (wasEmpty) requestAnimationFrame(() => fitWidth());
   };
 
   const fitBoard = useCallback(() => {
@@ -3108,7 +3139,7 @@ ${rows}
     const avW = wrap.clientWidth  - BOARD_PAD * 2 - 8;
     const avH = wrap.clientHeight - BOARD_PAD * 2 - 8;
     const z = Math.max(0.05, Math.min(4, Math.min(avW / bp.w, avH / bp.h)));
-    setZoom(z);
+    setZoom(z); zoomRef.current = z; fitZoomRef.current = z;
     requestAnimationFrame(() => {
       const bpNow = boardPxRef.current;
       if (!wrap || !bpNow) return;
@@ -3130,17 +3161,17 @@ ${rows}
     const maxY = Math.max(...its.map(i => i.y + getItemH(i)));
     const cW = maxX - minX || 1, cH = maxY - minY || 1;
     const PAD = 60;
-    const z = Math.max(0.05, Math.min(4, Math.min(
+    const z = Math.max(0.001, Math.min(4, Math.min(
       (wrap.clientWidth  - PAD * 2) / cW,
       (wrap.clientHeight - PAD * 2) / cH
     )));
-    setZoom(z);
-    requestAnimationFrame(() => {
+    setZoom(z); zoomRef.current = z; fitZoomRef.current = z;
+    requestAnimationFrame(() => requestAnimationFrame(() => {
       const w = wrapRef.current;
       if (!w) return;
       w.scrollLeft = Math.max(0, minX * z - Math.max(PAD, (w.clientWidth  - cW * z) / 2));
       w.scrollTop  = Math.max(0, minY * z - Math.max(PAD, (w.clientHeight - cH * z) / 2));
-    });
+    }));
   }, []);
 
   // restore saved zoom or auto-fit when switching boards
@@ -3465,11 +3496,24 @@ ${rows}
     }, false);
   };
 
-  const deleteVersion = async (ts) => {
+  const deleteVersion = (ts) => {
+    showConfirm(t('confirmDeleteVersion'), async () => {
+      try {
+        await api.del(`/api/boards/${pid}/${bid}/versions/${ts}`);
+        setVersions(vs => vs.filter(v => v.ts !== ts));
+        if (verPreviewTs === ts) { setVerPreviewTs(null); setVerPreviewItems([]); }
+        showToast(t('versionDeleted'));
+      } catch (e) { showToast('Error: ' + e.message, true); }
+    });
+  };
+
+  const previewVersion = async (ts) => {
+    if (verPreviewTs === ts) { setVerPreviewTs(null); setVerPreviewItems([]); return; }
     try {
-      await api.del(`/api/boards/${pid}/${bid}/versions/${ts}`);
-      setVersions(vs => vs.filter(v => v.ts !== ts));
-    } catch (e) { showToast('Error: ' + e.message, true); }
+      const items = await api.get(`/api/boards/${pid}/${bid}/versions/${ts}`);
+      setVerPreviewTs(ts);
+      setVerPreviewItems(Array.isArray(items) ? items : []);
+    } catch { setVerPreviewTs(null); setVerPreviewItems([]); }
   };
 
   // ── Templates ────────────────────────────────────────────────────────────────
@@ -3958,8 +4002,8 @@ ${rows}
     const z = zoomRef.current;
     const pad = boardPxRef.current ? BOARD_PAD : 0;
     const pos = { x: (e.clientX - r.left + wrap.scrollLeft - pad) / z, y: (e.clientY - r.top + wrap.scrollTop - pad) / z };
+    if (!bidRef.current) return showToast(t('createBoardFirst'), true);
     if (e.dataTransfer.files?.length) {
-      if (!bidRef.current) return showToast(t('createBoardFirst'), true);
       await uploadFiles(e.dataTransfer.files, pos);
       return;
     }
@@ -3971,14 +4015,17 @@ ${rows}
       if (photo) placePhoto(photo, pos.x, pos.y);
     } else if (photoIds.length > 1) {
       pushUndo();
+      const wasEmptyMulti = !boardPxRef.current && itemsRef.current.length === 0;
       const board2 = boardsRef.current.find(b => b.id === bidRef.current);
-      const W = board2?.defaultW || 320, GAP = 20;
+      const GAP = 20;
       const maxZ = itemsRef.current.length ? Math.max(...itemsRef.current.map(i => i.z||0)) : 0;
       const defFrame = board2?.defaultFrame || 0;
       const bp = boardPxRef.current;
       const wrap = wrapRef.current;
       const z2 = zoomRef.current;
       const availW = bp ? bp.w : Math.round(wrap.clientWidth / z2);
+      const firstPhoto = photosRef.current.find(p => p.id === photoIds[0]);
+      const W = board2?.defaultW || (firstPhoto?.origW || firstPhoto?.w || 320);
       const perRow = Math.max(1, Math.floor((availW + GAP) / (W + GAP)));
       const newItems = photoIds.map((photoId, idx) => {
         const photo = photosRef.current.find(p => p.id === photoId);
@@ -4003,6 +4050,7 @@ ${rows}
       selRef.current = newItems.map(i => i.id); setSel(selRef.current);
       saveItemsNow(norm);
       setLibSelection([]);
+      if (wasEmptyMulti) requestAnimationFrame(() => fitWidth());
     }
   };
 
@@ -5797,22 +5845,20 @@ ${rows}
     setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
   };
 
-  const buildExportUrl = (quality) => {
-    const maxpx = quality >= 100 ? 16000 : 10000;
-    const q = `quality=${quality}&maxpx=${maxpx}`;
+  const buildExportUrl = (exportDpi) => {
+    const q = `quality=92&exportDpi=${exportDpi}`;
     return boardPx
       ? `/api/boards/${pid}/${bid}/export?useBoard=1&${q}`
       : `/api/boards/${pid}/${bid}/export?pad=${activeBoardMeta?.exportPad ?? 60}&${q}`;
   };
 
-  const exportSelection = (quality = 92) => {
+  const exportSelection = (exportDpi = 150) => {
     const ids = selRef.current.join(',');
     const p = pidRef.current, b = bidRef.current;
     if (!p || !b || !ids) return;
     const board = boardsRef.current.find(b2 => b2.id === b);
     const pad = boardPxRef.current ? '' : `&pad=${board?.exportPad ?? 60}`;
-    const maxpx = quality >= 98 ? 16000 : 10000;
-    window.location.href = `/api/boards/${p}/${b}/export?ids=${encodeURIComponent(ids)}${pad}&quality=${quality}&maxpx=${maxpx}`;
+    window.location.href = `/api/boards/${p}/${b}/export?ids=${encodeURIComponent(ids)}${pad}&quality=92&exportDpi=${exportDpi}`;
   };
 
   if (!ready) return (
@@ -5922,24 +5968,22 @@ ${rows}
         />
         <div className="info-meta">
           <div className="info-name" title={photo?.name}>{photo?.name || '—'}</div>
-          {photo?.w > 0 && (
-            <div className="info-row">{t('original')} {photo.w} × {photo.h} px</div>
-          )}
-          {photo?.size > 0 && (
-            <div className="info-row">{fmtSize(photo.size)}</div>
-          )}
-          {itemW && (
-            <>
-              <div className="info-row" style={{marginTop:2}}>
-                {t('inTableau')} {itemW} × {itemH} px
-              </div>
-              {boardDpi && boardUnits !== 'px' && (
-                <div className="info-phys">
-                  ≈ {pxToPhys(itemW, boardDpi, boardUnits)} × {pxToPhys(itemH, boardDpi, boardUnits)}
-                  <span style={{color:'var(--muted)',marginLeft:4}}>@ {boardDpi} dpi</span>
-                </div>
-              )}
-            </>
+          {(photo?.origW || photo?.w) > 0 && (() => {
+            const ow = photo.origW || photo.w, oh = photo.origH || photo.h;
+            const dpi = photo.origDpi;
+            const nativeW = dpi ? (ow / dpi * 2.54).toFixed(1) : null;
+            const nativeH = dpi ? (oh / dpi * 2.54).toFixed(1) : null;
+            return (
+              <>
+                <div className="info-row">{ow} × {oh} px{dpi ? ` · ${dpi} dpi` : ''}</div>
+                {nativeW && <div className="info-phys">{nativeW} × {nativeH} cm <span style={{color:'var(--muted)'}}>({dpi} dpi)</span></div>}
+              </>
+            );
+          })()}
+          {itemW && boardDpi && boardUnits !== 'px' && (
+            <div className="info-phys" style={{marginTop:2}}>
+              {t('inTableau')} {pxToPhys(itemW, boardDpi, boardUnits)} × {pxToPhys(itemH, boardDpi, boardUnits)}
+            </div>
           )}
           <div className="info-rating">
             {rating > 0
@@ -8067,7 +8111,7 @@ ${rows}
           <button className="zc-btn" title="Zoom − (Ctrl+−)" onClick={() => zoomStep(-1)}>−</button>
           <span className="zc-pct" onClick={boardPx ? fitBoard : fitWidth}
             title={boardPx ? `${t('fitView')} (Ctrl+0)` : t('fitWidth')}>
-            {Math.round(zoom*100)}%
+            {Math.round(zoom * 100)}%
           </span>
           <button className="zc-btn" title={boardPx ? `${t('fitView')} (Ctrl+0)` : t('fitWidth')}
             onClick={boardPx ? fitBoard : fitWidth} style={{fontSize:13}}>⇔</button>
@@ -8106,21 +8150,6 @@ ${rows}
       )}
       {toast && <div className={`toast${toast.err?' err':''}`} style={{bottom: (libOpen ? libHeight : 30) + 8}}>{toast.msg}</div>}
 
-      {confirmModal && (
-        <div className="overlay" onClick={() => setConfirmModal(null)}>
-          <div className="confirm-dialog" onClick={e => e.stopPropagation()}>
-            <div className="confirm-msg">{confirmModal.message}</div>
-            {confirmModal.extra && <div style={{marginTop:8}}>{confirmModal.extra}</div>}
-            <div className="confirm-row">
-              <button className="btn" onClick={() => setConfirmModal(null)}>{lang === 'es' ? 'Cancelar' : 'Cancel'}</button>
-              <button className={`btn${confirmModal.danger ? ' danger' : ' acc'}`}
-                onClick={() => { setConfirmModal(null); confirmModal.onConfirm(); }}>
-                {lang === 'es' ? 'Confirmar' : 'Confirm'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {presentation && (() => {
         const zoneMode = presZoneIdx >= 0;
@@ -8696,9 +8725,9 @@ ${rows}
         <>
           <div style={{position:'fixed',inset:0,zIndex:599}} onClick={() => setExportDropOpen(false)}/>
           <div className="upload-drop" style={{position:'fixed',right:exportDropPos.right,top:exportDropPos.top,zIndex:600}}>
-            {[[85, lang==='es'?'Buena calidad':'Good quality','JPEG 85'],[92, lang==='es'?'Alta calidad':'High quality','JPEG 92'],[100, lang==='es'?'Máxima calidad':'Max quality','JPEG 100']].map(([q, label, sub]) => (
-              <a key={q} className="upload-drop-item" style={{display:'flex',justifyContent:'space-between',gap:16,textDecoration:'none'}}
-                href={buildExportUrl(q)} download onClick={() => setExportDropOpen(false)}>
+            {[[96, lang==='es'?'Pantalla / web':'Screen / web','96 dpi'],[150, lang==='es'?'Borrador / uso general':'Draft / general use','150 dpi'],[300, lang==='es'?'Imprenta / alta calidad':'Press / high quality','300 dpi']].map(([dpi, label, sub]) => (
+              <a key={dpi} className="upload-drop-item" style={{display:'flex',justifyContent:'space-between',gap:16,textDecoration:'none'}}
+                href={buildExportUrl(dpi)} download onClick={() => setExportDropOpen(false)}>
                 <span>{label}</span><span style={{color:'var(--dim)'}}>{sub}</span>
               </a>
             ))}
@@ -8974,16 +9003,17 @@ ${rows}
                   <option value="in">{t('unitIn')}</option>
                 </select>
               </div>
-              <div>
-                <div className="cfg-label">{t('resolutionLabel')}</div>
-                <select className="inp" value={cfgDpi} onChange={e => setCfgDpi(e.target.value)}>
-                  <option value="72">{t('dpi72')}</option>
-                  <option value="96">{t('dpi96')}</option>
-                  <option value="150">{t('dpi150')}</option>
-                  <option value="300">{t('dpi300')}</option>
-                  <option value="600">{t('dpi600')}</option>
-                </select>
-              </div>
+              {cfgUnits !== 'px' && (
+                <div>
+                  <div className="cfg-label">{t('resolutionLabel')}</div>
+                  <select className="inp" value={cfgDpi} onChange={e => setCfgDpi(e.target.value)}>
+                    <option value="96">{t('dpi96')}</option>
+                    <option value="150">{t('dpi150')}</option>
+                    <option value="300">{t('dpi300')}</option>
+                    <option value="600">{t('dpi600')}</option>
+                  </select>
+                </div>
+              )}
             </div>
             <div className="cfg-row">
               <div>
@@ -9013,7 +9043,7 @@ ${rows}
               <div className="cfg-hint">{cfgHint()}</div>
             )}
             {cfgFixed && cfgBoardW && cfgBoardH && (() => {
-              const px = getBoardPx({ fixed: true, fixedW: parseFloat(cfgBoardW), fixedH: parseFloat(cfgBoardH), units: cfgUnits, dpi: parseInt(cfgDpi)||300 });
+              const px = getBoardPx({ fixed: true, fixedW: parseFloat(cfgBoardW), fixedH: parseFloat(cfgBoardH), units: cfgUnits, dpi: parseInt(cfgDpi) || 150 });
               return px ? <div className="cfg-hint" style={{color:'var(--acc)'}}>{t('pxPreview', px.w, px.h)}</div> : null;
             })()}
             <div style={{fontSize:9,color:'var(--muted)',lineHeight:1.8}}>
@@ -9088,16 +9118,75 @@ ${rows}
               <div style={{fontSize:9,color:'var(--muted)',textAlign:'center',padding:'16px 0'}}>{t('noVersions')}</div>
             ) : (
               <div className="ver-list">
-                {versions.map(v => (
-                  <div key={v.ts} className="ver-row">
-                    <div style={{flex:1}}>
-                      <div className="ver-ts">{fmtTs(v.ts)}</div>
-                      <div className="ver-count">{t('versionItems', v.itemCount)}</div>
+                {versions.map(v => {
+                  const isPreviewOpen = verPreviewTs === v.ts;
+                  const previewEl = (() => {
+                    if (!isPreviewOpen || !verPreviewItems.length) return null;
+                    const board = activeBoardMeta;
+                    const dpi = board?.dpi || null; const units = board?.units || 'px';
+                    const bPx = board ? getBoardPx(board) : null;
+                    const expanded = [];
+                    verPreviewItems.forEach(item => {
+                      if (item.type === 'note' || item.type === 'text' || item.type === 'zone') return;
+                      if (item.type === 'grid') {
+                        const layout = calcGridLayout(item, photos, dpi || 150, units);
+                        let rowY = item.y;
+                        layout.rows.forEach(row => {
+                          row.ids.forEach((photoId, ci) => {
+                            if (photoId) expanded.push({ ...item, id: item.id+'_'+photoId, photoId, x: item.x+ci*(layout.cellW+layout.gapPx), y: rowY, w: layout.cellW, rot:0, freeRot:0 });
+                          });
+                          rowY += row.h + layout.gapPx;
+                        });
+                      } else { expanded.push(item); }
+                    });
+                    const mapped = expanded.map(item => {
+                      const photo = photos.find(p => p.id === item.photoId);
+                      const rot = item.rot||0; const isSwapped = rot%180!==0;
+                      const naturalW = isSwapped ? (photo?Math.round(item.w*photo.w/photo.h):item.w) : item.w;
+                      const naturalH = isSwapped ? item.w : (photo?Math.round(item.w*photo.h/photo.w):item.w);
+                      const displayH = isSwapped ? naturalW : naturalH;
+                      const cx = item.x+item.w/2; const cy = item.y+displayH/2;
+                      return { ...item, naturalW, naturalH, displayH, offX:Math.round((item.w-naturalW)/2), offY:Math.round((displayH-naturalH)/2), vL:cx-item.w/2, vT:cy-displayH/2, vW:item.w, vH:displayH };
+                    });
+                    const minX = bPx ? 0 : (mapped.length ? Math.min(...mapped.map(i=>i.vL)) : 0);
+                    const minY = bPx ? 0 : (mapped.length ? Math.min(...mapped.map(i=>i.vT)) : 0);
+                    const bW = bPx?.w ?? (mapped.length ? Math.max(...mapped.map(i=>i.vL+i.vW))-minX : 0);
+                    const bH = bPx?.h ?? (mapped.length ? Math.max(...mapped.map(i=>i.vT+i.vH))-minY : 0);
+                    if (!bW || !bH) return null;
+                    const sc = Math.min(380/bW, 180/bH, 1);
+                    const pW = Math.round(bW*sc); const pH = Math.round(bH*sc);
+                    return (
+                      <div style={{margin:'6px 0 2px',background:'var(--deep)',borderRadius:3,overflow:'hidden',width:pW,height:pH,position:'relative',border:'1px solid var(--border)'}}>
+                        {mapped.map(item => {
+                          const rot = item.rot||0; const freeRot = item.freeRot||0;
+                          const iL = Math.round((item.x-minX)*sc); const iT = Math.round((item.y-minY)*sc);
+                          const iW = Math.round(item.w*sc); const iH = Math.round(item.displayH*sc);
+                          const matSz = item.matSize??item.frame??0; const moldSz = item.frameSize??0;
+                          const matPxS = matSz>0?Math.max(1,Math.round(physToPx(matSz,dpi,units)*sc)):0;
+                          const moldPxS = moldSz>0?Math.max(1,Math.round(physToPx(moldSz,dpi,units)*sc)):0;
+                          const fStyle = (matPxS||moldPxS)?{boxShadow:`0 0 0 ${matPxS}px ${item.matColor||'#fff'},0 0 0 ${matPxS+moldPxS}px ${item.frameColor||'#5a3e1b'}`}:{};
+                          return (
+                            <div key={item.id} style={{position:'absolute',left:iL,top:iT,width:iW,height:iH,overflow:'hidden',...(freeRot?{transform:`rotate(${freeRot}deg)`,transformOrigin:'center'}:{}),...fStyle}}>
+                              <img src={`/photos/${pid}/${item.photoId}/thumb`} alt="" style={{position:'absolute',left:Math.round(item.offX*sc),top:Math.round(item.offY*sc),width:Math.round(item.naturalW*sc),height:Math.round(item.naturalH*sc),objectFit:'cover',...(rot?{transform:`rotate(${rot}deg)`,transformOrigin:'center'}:{})}} />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })();
+                  return (
+                    <div key={v.ts} className="ver-row" style={{flexWrap:'wrap'}}>
+                      <div style={{flex:1,minWidth:0,cursor:'pointer'}} onClick={() => previewVersion(v.ts)}>
+                        <div className="ver-ts">{fmtTs(v.ts)}</div>
+                        <div className="ver-count">{t('versionItems', v.itemCount)}</div>
+                      </div>
+                      <button className="btn" style={{fontSize:9,padding:'3px 7px',color:isPreviewOpen?'var(--acc)':undefined}} onClick={() => previewVersion(v.ts)} title={lang==='es'?'Vista previa':'Preview'}>◉</button>
+                      <button className="btn" style={{fontSize:9,padding:'3px 8px'}} onClick={() => restoreVersion(v.ts)}>{t('restoreVersion')}</button>
+                      <button className="btn" style={{fontSize:9,padding:'3px 7px',color:'var(--danger,#e05)'}} onClick={() => deleteVersion(v.ts)}>×</button>
+                      {previewEl && <div style={{width:'100%',paddingTop:4}}>{previewEl}</div>}
                     </div>
-                    <button className="btn" style={{fontSize:9,padding:'3px 8px'}} onClick={() => restoreVersion(v.ts)}>{t('restoreVersion')}</button>
-                    <button className="btn" style={{fontSize:9,padding:'3px 7px',color:'var(--danger,#e05)'}} onClick={() => deleteVersion(v.ts)}>×</button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
             <div className="modal-row">
@@ -9173,7 +9262,23 @@ ${rows}
                     ) : (() => {
                       const bPx = getBoardPx(board);
                       const textItems = boardIt.filter(i => i.type === 'text');
-                      const photoItems = boardIt.filter(i => i.type !== 'note' && i.type !== 'text' && i.type !== 'zone').map(item => {
+                      const expandedM = [];
+                      boardIt.forEach(item => {
+                        if (item.type === 'note' || item.type === 'text' || item.type === 'zone') return;
+                        if (item.type === 'grid') {
+                          const layout = calcGridLayout(item, photos, dpi || 150, units);
+                          let rowY = item.y;
+                          layout.rows.forEach(row => {
+                            row.ids.forEach((photoId, ci) => {
+                              if (photoId) expandedM.push({ ...item, id: item.id + '_' + photoId, photoId, x: item.x + ci * (layout.cellW + layout.gapPx), y: rowY, w: layout.cellW, rot: 0, freeRot: 0 });
+                            });
+                            rowY += row.h + layout.gapPx;
+                          });
+                        } else {
+                          expandedM.push(item);
+                        }
+                      });
+                      const photoItems = expandedM.map(item => {
                         const photo = photos.find(p => p.id === item.photoId);
                         const rot = item.rot || 0; const freeRot = item.freeRot || 0;
                         const isSwapped = rot % 180 !== 0;
@@ -9207,8 +9312,10 @@ ${rows}
                               }}>
                                 {photoItems.map(item => {
                                   const rot = item.rot || 0; const freeRot = item.freeRot || 0;
-                                  const fPx = item.frame > 0 ? Math.max(1, Math.round(physToPx(item.frame, dpi, units) * sc)) : 0;
-                                  const frameStyle = fPx > 0 ? { outline: `${fPx}px solid #c8c8c8` } : {};
+                                  const matSzM = item.matSize ?? item.frame ?? 0; const moldSzM = item.frameSize ?? 0;
+                                  const matPxM = matSzM > 0 ? Math.max(1, Math.round(physToPx(matSzM, dpi, units) * sc)) : 0;
+                                  const moldPxM = moldSzM > 0 ? Math.max(1, Math.round(physToPx(moldSzM, dpi, units) * sc)) : 0;
+                                  const frameStyle = (matPxM || moldPxM) ? { boxShadow: `0 0 0 ${matPxM}px ${item.matColor||'#ffffff'}, 0 0 0 ${matPxM+moldPxM}px ${item.frameColor||'#5a3e1b'}` } : {};
                                   const iL = Math.round((item.x - minX) * sc); const iT = Math.round((item.y - minY) * sc);
                                   const iW = Math.round(item.w * sc); const iH = Math.round(item.displayH * sc);
                                   return (
@@ -9231,29 +9338,61 @@ ${rows}
                               <div className="mem-preview-dim">{dimLabel(bW, bH, dpi, units)}</div>
                             </div>
                           )}
-                          {boardIt.filter(i => i.type !== 'note' && i.type !== 'text').map((item, idx) => {
-                            const photo = photos.find(p => p.id === item.photoId);
-                            const h = photo
-                              ? ((item.rot || 0) % 180 !== 0
-                                ? Math.round(item.w * photo.w / photo.h)
-                                : Math.round(item.w * photo.h / photo.w))
-                              : item.w;
-                            const dimStr = dimLabel(item.w, h, dpi, units, item.frame);
-                            return (
-                              <div key={item.id} className="mem-item">
-                                <div className="mem-idx">{idx + 1}.</div>
-                                <img className="mem-thumb" src={`/photos/${pid}/${item.photoId}/thumb`} alt="" />
-                                <div className="mem-info">
-                                  <div className="mem-iname">{photo?.name || item.photoId}</div>
-                                  <div className="mem-dims">
-                                    {dimStr}
-                                    {(item.frame > 0) && <span style={{color:'var(--muted)',marginLeft:6,fontSize:8}}>({t('frameNote', item.frame, hasPhys ? units : 'px')})</span>}
+                          {(() => {
+                            let mIdx = 0;
+                            return boardIt.filter(i => i.type !== 'note' && i.type !== 'text' && i.type !== 'zone').flatMap(item => {
+                              const u = hasPhys ? units : 'px';
+                              if (item.type === 'grid') {
+                                const layout = calcGridLayout(item, photos, dpi || 150, units);
+                                const gLabel = item.label ? ` "${item.label}"` : '';
+                                const gHeader = (
+                                  <div key={item.id + '_hdr'} style={{fontSize:8,textTransform:'uppercase',letterSpacing:'.8px',color:'var(--muted)',borderTop:'1px solid var(--border)',padding:'6px 4px 3px',marginTop:4}}>
+                                    {lang==='es'?'Grid':'Grid'} {layout.cols}×{layout.rows.length}{gLabel} · {dimLabel(item.w, layout.totalH, dpi, units)}
                                   </div>
-                                  {item.label && <div className="mem-lbl">"{item.label}"</div>}
+                                );
+                                const gRows = layout.rows.flatMap(row =>
+                                  row.ids.map(photoId => {
+                                    if (!photoId) return null;
+                                    mIdx++;
+                                    const photo = photos.find(p => p.id === photoId);
+                                    return (
+                                      <div key={item.id + '_' + photoId} className="mem-item">
+                                        <div className="mem-idx">{mIdx}.</div>
+                                        <img className="mem-thumb" src={`/photos/${pid}/${photoId}/thumb`} alt="" />
+                                        <div className="mem-info">
+                                          <div className="mem-iname">{photo?.name || photoId}</div>
+                                          <div className="mem-dims">{dimLabel(layout.cellW, row.h, dpi, units)}</div>
+                                        </div>
+                                      </div>
+                                    );
+                                  }).filter(Boolean)
+                                );
+                                return [gHeader, ...gRows];
+                              }
+                              mIdx++;
+                              const photo = photos.find(p => p.id === item.photoId);
+                              const h = photo ? ((item.rot||0)%180!==0 ? Math.round(item.w*photo.w/photo.h) : Math.round(item.w*photo.h/photo.w)) : item.w;
+                              const mat = item.matSize ?? item.frame ?? 0; const mold = item.frameSize ?? 0;
+                              const totalFrame = mat + mold;
+                              const frameParts = [];
+                              if (mat) frameParts.push(`${mat}${u} ${lang==='es'?'paspartú':'mat'}`);
+                              if (mold) frameParts.push(`${mold}${u} ${lang==='es'?'moldura':'molding'}`);
+                              return [(
+                                <div key={item.id} className="mem-item">
+                                  <div className="mem-idx">{mIdx}.</div>
+                                  <img className="mem-thumb" src={`/photos/${pid}/${item.photoId}/thumb`} alt="" />
+                                  <div className="mem-info">
+                                    <div className="mem-iname">{photo?.name || item.photoId}</div>
+                                    <div className="mem-dims">
+                                      {dimLabel(item.w, h, dpi, units, totalFrame)}
+                                      {frameParts.length > 0 && <span style={{color:'var(--muted)',marginLeft:6,fontSize:9}}>{frameParts.join(' + ')}</span>}
+                                    </div>
+                                    {item.label && <div className="mem-lbl">"{item.label}"</div>}
+                                  </div>
                                 </div>
-                              </div>
-                            );
-                          })}
+                              )];
+                            });
+                          })()}
                           {boardIt.filter(i => i.type === 'note' && i.inMemory).length > 0 && (
                             <>
                               <div className="mem-notes-hd">{t('notesSectionTitle')}</div>
@@ -9349,6 +9488,21 @@ ${rows}
               {importState.conflict && (
                 <button className="btn acc" onClick={() => confirmImport('replace')} disabled={importState.busy}>{t('importReplace')}</button>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+      {confirmModal && (
+        <div className="overlay" style={{zIndex:1100}} onClick={() => setConfirmModal(null)}>
+          <div className="confirm-dialog" onClick={e => e.stopPropagation()}>
+            <div className="confirm-msg">{confirmModal.message}</div>
+            {confirmModal.extra && <div style={{marginTop:8}}>{confirmModal.extra}</div>}
+            <div className="confirm-row">
+              <button className="btn" onClick={() => setConfirmModal(null)}>{lang === 'es' ? 'Cancelar' : 'Cancel'}</button>
+              <button className={`btn${confirmModal.danger ? ' danger' : ' acc'}`}
+                onClick={() => { setConfirmModal(null); confirmModal.onConfirm(); }}>
+                {lang === 'es' ? 'Confirmar' : 'Confirm'}
+              </button>
             </div>
           </div>
         </div>

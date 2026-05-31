@@ -31,21 +31,20 @@ No requiere instalar nada más. Node.js va incluido en el paquete.
 
 > Si no sabes qué procesador tienes: menú Apple → **Acerca de este Mac**. Si pone "Apple M..." es Apple Silicon; si pone "Intel" es Intel.
 
-**Instalación:**
+**Instalación (método recomendado):**
 
-1. Descarga el `.dmg` correspondiente desde [Releases](https://github.com/blasgonzalez/tableau/releases/latest)
-2. Abre el `.dmg` y arrastra **Tableau** a la carpeta **Aplicaciones**
-3. **Primera vez (solo una vez):** macOS bloqueará la app porque no está firmada con certificado de Apple.
-   Para abrirla:
-   - En Finder → Aplicaciones, haz **clic derecho** sobre Tableau → **Abrir**
-   - En el diálogo de aviso, haz clic en **Abrir** de nuevo
-4. A partir de ahí, el doble clic normal ya funciona
+1. Descarga el `.dmg` desde [Releases](https://github.com/blasgonzalez/tableau/releases/latest) y ábrelo
+2. Haz **clic derecho** sobre **"Instalar Tableau"** → **Abrir**
+3. En el diálogo de seguridad, confirma que quieres abrirlo
+4. Un terminal se abre brevemente, copia la app a Aplicaciones y la lanza automáticamente
+
+A partir de ese momento el doble clic normal ya funciona.
 
 Al abrirse, Tableau lanza el servidor en segundo plano y abre el navegador automáticamente.
 
 Los datos se guardan en `~/Library/Application Support/Tableau/data` y no se eliminan al borrar la app.
 
-> **Alternativa si el clic derecho no funciona:** Ajustes del Sistema → Privacidad y Seguridad → pulsa **"Abrir de todas formas"** (aparece unos segundos después del primer intento bloqueado).
+> **Instalación manual alternativa:** arrastra Tableau a la carpeta Aplicaciones. La primera vez, abre Finder → Aplicaciones, haz **clic derecho** sobre Tableau → **Abrir** → **Abrir**. Si el icono aparece en gris o el navegador no conecta, consulta la sección de soporte.
 
 ---
 
@@ -59,7 +58,7 @@ sudo apt install nodejs npm
 
 **Instalación:**
 
-1. Descarga **`tableau-linux-1.2.0.zip`** desde [Releases](https://github.com/blasgonzalez/tableau/releases/latest)
+1. Descarga **`tableau-linux-x.x.x.zip`** desde [Releases](https://github.com/blasgonzalez/tableau/releases/latest)
 2. Descomprime el ZIP desde la Terminal (el gestor de archivos gráfico puede no descomprimir correctamente):
    ```
    unzip tableau-linux-1.2.0.zip -d ~/Aplicaciones/Tableau

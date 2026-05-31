@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.10.0] — 2026-05-31
+
+### Añadido
+- Panel de info: dimensiones reales del archivo original (no de la miniatura de trabajo), DPI del archivo y tamaño de impresión nativo
+- Colocación de fotos a tamaño nativo: al arrastrar al tablero, la foto ocupa el espacio que le corresponde según sus píxeles y el DPI del tablero
+- DPI vuelve al panel de configuración del tablero (se había retirado en 1.9.x)
+- Tablero variable: al colocar la primera foto, el zoom se ajusta automáticamente para mostrarla completa
+- Tablero variable: el botón ⇔ (ajustar) ya no tiene límite mínimo de zoom — siempre muestra todo el contenido
+- Zoom con rueda: mínimo reducido a 0,1 % (antes 5 %)
+- Mac: el DMG incluye "Instalar Tableau.command" — un clic derecho → Abrir copia la app, elimina la restricción de seguridad y la abre
+
+### Corregido
+- El panel de información ya no muestra los KB de la miniatura de trabajo (dato incorrecto)
+- Colocación de fotos: la herencia de tamaño entre fotos de diferente orientación (vertical/horizontal) ya no causa tamaños incorrectos
+- Borrar el único tablero o proyecto ya deja el canvas correctamente inactivo (no se podían seguir añadiendo fotos sin tablero activo)
+- Multi-arrastre desde biblioteca: las fotos se colocan a su tamaño real en lugar de a 320 px fijo
+- Normalización del canvas variable: los ítems siempre se anclan al origen, evitando que el botón ⇔ deje de funcionar al dispersar contenido
+
+---
+
 ## [1.9.10] — 2026-05-30
 ### Corregido
 - Windows: el lanzador detectaba incorrectamente el servidor como activo tras cerrarlo — ya arranca siempre correctamente

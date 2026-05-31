@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.10.0] — 2026-05-31
+
+### Added
+- Info panel: real original file dimensions (not the working thumbnail), EXIF DPI and native print size
+- Photos placed at native size: dragging to the board places the photo at the size matching its pixels and board DPI
+- Board DPI returned to the board config panel (was removed in 1.9.x)
+- Variable board: placing the first photo auto-adjusts zoom to show it fully
+- Variable board: the ⇔ (fit) button no longer has a minimum zoom limit — always shows all content
+- Mouse wheel zoom: minimum lowered to 0.1 % (was 5 %)
+- Mac: DMG now includes "Instalar Tableau.command" — one right-click → Open copies the app, removes quarantine and launches it
+
+### Fixed
+- Info panel no longer shows the working thumbnail's file size (incorrect value)
+- Photo placement: size inheritance between portrait and landscape photos no longer causes wrong dimensions
+- Deleting the only board or project now leaves the canvas correctly inactive (photos could still be dropped without an active board)
+- Multi-drag from library: photos placed at their real size instead of a fixed 320 px
+- Variable canvas normalisation: items always anchor to origin, preventing the ⇔ button from breaking when content is spread far apart
+
+---
+
 ## [1.9.10] — 2026-05-30
 ### Fixed
 - Windows: launcher incorrectly detected the server as running after it was closed — now always starts correctly
