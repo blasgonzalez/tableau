@@ -14,7 +14,7 @@ env:
 
 jobs:
   mac:
-    runs-on: macos-13        # Intel x64 — works on Intel Mac natively and Apple Silicon via Rosetta 2
+    runs-on: macos-latest    # Apple Silicon (ARM64) — works on M1/M2/M3+ natively
     permissions:
       contents: write
     steps:
@@ -24,10 +24,10 @@ jobs:
         id: ver
         run: echo "v=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
 
-      - name: Download portable Node.js (macOS x64)
+      - name: Download portable Node.js (macOS ARM64)
         run: |
-          curl -fsSL "https://nodejs.org/dist/v${{ env.NODE_VERSION }}/node-v${{ env.NODE_VERSION }}-darwin-x64.tar.gz" | tar -xz
-          mv "node-v${{ env.NODE_VERSION }}-darwin-x64" node-dist
+          curl -fsSL "https://nodejs.org/dist/v${{ env.NODE_VERSION }}/node-v${{ env.NODE_VERSION }}-darwin-arm64.tar.gz" | tar -xz
+          mv "node-v${{ env.NODE_VERSION }}-darwin-arm64" node-dist
 
       - name: Install production dependencies
         run: npm install --production
