@@ -8,9 +8,11 @@ Gestión visual de proyectos fotográficos. Tableros libres, biblioteca por proy
 
 ### Windows
 
-1. Descarga **`tableau-installer-1.2.0.exe`** desde [Releases](https://github.com/blasgonzalez/tableau/releases/latest)
+1. Descarga **`tableau-installer-x.x.x.exe`** desde [Releases](https://github.com/blasgonzalez/tableau/releases/latest)
 2. Ejecuta el instalador y sigue el asistente (no requiere permisos de administrador)
 3. Al finalizar, elige **Iniciar Tableau** o usa el acceso directo del Escritorio
+
+Al abrirse, Tableau lanza el servidor en segundo plano (sin ventana) y abre el navegador automáticamente.
 
 Los datos se guardan en `%LOCALAPPDATA%\Tableau\data` y no se eliminan al desinstalar.
 
@@ -18,28 +20,32 @@ Los datos se guardan en `%LOCALAPPDATA%\Tableau\data` y no se eliminan al desins
 
 ### Mac
 
-**Requisito previo:** Node.js 18 o superior.
-Si no lo tienes, descárgalo desde [nodejs.org](https://nodejs.org) o instálalo con Homebrew:
-```
-brew install node
-```
+No requiere instalar nada más. Node.js va incluido en el paquete.
+
+**¿Qué archivo descargar?**
+
+| Mac | Archivo |
+|-----|---------|
+| Apple Silicon (M1/M2/M3/M4) | `tableau-mac-x.x.x.dmg` |
+| Intel (anterior a 2021) | `tableau-mac-intel-x.x.x.dmg` |
+
+> Si no sabes qué procesador tienes: menú Apple → **Acerca de este Mac**. Si pone "Apple M..." es Apple Silicon; si pone "Intel" es Intel.
 
 **Instalación:**
 
-1. Descarga **`tableau-mac-1.2.0.zip`** desde [Releases](https://github.com/blasgonzalez/tableau/releases/latest)
-2. Descomprime el ZIP en la carpeta donde quieras tener la aplicación (p. ej. `~/Aplicaciones/Tableau`)
-3. Abre **Terminal** y escribe `chmod +x ` (con un espacio al final), arrastra el archivo `install.sh` a la ventana y pulsa Enter:
-   ```
-   chmod +x /ruta/a/tu/carpeta/install.sh
-   ```
-4. Arrastra de nuevo `install.sh` a la Terminal y pulsa Enter para iniciar la instalación
-5. Cuando termine, aparecerá **`Tableau.command`** en el Escritorio
+1. Descarga el `.dmg` correspondiente desde [Releases](https://github.com/blasgonzalez/tableau/releases/latest)
+2. Abre el `.dmg` y arrastra **Tableau** a la carpeta **Aplicaciones**
+3. **Primera vez (solo una vez):** macOS bloqueará la app porque no está firmada con certificado de Apple.
+   Para abrirla:
+   - En Finder → Aplicaciones, haz **clic derecho** sobre Tableau → **Abrir**
+   - En el diálogo de aviso, haz clic en **Abrir** de nuevo
+4. A partir de ahí, el doble clic normal ya funciona
 
-A partir de ese momento, haz doble clic en `Tableau.command` para abrir la aplicación.
+Al abrirse, Tableau lanza el servidor en segundo plano y abre el navegador automáticamente.
 
-Los datos se guardan en `~/Library/Application Support/Tableau/data`.
+Los datos se guardan en `~/Library/Application Support/Tableau/data` y no se eliminan al borrar la app.
 
-> **Si macOS bloquea el archivo:** ve a Ajustes del Sistema → Privacidad y Seguridad → pulsa "Abrir de todas formas".
+> **Alternativa si el clic derecho no funciona:** Ajustes del Sistema → Privacidad y Seguridad → pulsa **"Abrir de todas formas"** (aparece unos segundos después del primer intento bloqueado).
 
 ---
 
@@ -121,16 +127,19 @@ Para desarrollo con recarga automática: `npm run dev`
 
 ### Generar instaladores
 
+**Windows** (local):
 ```
 installer\build.bat
 ```
+Genera `dist/tableau-installer-x.x.x.exe`. Requiere [Inno Setup 6](https://jrsoftware.org/isdl.php) en el PATH.
 
-Genera en `dist/`:
-- `tableau-installer-x.x.x.exe` — instalador Windows
-- `tableau-mac-x.x.x.zip` — paquete Mac
-- `tableau-linux-x.x.x.zip` — paquete Linux
+**Mac y Linux** (automático vía GitHub Actions):
+Al publicar un release en GitHub, el workflow `.github/workflows/release.yml` genera y sube automáticamente:
+- `tableau-mac-x.x.x.dmg` — Apple Silicon (M1/M2/M3/M4)
+- `tableau-mac-intel-x.x.x.dmg` — Intel
+- `tableau-linux-x.x.x.zip` — Linux x64
 
-Requiere [Inno Setup 6](https://jrsoftware.org/isdl.php) en el PATH.
+Para regenerar manualmente: GitHub → Actions → **Build Mac & Linux** → Run workflow → introducir el tag.
 
 ### Estructura de carpetas
 
