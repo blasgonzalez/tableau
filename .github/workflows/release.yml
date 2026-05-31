@@ -14,9 +14,18 @@ env:
 
 jobs:
   mac:
-    runs-on: macos-latest    # Apple Silicon (ARM64) — works on M1/M2/M3+ natively
+    runs-on: macos-latest
     permissions:
       contents: write
+    strategy:
+      matrix:
+        include:
+          - arch: arm64
+            suffix: ""
+            node_arch: darwin-arm64
+          - arch: x64
+            suffix: "-intel"
+            node_arch: darwin-x64
     steps:
       - uses: actions/checkout@v4
 
@@ -31,10 +40,10 @@ jobs:
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "v=${TAG#v}" >> $GITHUB_OUTPUT
 
-      - name: Download portable Node.js (macOS ARM64)
+      - name: Download portable Node.js
         run: |
-          curl -fsSL "https://nodejs.org/dist/v${{ env.NODE_VERSION }}/node-v${{ env.NODE_VERSION }}-darwin-arm64.tar.gz" | tar -xz
-          mv "node-v${{ env.NODE_VERSION }}-darwin-arm64" node-dist
+          curl -fsSL "https://nodejs.org/dist/v${{ env.NODE_VERSION }}/node-v${{ env.NODE_VERSION }}-${{ matrix.node_arch }}.tar.gz" | tar -xz
+          mv "node-v${{ env.NODE_VERSION }}-${{ matrix.node_arch }}" node-dist
 
       - name: Install production dependencies
         run: npm install --production
@@ -72,15 +81,19 @@ jobs:
       - name: Create DMG
         run: |
           V=${{ steps.ver.outputs.v }}
+          SUFFIX="${{ matrix.suffix }}"
           mkdir dmg-stage
           cp -r Tableau.app dmg-stage/
           ln -s /Applications dmg-stage/Applications
-          hdiutil create -volname "Tableau $V" -srcfolder dmg-stage -ov -format UDZO "tableau-mac-$V.dmg"
+          hdiutil create -volname "Tableau $V" -srcfolder dmg-stage -ov -format UDZO "tableau-mac${SUFFIX}-${V}.dmg"
 
       - name: Upload to release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "${{ steps.ver.outputs.tag }}" "tableau-mac-${{ steps.ver.outputs.v }}.dmg" --clobber
+        run: |
+          V=${{ steps.ver.outputs.v }}
+          SUFFIX="${{ matrix.suffix }}"
+          gh release upload "${{ steps.ver.outputs.tag }}" "tableau-mac${SUFFIX}-${V}.dmg" --clobber
 
   linux:
     runs-on: ubuntu-latest
