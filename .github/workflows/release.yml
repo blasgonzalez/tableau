@@ -17,15 +17,6 @@ jobs:
     runs-on: macos-latest
     permissions:
       contents: write
-    strategy:
-      matrix:
-        include:
-          - arch: arm64
-            suffix: ""
-            node_arch: darwin-arm64
-          - arch: x64
-            suffix: "-intel"
-            node_arch: darwin-x64
     steps:
       - uses: actions/checkout@v4
 
@@ -40,10 +31,15 @@ jobs:
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "v=${TAG#v}" >> $GITHUB_OUTPUT
 
-      - name: Download portable Node.js
+      - name: Download Node.js (arm64 + x64) and create universal binary
         run: |
-          curl -fsSL "https://nodejs.org/dist/v${{ env.NODE_VERSION }}/node-v${{ env.NODE_VERSION }}-${{ matrix.node_arch }}.tar.gz" | tar -xz
-          mv "node-v${{ env.NODE_VERSION }}-${{ matrix.node_arch }}" node-dist
+          curl -fsSL "https://nodejs.org/dist/v${{ env.NODE_VERSION }}/node-v${{ env.NODE_VERSION }}-darwin-arm64.tar.gz" | tar -xz
+          curl -fsSL "https://nodejs.org/dist/v${{ env.NODE_VERSION }}/node-v${{ env.NODE_VERSION }}-darwin-x64.tar.gz" | tar -xz
+          lipo -create \
+            "node-v${{ env.NODE_VERSION }}-darwin-arm64/bin/node" \
+            "node-v${{ env.NODE_VERSION }}-darwin-x64/bin/node" \
+            -output node-universal
+          chmod +x node-universal
 
       - name: Install production dependencies
         run: npm install --production
@@ -54,7 +50,7 @@ jobs:
           APP="Tableau.app"
           mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$APP/Contents/node" "$APP/Contents/app"
 
-          cp node-dist/bin/node "$APP/Contents/node/node"
+          cp node-universal "$APP/Contents/node/node"
           cp server.js package.json "$APP/Contents/app/"
           cp -r public node_modules "$APP/Contents/app/"
           [ -d fonts ] && cp -r fonts "$APP/Contents/app/"
@@ -81,7 +77,6 @@ jobs:
       - name: Create DMG
         run: |
           V=${{ steps.ver.outputs.v }}
-          SUFFIX="${{ matrix.suffix }}"
           mkdir dmg-stage
           cp -r Tableau.app dmg-stage/
           cp installer/install-mac.command "dmg-stage/Instalar Tableau.command"
@@ -89,15 +84,14 @@ jobs:
           ln -s /Applications dmg-stage/Applications
           touch dmg-stage/.metadata_never_index
           sleep 3
-          hdiutil create -volname "Tableau $V" -srcfolder dmg-stage -ov -format UDZO "tableau-mac${SUFFIX}-${V}.dmg"
+          hdiutil create -volname "Tableau $V" -srcfolder dmg-stage -ov -format UDZO "tableau-mac-${V}.dmg"
 
       - name: Upload to release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           V=${{ steps.ver.outputs.v }}
-          SUFFIX="${{ matrix.suffix }}"
-          gh release upload "${{ steps.ver.outputs.tag }}" "tableau-mac${SUFFIX}-${V}.dmg" --clobber
+          gh release upload "${{ steps.ver.outputs.tag }}" "tableau-mac-${V}.dmg" --clobber
 
   linux:
     runs-on: ubuntu-latest

@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.10.2] — 2026-06-01
+
+### Mejorado
+- Instalador Mac universal: un solo DMG para Intel y Apple Silicon (binario Node fat binary via lipo)
+- Launcher Mac registra errores en `~/Library/Logs/Tableau/tableau.log` y muestra un diálogo si el servidor no arranca
+
+---
+
 ## [1.10.1] — 2026-06-01
 
 ### Mejorado

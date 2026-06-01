@@ -1,6 +1,6 @@
 {
-  "version": "1.10.1",
+  "version": "1.10.2",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-06-01",
-  "notes": "Carga inicial instantánea — JSX compilado en el servidor, sin dependencias externas de red."
+  "notes": "Instalador Mac universal (Intel + Apple Silicon en un solo archivo). Logs de arranque y diálogo de error si el servidor no puede iniciarse."
 }
