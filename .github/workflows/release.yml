@@ -87,6 +87,8 @@ jobs:
           cp installer/install-mac.command "dmg-stage/Instalar Tableau.command"
           chmod +x "dmg-stage/Instalar Tableau.command"
           ln -s /Applications dmg-stage/Applications
+          touch dmg-stage/.metadata_never_index
+          sleep 3
           hdiutil create -volname "Tableau $V" -srcfolder dmg-stage -ov -format UDZO "tableau-mac${SUFFIX}-${V}.dmg"
 
       - name: Upload to release
