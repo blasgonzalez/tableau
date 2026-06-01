@@ -1,6 +1,7 @@
 const express = require('express');
 const multer  = require('multer');
-const sharp   = require('sharp');
+let   _sharpMod = null;
+const sharp     = (...a) => { if (!_sharpMod) _sharpMod = require('sharp'); return _sharpMod(...a); };
 const path    = require('path');
 const fs      = require('fs');
 const { v4: uuidv4 } = require('uuid');
@@ -186,6 +187,60 @@ async function processImage(input, pid, existingId = null) {
   const meanColor = { r: Math.round(ch[0].mean), g: Math.round(ch[1].mean), b: Math.round(ch[2].mean) };
   return { id, w: meta.width, h: meta.height, size: resized.length, dominant: stats.dominant, brightness, meanColor, origW, origH, ...(origDpi && { origDpi }), ...(exif && { exif }) };
 }
+
+// ── Vendor libs (React/ReactDOM served locally — no CDN dependency) ──────────
+const REACT_JS     = path.join(path.dirname(require.resolve('react/package.json')),     'umd', 'react.production.min.js');
+const REACT_DOM_JS = path.join(path.dirname(require.resolve('react-dom/package.json')), 'umd', 'react-dom.production.min.js');
+app.get('/vendor/react.js',     (_, res) => res.sendFile(REACT_JS));
+app.get('/vendor/react-dom.js', (_, res) => res.sendFile(REACT_DOM_JS));
+
+// ── index.html con JSX pre-transpilado (babel, ~2s, cacheado en disco) ───────
+const HTML_SRC   = path.join(__dirname, 'public', 'index.html');
+const HTML_BUILT = path.join(__dirname, 'public', '_built.html');
+let _htmlReady   = null; // Promise<string>
+
+function compileHtml() {
+  return new Promise((resolve) => {
+    try {
+      const srcMtime = fs.statSync(HTML_SRC).mtimeMs;
+      try {
+        if (fs.statSync(HTML_BUILT).mtimeMs >= srcMtime)
+          return resolve(fs.readFileSync(HTML_BUILT, 'utf8'));
+      } catch {}
+      const raw  = fs.readFileSync(HTML_SRC, 'utf8');
+      const m    = raw.match(/<script type="text\/babel">([\s\S]*?)<\/script>/);
+      if (!m) { fs.writeFileSync(HTML_BUILT, raw); return resolve(raw); }
+      const babel  = require('@babel/core');
+      const { code } = babel.transformSync(m[1], {
+        presets: [['@babel/preset-react', { runtime: 'classic' }]],
+        plugins: ['@babel/plugin-transform-block-scoping'],
+        compact: false, sourceMaps: false
+      });
+      const built = raw
+        .replace(/<script[^>]+unpkg\.com[^>]*><\/script>/g, '')
+        .replace(m[0], `<script>${code}</script>`)
+        .replace('</head>', '<script src="/vendor/react.js"></script>\n<script src="/vendor/react-dom.js"></script>\n</head>');
+      fs.writeFileSync(HTML_BUILT, built);
+      resolve(built);
+    } catch (e) {
+      console.error('HTML build error:', e.message);
+      resolve(fs.readFileSync(HTML_SRC, 'utf8'));
+    }
+  });
+}
+
+// Compilar en background al arrancar — listo antes de que el navegador conecte
+_htmlReady = compileHtml();
+
+app.get('/', async (req, res) => {
+  const html = await _htmlReady;
+  try {
+    if (fs.statSync(HTML_SRC).mtimeMs > fs.statSync(HTML_BUILT).mtimeMs)
+      _htmlReady = compileHtml();
+  } catch {}
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(html);
+});
 
 // ── Middleware ───────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '2mb' }));

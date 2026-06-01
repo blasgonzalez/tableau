@@ -24,7 +24,7 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .app{height:100vh;display:flex;flex-direction:column;overflow:hidden}
 
 /* ── TOPBAR ── */
-.topbar{height:46px;background:var(--surf);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:10px;flex-shrink:0;z-index:200}
+.topbar{height:46px;background:var(--surf);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:10px;flex-shrink:0;z-index:300}
 .logo{font-family:'Playfair Display',serif;font-size:17px;color:var(--acc);flex-shrink:0}
 .vsep{width:1px;height:22px;background:var(--border2);flex-shrink:0}
 .breadcrumb{display:flex;align-items:center;gap:7px;flex:1;min-width:0;overflow:hidden}
@@ -1348,7 +1348,7 @@ function App() {
   const [templates,      setTemplates]      = useState([]);
   const [tmplNameInput,  setTmplNameInput]  = useState(null); // null = oculto, string = activo
   const [sbNavOpen,      setSbNavOpen]      = useState(true);
-  const [sbTemplOpen,    setSbTemplOpen]    = useState(() => localStorage.getItem('sbTemplOpen') === 'true');
+  const [sbTemplOpen,    setSbTemplOpen]    = useState(false);
   const [renamingTmpl,   setRenamingTmpl]   = useState(null); // {id, value}
   const [sbTmplInput,    setSbTmplInput]    = useState(null); // null | string — inline save en sidebar
   const [tmplEditMode,   setTmplEditMode]   = useState(null); // null | {id, name}
@@ -6047,7 +6047,7 @@ ${rows}
   const snapLib = (e) => {
     e.stopPropagation();
     const TOPBAR = 46;
-    const maxH = Math.floor(window.innerHeight * 0.70);
+    const maxH = window.innerHeight - TOPBAR - 5;
     const isLarge = libHeightRef.current > window.innerHeight * 0.40;
     const newH = isLarge ? LIB_COMPACT : maxH;
     if (!libOpen) { setLibOpen(true); localStorage.setItem('libOpen', 'true'); }
@@ -6295,7 +6295,7 @@ ${rows}
                 {/* NAV: Projects & Boards */}
                 <div className={`sb-sec nav${sbNavOpen ? '' : ' collapsed'}`}>
                   <div className="sb-sec-hd" style={{cursor:'pointer'}} onClick={() => { setSbNavOpen(v => { if (!v) setSbTemplOpen(false); return !v; }); }}>
-                    <span className="sb-sec-title">{t('projBoards')}</span>
+                    <span className="sb-sec-title">⊞ {t('projBoards')}</span>
                     {sbNavOpen && <button className="sb-sec-btn" title={t('newProject')}
                       onClick={e => { e.stopPropagation(); setNameVal(''); setModal('project'); }}>+</button>}
                     {sbNavOpen && <button className="sb-sec-btn" title={t('importProjectBtn')}
@@ -6429,8 +6429,8 @@ ${rows}
 
                 {/* PLANTILLAS */}
                 <div className="sb-sec tmpl">
-                  <div className="sb-sec-hd" style={{cursor:'pointer'}} onClick={() => { const v = !sbTemplOpen; setSbTemplOpen(v); localStorage.setItem('sbTemplOpen', String(v)); if (v) setSbNavOpen(false); }}>
-                    <span className="sb-sec-title">{t('templatesSection')}</span>
+                  <div className="sb-sec-hd" style={{cursor:'pointer'}} onClick={() => setSbTemplOpen(v => !v)}>
+                    <span className="sb-sec-title">◈ {t('templatesSection')}</span>
                     {bid && sbTemplOpen && <button className="sb-sec-btn" title={t('saveAsTemplate')}
                       onClick={e => { e.stopPropagation(); setSbTmplInput(v => v === null ? (activeBoardMeta?.name || '') : null); }}>+</button>}
                     <button className="sb-sec-btn" style={{marginLeft:2}}>{sbTemplOpen ? '▾' : '›'}</button>
@@ -6485,7 +6485,7 @@ ${rows}
                 {/* INFO */}
                 <div className="sb-sec info">
                   <div className="sb-sec-hd">
-                    <span className="sb-sec-title">{t('infoTitle')}</span>
+                    <span className="sb-sec-title">○ {t('infoTitle')}</span>
                   </div>
                   <InfoPanel/>
                 </div>

@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.10.1] — 2026-06-01
+
+### Mejorado
+- Carga inicial instantánea: el JSX se compila en el servidor al arrancar (~2 s una sola vez) y se cachea en disco — el navegador recibe JS puro, sin Babel
+- React y ReactDOM se sirven localmente desde node_modules — sin dependencia de unpkg.com ni de ninguna red externa
+- Arranque del servidor más rápido: sharp se carga en diferido (solo al procesar la primera imagen)
+
+### Corregido
+- Panel izquierdo: plantillas siempre arranca colapsado; expandirlas ya no colapsa la sección de proyectos
+- Panel izquierdo: iconos identificativos en cada sección (⊞ Proyectos, ◈ Plantillas, ○ Información)
+- El desplegable de preferencias ya no queda tapado por los controles de zoom al expandir la biblioteca
+- El botón de ampliar biblioteca expande hasta ocupar toda la pantalla (sin canvas visible)
+
+---
+
 ## [1.10.0] — 2026-05-31
 
 ### Añadido

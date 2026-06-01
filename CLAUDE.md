@@ -10,7 +10,11 @@ npm run dev        # development with nodemon auto-reload
 installer\build.bat  # build all installers into dist/
 ```
 
-No test suite, no linter. There is no build step for the frontend.
+No test suite, no linter. There is no manual build step for the frontend.
+
+### JSX pre-compilation
+
+On server start, `server.js` compiles `public/index.html` (which contains JSX) using `@babel/core` + `@babel/preset-react` + `@babel/plugin-transform-block-scoping` and caches the result to `public/_built.html`. Subsequent requests serve the cached file (instant). The cache invalidates automatically when `index.html` changes (mtime check). React and ReactDOM are served locally from `node_modules` — no CDN dependency. `_built.html` is gitignored.
 
 ## Architecture
 

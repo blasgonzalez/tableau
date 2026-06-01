@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.10.1] — 2026-06-01
+
+### Improved
+- Instant initial load: JSX is compiled on the server at startup (~2 s once) and cached to disk — the browser receives plain JS, no Babel
+- React and ReactDOM served locally from node_modules — no dependency on unpkg.com or any external network
+- Faster server startup: sharp is loaded lazily (only when processing the first image)
+
+### Fixed
+- Left panel: templates always starts collapsed; expanding it no longer collapses the projects section
+- Left panel: section icons added (⊞ Projects, ◈ Templates, ○ Info)
+- Preferences dropdown no longer hidden behind zoom controls when the library is expanded
+- Library expand button now fills the full screen (canvas hidden)
+
+---
+
 ## [1.10.0] — 2026-05-31
 
 ### Added

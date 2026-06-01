@@ -1,6 +1,6 @@
 {
-  "version": "1.10.0",
+  "version": "1.10.1",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-05-31",
-  "notes": "Dimensiones reales de fotos al importar, colocación a tamaño nativo en el tablero, zoom mejorado en tableros variables, instalador Mac automatizado."
+  "releaseDate": "2026-06-01",
+  "notes": "Carga inicial instantánea — JSX compilado en el servidor, sin dependencias externas de red."
 }
