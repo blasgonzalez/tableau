@@ -124,9 +124,10 @@ Al eliminar una foto que ya está colocada en algún tablero, el aviso lista los
 
 Pasa el ratón sobre una foto en la librería para ver en el panel lateral:
 
-- Nombre, dimensiones originales y tamaño de archivo
+- Nombre del archivo
+- **Dimensiones originales** — píxeles exactos del archivo (`3000 × 4000 px`) y resolución nativa si está disponible (`72 dpi`); y su tamaño físico a esa resolución (`105.8 × 141.1 cm a 72 dpi`)
+- **Tamaño en el tablero** — dimensiones físicas al DPI configurado en el tablero activo (`50.8 × 67.7 cm a 150 dpi`)
 - Cámara, objetivo, distancia focal, apertura, velocidad e ISO (metadatos EXIF)
-- Tamaño en el tablero y dimensiones físicas (si hay DPI configurado)
 - Valoración en estrellas
 - Tono dominante con muestra de color y porcentaje de luminosidad
 - Etiquetas asignadas
@@ -145,6 +146,10 @@ La pestaña **Repo** muestra las imágenes de una carpeta local compartida. Copi
 - Arrastra una miniatura desde la librería al canvas
 - Arrastra una miniatura desde la pestaña Repo
 - Suelta archivos de imagen directamente desde el explorador de archivos
+
+Las fotos se colocan a su **anchura original en píxeles** (por ejemplo, una foto de 3000 px de ancho ocupa 3000 px en el tablero). El DPI del tablero determina cuántos centímetros equivale eso: a 150 dpi serían 50.8 cm, a 72 dpi serían 105.8 cm.
+
+En un **tablero variable vacío**, al añadir la primera foto el zoom se ajusta automáticamente para que todo el contenido sea visible. Ese nivel de zoom pasa a ser el nuevo punto de referencia del ajustar-al-ancho.
 
 Las fotos añadidas individualmente con clic en la miniatura aparecen en cascada diagonal, no apiladas.
 
@@ -310,6 +315,8 @@ Selecciona varias fotos en la librería y pulsa **⊞ Cuadrícula** en la barra 
 | Ampliar / reducir | **Ctrl + rueda del ratón** |
 | Ampliar / reducir | **Ctrl + +** / **Ctrl + −** |
 | Ajustar al ancho | **Ctrl + 0** · o botón **⇔** |
+
+**Ajustar al ancho** encaja todo el contenido del tablero en el viewport y actualiza el punto de referencia del 100 %. En tableros variables, añadir la primera foto ejecuta este ajuste automáticamente.
 
 El nivel de zoom se guarda por tablero y se restaura al volver a él.
 

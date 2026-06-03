@@ -124,9 +124,10 @@ When dragging to the canvas with multiple photos selected, an animated stack wit
 
 Hover over a photo in the library to see in the side panel:
 
-- Name, original dimensions and file size
+- File name
+- **Original dimensions** — exact pixel size (`3000 × 4000 px`) and native resolution if available (`72 dpi`); and the physical size at that resolution (`105.8 × 141.1 cm at 72 dpi`)
+- **Size on board** — physical dimensions at the active board's configured DPI (`50.8 × 67.7 cm at 150 dpi`)
 - Camera, lens, focal length, aperture, shutter speed and ISO (EXIF metadata)
-- Size on the board and physical dimensions (if DPI is configured)
 - Star rating
 - Dominant hue with colour swatch and brightness percentage
 - Assigned tags
@@ -145,6 +146,10 @@ The **Repo** tab shows images from a shared local folder. Copy files into the `r
 - Drag a thumbnail from the library onto the canvas
 - Drag a thumbnail from the Repo tab
 - Drop image files directly from the file explorer
+
+Photos are placed at their **original pixel width** (e.g. a 3000 px wide photo occupies 3000 px on the board). The board DPI determines the physical size: at 150 dpi that is 50.8 cm; at 72 dpi it is 105.8 cm.
+
+On an **empty variable board**, adding the first photo automatically adjusts the zoom so all content is visible. That zoom level becomes the new fit-to-width reference.
 
 Photos added individually by clicking a thumbnail appear in a diagonal cascade, not stacked.
 
@@ -310,6 +315,8 @@ Select multiple photos in the library and click **⊞ Grid** in the selection ba
 | Zoom in / out | **Ctrl + scroll wheel** |
 | Zoom in / out | **Ctrl + +** / **Ctrl + −** |
 | Fit to width | **Ctrl + 0** · or **⇔** button |
+
+**Fit to width** fits all board content into the viewport and resets the 100 % reference zoom level. On variable boards, adding the first photo triggers this automatically.
 
 Zoom level is saved per board and restored when you switch back to it.
 

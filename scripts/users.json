@@ -1,0 +1,16 @@
+[
+  {
+    "id": "6bb85a22-f568-46d2-b1e3-f147c50574ce",
+    "username": "blasgs",
+    "passwordHash": "$2a$10$AlE6JdBppkQNLPL1EN2FkO2fiKPD2cVh2H/pqlhDZWgZ5uj3/0SuK",
+    "quota": 52428800,
+    "created": 1780331651248
+  },
+  {
+    "id": "804e5234-e5aa-4f00-a915-87d4ead570a6",
+    "username": "susanagalbis",
+    "passwordHash": "$2a$10$RGVIUtRQBN/kQEz.wdjas.nCxpuHVTHwz6X59bo3uPM1UuSVmtCHu",
+    "quota": 52428800,
+    "created": 1780332658153
+  }
+]

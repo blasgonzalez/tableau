@@ -20,20 +20,11 @@ Los datos se guardan en `%LOCALAPPDATA%\Tableau\data` y no se eliminan al desins
 
 ### Mac
 
-No requiere instalar nada más. Node.js va incluido en el paquete.
+No requiere instalar nada más. Node.js va incluido en el paquete. El mismo archivo funciona en Apple Silicon e Intel.
 
-**¿Qué archivo descargar?**
+**Instalación:**
 
-| Mac | Archivo |
-|-----|---------|
-| Apple Silicon (M1/M2/M3/M4) | `tableau-mac-x.x.x.dmg` |
-| Intel (anterior a 2021) | `tableau-mac-intel-x.x.x.dmg` |
-
-> Si no sabes qué procesador tienes: menú Apple → **Acerca de este Mac**. Si pone "Apple M..." es Apple Silicon; si pone "Intel" es Intel.
-
-**Instalación (método recomendado):**
-
-1. Descarga el `.dmg` desde [Releases](https://github.com/blasgonzalez/tableau/releases/latest) y ábrelo
+1. Descarga **`tableau-mac-x.x.x.dmg`** desde [Releases](https://github.com/blasgonzalez/tableau/releases/latest) y ábrelo
 2. Haz **clic derecho** sobre **"Instalar Tableau"** → **Abrir**
 3. En el diálogo de seguridad, confirma que quieres abrirlo
 4. Un terminal se abre brevemente, copia la app a Aplicaciones y la lanza automáticamente
@@ -44,7 +35,7 @@ Al abrirse, Tableau lanza el servidor en segundo plano y abre el navegador autom
 
 Los datos se guardan en `~/Library/Application Support/Tableau/data` y no se eliminan al borrar la app.
 
-> **Instalación manual alternativa:** arrastra Tableau a la carpeta Aplicaciones. La primera vez, abre Finder → Aplicaciones, haz **clic derecho** sobre Tableau → **Abrir** → **Abrir**. Si el icono aparece en gris o el navegador no conecta, consulta la sección de soporte.
+> **Instalación manual alternativa:** arrastra Tableau a la carpeta Aplicaciones. La primera vez, abre Finder → Aplicaciones, haz **clic derecho** sobre Tableau → **Abrir** → **Abrir**. Si el icono aparece en gris o el navegador no conecta, ejecuta en Terminal: `open ~/Library/Logs/Tableau/tableau.log` para ver el error.
 
 ---
 
@@ -134,8 +125,7 @@ Genera `dist/tableau-installer-x.x.x.exe`. Requiere [Inno Setup 6](https://jrsof
 
 **Mac y Linux** (automático vía GitHub Actions):
 Al publicar un release en GitHub, el workflow `.github/workflows/release.yml` genera y sube automáticamente:
-- `tableau-mac-x.x.x.dmg` — Apple Silicon (M1/M2/M3/M4)
-- `tableau-mac-intel-x.x.x.dmg` — Intel
+- `tableau-mac-x.x.x.dmg` — Universal (Apple Silicon + Intel, fat binary via lipo)
 - `tableau-linux-x.x.x.zip` — Linux x64
 
 Para regenerar manualmente: GitHub → Actions → **Build Mac & Linux** → Run workflow → introducir el tag.

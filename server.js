@@ -1,3 +1,4 @@
+try { require('dotenv').config(); } catch {} // carga .env si existe (opcional)
 const express = require('express');
 const multer  = require('multer');
 let   _sharpMod = null;
@@ -5,11 +6,46 @@ const sharp     = (...a) => { if (!_sharpMod) _sharpMod = require('sharp'); retu
 const path    = require('path');
 const fs      = require('fs');
 const { v4: uuidv4 } = require('uuid');
-const AdmZip = require('adm-zip');
+const AdmZip  = require('adm-zip');
+const session = require('express-session');
+const bcrypt  = require('bcryptjs');
 const { version: APP_VERSION } = require('./package.json');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
+
+// ── Auth config ───────────────────────────────────────────────────────────────
+// TABLEAU_AUTH=true activa autenticación de usuarios (modo servidor)
+// En modo local (defecto) no hay auth y todos los datos van a DATA_DIR
+const AUTH_ENABLED     = process.env.TABLEAU_AUTH === 'true';
+const SESSION_SECRET   = process.env.TABLEAU_SESSION_SECRET || 'tableau-dev-secret';
+const DEFAULT_QUOTA    = parseInt(process.env.TABLEAU_DEFAULT_QUOTA_MB || '25') * 1024 * 1024;
+const APP_URL          = (process.env.TABLEAU_APP_URL || 'http://localhost:3000').replace(/\/$/, '');
+
+// ── Email (nodemailer, solo con AUTH_ENABLED) ─────────────────────────────────
+let _mailer = null;
+function getMailer() {
+  if (_mailer) return _mailer;
+  if (!process.env.TABLEAU_SMTP_HOST) return null;
+  try {
+    const nodemailer = require('nodemailer');
+    _mailer = nodemailer.createTransport({
+      host:   process.env.TABLEAU_SMTP_HOST,
+      port:   parseInt(process.env.TABLEAU_SMTP_PORT || '587'),
+      secure: process.env.TABLEAU_SMTP_SECURE === 'true',
+      auth: { user: process.env.TABLEAU_SMTP_USER, pass: process.env.TABLEAU_SMTP_PASS },
+    });
+    return _mailer;
+  } catch { return null; }
+}
+
+async function sendMail({ to, subject, html }) {
+  const mailer = getMailer();
+  if (!mailer) { console.warn('[mail] SMTP no configurado'); return false; }
+  const from = process.env.TABLEAU_SMTP_FROM || process.env.TABLEAU_SMTP_USER;
+  try { await mailer.sendMail({ from, to, subject, html }); return true; }
+  catch (e) { console.error('[mail] Error:', e.message); return false; }
+}
 
 // ── Embedded fonts for SVG/text export ───────────────────────────────────────
 const FONTS_DIR = path.join(__dirname, 'fonts');
@@ -35,10 +71,10 @@ try {
 
 // ── Config ───────────────────────────────────────────────────────────────────
 const DATA_DIR       = process.env.TABLEAU_DATA_DIR || path.join(__dirname, 'data');
-const MAX_UPLOAD_MB  = 80;    // límite de subida antes de resize
-const RESIZE_PX      = 1800;  // dimensión máxima de foto almacenada
-const THUMB_PX       = 260;   // dimensión máxima de miniatura
-const JPEG_QUALITY   = 87;
+const MAX_UPLOAD_MB  = 80;
+const RESIZE_PX      = parseInt(process.env.TABLEAU_RESIZE_PX    || '1800');  // dimensión máxima almacenada
+const THUMB_PX       = 260;
+const JPEG_QUALITY   = parseInt(process.env.TABLEAU_JPEG_QUALITY || '87');    // calidad JPEG 1-100
 const IMAGE_EXT      = new Set(['.jpg', '.jpeg', '.png', '.webp', '.tiff', '.tif', '.avif']);
 
 // ── File system helpers ──────────────────────────────────────────────────────
@@ -47,21 +83,25 @@ const ensureDir = d => { if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: tru
 ensureDir(DATA_DIR);
 ensureDir(path.join(__dirname, 'public'));
 
-const projsFile  = ()          => path.join(DATA_DIR, 'projects.json');
-const projDir    = pid         => path.join(DATA_DIR, pid);
-const photoDir   = pid         => path.join(DATA_DIR, pid, 'photos');
-const boardDir   = pid         => path.join(DATA_DIR, pid, 'boards');
-const boardFile  = (pid, bid)  => path.join(boardDir(pid), `${bid}.json`);
-const boardsMeta = pid         => path.join(projDir(pid), 'boards.json');
-const photosMeta = pid         => path.join(projDir(pid), 'photos.json');
-const roomFile   = pid         => path.join(projDir(pid), 'room.json');
-const roomsFile  = pid         => path.join(projDir(pid), 'rooms.json');
+// Path helpers — aceptan dd (data dir del usuario) para aislar datos por usuario
+const projsFile      = (dd = DATA_DIR)          => path.join(dd, 'projects.json');
+const projDir        = (pid, dd = DATA_DIR)     => path.join(dd, pid);
+const photoDir       = (pid, dd = DATA_DIR)     => path.join(dd, pid, 'photos');
+const boardDir       = (pid, dd = DATA_DIR)     => path.join(dd, pid, 'boards');
+const boardFile      = (pid, bid, dd = DATA_DIR)=> path.join(boardDir(pid, dd), `${bid}.json`);
+const boardsMeta     = (pid, dd = DATA_DIR)     => path.join(projDir(pid, dd), 'boards.json');
+const photosMeta     = (pid, dd = DATA_DIR)     => path.join(projDir(pid, dd), 'photos.json');
+const roomFile       = (pid, dd = DATA_DIR)     => path.join(projDir(pid, dd), 'room.json');
+const roomsFile      = (pid, dd = DATA_DIR)     => path.join(projDir(pid, dd), 'rooms.json');
+const photoTrashDir  = (pid, dd = DATA_DIR)     => path.join(dd, pid, 'trash', 'photos');
+const photoTrashMeta = (pid, dd = DATA_DIR)     => path.join(dd, pid, 'trash', 'photos.json');
+const projTrashDir   = (dd = DATA_DIR)          => path.join(dd, '.trash');
 
 // Migrate single room.json → rooms.json on first access
-function migrateRooms(pid) {
-  const nf = roomsFile(pid);
+function migrateRooms(pid, dd = DATA_DIR) {
+  const nf = roomsFile(pid, dd);
   if (fs.existsSync(nf) && readJSON(nf, []).length > 0) return;
-  const of = roomFile(pid);
+  const of = roomFile(pid, dd);
   if (fs.existsSync(of)) {
     const old = readJSON(of, null);
     if (old && old.vertices) {
@@ -80,12 +120,122 @@ function writeJSON(file, data) {
   fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf8');
 }
 
-function initProject(pid) {
-  ensureDir(projDir(pid));
-  ensureDir(photoDir(pid));
-  ensureDir(boardDir(pid));
-  if (!fs.existsSync(boardsMeta(pid))) writeJSON(boardsMeta(pid), []);
-  if (!fs.existsSync(photosMeta(pid))) writeJSON(photosMeta(pid), []);
+function initProject(pid, dd = DATA_DIR) {
+  ensureDir(projDir(pid, dd));
+  ensureDir(photoDir(pid, dd));
+  ensureDir(boardDir(pid, dd));
+  if (!fs.existsSync(boardsMeta(pid, dd))) writeJSON(boardsMeta(pid, dd), []);
+  if (!fs.existsSync(photosMeta(pid, dd))) writeJSON(photosMeta(pid, dd), []);
+}
+
+// ── Trash purge ───────────────────────────────────────────────────────────────
+const TRASH_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+
+function purgeOldTrash(dd) {
+  if (!fs.existsSync(dd)) return;
+  const now = Date.now();
+  for (const entry of fs.readdirSync(dd, { withFileTypes: true })) {
+    if (!entry.isDirectory() || entry.name.startsWith('.')) continue;
+    const pid = entry.name;
+    const tmf = photoTrashMeta(pid, dd);
+    if (!fs.existsSync(tmf)) continue;
+    const trashed = readJSON(tmf, []);
+    const surviving = trashed.filter(p => {
+      if (now - p.deletedAt <= TRASH_MAX_AGE_MS) return true;
+      [`${p.id}.jpg`, `${p.id}_thumb.jpg`].forEach(f => { try { fs.unlinkSync(path.join(photoTrashDir(pid, dd), f)); } catch {} });
+      return false;
+    });
+    if (surviving.length !== trashed.length) writeJSON(tmf, surviving);
+  }
+  const ptd = projTrashDir(dd);
+  if (!fs.existsSync(ptd)) return;
+  for (const e of fs.readdirSync(ptd, { withFileTypes: true })) {
+    if (!e.isDirectory()) continue;
+    const mf = path.join(ptd, e.name, '_meta.json');
+    const meta = readJSON(mf, null);
+    if (meta && now - meta.deletedAt > TRASH_MAX_AGE_MS)
+      fs.rmSync(path.join(ptd, e.name), { recursive: true, force: true });
+  }
+}
+
+function runStartupPurge() {
+  if (AUTH_ENABLED) {
+    for (const user of loadUsers()) purgeOldTrash(path.join(DATA_DIR, user.id));
+  } else {
+    purgeOldTrash(DATA_DIR);
+  }
+}
+
+// ── Gestión de usuarios (solo cuando AUTH_ENABLED) ───────────────────────────
+const usersFile = () => path.join(DATA_DIR, 'users.json');
+const loadUsers = () => { try { return JSON.parse(fs.readFileSync(usersFile(), 'utf8')); } catch { return []; } };
+const saveUsers = u  => { fs.mkdirSync(DATA_DIR, { recursive: true }); fs.writeFileSync(usersFile(), JSON.stringify(u, null, 2)); };
+
+function dirSize(dir) {
+  if (!fs.existsSync(dir)) return 0;
+  let total = 0;
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const p = path.join(dir, e.name);
+    total += e.isDirectory() ? dirSize(p) : fs.statSync(p).size;
+  }
+  return total;
+}
+
+// ── Reset tokens ──────────────────────────────────────────────────────────────
+const resetTokensFile = () => path.join(DATA_DIR, 'reset-tokens.json');
+function loadTokens()   { try { return JSON.parse(fs.readFileSync(resetTokensFile(), 'utf8')); } catch { return {}; } }
+function saveTokens(t)  { fs.writeFileSync(resetTokensFile(), JSON.stringify(t)); }
+function createResetToken(userId) {
+  const tokens = loadTokens();
+  // Limpiar tokens expirados
+  const now = Date.now();
+  for (const [k, v] of Object.entries(tokens)) { if (v.expires < now) delete tokens[k]; }
+  const token = uuidv4().replace(/-/g, '');
+  tokens[token] = { userId, expires: now + 60 * 60 * 1000 }; // 1 hora
+  saveTokens(tokens);
+  return token;
+}
+function consumeResetToken(token) {
+  const tokens = loadTokens();
+  const entry  = tokens[token];
+  if (!entry || entry.expires < Date.now()) return null;
+  delete tokens[token];
+  saveTokens(tokens);
+  return entry.userId;
+}
+
+// ── Admin middleware ───────────────────────────────────────────────────────────
+function requireAdmin(req, res, next) {
+  if (!AUTH_ENABLED) return res.status(403).json({ error: 'Solo disponible en modo servidor' });
+  if (!req.session?.userId) return res.status(401).json({ error: 'No autenticado' });
+  const user = loadUsers().find(u => u.id === req.session.userId);
+  if (!user || user.role !== 'admin') return res.status(403).json({ error: 'No autorizado' });
+  next();
+}
+
+// ── Política de contraseñas ───────────────────────────────────────────────────
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCKOUT_MS         = 15 * 60 * 1000; // 15 minutos
+
+function validatePassword(pwd) {
+  const errors = [];
+  if (!pwd || pwd.length < 8)    errors.push('Mínimo 8 caracteres');
+  if (!/[A-Z]/.test(pwd))        errors.push('Al menos una mayúscula');
+  if (!/[a-z]/.test(pwd))        errors.push('Al menos una minúscula');
+  if (!/[0-9]/.test(pwd))        errors.push('Al menos un número');
+  return errors; // [] = válida
+}
+
+// Genera contraseña temporal legible (cumple la política)
+function tempPassword() {
+  const lower   = 'abcdefghijkmnpqrstuvwxyz';
+  const upper   = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const digits  = '23456789';
+  const all     = lower + upper + digits;
+  const base    = Array.from({ length: 9 }, () => all[Math.floor(Math.random() * all.length)]);
+  base[0] = upper[Math.floor(Math.random() * upper.length)];
+  base[1] = digits[Math.floor(Math.random() * digits.length)];
+  return base.sort(() => Math.random() - 0.5).join('');
 }
 
 function newId(len = 10) {
@@ -149,7 +299,7 @@ function parseExifBuffer(buf) {
 }
 
 // ── Image processing ─────────────────────────────────────────────────────────
-async function processImage(input, pid, existingId = null) {
+async function processImage(input, pid, existingId = null, dd = DATA_DIR) {
   const id = existingId || newId(12);
 
   const origMeta = await sharp(input).metadata();
@@ -179,8 +329,8 @@ async function processImage(input, pid, existingId = null) {
     .jpeg({ quality: 80 })
     .toBuffer();
 
-  fs.writeFileSync(path.join(photoDir(pid), `${id}.jpg`), resized);
-  fs.writeFileSync(path.join(photoDir(pid), `${id}_thumb.jpg`), thumb);
+  fs.writeFileSync(path.join(photoDir(pid, dd), `${id}.jpg`), resized);
+  fs.writeFileSync(path.join(photoDir(pid, dd), `${id}_thumb.jpg`), thumb);
 
   const ch = stats.channels;
   const brightness = Math.round((0.299 * ch[0].mean + 0.587 * ch[1].mean + 0.114 * ch[2].mean) / 255 * 100) / 100;
@@ -244,6 +394,241 @@ app.get('/', async (req, res) => {
 
 // ── Middleware ───────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '2mb' }));
+
+if (AUTH_ENABLED) {
+  app.use(session({
+    secret: SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: { httpOnly: true, sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 },
+  }));
+}
+
+// requireAuth: verifica sesión y asigna req.dd (data dir del usuario)
+// En modo local (AUTH_ENABLED=false) siempre pasa y usa DATA_DIR global
+function requireAuth(req, res, next) {
+  if (!AUTH_ENABLED) { req.dd = DATA_DIR; return next(); }
+  if (!req.session?.userId) return res.status(401).json({ error: 'No autenticado' });
+  const user = loadUsers().find(u => u.id === req.session.userId);
+  if (user?.expiresAt && user.expiresAt < Date.now())
+    return res.status(403).json({ error: 'Cuenta expirada' });
+  req.dd = path.join(DATA_DIR, req.session.userId);
+  next();
+}
+
+// ── Auth endpoints ────────────────────────────────────────────────────────────
+app.post('/api/login', (req, res) => {
+  if (!AUTH_ENABLED) return res.json({ ok: true });
+  const { username, password } = req.body || {};
+  if (!username || !password) return res.status(400).json({ error: 'Credenciales requeridas' });
+  const users = loadUsers();
+  const user  = users.find(u => u.username === username);
+  if (!user) return res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
+
+  // Comprobar expiración de cuenta
+  if (user.expiresAt && user.expiresAt < Date.now())
+    return res.status(403).json({ error: 'Tu cuenta ha expirado. Contacta con el administrador.' });
+
+  // Comprobar bloqueo
+  if (user.lockedUntil && user.lockedUntil > Date.now()) {
+    const mins = Math.ceil((user.lockedUntil - Date.now()) / 60000);
+    return res.status(429).json({ error: `Cuenta bloqueada. Intenta de nuevo en ${mins} min.` });
+  }
+
+  if (!bcrypt.compareSync(password, user.passwordHash)) {
+    user.loginAttempts = (user.loginAttempts || 0) + 1;
+    if (user.loginAttempts >= MAX_LOGIN_ATTEMPTS) {
+      user.lockedUntil   = Date.now() + LOCKOUT_MS;
+      user.loginAttempts = 0;
+      saveUsers(users);
+      return res.status(429).json({ error: `Demasiados intentos. Cuenta bloqueada 15 minutos.` });
+    }
+    const restantes = MAX_LOGIN_ATTEMPTS - user.loginAttempts;
+    saveUsers(users);
+    return res.status(401).json({ error: `Usuario o contraseña incorrectos. Intentos restantes: ${restantes}.` });
+  }
+
+  // Login correcto — resetear contadores
+  user.loginAttempts = 0;
+  delete user.lockedUntil;
+  user.lastLogin = Date.now();
+  saveUsers(users);
+
+  req.session.userId   = user.id;
+  req.session.username = user.username;
+  const used = dirSize(path.join(DATA_DIR, user.id));
+  res.json({ ok: true, username: user.username, quota: user.quota, used, role: user.role || 'user', mustChangePassword: !!user.mustChangePassword, expiresAt: user.expiresAt || null });
+});
+
+app.post('/api/logout', (req, res) => {
+  if (AUTH_ENABLED) req.session.destroy(() => {});
+  res.json({ ok: true });
+});
+
+app.get('/api/me', (req, res) => {
+  if (!AUTH_ENABLED) return res.json({ auth: false });
+  if (!req.session?.userId) return res.json({ auth: true, authenticated: false });
+  const users = loadUsers();
+  const user  = users.find(u => u.id === req.session.userId);
+  if (!user) return res.json({ auth: true, authenticated: false });
+  const used = dirSize(path.join(DATA_DIR, user.id));
+  res.json({ auth: true, authenticated: true, username: user.username, quota: user.quota, used, role: user.role || 'user', mustChangePassword: !!user.mustChangePassword, expiresAt: user.expiresAt || null });
+});
+
+// Cambio de contraseña (usuario autenticado)
+app.post('/api/change-password', requireAuth, (req, res) => {
+  const { currentPassword, newPassword } = req.body || {};
+  const pwErrors = validatePassword(newPassword);
+  if (pwErrors.length) return res.status(400).json({ error: pwErrors.join('. ') });
+  const users = loadUsers();
+  const user  = users.find(u => u.id === req.session.userId);
+  if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+  if (currentPassword && !bcrypt.compareSync(currentPassword, user.passwordHash))
+    return res.status(401).json({ error: 'Contraseña actual incorrecta' });
+  user.passwordHash      = bcrypt.hashSync(newPassword, 10);
+  user.mustChangePassword = false;
+  saveUsers(users);
+  res.json({ ok: true });
+});
+
+// Solicitar reset de contraseña (público)
+app.post('/api/reset-password/request', async (req, res) => {
+  if (!AUTH_ENABLED) return res.status(403).json({ error: 'No disponible' });
+  const { email } = req.body || {};
+  if (!email) return res.status(400).json({ error: 'Email requerido' });
+  const users = loadUsers();
+  const user  = users.find(u => u.email === email);
+  res.json({ ok: true }); // Siempre responder ok (no revelar si el email existe)
+  if (!user) return;
+  const token = createResetToken(user.id);
+  const link  = `${APP_URL}/?reset=${token}`;
+  await sendMail({
+    to: email,
+    subject: 'Tableau — Recuperar contraseña',
+    html: `<p>Hola ${user.username},</p><p>Haz clic en el siguiente enlace para restablecer tu contraseña (válido 1 hora):</p><p><a href="${link}">${link}</a></p><p>Si no solicitaste este cambio, ignora este mensaje.</p>`,
+  });
+});
+
+// Confirmar reset de contraseña (público)
+app.post('/api/reset-password/confirm', (req, res) => {
+  if (!AUTH_ENABLED) return res.status(403).json({ error: 'No disponible' });
+  const { token, newPassword } = req.body || {};
+  if (!token || !newPassword) return res.status(400).json({ error: 'Datos incompletos' });
+  const pwErrors2 = validatePassword(newPassword);
+  if (pwErrors2.length) return res.status(400).json({ error: pwErrors2.join('. ') });
+  const userId = consumeResetToken(token);
+  if (!userId) return res.status(400).json({ error: 'Token inválido o expirado' });
+  const users = loadUsers();
+  const user  = users.find(u => u.id === userId);
+  if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+  user.passwordHash       = bcrypt.hashSync(newPassword, 10);
+  user.mustChangePassword = false;
+  saveUsers(users);
+  res.json({ ok: true });
+});
+
+// ── Admin endpoints ───────────────────────────────────────────────────────────
+function userStats(uid) {
+  const dd = path.join(DATA_DIR, uid);
+  const pf = path.join(dd, 'projects.json');
+  if (!fs.existsSync(pf)) return { projects: 0, photos: 0, rooms: 0 };
+  let projects = 0, photos = 0, rooms = 0;
+  try {
+    const projs = JSON.parse(fs.readFileSync(pf, 'utf8'));
+    projects = projs.length;
+    for (const p of projs) {
+      const pm = path.join(dd, p.id, 'photos.json');
+      if (fs.existsSync(pm)) photos += JSON.parse(fs.readFileSync(pm, 'utf8')).length;
+      const rm = path.join(dd, p.id, 'rooms.json');
+      if (fs.existsSync(rm)) rooms += JSON.parse(fs.readFileSync(rm, 'utf8')).length;
+    }
+  } catch {}
+  return { projects, photos, rooms };
+}
+
+app.get('/api/admin/users', requireAdmin, (req, res) => {
+  const users = loadUsers();
+  res.json(users.map(u => ({
+    id: u.id, username: u.username, email: u.email || '', role: u.role || 'user',
+    quota: u.quota, used: dirSize(path.join(DATA_DIR, u.id)),
+    mustChangePassword: !!u.mustChangePassword, created: u.created,
+    expiresAt: u.expiresAt || null, lastLogin: u.lastLogin || null,
+    ...userStats(u.id),
+  })));
+});
+
+app.post('/api/admin/users', requireAdmin, async (req, res) => {
+  const { username, email, quotaMb, role } = req.body || {};
+  if (!username?.trim() || !email?.trim()) return res.status(400).json({ error: 'Usuario y email requeridos' });
+  const users = loadUsers();
+  if (users.find(u => u.username === username)) return res.status(409).json({ error: 'El usuario ya existe' });
+  const pass  = tempPassword();
+  const quota = Math.round((parseFloat(quotaMb) || DEFAULT_QUOTA / 1024 / 1024) * 1024 * 1024);
+  const user  = { id: uuidv4(), username: username.trim(), email: email.trim(), passwordHash: bcrypt.hashSync(pass, 10), quota, role: role || 'user', mustChangePassword: true, created: Date.now() };
+  users.push(user);
+  saveUsers(users);
+  fs.mkdirSync(path.join(DATA_DIR, user.id), { recursive: true });
+  await sendMail({
+    to: email,
+    subject: 'Bienvenido a Tableau',
+    html: `<p>Hola ${username},</p><p>Tu cuenta en Tableau ha sido creada.</p><p><strong>URL:</strong> <a href="${APP_URL}">${APP_URL}</a><br><strong>Usuario:</strong> ${username}<br><strong>Contraseña temporal:</strong> ${pass}</p><p>Al iniciar sesión por primera vez deberás cambiar tu contraseña.</p>`,
+  });
+  res.json({ ok: true, id: user.id });
+});
+
+app.delete('/api/admin/users/:uid', requireAdmin, (req, res) => {
+  const { uid } = req.params;
+  if (uid === req.session.userId) return res.status(400).json({ error: 'No puedes eliminarte a ti mismo' });
+  const users = loadUsers();
+  const idx   = users.findIndex(u => u.id === uid);
+  if (idx === -1) return res.status(404).json({ error: 'Usuario no encontrado' });
+  const dir = path.join(DATA_DIR, uid);
+  users.splice(idx, 1);
+  saveUsers(users);
+  if (fs.existsSync(dir)) fs.rmSync(dir, { recursive: true, force: true });
+  res.json({ ok: true });
+});
+
+app.patch('/api/admin/users/:uid/quota', requireAdmin, (req, res) => {
+  const { quotaMb } = req.body || {};
+  if (!quotaMb) return res.status(400).json({ error: 'quotaMb requerido' });
+  const users = loadUsers();
+  const user  = users.find(u => u.id === req.params.uid);
+  if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+  user.quota = Math.round(parseFloat(quotaMb) * 1024 * 1024);
+  saveUsers(users);
+  res.json({ ok: true });
+});
+
+app.patch('/api/admin/users/:uid/expires', requireAdmin, (req, res) => {
+  const { expiresAt } = req.body || {};
+  const users = loadUsers();
+  const user  = users.find(u => u.id === req.params.uid);
+  if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+  if (expiresAt) user.expiresAt = new Date(expiresAt).getTime();
+  else delete user.expiresAt;
+  saveUsers(users);
+  res.json({ ok: true });
+});
+
+app.post('/api/admin/users/:uid/reset-password', requireAdmin, async (req, res) => {
+  const users = loadUsers();
+  const user  = users.find(u => u.id === req.params.uid);
+  if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+  const pass  = tempPassword();
+  user.passwordHash       = bcrypt.hashSync(pass, 10);
+  user.mustChangePassword = true;
+  saveUsers(users);
+  if (user.email) {
+    await sendMail({
+      to: user.email,
+      subject: 'Tableau — Nueva contraseña',
+      html: `<p>Hola ${user.username},</p><p>Tu contraseña ha sido restablecida.<br><strong>Nueva contraseña temporal:</strong> ${pass}</p><p>Al iniciar sesión deberás cambiarla.</p>`,
+    });
+  }
+  res.json({ ok: true, ...(user.email ? {} : { tempPassword: pass }) });
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 const upload = multer({
@@ -276,6 +661,7 @@ async function checkForUpdates() {
 
 checkForUpdates();
 setInterval(checkForUpdates, 24 * 60 * 60 * 1000);
+runStartupPurge();
 
 // ── Link preview ─────────────────────────────────────────────────────────────
 app.get('/api/linkpreview', async (req, res) => {
@@ -309,9 +695,12 @@ app.get('/api/version', (_req, res) => res.json({ version: APP_VERSION }));
 app.get('/api/update',  (_req, res) => res.json({ current: APP_VERSION, update: updateAvailable }));
 
 // ── Heartbeat ─────────────────────────────────────────────────────────────────
+// TABLEAU_AUTO_SHUTDOWN=false desactiva el cierre automático (útil en servidor)
+const AUTO_SHUTDOWN = process.env.TABLEAU_AUTO_SHUTDOWN !== 'false';
 const HEARTBEAT_TIMEOUT = 300_000; // ms sin heartbeat antes de cerrar (5 min)
 let heartbeatTimer = null;
 const resetHeartbeat = () => {
+  if (!AUTO_SHUTDOWN) return;
   clearTimeout(heartbeatTimer);
   heartbeatTimer = setTimeout(() => process.exit(0), HEARTBEAT_TIMEOUT);
 };
@@ -319,61 +708,74 @@ resetHeartbeat();
 app.post('/api/heartbeat', (_req, res) => { resetHeartbeat(); res.sendStatus(204); });
 
 // ── Projects ─────────────────────────────────────────────────────────────────
-app.get('/api/projects', (_req, res) => {
-  res.json(readJSON(projsFile()));
+app.get('/api/projects', requireAuth, (req, res) => {
+  res.json(readJSON(projsFile(req.dd)));
 });
 
-app.post('/api/projects', (req, res) => {
+app.post('/api/projects', requireAuth, (req, res) => {
   const { name } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: 'Nombre requerido' });
-  const projects = readJSON(projsFile());
+  const projects = readJSON(projsFile(req.dd));
   const p = { id: newId(), name: name.trim(), created: Date.now() };
   projects.push(p);
-  writeJSON(projsFile(), projects);
-  initProject(p.id);
+  writeJSON(projsFile(req.dd), projects);
+  initProject(p.id, req.dd);
   res.json(p);
 });
 
-app.patch('/api/projects/:pid', (req, res) => {
+app.patch('/api/projects/:pid', requireAuth, (req, res) => {
   const { pid } = req.params;
   const allowed = ['name','exTitle','subtitle','memSections'];
   const patch = {};
   for (const k of allowed) if (req.body[k] !== undefined) patch[k] = req.body[k];
   if (patch.name) patch.name = patch.name.trim();
-  const projects = readJSON(projsFile()).map(p => p.id === pid ? { ...p, ...patch } : p);
-  writeJSON(projsFile(), projects);
+  const projects = readJSON(projsFile(req.dd)).map(p => p.id === pid ? { ...p, ...patch } : p);
+  writeJSON(projsFile(req.dd), projects);
   res.json({ ok: true });
 });
 
-app.delete('/api/projects/:pid', (req, res) => {
+app.delete('/api/projects/:pid', requireAuth, (req, res) => {
   const { pid } = req.params;
-  const projects = readJSON(projsFile()).filter(p => p.id !== pid);
-  writeJSON(projsFile(), projects);
-  fs.rmSync(projDir(pid), { recursive: true, force: true });
+  const dd = req.dd;
+  const projects = readJSON(projsFile(dd));
+  const proj = projects.find(p => p.id === pid);
+  if (!proj) return res.status(404).json({ error: 'not found' });
+  const src = projDir(pid, dd);
+  const ptd = projTrashDir(dd);
+  ensureDir(ptd);
+  const dst = path.join(ptd, pid);
+  if (fs.existsSync(src)) {
+    if (fs.existsSync(dst)) fs.rmSync(dst, { recursive: true, force: true });
+    fs.renameSync(src, dst);
+  } else {
+    ensureDir(dst);
+  }
+  writeJSON(path.join(dst, '_meta.json'), { name: proj.name, deletedAt: Date.now() });
+  writeJSON(projsFile(dd), projects.filter(p => p.id !== pid));
   res.json({ ok: true });
 });
 
 // ── Boards ───────────────────────────────────────────────────────────────────
-app.get('/api/projects/:pid/boards', (req, res) => {
-  res.json(readJSON(boardsMeta(req.params.pid)));
+app.get('/api/projects/:pid/boards', requireAuth, (req, res) => {
+  res.json(readJSON(boardsMeta(req.params.pid, req.dd)));
 });
 
-app.post('/api/projects/:pid/boards', (req, res) => {
+app.post('/api/projects/:pid/boards', requireAuth, (req, res) => {
   const { pid } = req.params;
   const { name } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: 'Nombre requerido' });
-  const boards = readJSON(boardsMeta(pid));
+  const boards = readJSON(boardsMeta(pid, req.dd));
   const b = { id: newId(), name: name.trim(), created: Date.now(), units: 'cm', dpi: 150 };
   boards.push(b);
-  writeJSON(boardsMeta(pid), boards);
-  writeJSON(boardFile(pid, b.id), []);
+  writeJSON(boardsMeta(pid, req.dd), boards);
+  writeJSON(boardFile(pid, b.id, req.dd), []);
   res.json(b);
 });
 
-app.patch('/api/projects/:pid/boards/:bid', (req, res) => {
+app.patch('/api/projects/:pid/boards/:bid', requireAuth, (req, res) => {
   const { pid, bid } = req.params;
   const { name, units, dpi, fixed, fixedW, fixedH, defaultFrame, background, defaultW, exportPad } = req.body;
-  const boards = readJSON(boardsMeta(pid)).map(b => {
+  const boards = readJSON(boardsMeta(pid, req.dd)).map(b => {
     if (b.id !== bid) return b;
     const u = { ...b };
     if (name         !== undefined) u.name         = name.trim();
@@ -389,84 +791,103 @@ app.patch('/api/projects/:pid/boards/:bid', (req, res) => {
     if (req.body.inMemory !== undefined) u.inMemory = req.body.inMemory;
     return u;
   });
-  writeJSON(boardsMeta(pid), boards);
+  writeJSON(boardsMeta(pid, req.dd), boards);
   res.json({ ok: true });
 });
 
-app.delete('/api/projects/:pid/boards/:bid', (req, res) => {
+app.delete('/api/projects/:pid/boards/:bid', requireAuth, (req, res) => {
   const { pid, bid } = req.params;
-  const boards = readJSON(boardsMeta(pid)).filter(b => b.id !== bid);
-  writeJSON(boardsMeta(pid), boards);
-  const bf = boardFile(pid, bid);
+  const boards = readJSON(boardsMeta(pid, req.dd)).filter(b => b.id !== bid);
+  writeJSON(boardsMeta(pid, req.dd), boards);
+  const bf = boardFile(pid, bid, req.dd);
   if (fs.existsSync(bf)) fs.unlinkSync(bf);
-  const vdir = boardVersionsDir(pid, bid);
+  const vdir = boardVersionsDir(pid, bid, req.dd);
   if (fs.existsSync(vdir)) fs.rmSync(vdir, { recursive: true, force: true });
   res.json({ ok: true });
 });
 
-app.post('/api/projects/:pid/boards/:bid/duplicate', (req, res) => {
+app.post('/api/projects/:pid/boards/:bid/duplicate', requireAuth, (req, res) => {
   const { pid, bid } = req.params;
-  const boards = readJSON(boardsMeta(pid));
+  const boards = readJSON(boardsMeta(pid, req.dd));
   const original = boards.find(b => b.id === bid);
   if (!original) return res.status(404).json({ error: 'Tablero no encontrado' });
   const copy = { ...original, id: newId(), name: original.name + ' (copia)', created: Date.now() };
-  const items = readJSON(boardFile(pid, bid), []);
+  const items = readJSON(boardFile(pid, bid, req.dd), []);
   const idx = boards.findIndex(b => b.id === bid);
   boards.splice(idx + 1, 0, copy);
-  writeJSON(boardsMeta(pid), boards);
-  writeJSON(boardFile(pid, copy.id), items);
+  writeJSON(boardsMeta(pid, req.dd), boards);
+  writeJSON(boardFile(pid, copy.id, req.dd), items);
   res.json(copy);
 });
 
-app.put('/api/projects/:pid/boards/order', (req, res) => {
+app.put('/api/projects/:pid/boards/order', requireAuth, (req, res) => {
   const { pid } = req.params;
   const { order } = req.body;
   if (!Array.isArray(order)) return res.status(400).json({ error: 'order required' });
-  const boards = readJSON(boardsMeta(pid));
+  const boards = readJSON(boardsMeta(pid, req.dd));
   const map = Object.fromEntries(boards.map(b => [b.id, b]));
   const sorted = order.map(id => map[id]).filter(Boolean);
   boards.forEach(b => { if (!order.includes(b.id)) sorted.push(b); });
-  writeJSON(boardsMeta(pid), sorted);
+  writeJSON(boardsMeta(pid, req.dd), sorted);
   res.json({ ok: true });
 });
 
 // ── Rooms (multi-room) ────────────────────────────────────────────────────────
-app.get('/api/projects/:pid/rooms', (req, res) => {
-  const pid = req.params.pid;
-  migrateRooms(pid);
-  res.json(readJSON(roomsFile(pid), []));
+app.get('/api/projects/:pid/rooms', requireAuth, (req, res) => {
+  const { pid } = req.params;
+  migrateRooms(pid, req.dd);
+  res.json(readJSON(roomsFile(pid, req.dd), []));
 });
 
-app.post('/api/projects/:pid/rooms', (req, res) => {
-  const pid = req.params.pid;
-  migrateRooms(pid);
-  const rooms = readJSON(roomsFile(pid), []);
+app.post('/api/projects/:pid/rooms', requireAuth, (req, res) => {
+  const { pid } = req.params;
+  migrateRooms(pid, req.dd);
+  const rooms = readJSON(roomsFile(pid, req.dd), []);
   const r = { id: `r${Date.now().toString(36)}`, ...req.body };
   rooms.push(r);
-  writeJSON(roomsFile(pid), rooms);
+  writeJSON(roomsFile(pid, req.dd), rooms);
   res.json(r);
 });
 
-app.put('/api/projects/:pid/rooms/:rid', (req, res) => {
+app.put('/api/projects/:pid/rooms/:rid', requireAuth, (req, res) => {
   const { pid, rid } = req.params;
-  const rooms = readJSON(roomsFile(pid), []);
+  const rooms = readJSON(roomsFile(pid, req.dd), []);
   const idx = rooms.findIndex(r => r.id === rid);
   if (idx === -1) return res.status(404).json({ error: 'not found' });
   rooms[idx] = { ...rooms[idx], ...req.body, id: rid };
-  writeJSON(roomsFile(pid), rooms);
+  writeJSON(roomsFile(pid, req.dd), rooms);
   res.json({ ok: true });
 });
 
-app.delete('/api/projects/:pid/rooms/:rid', (req, res) => {
+app.delete('/api/projects/:pid/rooms/:rid', requireAuth, (req, res) => {
   const { pid, rid } = req.params;
-  const f = roomsFile(pid);
-  if (fs.existsSync(f)) writeJSON(f, readJSON(f, []).filter(r => r.id !== rid));
+  const dd = req.dd;
+  const f = roomsFile(pid, dd);
+  const rooms = readJSON(f, []);
+  const room = rooms.find(r => r.id === rid);
+  if (room) {
+    const boardIds = new Set([
+      ...(room.walls  || []).flatMap(w => [w.boardId, w.boardIdBack].filter(Boolean)),
+      ...(room.blocks || []).flatMap(b => Object.values(b.faces || {}).map(f => f?.boardId).filter(Boolean)),
+      ...(room.columns|| []).flatMap(c => Object.values(c.faces || {}).map(f => f?.boardId).filter(Boolean)),
+    ]);
+    if (boardIds.size > 0) {
+      writeJSON(boardsMeta(pid, dd), readJSON(boardsMeta(pid, dd)).filter(b => !boardIds.has(b.id)));
+      for (const bid of boardIds) {
+        const bf = boardFile(pid, bid, dd);
+        if (fs.existsSync(bf)) fs.unlinkSync(bf);
+        const vdir = boardVersionsDir(pid, bid, dd);
+        if (fs.existsSync(vdir)) fs.rmSync(vdir, { recursive: true, force: true });
+      }
+    }
+    writeJSON(f, rooms.filter(r => r.id !== rid));
+  }
   res.json({ ok: true });
 });
 
-app.post('/api/projects/:pid/rooms/:rid/duplicate', (req, res) => {
+app.post('/api/projects/:pid/rooms/:rid/duplicate', requireAuth, (req, res) => {
   const { pid, rid } = req.params;
-  const rooms = readJSON(roomsFile(pid), []);
+  const rooms = readJSON(roomsFile(pid, req.dd), []);
   const original = rooms.find(r => r.id === rid);
   if (!original) return res.status(404).json({ error: 'not found' });
   const copy = {
@@ -483,42 +904,52 @@ app.post('/api/projects/:pid/rooms/:rid/duplicate', (req, res) => {
   };
   const idx = rooms.findIndex(r => r.id === rid);
   rooms.splice(idx + 1, 0, copy);
-  writeJSON(roomsFile(pid), rooms);
+  writeJSON(roomsFile(pid, req.dd), rooms);
   res.json(copy);
 });
 
 // ── Room geometry (legacy single-room — kept for compatibility) ───────────────
-app.get('/api/projects/:pid/room', (req, res) => {
-  const f = roomFile(req.params.pid);
+app.get('/api/projects/:pid/room', requireAuth, (req, res) => {
+  const f = roomFile(req.params.pid, req.dd);
   res.json(fs.existsSync(f) ? readJSON(f, null) : null);
 });
 
-app.put('/api/projects/:pid/room', (req, res) => {
-  ensureDir(projDir(req.params.pid));
-  writeJSON(roomFile(req.params.pid), req.body);
+app.put('/api/projects/:pid/room', requireAuth, (req, res) => {
+  ensureDir(projDir(req.params.pid, req.dd));
+  writeJSON(roomFile(req.params.pid, req.dd), req.body);
   res.json({ ok: true });
 });
 
-app.delete('/api/projects/:pid/room', (req, res) => {
-  const f = roomFile(req.params.pid);
+app.delete('/api/projects/:pid/room', requireAuth, (req, res) => {
+  const f = roomFile(req.params.pid, req.dd);
   if (fs.existsSync(f)) fs.unlinkSync(f);
   res.json({ ok: true });
 });
 
 // ── Photos – upload ──────────────────────────────────────────────────────────
-app.get('/api/projects/:pid/photos', (req, res) => {
-  res.json(readJSON(photosMeta(req.params.pid)));
+app.get('/api/projects/:pid/photos', requireAuth, (req, res) => {
+  res.json(readJSON(photosMeta(req.params.pid, req.dd)));
 });
 
-app.post('/api/projects/:pid/photos', upload.single('photo'), async (req, res) => {
+app.post('/api/projects/:pid/photos', requireAuth, upload.single('photo'), async (req, res) => {
   const { pid } = req.params;
   if (!req.file) return res.status(400).json({ error: 'No se recibió ningún fichero' });
+  // Verificar cuota (solo en modo auth)
+  if (AUTH_ENABLED) {
+    const users = loadUsers();
+    const user  = users.find(u => u.id === req.session.userId);
+    if (user) {
+      const used = dirSize(req.dd);
+      if (used + req.file.size > user.quota)
+        return res.status(413).json({ error: 'Cuota de almacenamiento superada' });
+    }
+  }
   try {
-    const { id, w, h, size, dominant, brightness, meanColor, origW, origH, origDpi, exif } = await processImage(req.file.buffer, pid);
-    const photos = readJSON(photosMeta(pid));
+    const { id, w, h, size, dominant, brightness, meanColor, origW, origH, origDpi, exif } = await processImage(req.file.buffer, pid, null, req.dd);
+    const photos = readJSON(photosMeta(pid, req.dd));
     const p = { id, name: req.file.originalname, w, h, size, dominant, brightness, meanColor, created: Date.now(), origW, origH, ...(origDpi ? { origDpi } : {}), ...(exif ? { exif } : {}) };
     photos.push(p);
-    writeJSON(photosMeta(pid), photos);
+    writeJSON(photosMeta(pid, req.dd), photos);
     res.json(p);
   } catch (e) {
     console.error('Upload error:', e.message);
@@ -526,17 +957,17 @@ app.post('/api/projects/:pid/photos', upload.single('photo'), async (req, res) =
   }
 });
 
-app.put('/api/projects/:pid/photos/:id/file', upload.single('photo'), async (req, res) => {
+app.put('/api/projects/:pid/photos/:id/file', requireAuth, upload.single('photo'), async (req, res) => {
   const { pid, id } = req.params;
   if (!req.file) return res.status(400).json({ error: 'No se recibió ningún fichero' });
-  const photos = readJSON(photosMeta(pid));
+  const photos = readJSON(photosMeta(pid, req.dd));
   const idx = photos.findIndex(p => p.id === id);
   if (idx === -1) return res.status(404).json({ error: 'Foto no encontrada' });
   try {
-    const { w, h, size, dominant, brightness, meanColor, origW, origH, origDpi, exif } = await processImage(req.file.buffer, pid, id);
+    const { w, h, size, dominant, brightness, meanColor, origW, origH, origDpi, exif } = await processImage(req.file.buffer, pid, id, req.dd);
     const updated = { ...photos[idx], w, h, size, dominant, brightness, meanColor, origW, origH, ...(origDpi ? { origDpi } : {}), ...(exif ? { exif } : {}) };
     photos[idx] = updated;
-    writeJSON(photosMeta(pid), photos);
+    writeJSON(photosMeta(pid, req.dd), photos);
     res.json(updated);
   } catch (e) {
     console.error('Replace error:', e.message);
@@ -544,115 +975,269 @@ app.put('/api/projects/:pid/photos/:id/file', upload.single('photo'), async (req
   }
 });
 
-app.delete('/api/projects/:pid/photos/:id', (req, res) => {
+app.delete('/api/projects/:pid/photos/:id', requireAuth, (req, res) => {
   const { pid, id } = req.params;
-  const photos = readJSON(photosMeta(pid)).filter(p => p.id !== id);
-  writeJSON(photosMeta(pid), photos);
-  [path.join(photoDir(pid), `${id}.jpg`), path.join(photoDir(pid), `${id}_thumb.jpg`)]
-    .forEach(f => { try { fs.unlinkSync(f); } catch {} });
+  const dd = req.dd;
+  const photos = readJSON(photosMeta(pid, dd));
+  const photo = photos.find(p => p.id === id);
+  if (!photo) return res.status(404).json({ error: 'not found' });
+  writeJSON(photosMeta(pid, dd), photos.filter(p => p.id !== id));
+  ensureDir(photoTrashDir(pid, dd));
+  [`${id}.jpg`, `${id}_thumb.jpg`].forEach(fname => {
+    const src = path.join(photoDir(pid, dd), fname);
+    const dst = path.join(photoTrashDir(pid, dd), fname);
+    if (fs.existsSync(src)) try { fs.renameSync(src, dst); } catch {}
+  });
+  const tmf = photoTrashMeta(pid, dd);
+  const trashed = readJSON(tmf, []);
+  trashed.unshift({ ...photo, deletedAt: Date.now() });
+  writeJSON(tmf, trashed);
+  for (const b of readJSON(boardsMeta(pid, dd))) {
+    const bf = boardFile(pid, b.id, dd);
+    if (!fs.existsSync(bf)) continue;
+    const items = readJSON(bf, []);
+    const filtered = items.filter(i => i.photoId !== id);
+    if (filtered.length !== items.length) writeJSON(bf, filtered);
+  }
   res.json({ ok: true });
 });
 
-app.patch('/api/projects/:pid/photos/:id/rating', (req, res) => {
+app.patch('/api/projects/:pid/photos/:id/rating', requireAuth, (req, res) => {
   const { pid, id } = req.params;
   const { rating } = req.body;
   if (typeof rating !== 'number' || rating < 0 || rating > 5) return res.status(400).json({ error: 'rating 0-5 required' });
-  const photos = readJSON(photosMeta(pid));
+  const photos = readJSON(photosMeta(pid, req.dd));
   const p = photos.find(p => p.id === id);
   if (!p) return res.status(404).json({ error: 'not found' });
   p.rating = rating;
-  writeJSON(photosMeta(pid), photos);
+  writeJSON(photosMeta(pid, req.dd), photos);
   res.json(p);
 });
 
-app.patch('/api/projects/:pid/photos/:id/tags', (req, res) => {
+app.patch('/api/projects/:pid/photos/:id/tags', requireAuth, (req, res) => {
   const { pid, id } = req.params;
   const { tags } = req.body;
   if (!Array.isArray(tags)) return res.status(400).json({ error: 'tags array required' });
-  const photos = readJSON(photosMeta(pid));
+  const photos = readJSON(photosMeta(pid, req.dd));
   const p = photos.find(p => p.id === id);
   if (!p) return res.status(404).json({ error: 'not found' });
   p.tags = tags.map(t => t.trim()).filter(Boolean);
-  writeJSON(photosMeta(pid), photos);
+  writeJSON(photosMeta(pid, req.dd), photos);
   res.json(p);
 });
 
-app.patch('/api/projects/:pid/photos/:id/rejected', (req, res) => {
+app.patch('/api/projects/:pid/photos/:id/rejected', requireAuth, (req, res) => {
   const { pid, id } = req.params;
   const { rejected } = req.body;
-  const photos = readJSON(photosMeta(pid));
+  const photos = readJSON(photosMeta(pid, req.dd));
   const p = photos.find(p => p.id === id);
   if (!p) return res.status(404).json({ error: 'not found' });
   p.rejected = !!rejected;
-  writeJSON(photosMeta(pid), photos);
+  writeJSON(photosMeta(pid, req.dd), photos);
   res.json(p);
 });
 
-app.patch('/api/projects/:pid/photos/:id/section', (req, res) => {
+app.patch('/api/projects/:pid/photos/:id/section', requireAuth, (req, res) => {
   const { pid, id } = req.params;
   const { sectionId } = req.body;
-  const photos = readJSON(photosMeta(pid));
+  const photos = readJSON(photosMeta(pid, req.dd));
   const p = photos.find(p => p.id === id);
   if (!p) return res.status(404).json({ error: 'not found' });
   if (sectionId) p.sectionId = sectionId; else delete p.sectionId;
-  writeJSON(photosMeta(pid), photos);
+  writeJSON(photosMeta(pid, req.dd), photos);
   res.json(p);
 });
 
-app.put('/api/projects/:pid/sections', (req, res) => {
+app.put('/api/projects/:pid/sections', requireAuth, (req, res) => {
   const { pid } = req.params;
   const { sections } = req.body;
   if (!Array.isArray(sections)) return res.status(400).json({ error: 'sections array required' });
-  const projects = readJSON(projsFile()).map(p =>
+  const projects = readJSON(projsFile(req.dd)).map(p =>
     p.id === pid ? { ...p, sections } : p
   );
-  writeJSON(projsFile(), projects);
+  writeJSON(projsFile(req.dd), projects);
   res.json({ ok: true });
 });
 
 // ── Templates ─────────────────────────────────────────────────────────────────
-const templatesFile = () => path.join(DATA_DIR, 'templates.json');
+const templatesFile = (dd = DATA_DIR) => path.join(dd, 'templates.json');
 
-app.get('/api/templates', (_req, res) => {
-  res.json(readJSON(templatesFile()));
+app.get('/api/templates', requireAuth, (req, res) => {
+  res.json(readJSON(templatesFile(req.dd)));
 });
 
-app.post('/api/templates', (req, res) => {
+app.post('/api/templates', requireAuth, (req, res) => {
   const { name, boardMeta, items } = req.body;
   if (!name || !Array.isArray(items)) return res.status(400).json({ error: 'name and items required' });
-  const templates = readJSON(templatesFile());
+  const templates = readJSON(templatesFile(req.dd));
   const tmpl = {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
     name: name.trim(), created: Date.now(),
     boardMeta: boardMeta || {}, items,
   };
   templates.push(tmpl);
-  writeJSON(templatesFile(), templates);
+  writeJSON(templatesFile(req.dd), templates);
   res.json(tmpl);
 });
 
-app.patch('/api/templates/:tid', (req, res) => {
+app.patch('/api/templates/:tid', requireAuth, (req, res) => {
   const { name, items } = req.body;
-  const templates = readJSON(templatesFile()).map(t => {
+  const templates = readJSON(templatesFile(req.dd)).map(t => {
     if (t.id !== req.params.tid) return t;
     return { ...t, ...(name !== undefined ? { name: name.trim() } : {}), ...(items !== undefined ? { items } : {}) };
   });
-  writeJSON(templatesFile(), templates);
+  writeJSON(templatesFile(req.dd), templates);
   res.json({ ok: true });
 });
 
-app.delete('/api/templates/:tid', (req, res) => {
-  writeJSON(templatesFile(), readJSON(templatesFile()).filter(t => t.id !== req.params.tid));
+app.delete('/api/templates/:tid', requireAuth, (req, res) => {
+  writeJSON(templatesFile(req.dd), readJSON(templatesFile(req.dd)).filter(t => t.id !== req.params.tid));
   res.json({ ok: true });
 });
 
-app.post('/api/projects/:pid/photos/analyze-colors', async (req, res) => {
+// ── Trash ─────────────────────────────────────────────────────────────────────
+app.get('/api/trash/count', requireAuth, (req, res) => {
+  const dd = req.dd;
+  let photos = 0, projects = 0;
+  if (fs.existsSync(dd)) {
+    for (const e of fs.readdirSync(dd, { withFileTypes: true })) {
+      if (!e.isDirectory() || e.name.startsWith('.')) continue;
+      const tmf = photoTrashMeta(e.name, dd);
+      if (fs.existsSync(tmf)) photos += readJSON(tmf, []).length;
+    }
+  }
+  const ptd = projTrashDir(dd);
+  if (fs.existsSync(ptd))
+    projects = fs.readdirSync(ptd, { withFileTypes: true }).filter(e => e.isDirectory()).length;
+  res.json({ photos, projects, total: photos + projects });
+});
+
+app.get('/api/trash/photos', requireAuth, (req, res) => {
+  const dd = req.dd;
+  const projectMap = Object.fromEntries(readJSON(projsFile(dd)).map(p => [p.id, p.name]));
+  const result = [];
+  if (fs.existsSync(dd)) {
+    for (const e of fs.readdirSync(dd, { withFileTypes: true })) {
+      if (!e.isDirectory() || e.name.startsWith('.')) continue;
+      const pid = e.name;
+      const tmf = photoTrashMeta(pid, dd);
+      if (!fs.existsSync(tmf)) continue;
+      for (const p of readJSON(tmf, []))
+        result.push({ ...p, pid, projectName: projectMap[pid] || pid });
+    }
+  }
+  result.sort((a, b) => b.deletedAt - a.deletedAt);
+  res.json(result);
+});
+
+app.get('/api/trash/photos/:pid/:id/thumb', requireAuth, (req, res) => {
+  const { pid, id } = req.params;
+  const f = path.join(photoTrashDir(pid, req.dd), `${id}_thumb.jpg`);
+  if (!fs.existsSync(f)) return res.status(404).send();
+  res.sendFile(f);
+});
+
+app.post('/api/trash/photos/:pid/:id/restore', requireAuth, (req, res) => {
+  const { pid, id } = req.params;
+  const dd = req.dd;
+  const tmf = photoTrashMeta(pid, dd);
+  const trashed = readJSON(tmf, []);
+  const photo = trashed.find(p => p.id === id);
+  if (!photo) return res.status(404).json({ error: 'not found' });
+  ensureDir(photoDir(pid, dd));
+  [`${id}.jpg`, `${id}_thumb.jpg`].forEach(fname => {
+    const src = path.join(photoTrashDir(pid, dd), fname);
+    const dst = path.join(photoDir(pid, dd), fname);
+    if (fs.existsSync(src)) try { fs.renameSync(src, dst); } catch {}
+  });
+  const { deletedAt, pid: _p, projectName: _pn, ...photoMeta } = photo;
+  const photos = readJSON(photosMeta(pid, dd));
+  photos.push(photoMeta);
+  writeJSON(photosMeta(pid, dd), photos);
+  writeJSON(tmf, trashed.filter(p => p.id !== id));
+  res.json({ ...photoMeta, pid });
+});
+
+app.delete('/api/trash/photos/:pid/:id', requireAuth, (req, res) => {
+  const { pid, id } = req.params;
+  const dd = req.dd;
+  const tmf = photoTrashMeta(pid, dd);
+  writeJSON(tmf, readJSON(tmf, []).filter(p => p.id !== id));
+  [`${id}.jpg`, `${id}_thumb.jpg`].forEach(fname => {
+    try { fs.unlinkSync(path.join(photoTrashDir(pid, dd), fname)); } catch {}
+  });
+  res.json({ ok: true });
+});
+
+app.delete('/api/trash/photos', requireAuth, (req, res) => {
+  const dd = req.dd;
+  if (fs.existsSync(dd)) {
+    for (const e of fs.readdirSync(dd, { withFileTypes: true })) {
+      if (!e.isDirectory() || e.name.startsWith('.')) continue;
+      const pid = e.name;
+      const tmf = photoTrashMeta(pid, dd);
+      if (!fs.existsSync(tmf)) continue;
+      for (const p of readJSON(tmf, []))
+        [`${p.id}.jpg`, `${p.id}_thumb.jpg`].forEach(fname => {
+          try { fs.unlinkSync(path.join(photoTrashDir(pid, dd), fname)); } catch {}
+        });
+      writeJSON(tmf, []);
+    }
+  }
+  res.json({ ok: true });
+});
+
+app.get('/api/trash/projects', requireAuth, (req, res) => {
+  const ptd = projTrashDir(req.dd);
+  if (!fs.existsSync(ptd)) return res.json([]);
+  const result = [];
+  for (const e of fs.readdirSync(ptd, { withFileTypes: true })) {
+    if (!e.isDirectory()) continue;
+    const meta = readJSON(path.join(ptd, e.name, '_meta.json'), null);
+    if (!meta) continue;
+    result.push({ pid: e.name, name: meta.name, deletedAt: meta.deletedAt, size: dirSize(path.join(ptd, e.name)) });
+  }
+  result.sort((a, b) => b.deletedAt - a.deletedAt);
+  res.json(result);
+});
+
+app.post('/api/trash/projects/:pid/restore', requireAuth, (req, res) => {
   const { pid } = req.params;
-  const photos = readJSON(photosMeta(pid));
+  const dd = req.dd;
+  const ptd = projTrashDir(dd);
+  const src = path.join(ptd, pid);
+  if (!fs.existsSync(src)) return res.status(404).json({ error: 'not found' });
+  const meta = readJSON(path.join(src, '_meta.json'), null);
+  if (!meta) return res.status(400).json({ error: 'invalid' });
+  const dst = projDir(pid, dd);
+  if (fs.existsSync(dst)) return res.status(409).json({ error: 'exists' });
+  try { fs.unlinkSync(path.join(src, '_meta.json')); } catch {}
+  fs.renameSync(src, dst);
+  const projects = readJSON(projsFile(dd));
+  projects.push({ id: pid, name: meta.name, created: Date.now() });
+  writeJSON(projsFile(dd), projects);
+  res.json({ id: pid, name: meta.name });
+});
+
+app.delete('/api/trash/projects/:pid', requireAuth, (req, res) => {
+  const dir = path.join(projTrashDir(req.dd), req.params.pid);
+  if (fs.existsSync(dir)) fs.rmSync(dir, { recursive: true, force: true });
+  res.json({ ok: true });
+});
+
+app.delete('/api/trash/projects', requireAuth, (req, res) => {
+  const ptd = projTrashDir(req.dd);
+  if (fs.existsSync(ptd)) fs.rmSync(ptd, { recursive: true, force: true });
+  res.json({ ok: true });
+});
+
+app.post('/api/projects/:pid/photos/analyze-colors', requireAuth, async (req, res) => {
+  const { pid } = req.params;
+  const photos = readJSON(photosMeta(pid, req.dd));
   let updated = 0;
   for (const p of photos) {
     if (p.dominant) continue;
-    const pFile = path.join(photoDir(pid), `${p.id}.jpg`);
+    const pFile = path.join(photoDir(pid, req.dd), `${p.id}.jpg`);
     if (!fs.existsSync(pFile)) continue;
     try {
       const stats = await sharp(pFile).stats();
@@ -663,59 +1248,59 @@ app.post('/api/projects/:pid/photos/analyze-colors', async (req, res) => {
       updated++;
     } catch {}
   }
-  if (updated > 0) writeJSON(photosMeta(pid), photos);
+  if (updated > 0) writeJSON(photosMeta(pid, req.dd), photos);
   res.json({ ok: true, updated });
 });
 
-app.post('/api/projects/:pid/photos/:photoId/copy-to/:targetPid', (req, res) => {
+app.post('/api/projects/:pid/photos/:photoId/copy-to/:targetPid', requireAuth, (req, res) => {
   const { pid, photoId, targetPid } = req.params;
-  const srcPhotos = readJSON(photosMeta(pid));
+  const srcPhotos = readJSON(photosMeta(pid, req.dd));
   const photo = srcPhotos.find(p => p.id === photoId);
   if (!photo) return res.status(404).json({ error: 'Foto no encontrada' });
-  const projects = readJSON(projsFile());
+  const projects = readJSON(projsFile(req.dd));
   if (!projects.find(p => p.id === targetPid)) return res.status(404).json({ error: 'Proyecto destino no encontrado' });
   const nid = newId(12);
   try {
-    fs.copyFileSync(path.join(photoDir(pid), `${photoId}.jpg`),       path.join(photoDir(targetPid), `${nid}.jpg`));
-    fs.copyFileSync(path.join(photoDir(pid), `${photoId}_thumb.jpg`), path.join(photoDir(targetPid), `${nid}_thumb.jpg`));
+    fs.copyFileSync(path.join(photoDir(pid, req.dd), `${photoId}.jpg`),       path.join(photoDir(targetPid, req.dd), `${nid}.jpg`));
+    fs.copyFileSync(path.join(photoDir(pid, req.dd), `${photoId}_thumb.jpg`), path.join(photoDir(targetPid, req.dd), `${nid}_thumb.jpg`));
   } catch (e) { return res.status(500).json({ error: e.message }); }
-  const dstPhotos = readJSON(photosMeta(targetPid));
+  const dstPhotos = readJSON(photosMeta(targetPid, req.dd));
   const newPhoto = { ...photo, id: nid };
   dstPhotos.push(newPhoto);
-  writeJSON(photosMeta(targetPid), dstPhotos);
+  writeJSON(photosMeta(targetPid, req.dd), dstPhotos);
   res.json(newPhoto);
 });
 
 // ── Serve photos ──────────────────────────────────────────────────────────────
-app.get('/photos/:pid/:id', (req, res) => {
-  const file = path.join(photoDir(req.params.pid), `${req.params.id}.jpg`);
+app.get('/photos/:pid/:id', requireAuth, (req, res) => {
+  const file = path.join(photoDir(req.params.pid, req.dd), `${req.params.id}.jpg`);
   fs.existsSync(file) ? res.sendFile(file) : res.status(404).end();
 });
 
-app.get('/photos/:pid/:id/thumb', (req, res) => {
-  const file = path.join(photoDir(req.params.pid), `${req.params.id}_thumb.jpg`);
+app.get('/photos/:pid/:id/thumb', requireAuth, (req, res) => {
+  const file = path.join(photoDir(req.params.pid, req.dd), `${req.params.id}_thumb.jpg`);
   fs.existsSync(file) ? res.sendFile(file) : res.status(404).end();
 });
 
 // ── Board items ───────────────────────────────────────────────────────────────
-app.get('/api/boards/:pid/:bid/items', (req, res) => {
+app.get('/api/boards/:pid/:bid/items', requireAuth, (req, res) => {
   const { pid, bid } = req.params;
-  res.json(readJSON(boardFile(pid, bid), []));
+  res.json(readJSON(boardFile(pid, bid, req.dd), []));
 });
 
-app.put('/api/boards/:pid/:bid/items', (req, res) => {
+app.put('/api/boards/:pid/:bid/items', requireAuth, (req, res) => {
   const { pid, bid } = req.params;
   if (!Array.isArray(req.body)) return res.status(400).json({ error: 'Array esperado' });
-  writeJSON(boardFile(pid, bid), req.body);
+  writeJSON(boardFile(pid, bid, req.dd), req.body);
   res.json({ ok: true });
 });
 
 // ── Board versions ────────────────────────────────────────────────────────────
-const boardVersionsDir = (pid, bid) => path.join(boardDir(pid), `${bid}.versions`);
+const boardVersionsDir = (pid, bid, dd = DATA_DIR) => path.join(boardDir(pid, dd), `${bid}.versions`);
 
-app.get('/api/boards/:pid/:bid/versions', (req, res) => {
+app.get('/api/boards/:pid/:bid/versions', requireAuth, (req, res) => {
   const { pid, bid } = req.params;
-  const dir = boardVersionsDir(pid, bid);
+  const dir = boardVersionsDir(pid, bid, req.dd);
   if (!fs.existsSync(dir)) return res.json([]);
   const versions = fs.readdirSync(dir)
     .filter(f => f.endsWith('.json'))
@@ -728,47 +1313,47 @@ app.get('/api/boards/:pid/:bid/versions', (req, res) => {
   res.json(versions);
 });
 
-app.post('/api/boards/:pid/:bid/versions', (req, res) => {
+app.post('/api/boards/:pid/:bid/versions', requireAuth, (req, res) => {
   const { pid, bid } = req.params;
-  const dir = boardVersionsDir(pid, bid);
+  const dir = boardVersionsDir(pid, bid, req.dd);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  const items = readJSON(boardFile(pid, bid), []);
+  const items = readJSON(boardFile(pid, bid, req.dd), []);
   const ts = Date.now();
   writeJSON(path.join(dir, `${ts}.json`), items);
   res.json({ ts, itemCount: items.length });
 });
 
-app.get('/api/boards/:pid/:bid/versions/:ts', (req, res) => {
+app.get('/api/boards/:pid/:bid/versions/:ts', requireAuth, (req, res) => {
   const { pid, bid, ts } = req.params;
-  const file = path.join(boardVersionsDir(pid, bid), `${ts}.json`);
+  const file = path.join(boardVersionsDir(pid, bid, req.dd), `${ts}.json`);
   if (!fs.existsSync(file)) return res.status(404).json({ error: 'Versión no encontrada' });
   res.json(readJSON(file, []));
 });
 
-app.post('/api/boards/:pid/:bid/versions/:ts/restore', (req, res) => {
+app.post('/api/boards/:pid/:bid/versions/:ts/restore', requireAuth, (req, res) => {
   const { pid, bid, ts } = req.params;
-  const file = path.join(boardVersionsDir(pid, bid), `${ts}.json`);
+  const file = path.join(boardVersionsDir(pid, bid, req.dd), `${ts}.json`);
   if (!fs.existsSync(file)) return res.status(404).json({ error: 'Versión no encontrada' });
   const items = readJSON(file, []);
-  writeJSON(boardFile(pid, bid), items);
+  writeJSON(boardFile(pid, bid, req.dd), items);
   res.json(items);
 });
 
-app.delete('/api/boards/:pid/:bid/versions/:ts', (req, res) => {
+app.delete('/api/boards/:pid/:bid/versions/:ts', requireAuth, (req, res) => {
   const { pid, bid, ts } = req.params;
-  const file = path.join(boardVersionsDir(pid, bid), `${ts}.json`);
+  const file = path.join(boardVersionsDir(pid, bid, req.dd), `${ts}.json`);
   if (fs.existsSync(file)) fs.unlinkSync(file);
   res.json({ ok: true });
 });
 
 // ── Board export (JPEG composite) ─────────────────────────────────────────────
-app.get('/api/boards/:pid/:bid/export', async (req, res) => {
+app.get('/api/boards/:pid/:bid/export', requireAuth, async (req, res) => {
   const { pid, bid } = req.params;
   const { ids, useBoard, pad: padParam } = req.query;
-  let boardItems = readJSON(boardFile(pid, bid), []);
+  let boardItems = readJSON(boardFile(pid, bid, req.dd), []);
   if (ids) { const idSet = new Set(ids.split(',')); boardItems = boardItems.filter(i => idSet.has(i.id)); }
-  const photosData = readJSON(photosMeta(pid));
-  const boardsData = readJSON(boardsMeta(pid));
+  const photosData = readJSON(photosMeta(pid, req.dd));
+  const boardsData = readJSON(boardsMeta(pid, req.dd));
   const board      = boardsData.find(b => b.id === bid);
 
   if (!boardItems.length) return res.status(400).json({ error: 'El tablero está vacío' });
@@ -847,7 +1432,7 @@ app.get('/api/boards/:pid/:bid/export', async (req, res) => {
     try {
       const photo = photosData.find(p => p.id === item.photoId);
       if (!photo) return null;
-      const pFile = path.join(photoDir(pid), `${item.photoId}.jpg`);
+      const pFile = path.join(photoDir(pid, req.dd), `${item.photoId}.jpg`);
       if (!fs.existsSync(pFile)) return null;
 
       const units = board?.units || 'px';
@@ -950,9 +1535,9 @@ app.get('/api/boards/:pid/:bid/export', async (req, res) => {
 });
 
 // ── Project export / import (ZIP) ────────────────────────────────────────────
-app.get('/api/projects/:pid/export', (req, res) => {
+app.get('/api/projects/:pid/export', requireAuth, (req, res) => {
   const { pid } = req.params;
-  const proj = readJSON(projsFile()).find(p => p.id === pid);
+  const proj = readJSON(projsFile(req.dd)).find(p => p.id === pid);
   if (!proj) return res.status(404).json({ error: 'Proyecto no encontrado' });
 
   const zip = new AdmZip();
@@ -961,19 +1546,19 @@ app.get('/api/projects/:pid/export', (req, res) => {
     sections: proj.sections || [],
   }, null, 2)));
 
-  const pMeta = photosMeta(pid);
-  const bMeta = boardsMeta(pid);
-  const rMeta = roomsFile(pid);
+  const pMeta = photosMeta(pid, req.dd);
+  const bMeta = boardsMeta(pid, req.dd);
+  const rMeta = roomsFile(pid, req.dd);
   if (fs.existsSync(pMeta)) zip.addFile('photos.json', fs.readFileSync(pMeta));
   if (fs.existsSync(bMeta)) zip.addFile('boards.json', fs.readFileSync(bMeta));
   if (fs.existsSync(rMeta)) zip.addFile('rooms.json',  fs.readFileSync(rMeta));
 
-  readJSON(boardsMeta(pid)).forEach(b => {
-    const bf = boardFile(pid, b.id);
+  readJSON(boardsMeta(pid, req.dd)).forEach(b => {
+    const bf = boardFile(pid, b.id, req.dd);
     if (fs.existsSync(bf)) zip.addFile(`boards/${b.id}.json`, fs.readFileSync(bf));
   });
 
-  const pDir = photoDir(pid);
+  const pDir = photoDir(pid, req.dd);
   if (fs.existsSync(pDir)) {
     fs.readdirSync(pDir).forEach(f => zip.addFile(`photos/${f}`, fs.readFileSync(path.join(pDir, f))));
   }
@@ -986,7 +1571,7 @@ app.get('/api/projects/:pid/export', (req, res) => {
 
 const pendingImports = new Map();
 
-app.post('/api/projects/import', (req, res, next) => {
+app.post('/api/projects/import', requireAuth, (req, res, next) => {
   uploadZip.single('zip')(req, res, err => {
     if (err) return res.status(400).json({ error: `Error al recibir el archivo: ${err.message}` });
 
@@ -1014,7 +1599,7 @@ app.post('/api/projects/import', (req, res, next) => {
       return res.status(400).json({ error: 'tableau-export.json incompleto (faltan campos originId o projectName)' });
     }
 
-    const projects = readJSON(projsFile());
+    const projects = readJSON(projsFile(req.dd));
     const existing = projects.find(p => p.id === exportMeta.originId);
 
     const now = Date.now();
@@ -1022,13 +1607,13 @@ app.post('/api/projects/import', (req, res, next) => {
       if (now - v.createdAt > 10 * 60 * 1000) pendingImports.delete(k);
     }
     const tempId = newId();
-    pendingImports.set(tempId, { buffer: req.file.buffer, exportMeta, createdAt: now });
+    pendingImports.set(tempId, { buffer: req.file.buffer, exportMeta, createdAt: now, dd: req.dd });
 
     res.json({ tempId, projectName: exportMeta.projectName, conflict: !!existing, existingProject: existing || null });
   });
 });
 
-app.post('/api/projects/import/:tempId/confirm', (req, res) => {
+app.post('/api/projects/import/:tempId/confirm', requireAuth, (req, res) => {
   const { tempId } = req.params;
   const { mode, targetPid } = req.body;
 
@@ -1036,7 +1621,7 @@ app.post('/api/projects/import/:tempId/confirm', (req, res) => {
   if (!pending) return res.status(400).json({ error: 'Importación expirada, vuelve a subir el archivo' });
   pendingImports.delete(tempId);
 
-  const { buffer, exportMeta } = pending;
+  const { buffer, exportMeta, dd } = pending;
 
   let zip;
   try { zip = new AdmZip(buffer); } catch (e) {
@@ -1051,18 +1636,18 @@ app.post('/api/projects/import/:tempId/confirm', (req, res) => {
     let newPid;
     if (mode === 'replace' && targetPid) {
       newPid = targetPid;
-      const pDir = photoDir(newPid);
-      const bDir = boardDir(newPid);
+      const pDir = photoDir(newPid, dd);
+      const bDir = boardDir(newPid, dd);
       if (fs.existsSync(pDir)) fs.readdirSync(pDir).forEach(f => { try { fs.unlinkSync(path.join(pDir, f)); } catch {} });
       if (fs.existsSync(bDir)) fs.readdirSync(bDir).forEach(f => { try { fs.unlinkSync(path.join(bDir, f)); } catch {} });
-      const projects = readJSON(projsFile()).map(p => p.id === newPid ? { ...p, name: exportMeta.projectName, sections: exportMeta.sections || [] } : p);
-      writeJSON(projsFile(), projects);
+      const projects = readJSON(projsFile(dd)).map(p => p.id === newPid ? { ...p, name: exportMeta.projectName, sections: exportMeta.sections || [] } : p);
+      writeJSON(projsFile(dd), projects);
     } else {
       newPid = newId();
-      const projects = readJSON(projsFile());
+      const projects = readJSON(projsFile(dd));
       projects.push({ id: newPid, name: exportMeta.projectName, created: Date.now(), sections: exportMeta.sections || [] });
-      writeJSON(projsFile(), projects);
-      initProject(newPid);
+      writeJSON(projsFile(dd), projects);
+      initProject(newPid, dd);
     }
 
     const oldRooms = JSON.parse(zip.getEntry('rooms.json')?.getData().toString('utf8') || '[]');
@@ -1072,7 +1657,7 @@ app.post('/api/projects/import/:tempId/confirm', (req, res) => {
     const boardIdMap = {};
     oldBoards.forEach(b => { boardIdMap[b.id] = newId(); });
 
-    writeJSON(photosMeta(newPid), oldPhotos.map(p => ({ ...p, id: photoIdMap[p.id] })));
+    writeJSON(photosMeta(newPid, dd), oldPhotos.map(p => ({ ...p, id: photoIdMap[p.id] })));
 
     zip.getEntries().forEach(entry => {
       if (!entry.entryName.startsWith('photos/') || entry.isDirectory) return;
@@ -1087,15 +1672,15 @@ app.post('/api/projects/import/:tempId/confirm', (req, res) => {
         const nid = photoIdMap[oldId]; if (!nid) return;
         newFname = `${nid}.jpg`;
       } else return;
-      fs.writeFileSync(path.join(photoDir(newPid), newFname), entry.getData());
+      fs.writeFileSync(path.join(photoDir(newPid, dd), newFname), entry.getData());
     });
 
-    writeJSON(boardsMeta(newPid), oldBoards.map(b => ({ ...b, id: boardIdMap[b.id] })));
+    writeJSON(boardsMeta(newPid, dd), oldBoards.map(b => ({ ...b, id: boardIdMap[b.id] })));
 
     oldBoards.forEach(b => {
       const entry = zip.getEntry(`boards/${b.id}.json`);
       const items = entry ? JSON.parse(entry.getData().toString('utf8')) : [];
-      writeJSON(boardFile(newPid, boardIdMap[b.id]), items.map(item => ({
+      writeJSON(boardFile(newPid, boardIdMap[b.id], dd), items.map(item => ({
         ...item,
         id: newId(),
         ...(item.photoId ? { photoId: photoIdMap[item.photoId] || item.photoId } : {}),
@@ -1119,10 +1704,10 @@ app.post('/api/projects/import/:tempId/confirm', (req, res) => {
           ),
         })),
       }));
-      writeJSON(roomsFile(newPid), newRooms);
+      writeJSON(roomsFile(newPid, dd), newRooms);
     }
 
-    res.json(readJSON(projsFile()).find(p => p.id === newPid) || { id: newPid, name: exportMeta.projectName });
+    res.json(readJSON(projsFile(dd)).find(p => p.id === newPid) || { id: newPid, name: exportMeta.projectName });
   } catch (e) {
     console.error('[import/confirm] Error durante la importación:', e);
     res.status(500).json({ error: `Error durante la importación: ${e.message}` });

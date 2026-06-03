@@ -58,6 +58,28 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .sb-sec.nav{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
 .sb-sec.nav.collapsed{flex:0 0 auto}
 .sb-sec.info{flex-shrink:0;border-top:1px solid var(--border);margin-top:auto}
+.sb-trash-btn{height:32px;display:flex;align-items:center;gap:5px;padding:0 8px 0 10px;border-top:1px solid var(--border);background:var(--deep);flex-shrink:0;cursor:pointer;transition:background .12s}
+.sb-trash-btn:hover{background:var(--hover)}
+.sb-trash-badge{background:#c04040;color:#fff;border-radius:8px;font-size:7px;padding:1px 5px;min-width:16px;text-align:center;letter-spacing:0;line-height:1.4}
+.trash-modal{display:flex;flex-direction:column;gap:0;min-width:440px;max-width:560px;padding:0}
+.trash-modal-hd{padding:16px 20px 0;display:flex;align-items:center;justify-content:space-between}
+.trash-tabs{display:flex;border-bottom:1px solid var(--border2);padding:0 20px;gap:0;flex-shrink:0}
+.trash-tab{padding:7px 14px;font-size:9px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .12s}
+.trash-tab.active{color:var(--acc);border-bottom-color:var(--acc)}
+.trash-tab:hover:not(.active){color:var(--sub)}
+.trash-tab-badge{display:inline-block;background:var(--panel2);color:var(--muted);border-radius:8px;font-size:7px;padding:1px 5px;margin-left:4px;min-width:14px;text-align:center}
+.trash-tab.active .trash-tab-badge{background:var(--acc-faint,rgba(200,160,80,.15));color:var(--acc)}
+.trash-list{overflow-y:auto;max-height:360px;flex:1}
+.trash-item{display:flex;align-items:center;gap:10px;padding:8px 20px;border-bottom:1px solid var(--border)}
+.trash-item:last-child{border-bottom:none}
+.trash-item:hover{background:var(--hover)}
+.trash-item-thumb{width:44px;height:44px;object-fit:cover;flex-shrink:0;background:var(--panel2)}
+.trash-item-info{flex:1;min-width:0}
+.trash-item-name{font-size:10px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trash-item-meta{font-size:8px;color:var(--muted);margin-top:2px;letter-spacing:.3px}
+.trash-item-proj{font-size:8px;color:var(--acc-dim);margin-top:1px;letter-spacing:.3px}
+.trash-empty-msg{padding:28px 20px;text-align:center;font-size:9px;color:var(--muted);letter-spacing:.5px}
+.trash-footer{padding:10px 20px;border-top:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .sb-sec.tmpl{flex-shrink:0;border-top:1px solid var(--border);display:flex;flex-direction:column;max-height:220px}
 .sb-sec.tmpl .sb-scroll{overflow-y:auto;flex:1}
 .tmpl-row{display:flex;align-items:center;gap:5px;padding:3px 8px 3px 10px;min-height:38px;cursor:default}
@@ -213,6 +235,7 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .canvas-wrap.frame-painter .bitem:not(.locked){cursor:copy}
 .canvas{position:relative;min-width:3000px;min-height:2200px;z-index:1}
 .canvas-drop-hint{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(196,137,74,.06);border:3px dashed var(--acc-dim);font-size:14px;letter-spacing:3px;color:var(--acc);pointer-events:none;z-index:500}
+.canvas-drop-hint.no-proj{background:rgba(238,0,85,.05);border-color:#e05;color:#e05}
 
 /* ── ROOM VIEW ── */
 .room-view{display:flex;flex:1;overflow:hidden}
@@ -420,6 +443,7 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .library{background:var(--surf);border-top:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;z-index:100;overflow:hidden;transition:height .18s ease}
 .library.resizing{transition:none !important}
 .library.lib-drop-active .lib-body{outline:2px dashed var(--acc-dim);outline-offset:-3px;background:color-mix(in srgb,var(--acc) 6%,transparent)}
+.library.lib-drop-noproj .lib-body{outline:2px dashed #e05;outline-offset:-3px;background:color-mix(in srgb,#e05 6%,transparent)}
 .sect-drop-active{background:color-mix(in srgb,var(--acc) 8%,transparent);border-radius:3px}
 .sect-drop-active .sect-header{border-bottom-color:var(--acc)}
 .sect-none-sep{width:100%;border-top:1px dashed var(--border);margin:4px 0 0 0;flex-shrink:0}
@@ -831,14 +855,15 @@ const getBoardPx = board => {
   return { w: Math.max(1, toPx(board.fixedW)), h: Math.max(1, toPx(board.fixedH)) };
 };
 
+const chk = r => { if (!r.ok) throw Object.assign(new Error(r.statusText), {status: r.status}); return r; };
 const api = {
-  get:    url         => fetch(url).then(r => r.json()),
-  post:   (url, body) => fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)}).then(r => r.json()),
-  put:    (url, body) => fetch(url, {method:'PUT',  headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)}).then(r => r.json()),
-  patch:  (url, body) => fetch(url, {method:'PATCH',headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)}).then(r => r.json()),
-  del:    url         => fetch(url, {method:'DELETE'}).then(r => r.json()),
-  upload:        (url, file) => { const fd = new FormData(); fd.append('photo', file); return fetch(url, {method:'POST', body:fd}).then(r => r.json()); },
-  uploadReplace: (url, file) => { const fd = new FormData(); fd.append('photo', file); return fetch(url, {method:'PUT',  body:fd}).then(r => r.json()); },
+  get:    url         => fetch(url).then(chk).then(r => r.json()),
+  post:   (url, body) => fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)}).then(chk).then(r => r.json()),
+  put:    (url, body) => fetch(url, {method:'PUT',  headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)}).then(chk).then(r => r.json()),
+  patch:  (url, body) => fetch(url, {method:'PATCH',headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)}).then(chk).then(r => r.json()),
+  del:    url         => fetch(url, {method:'DELETE'}).then(chk).then(r => r.json()),
+  upload:        (url, file) => { const fd = new FormData(); fd.append('photo', file); return fetch(url, {method:'POST', body:fd}).then(chk).then(r => r.json()); },
+  uploadReplace: (url, file) => { const fd = new FormData(); fd.append('photo', file); return fetch(url, {method:'PUT',  body:fd}).then(chk).then(r => r.json()); },
 };
 
 const fmtSize = b => b > 1e6 ? (b/1e6).toFixed(1)+' MB' : Math.round(b/1024)+' KB';
@@ -930,6 +955,7 @@ const I18N = {
     dragHint2:'o desde el repositorio (panel izquierdo)',
     dragHint3:'o suelta imágenes desde el explorador de archivos',
     dropHint:'Suelta para añadir al tablero', dropHintGrid:'Suelta para añadir al mosaico', dropHintZone:'Suelta para añadir a la zona',
+    dropHintNoProj:'Sin proyecto — crea uno en el panel izquierdo',
     labelPlaceholder:'etiqueta…', rotateBtn:'Rotar 90°', bringFwdBtn:'Al frente', sendBackBtn:'Enviar atrás', deleteBtn:'Eliminar', lockBtn:'Bloquear', unlockBtn:'Desbloquear',
     noteTitlePh:'título…', noteInMemoryBtn:'Incluir en memoria', noteExcludeMemBtn:'Excluir de memoria', notesSectionTitle:'Notas',
     renameBtn:'Renombrar',
@@ -975,8 +1001,15 @@ const I18N = {
     imported: name => `"${name}" importada`,
     importError:'Error al importar', configSaved:'Configuración guardada',
     allowPopups:'Permite ventanas emergentes para imprimir',
-    confirmDeleteProject:'¿Eliminar este proyecto y todas sus fotos?',
+    confirmDeleteProject:'¿Mover este proyecto a la papelera?',
     confirmDeleteBoard:'¿Eliminar este tablero?',
+    trashTitle:'Papelera', trashTabPhotos:'Fotos', trashTabProjects:'Proyectos',
+    trashNoPhotos:'No hay fotos en la papelera', trashNoProjects:'No hay proyectos en la papelera',
+    trashRestore:'Restaurar', trashDeletePerm:'Borrar definitivamente',
+    trashEmptyAll:'Vaciar papelera', trashConfirmEmpty:'¿Vaciar la papelera? Esta acción no se puede deshacer.',
+    trashRestored:'Restaurado', trashDeletedPerm:'Eliminado definitivamente',
+    trashPurge: d => `Purga automática en ${d} día${d!==1?'s':''}`,
+    trashDeletedPhoto: n => `Foto movida a la papelera${n>0?` (en ${n} tablero${n!==1?'s':''})`: ''}`,
     confirmDeleteWallBoards: names => `Al eliminar la pared se borrarán también los tableros vinculados: ${names}. ¿Continuar?`,
     duplicateBoard:'Duplicar tablero',
     confirmDeletePhoto:'¿Eliminar esta foto del proyecto?',
@@ -1070,6 +1103,7 @@ const I18N = {
     dragHint2:'or from the repository (left panel)',
     dragHint3:'or drop images from the file explorer',
     dropHint:'Drop to add to board', dropHintGrid:'Drop to add to grid', dropHintZone:'Drop to add to zone',
+    dropHintNoProj:'No project — create one in the left panel',
     labelPlaceholder:'label…', rotateBtn:'Rotate 90°', bringFwdBtn:'Bring forward', sendBackBtn:'Send backward', deleteBtn:'Delete', lockBtn:'Lock', unlockBtn:'Unlock',
     noteTitlePh:'title…', noteInMemoryBtn:'Include in report', noteExcludeMemBtn:'Exclude from report', notesSectionTitle:'Notes',
     renameBtn:'Rename',
@@ -1115,8 +1149,15 @@ const I18N = {
     imported: name => `"${name}" imported`,
     importError:'Import error', configSaved:'Settings saved',
     allowPopups:'Allow pop-ups to print',
-    confirmDeleteProject:'Delete this project and all its photos?',
+    confirmDeleteProject:'Move this project to the trash?',
     confirmDeleteBoard:'Delete this board?',
+    trashTitle:'Trash', trashTabPhotos:'Photos', trashTabProjects:'Projects',
+    trashNoPhotos:'No photos in trash', trashNoProjects:'No projects in trash',
+    trashRestore:'Restore', trashDeletePerm:'Delete permanently',
+    trashEmptyAll:'Empty trash', trashConfirmEmpty:'Empty the trash? This cannot be undone.',
+    trashRestored:'Restored', trashDeletedPerm:'Permanently deleted',
+    trashPurge: d => `Auto-purge in ${d} day${d!==1?'s':''}`,
+    trashDeletedPhoto: n => `Photo moved to trash${n>0?` (on ${n} board${n!==1?'s':''})`: ''}`,
     confirmDeleteWallBoards: names => `Deleting the wall will also delete its linked boards: ${names}. Continue?`,
     duplicateBoard:'Duplicate board',
     confirmDeletePhoto:'Delete this photo from the project?',
@@ -1359,6 +1400,12 @@ function App() {
   const [dupModal,       setDupModal]       = useState(null); // {imageFiles, duplicates, dropPos, sectionId}
   const [exportDropOpen, setExportDropOpen] = useState(false);
   const [gridDropOpen,   setGridDropOpen]   = useState(false);
+  const [trashCount,     setTrashCount]     = useState({ photos: 0, projects: 0, total: 0 });
+  const [trashModal,     setTrashModal]     = useState(false);
+  const [trashTab,       setTrashTab]       = useState('photos');
+  const [trashPhotos,    setTrashPhotos]    = useState([]);
+  const [trashProjects,  setTrashProjects]  = useState([]);
+  const [trashLoading,   setTrashLoading]   = useState(false);
   const [gridDropPos,    setGridDropPos]    = useState({left:0,top:0});
   const [versions,       setVersions]       = useState([]); // [{ts, itemCount}]
   const [verPreviewTs,   setVerPreviewTs]   = useState(null);
@@ -1419,6 +1466,19 @@ function App() {
   const [updateInfo,    setUpdateInfo]    = useState(null);
   const [updateDismissed, setUpdateDismissed] = useState(false);
 
+  // Auth state (solo activo cuando el servidor tiene TABLEAU_AUTH=true)
+  const [authMode,      setAuthMode]      = useState(false);
+  const [authUser,      setAuthUser]      = useState(null);    // {username, quota, used, role, mustChangePassword}
+  const [loginForm,     setLoginForm]     = useState({ username: '', password: '', error: '', ok: '' });
+  const [changePwForm,  setChangePwForm]  = useState({ current: '', next: '', next2: '', error: '' });
+  const [resetForm,     setResetForm]     = useState({ step: 'login', email: '', token: '', next: '', next2: '', msg: '', error: '' });
+  const [adminOpen,     setAdminOpen]     = useState(false);
+  const [changePwOpen,  setChangePwOpen]  = useState(false);
+  const [adminUsers,    setAdminUsers]    = useState([]);
+  const [adminForm,     setAdminForm]     = useState({ username: '', email: '', quotaMb: '25', role: 'user', error: '', ok: '' });
+  const [adminEdit,     setAdminEdit]     = useState(null);  // {uid, type:'quota'|'expiry', value}
+  const [adminMsg,      setAdminMsg]      = useState('');
+
   useLayoutEffect(() => {
     const th = THEMES[theme];
     if (!th) return;
@@ -1458,7 +1518,6 @@ function App() {
   const activeRoomIdRef = useRef(null);
   const roomVboxRef     = useRef({x:-50,y:-50,w:1300,h:900});
   const importRoomRef        = useRef(null);
-  const deleteRoomBoardsRef  = useRef(false);
   const reset3DViewRef       = useRef(null);
   const snapshot3DRef        = useRef(null);
   const toggle3DPersonRef    = useRef(null);
@@ -1543,15 +1602,31 @@ function App() {
     const pollUpdate = () => api.get('/api/update').then(d => { if (d.update) setUpdateInfo(d.update); }).catch(() => {});
     pollUpdate();
     const updateInterval = setInterval(pollUpdate, 5 * 60 * 1000);
-    api.get('/api/templates').then(ts => { if (Array.isArray(ts)) setTemplates(ts); }).catch(() => {});
-    api.get('/api/projects').then(ps => {
-      setProjects(ps);
-      if (ps.length) {
-        const savedPid = localStorage.getItem('tb-lastpid');
-        setPid((savedPid && ps.find(p => p.id === savedPid)) ? savedPid : ps[0].id);
+    const loadData = () => {
+      api.get('/api/templates').then(ts => { if (Array.isArray(ts)) setTemplates(ts); }).catch(() => {});
+      api.get('/api/trash/count').then(c => setTrashCount(c || { photos:0, projects:0, total:0 })).catch(() => {});
+      api.get('/api/projects').then(ps => {
+        if (Array.isArray(ps)) {
+          setProjects(ps);
+          if (ps.length) {
+            const savedPid = localStorage.getItem('tb-lastpid');
+            setPid((savedPid && ps.find(p => p.id === savedPid)) ? savedPid : ps[0].id);
+          }
+        }
+        setReady(true);
+      }).catch(() => setReady(true));
+    };
+    // Comprobar si el servidor requiere autenticación
+    api.get('/api/me').then(d => {
+      if (d.auth === false) { loadData(); return; } // modo local
+      setAuthMode(true);
+      if (d.authenticated) {
+        setAuthUser({ username: d.username, quota: d.quota, used: d.used, role: d.role, mustChangePassword: d.mustChangePassword });
+        if (!d.mustChangePassword) loadData();
+      } else {
+        setReady(true); // mostrar pantalla de login
       }
-      setReady(true);
-    }).catch(() => setReady(true));
+    }).catch(() => { loadData(); }); // fallback modo local
     return () => { clearInterval(hbInterval); clearInterval(updateInterval); document.removeEventListener('visibilitychange', onVisible); };
   }, []);
 
@@ -3257,6 +3332,72 @@ ${rows}
     }
   };
 
+  const refreshTrashCount = () =>
+    api.get('/api/trash/count').then(c => setTrashCount(c || { photos:0, projects:0, total:0 })).catch(() => {});
+
+  const openTrash = async (tab) => {
+    setTrashTab(tab || 'photos');
+    setTrashModal(true);
+    setTrashLoading(true);
+    try {
+      const [ph, pr] = await Promise.all([
+        api.get('/api/trash/photos'),
+        api.get('/api/trash/projects'),
+      ]);
+      setTrashPhotos(Array.isArray(ph) ? ph : []);
+      setTrashProjects(Array.isArray(pr) ? pr : []);
+    } catch {} finally { setTrashLoading(false); }
+  };
+
+  const restoreTrashPhoto = async (pid, id) => {
+    try {
+      const photo = await api.post(`/api/trash/photos/${pid}/${id}/restore`, {});
+      setTrashPhotos(ps => ps.filter(p => !(p.pid === pid && p.id === id)));
+      refreshTrashCount();
+      if (photo.pid === pidRef.current) setPhotos(ps => [...ps, photo]);
+      showToast(t('trashRestored'));
+    } catch (e) { showToast('Error: ' + e.message, true); }
+  };
+
+  const permDeleteTrashPhoto = (pid, id) => {
+    showConfirm(t('trashDeletePerm') + '?', async () => {
+      await api.del(`/api/trash/photos/${pid}/${id}`);
+      setTrashPhotos(ps => ps.filter(p => !(p.pid === pid && p.id === id)));
+      refreshTrashCount();
+      showToast(t('trashDeletedPerm'));
+    }, true);
+  };
+
+  const restoreTrashProject = async (pid) => {
+    try {
+      const proj = await api.post(`/api/trash/projects/${pid}/restore`, {});
+      setTrashProjects(ps => ps.filter(p => p.pid !== pid));
+      refreshTrashCount();
+      const ps = await api.get('/api/projects');
+      if (Array.isArray(ps)) setProjects(ps);
+      setPid(proj.id);
+      showToast(t('trashRestored'));
+    } catch (e) { showToast('Error: ' + e.message, true); }
+  };
+
+  const permDeleteTrashProject = (pid) => {
+    showConfirm(t('trashDeletePerm') + '?', async () => {
+      await api.del(`/api/trash/projects/${pid}`);
+      setTrashProjects(ps => ps.filter(p => p.pid !== pid));
+      refreshTrashCount();
+      showToast(t('trashDeletedPerm'));
+    }, true);
+  };
+
+  const emptyTrash = () => {
+    showConfirm(t('trashConfirmEmpty'), async () => {
+      await Promise.all([api.del('/api/trash/photos'), api.del('/api/trash/projects')]);
+      setTrashPhotos([]); setTrashProjects([]);
+      setTrashCount({ photos:0, projects:0, total:0 });
+      showToast(lang === 'es' ? 'Papelera vaciada' : 'Trash emptied');
+    }, true);
+  };
+
   const deleteProject = (id, e) => {
     e?.stopPropagation();
     showConfirm(t('confirmDeleteProject'), async () => {
@@ -3264,6 +3405,7 @@ ${rows}
       const nps = projects.filter(p => p.id !== id);
       setProjects(nps);
       if (pidRef.current === id) setPid(nps[0]?.id || null);
+      refreshTrashCount();
     });
   };
 
@@ -3488,10 +3630,24 @@ ${rows}
     showConfirm(t('confirmRestore'), async () => {
       try {
         const newItems = await api.post(`/api/boards/${pid}/${bid}/versions/${ts}/restore`, {});
-        setItems(newItems); itemsRef.current = newItems;
-        setSel([]); selRef.current = [];
-        setModal(null);
-        showToast(t('versionRestored'));
+        const missingIds = [...new Set(
+          newItems.filter(i => i.photoId).map(i => i.photoId)
+            .filter(id => !photosRef.current.find(p => p.id === id))
+        )];
+        const doRestore = () => {
+          setItems(newItems); itemsRef.current = newItems;
+          setSel([]); selRef.current = [];
+          setModal(null);
+          showToast(t('versionRestored'));
+        };
+        if (missingIds.length > 0) {
+          const msg = lang === 'es'
+            ? `${missingIds.length} foto${missingIds.length!==1?'s':''} de esta versión ya no existe${missingIds.length!==1?'n':''} en la biblioteca. Se restaurará igualmente pero aparecerán vacías. ¿Continuar?`
+            : `${missingIds.length} photo${missingIds.length!==1?'s':''} in this version no longer exist in the library. They will appear empty. Continue?`;
+          showConfirm(msg, doRestore, false);
+        } else {
+          doRestore();
+        }
       } catch (e) { showToast('Error: ' + e.message, true); }
     }, false);
   };
@@ -3735,6 +3891,8 @@ ${rows}
       setAllBoardItems(prev => Object.fromEntries(
         Object.entries(prev).map(([bid, its]) => [bid, its.filter(i => i.photoId !== id)])
       ));
+      refreshTrashCount();
+      showToast(t('trashDeletedPhoto', placedBoards.length));
     });
   };
 
@@ -3756,6 +3914,7 @@ ${rows}
       ));
       setLibSelection([]);
       setBatchTagPop(null);
+      refreshTrashCount();
     });
   };
 
@@ -5475,26 +5634,19 @@ ${rows}
     const linkedIds = [...new Set([
       ...(r.walls||[]).flatMap(w => [w.boardId, w.boardIdBack].filter(Boolean)),
       ...(r.blocks||[]).flatMap(b => Object.values(b.faces||{}).map(f => f?.boardId).filter(Boolean)),
+      ...(r.columns||[]).flatMap(c => Object.values(c.faces||{}).map(f => f?.boardId).filter(Boolean)),
     ])];
-    deleteRoomBoardsRef.current = false;
-    const extra = linkedIds.length ? (
-      <label style={{display:'flex',alignItems:'center',gap:7,cursor:'pointer',fontSize:10,color:'var(--sub)',userSelect:'none'}}>
-        <input type="checkbox" defaultChecked={false} style={{accentColor:'var(--acc)',cursor:'pointer'}}
-          onChange={e => { deleteRoomBoardsRef.current = e.target.checked; }}/>
-        {lang==='es'
-          ? `Eliminar también ${linkedIds.length} tablero${linkedIds.length!==1?'s':''} vinculado${linkedIds.length!==1?'s':''}`
-          : `Also delete ${linkedIds.length} linked board${linkedIds.length!==1?'s':''}`}
-      </label>
-    ) : null;
+    const msg = linkedIds.length
+      ? (lang==='es'
+          ? `¿Eliminar la sala? Se eliminarán también ${linkedIds.length} tablero${linkedIds.length!==1?'s':''} vinculado${linkedIds.length!==1?'s':''}. Esta acción no se puede deshacer.`
+          : `Delete the room? ${linkedIds.length} linked board${linkedIds.length!==1?'s':''} will also be deleted. This cannot be undone.`)
+      : (lang==='es'?'¿Eliminar la sala? Se perderá la geometría de la planta.':'Delete the room? The floor plan geometry will be lost.');
     setConfirmModal({
-      message: lang==='es'?'¿Eliminar la sala? Se perderá la geometría de la planta.':'Delete the room? The floor plan geometry will be lost.',
+      message: msg,
       danger: true,
-      extra,
       onConfirm: async () => {
-        if (deleteRoomBoardsRef.current && linkedIds.length) {
-          for (const bid of linkedIds) {
-            await api.del(`/api/projects/${pidRef.current}/boards/${bid}`);
-          }
+        await api.del(`/api/projects/${pidRef.current}/rooms/${r.id}`);
+        if (linkedIds.length) {
           setBoards(bs => bs.filter(b => !linkedIds.includes(b.id)));
           setAllBoardItems(prev => {
             const next = {...prev};
@@ -5507,7 +5659,6 @@ ${rows}
             setBid(nb); bidRef.current = nb;
           }
         }
-        api.del(`/api/projects/${pidRef.current}/rooms/${r.id}`);
         const next = roomsRef.current.filter(x => x.id !== r.id);
         setRooms(next); roomsRef.current = next;
         const fallback = next[0] || null;
@@ -6076,7 +6227,7 @@ ${rows}
   const onLibDrop = (e) => {
     e.preventDefault(); e.stopPropagation();
     setLibDragOver(false); setLibDragOverSect(null);
-    if (!pidRef.current) return;
+    if (!pidRef.current) { showToast(t('dropHintNoProj'), true); return; }
     const files = [...e.dataTransfer.files].filter(f => f.type.startsWith('image/'));
     if (files.length) uploadFiles(files);
   };
@@ -6138,6 +6289,151 @@ ${rows}
     window.addEventListener('pointerup', onUp);
   };
 
+  // ── Login screen (solo cuando authMode=true y aún no hay sesión) ─────────────
+  const doLogin = async e => {
+    e.preventDefault();
+    setLoginForm(f => ({ ...f, error: '' }));
+    try {
+      const d = await api.post('/api/login', { username: loginForm.username, password: loginForm.password });
+      if (d.ok) {
+        setAuthUser({ username: d.username, quota: d.quota, used: d.used, role: d.role, mustChangePassword: d.mustChangePassword });
+        if (!d.mustChangePassword) {
+          api.get('/api/templates').then(ts => { if (Array.isArray(ts)) setTemplates(ts); }).catch(() => {});
+          api.get('/api/projects').then(ps => {
+            if (!Array.isArray(ps)) return;
+            setProjects(ps);
+            if (ps.length > 0) {
+              const savedPid = localStorage.getItem('tb-lastpid');
+              setPid((savedPid && ps.find(p => p.id === savedPid)) ? savedPid : ps[0].id);
+            }
+            setReady(true);
+          }).catch(() => setReady(true));
+        }
+      }
+    } catch { setLoginForm(f => ({ ...f, error: lang === 'es' ? 'Usuario o contraseña incorrectos' : 'Incorrect username or password' })); }
+  };
+
+  const authScreenStyle = {height:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--bg)',flexDirection:'column',gap:24};
+  const authInputStyle  = {padding:'8px 12px',background:'var(--surf)',border:'1px solid var(--border2)',color:'var(--text)',fontSize:13,outline:'none',width:'100%',boxSizing:'border-box'};
+  const authBtnStyle    = {padding:'8px 12px',background:'var(--acc-faint)',border:'1px solid var(--acc-dim)',color:'var(--acc)',fontSize:11,letterSpacing:'.6px',textTransform:'uppercase',cursor:'pointer',fontFamily:"'IBM Plex Mono',monospace"};
+  const authLinkStyle   = {background:'none',border:'none',color:'var(--muted)',fontSize:11,cursor:'pointer',textDecoration:'underline',padding:0};
+
+  const pwRules = pwd => [
+    { ok: pwd.length >= 8,       label: lang==='es'?'Mínimo 8 caracteres':'Min. 8 characters' },
+    { ok: /[A-Z]/.test(pwd),     label: lang==='es'?'Una mayúscula':'One uppercase' },
+    { ok: /[a-z]/.test(pwd),     label: lang==='es'?'Una minúscula':'One lowercase' },
+    { ok: /[0-9]/.test(pwd),     label: lang==='es'?'Un número':'One number' },
+  ];
+  const PwHints = ({pwd}) => pwd ? (
+    <div style={{display:'flex',gap:6,flexWrap:'wrap',marginTop:-4}}>
+      {pwRules(pwd).map((r,i) => (
+        <span key={i} style={{fontSize:10,color:r.ok?'var(--acc)':'var(--muted)',display:'flex',alignItems:'center',gap:2}}>
+          {r.ok?'✓':'○'} {r.label}
+        </span>
+      ))}
+    </div>
+  ) : null;
+  const pwValid = pwd => pwRules(pwd).every(r => r.ok);
+
+  // ── Pantalla de cambio de contraseña obligatorio ──────────────────────────
+  if (authMode && authUser?.mustChangePassword) {
+    const doChangePw = async e => {
+      e.preventDefault();
+      if (!pwValid(changePwForm.next)) { setChangePwForm(f => ({...f, error: lang==='es'?'La contraseña no cumple los requisitos':'Password does not meet requirements'})); return; }
+      if (changePwForm.next !== changePwForm.next2) { setChangePwForm(f => ({...f, error: lang==='es'?'Las contraseñas no coinciden':'Passwords do not match'})); return; }
+      try {
+        await api.post('/api/change-password', { newPassword: changePwForm.next });
+        await api.post('/api/logout');
+        setAuthUser(null);
+        setLoginForm({ username: '', password: '', error: '', ok: lang==='es'?'Contraseña actualizada. Inicia sesión.':'Password updated. Please sign in.' });
+      } catch { setChangePwForm(f => ({...f, error: lang==='es'?'Error al cambiar la contraseña':'Error changing password'})); }
+    };
+    return (
+      <div style={authScreenStyle}>
+        <div style={{fontFamily:"'Playfair Display',serif",fontSize:28,color:'var(--acc)',letterSpacing:1}}>Tableau</div>
+        <div style={{fontSize:12,color:'var(--muted)',marginTop:-12}}>{lang==='es'?'Debes establecer una nueva contraseña':'Please set a new password'}</div>
+        <form onSubmit={doChangePw} style={{display:'flex',flexDirection:'column',gap:12,width:280}}>
+          <input type="password" style={authInputStyle} placeholder={lang==='es'?'Nueva contraseña':'New password'} value={changePwForm.next} onChange={e => setChangePwForm(f => ({...f, next: e.target.value}))} autoFocus/>
+          <PwHints pwd={changePwForm.next}/>
+          <input type="password" style={authInputStyle} placeholder={lang==='es'?'Repetir contraseña':'Repeat password'} value={changePwForm.next2} onChange={e => setChangePwForm(f => ({...f, next2: e.target.value}))}/>
+          {changePwForm.error && <div style={{color:'#e06c75',fontSize:11}}>{changePwForm.error}</div>}
+          <button type="submit" style={{...authBtnStyle, opacity: pwValid(changePwForm.next)?1:0.5}} disabled={!pwValid(changePwForm.next)}>{lang==='es'?'Guardar contraseña':'Save password'}</button>
+        </form>
+      </div>
+    );
+  }
+
+  // ── Pantalla de reset de contraseña (desde URL ?reset=token) ──────────────
+  const urlToken = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('reset') : null;
+  if (authMode && !authUser && urlToken && resetForm.step !== 'done') {
+    const doResetConfirm = async e => {
+      e.preventDefault();
+      if (resetForm.next !== resetForm.next2) { setResetForm(f => ({...f, error: lang==='es'?'Las contraseñas no coinciden':'Passwords do not match'})); return; }
+      try {
+        await api.post('/api/reset-password/confirm', { token: urlToken, newPassword: resetForm.next });
+        setResetForm(f => ({...f, step:'done', error:''}));
+        history.replaceState({}, '', '/');
+      } catch { setResetForm(f => ({...f, error: lang==='es'?'Token inválido o expirado':'Invalid or expired token'})); }
+    };
+    if (resetForm.step === 'done') return (
+      <div style={authScreenStyle}>
+        <div style={{fontFamily:"'Playfair Display',serif",fontSize:28,color:'var(--acc)'}}>Tableau</div>
+        <div style={{color:'var(--text)',fontSize:13}}>{lang==='es'?'Contraseña actualizada. Ya puedes iniciar sesión.':'Password updated. You can now sign in.'}</div>
+        <button style={authBtnStyle} onClick={() => setResetForm(f => ({...f, step:'login'}))}>{lang==='es'?'Iniciar sesión':'Sign in'}</button>
+      </div>
+    );
+    return (
+      <div style={authScreenStyle}>
+        <div style={{fontFamily:"'Playfair Display',serif",fontSize:28,color:'var(--acc)'}}>Tableau</div>
+        <div style={{fontSize:12,color:'var(--muted)',marginTop:-12}}>{lang==='es'?'Establece tu nueva contraseña':'Set your new password'}</div>
+        <form onSubmit={doResetConfirm} style={{display:'flex',flexDirection:'column',gap:12,width:280}}>
+          <input type="password" style={authInputStyle} placeholder={lang==='es'?'Nueva contraseña':'New password'} value={resetForm.next} onChange={e => setResetForm(f => ({...f, next: e.target.value}))} autoFocus/>
+          <PwHints pwd={resetForm.next}/>
+          <input type="password" style={authInputStyle} placeholder={lang==='es'?'Repetir contraseña':'Repeat password'} value={resetForm.next2} onChange={e => setResetForm(f => ({...f, next2: e.target.value}))}/>
+          {resetForm.error && <div style={{color:'#e06c75',fontSize:11}}>{resetForm.error}</div>}
+          <button type="submit" style={authBtnStyle}>{lang==='es'?'Guardar contraseña':'Save password'}</button>
+        </form>
+      </div>
+    );
+  }
+
+  // ── Pantalla de login ────────────────────────────────────────────────────────
+  if (authMode && !authUser) {
+    const doLogin2 = doLogin; // alias para uso en JSX
+    const doRequestReset = async e => {
+      e.preventDefault();
+      setResetForm(f => ({...f, error:'', msg:''}));
+      try {
+        await api.post('/api/reset-password/request', { email: resetForm.email });
+        setResetForm(f => ({...f, msg: lang==='es'?'Si el email existe recibirás un enlace en breve.':'If the email exists you will receive a link shortly.'}));
+      } catch { setResetForm(f => ({...f, error: lang==='es'?'Error al enviar':'Error sending email'})); }
+    };
+    return (
+      <div style={authScreenStyle}>
+        <div style={{fontFamily:"'Playfair Display',serif",fontSize:28,color:'var(--acc)',letterSpacing:1}}>Tableau</div>
+        {resetForm.step === 'login' ? (
+          <form onSubmit={doLogin} style={{display:'flex',flexDirection:'column',gap:12,width:280}}>
+            <input style={authInputStyle} placeholder={lang==='es'?'Usuario':'Username'} value={loginForm.username} onChange={e => setLoginForm(f => ({...f, username: e.target.value}))} autoFocus/>
+            <input type="password" style={authInputStyle} placeholder={lang==='es'?'Contraseña':'Password'} value={loginForm.password} onChange={e => setLoginForm(f => ({...f, password: e.target.value}))}/>
+            {loginForm.ok    && <div style={{color:'var(--acc)',fontSize:11}}>{loginForm.ok}</div>}
+            {loginForm.error && <div style={{color:'#e06c75',fontSize:11}}>{loginForm.error}</div>}
+            <button type="submit" style={authBtnStyle}>{lang==='es'?'Entrar':'Sign in'}</button>
+            <button type="button" style={authLinkStyle} onClick={() => setResetForm(f => ({...f, step:'request', email:'', msg:'', error:''}))}>{lang==='es'?'¿Olvidaste tu contraseña?':'Forgot your password?'}</button>
+          </form>
+        ) : (
+          <form onSubmit={doRequestReset} style={{display:'flex',flexDirection:'column',gap:12,width:280}}>
+            <div style={{fontSize:12,color:'var(--muted)'}}>{lang==='es'?'Introduce tu email para recibir el enlace de recuperación:':'Enter your email to receive a recovery link:'}</div>
+            <input type="email" style={authInputStyle} placeholder="Email" value={resetForm.email} onChange={e => setResetForm(f => ({...f, email: e.target.value}))} autoFocus/>
+            {resetForm.error && <div style={{color:'#e06c75',fontSize:11}}>{resetForm.error}</div>}
+            {resetForm.msg   && <div style={{color:'var(--acc)',fontSize:11}}>{resetForm.msg}</div>}
+            <button type="submit" style={authBtnStyle}>{lang==='es'?'Enviar enlace':'Send link'}</button>
+            <button type="button" style={authLinkStyle} onClick={() => setResetForm(f => ({...f, step:'login'}))}>{lang==='es'?'Volver al login':'Back to sign in'}</button>
+          </form>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className={`app${presentation ? ' presentation' : ''}`} onClick={() => { selRef.current = []; setSel([]); renaming && setRenaming(null); setThemeOpen(false); setPropsPanelId(null); setTextFmtPanelId(null); setFramePainter(null); }}>
 
@@ -6171,9 +6467,6 @@ ${rows}
                 {activeBoard && <>
                   <span className="bc-arrow">›</span>
                   <span className="bc-seg">{activeBoard.name}</span>
-                  {boardDpi && boardUnits !== 'px' && (
-                    <span className="bc-dpi">{boardPx ? '⊡ ' : ''}{boardDpi} dpi · {boardUnits}</span>
-                  )}
                 </>}
               </>
             : <span className="bc-none">{projects.length === 0 ? t('noProjHintEmpty') : t('noProjHint')}</span>
@@ -6187,9 +6480,9 @@ ${rows}
           </button>
         )}
         {bid && roomView === 'board' && <button className={`btn${showGrid?' acc':''}`}
-            style={{fontSize:9,letterSpacing:.3,opacity:(showGrid && gridCellPx*zoom<4)?0.45:1}}
+            style={{fontSize:9,letterSpacing:.3,opacity:(showGrid && gridCellPx*zoom<1)?0.45:1}}
             onClick={e => { if (gridDropOpen) { setGridDropOpen(false); return; } const r = e.currentTarget.getBoundingClientRect(); setGridDropPos({ left: r.left, top: r.bottom + 4 }); setGridDropOpen(true); }}
-            title={showGrid && gridCellPx*zoom<4 ? t('gridHiddenZoom') : t('gridToggle')}>
+            title={showGrid && gridCellPx*zoom<1 ? t('gridHiddenZoom') : t('gridToggle')}>
             {t('gridToggle')}{showGrid && snapGrid ? ' ·' : ''}
           </button>}
         {(tmplEditMode || bid) && <button className="btn" style={{fontSize:10}} onClick={openBoardConfig} title={t('boardConfig')}>{t('config')}</button>}
@@ -6247,6 +6540,46 @@ ${rows}
                 <span className="theme-opt-label">{t('libPreviewToggle')}</span>
                 {showLibPreview && <span style={{color:'var(--acc)',fontSize:11}}>✓</span>}
               </div>
+              {authUser && <>
+                <div className="pref-divider"/>
+                <div className="pref-sec-hd">{lang === 'es' ? 'Almacenamiento' : 'Storage'}</div>
+                <div className="pref-about" onClick={e => e.stopPropagation()} style={{gap:6}}>
+                  <span style={{fontSize:11,color:'var(--text)'}}>{authUser.username}</span>
+                  {(() => {
+                    const pct = authUser.quota ? Math.round(authUser.used / authUser.quota * 100) : 0;
+                    const usedMb = (authUser.used / 1024 / 1024).toFixed(1);
+                    const totalMb = (authUser.quota / 1024 / 1024).toFixed(0);
+                    return <>
+                      <div style={{height:4,background:'var(--border2)',borderRadius:2,overflow:'hidden'}}>
+                        <div style={{height:'100%',width:`${Math.min(100,pct)}%`,background: pct > 85 ? '#e06c75' : 'var(--acc)',borderRadius:2,transition:'width .3s'}}/>
+                      </div>
+                      <span style={{fontSize:10,color:'var(--muted)'}}>{usedMb} / {totalMb} MB ({pct}%)</span>
+                      {authUser.expiresAt && (() => {
+                        const days = Math.ceil((authUser.expiresAt - Date.now()) / 86400000);
+                        if (days > 7) return <span style={{fontSize:10,color:'var(--muted)'}}>{lang==='es'?`Válido hasta: ${new Date(authUser.expiresAt).toLocaleDateString('es-ES')}`:`Valid until: ${new Date(authUser.expiresAt).toLocaleDateString()}`}</span>;
+                        if (days > 0) return <span style={{fontSize:10,color:'#e5c07b',fontWeight:600}}>⚠ {lang==='es'?`Expira en ${days} día${days>1?'s':''}`:`Expires in ${days} day${days>1?'s':''}`}</span>;
+                        return <span style={{fontSize:10,color:'#e06c75',fontWeight:600}}>{lang==='es'?'Cuenta expirada':'Account expired'}</span>;
+                      })()}
+                    </>;
+                  })()}
+                  <div style={{display:'flex',gap:6,marginTop:4,flexWrap:'wrap'}}>
+                    {authUser?.role === 'admin' && (
+                      <button onClick={() => { setThemeOpen(false); api.get('/api/admin/users').then(us => { setAdminUsers(us); setAdminOpen(true); }).catch(() => {}); }}
+                        style={{padding:'4px 8px',background:'var(--acc-faint)',border:'1px solid var(--acc-dim)',color:'var(--acc)',fontSize:10,letterSpacing:'.5px',textTransform:'uppercase',cursor:'pointer',fontFamily:"'IBM Plex Mono',monospace"}}>
+                        {lang === 'es' ? '⚙ Admin' : '⚙ Admin'}
+                      </button>
+                    )}
+                    <button onClick={() => { setThemeOpen(false); setChangePwForm({current:'',next:'',next2:'',error:''}); setChangePwOpen(true); }}
+                      style={{padding:'4px 8px',background:'transparent',border:'1px solid var(--border2)',color:'var(--sub)',fontSize:10,letterSpacing:'.5px',textTransform:'uppercase',cursor:'pointer',fontFamily:"'IBM Plex Mono',monospace"}}>
+                      {lang === 'es' ? 'Cambiar clave' : 'Change password'}
+                    </button>
+                    <button onClick={async () => { await api.post('/api/logout'); setAuthUser(null); setProjects([]); setPid(null); setBid(null); setPhotos([]); setItems([]); }}
+                      style={{padding:'4px 8px',background:'transparent',border:'1px solid var(--border2)',color:'var(--sub)',fontSize:10,letterSpacing:'.5px',textTransform:'uppercase',cursor:'pointer',fontFamily:"'IBM Plex Mono',monospace"}}>
+                      {lang === 'es' ? 'Cerrar sesión' : 'Sign out'}
+                    </button>
+                  </div>
+                </div>
+              </>}
               <div className="pref-divider"/>
               <div className="pref-sec-hd">{t('aboutLabel')}</div>
               <div className="pref-about" onClick={e => e.stopPropagation()}>
@@ -6265,7 +6598,7 @@ ${rows}
       </div>
 
       {/* ── MAIN ── */}
-      {!pid && !projects.length ? (
+      {!pid && !projects.length && trashCount.total === 0 ? (
         <div className="start">
           <div className="start-logo">Tableau</div>
           <div className="start-sub">
@@ -6480,6 +6813,12 @@ ${rows}
                       })}
                     </div>
                   )}
+                </div>
+
+                {/* PAPELERA */}
+                <div className="sb-trash-btn" onClick={() => openTrash('photos')}>
+                  <span className="sb-sec-title">⊘ {t('trashTitle')}</span>
+                  {trashCount.total > 0 && <span className="sb-trash-badge">{trashCount.total}</span>}
                 </div>
 
                 {/* INFO */}
@@ -7127,7 +7466,7 @@ ${rows}
               onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget)) setDragOver(false); }}
               onDrop={onCanvasDrop}
             >
-              {dragOver && !gridDropTarget && <div className="canvas-drop-hint">{zoneDropTarget ? t('dropHintZone') : t('dropHint')}</div>}
+              {dragOver && !gridDropTarget && <div className={`canvas-drop-hint${!pid ? ' no-proj' : ''}`}>{!pid ? t('dropHintNoProj') : zoneDropTarget ? t('dropHintZone') : t('dropHint')}</div>}
               {sel.length >= 1 && (
                 <div className="align-bar" onClick={e => e.stopPropagation()}>
                   <span className="abt-label">{sel.length}</span>
@@ -7188,7 +7527,7 @@ ${rows}
               <div className="canvas" style={{
                 zoom,
                 '--canvas-zoom': zoom,
-                backgroundImage: (showGrid && gridCellPx * zoom >= 4)
+                backgroundImage: (showGrid && gridCellPx * zoom >= 1)
                   ? `linear-gradient(${gridColor} 1px,transparent 1px),linear-gradient(90deg,${gridColor} 1px,transparent 1px)`
                   : 'none',
                 backgroundSize: `${gridCellPx}px ${gridCellPx}px`,
@@ -7832,7 +8171,7 @@ ${rows}
               const toggleFilter = (e) => { e.stopPropagation(); const v = photoFilter === 'pending' ? 'all' : 'pending'; setPhotoFilter(v); localStorage.setItem('photoFilter', v); };
               const toggleStarFilter = (n, e) => { e.stopPropagation(); setRatingFilter(f => f === n ? 0 : n); };
               return (
-              <div className={`library${libDragOver ? ' lib-drop-active' : ''}`} style={{height: libH}} onClick={e => e.stopPropagation()}>
+              <div className={`library${libDragOver ? (pid ? ' lib-drop-active' : ' lib-drop-noproj') : ''}`} style={{height: libH}} onClick={e => e.stopPropagation()}>
                 <div className="lib-header" onClick={toggleLib}>
                   <button className="lib-toggle-btn" onClick={e => { e.stopPropagation(); toggleLib(); }} title={libOpen ? t('collapsePanel') : t('openPanel')}>{libOpen ? '▼' : '▲'}</button>
                   <button className="lib-snap-btn" onClick={snapLib} title={libHeightRef.current > window.innerHeight * 0.40 ? t('libSnapCollapse') : t('libSnapExpand')}>{libHeightRef.current > window.innerHeight * 0.40 ? '⊟' : '⊞'}</button>
@@ -9196,6 +9535,83 @@ ${rows}
         </div>
       )}
 
+      {trashModal && (
+        <div className="overlay" onClick={() => setTrashModal(false)}>
+          <div className="modal trash-modal" onClick={e => e.stopPropagation()}>
+            <div className="trash-modal-hd">
+              <span style={{fontSize:13,letterSpacing:1,color:'var(--text)'}}>{t('trashTitle')}</span>
+              <button className="btn" style={{fontSize:10}} onClick={() => setTrashModal(false)}>×</button>
+            </div>
+            <div className="trash-tabs">
+              {[['photos', t('trashTabPhotos'), trashCount.photos], ['projects', t('trashTabProjects'), trashCount.projects]].map(([tab, label, cnt]) => (
+                <div key={tab} className={`trash-tab${trashTab === tab ? ' active' : ''}`} onClick={() => setTrashTab(tab)}>
+                  {label}
+                  <span className="trash-tab-badge">{cnt}</span>
+                </div>
+              ))}
+            </div>
+            {trashLoading ? (
+              <div className="trash-empty-msg">…</div>
+            ) : trashTab === 'photos' ? (
+              trashPhotos.length === 0 ? (
+                <div className="trash-empty-msg">{t('trashNoPhotos')}</div>
+              ) : (
+                <div className="trash-list">
+                  {trashPhotos.map(p => {
+                    const daysLeft = Math.max(0, Math.ceil(30 - (Date.now() - p.deletedAt) / 86400000));
+                    return (
+                      <div key={p.pid + p.id} className="trash-item">
+                        <img className="trash-item-thumb"
+                          src={`/api/trash/photos/${p.pid}/${p.id}/thumb`}
+                          onError={ev => { ev.target.style.opacity = '.2'; }}
+                          alt={p.name}/>
+                        <div className="trash-item-info">
+                          <div className="trash-item-name" title={p.name}>{p.name}</div>
+                          <div className="trash-item-proj">📁 {p.projectName}</div>
+                          <div className="trash-item-meta">
+                            {fmtSize(p.size)} · {new Date(p.deletedAt).toLocaleDateString()} · {t('trashPurge', daysLeft)}
+                          </div>
+                        </div>
+                        <button className="btn" style={{fontSize:9,padding:'3px 8px'}} onClick={() => restoreTrashPhoto(p.pid, p.id)}>{t('trashRestore')}</button>
+                        <button className="btn" style={{fontSize:9,padding:'3px 7px',color:'var(--danger,#e05)'}} onClick={() => permDeleteTrashPhoto(p.pid, p.id)}>×</button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )
+            ) : (
+              trashProjects.length === 0 ? (
+                <div className="trash-empty-msg">{t('trashNoProjects')}</div>
+              ) : (
+                <div className="trash-list">
+                  {trashProjects.map(p => {
+                    const daysLeft = Math.max(0, Math.ceil(30 - (Date.now() - p.deletedAt) / 86400000));
+                    return (
+                      <div key={p.pid} className="trash-item">
+                        <div style={{width:44,height:44,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,flexShrink:0}}>📁</div>
+                        <div className="trash-item-info">
+                          <div className="trash-item-name">{p.name}</div>
+                          <div className="trash-item-meta">
+                            {fmtSize(p.size)} · {new Date(p.deletedAt).toLocaleDateString()} · {t('trashPurge', daysLeft)}
+                          </div>
+                        </div>
+                        <button className="btn" style={{fontSize:9,padding:'3px 8px'}} onClick={() => restoreTrashProject(p.pid)}>{t('trashRestore')}</button>
+                        <button className="btn" style={{fontSize:9,padding:'3px 7px',color:'var(--danger,#e05)'}} onClick={() => permDeleteTrashProject(p.pid)}>×</button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )
+            )}
+            <div className="trash-footer">
+              <button className="btn danger" style={{fontSize:9}} onClick={emptyTrash}
+                disabled={trashCount.total === 0}>{t('trashEmptyAll')}</button>
+              <span style={{fontSize:8,color:'var(--muted)'}}>{t('trashPurge', 30)}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {modal === 'memoria' && (
         <div className="overlay" onClick={() => setModal(null)}>
           <div className="modal mem-modal" onClick={e => e.stopPropagation()}>
@@ -9507,6 +9923,187 @@ ${rows}
           </div>
         </div>
       )}
+
+      {/* ── Modal cambio de contraseña ── */}
+      {authUser && changePwOpen && (() => {
+        const closeCp = () => setChangePwOpen(false);
+        const doChangePw2 = async e => {
+          e.preventDefault();
+          if (!pwValid(changePwForm.next)) { setChangePwForm(f => ({...f, error: lang==='es'?'La contraseña no cumple los requisitos':'Password does not meet requirements'})); return; }
+          if (changePwForm.next !== changePwForm.next2) { setChangePwForm(f => ({...f, error: lang==='es'?'Las contraseñas no coinciden':'Passwords do not match'})); return; }
+          try {
+            await api.post('/api/change-password', { currentPassword: changePwForm.current, newPassword: changePwForm.next });
+            setChangePwForm({current:'',next:'',next2:'',error:''});
+            closeCp();
+          } catch { setChangePwForm(f => ({...f, error: lang==='es'?'Contraseña actual incorrecta':'Incorrect current password'})); }
+        };
+        return (
+          <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.6)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:9000}} onClick={closeCp}>
+            <form onSubmit={doChangePw2} style={{background:'var(--surf)',border:'1px solid var(--border2)',padding:24,display:'flex',flexDirection:'column',gap:12,width:300,minWidth:260}} onClick={e => e.stopPropagation()}>
+              <div style={{fontSize:12,fontWeight:600,color:'var(--text)',letterSpacing:.5}}>{lang==='es'?'CAMBIAR CONTRASEÑA':'CHANGE PASSWORD'}</div>
+              <input type="password" style={{padding:'8px 12px',background:'var(--deep)',border:'1px solid var(--border2)',color:'var(--text)',fontSize:13,outline:'none'}} placeholder={lang==='es'?'Contraseña actual':'Current password'} value={changePwForm.current} onChange={e => setChangePwForm(f => ({...f, current: e.target.value}))}/>
+              <input type="password" style={{padding:'8px 12px',background:'var(--deep)',border:'1px solid var(--border2)',color:'var(--text)',fontSize:13,outline:'none'}} placeholder={lang==='es'?'Nueva contraseña':'New password'} value={changePwForm.next} onChange={e => setChangePwForm(f => ({...f, next: e.target.value}))}/>
+              <PwHints pwd={changePwForm.next}/>
+              <input type="password" style={{padding:'8px 12px',background:'var(--deep)',border:'1px solid var(--border2)',color:'var(--text)',fontSize:13,outline:'none'}} placeholder={lang==='es'?'Repetir contraseña':'Repeat password'} value={changePwForm.next2} onChange={e => setChangePwForm(f => ({...f, next2: e.target.value}))}/>
+              {changePwForm.error && <div style={{color:'#e06c75',fontSize:11}}>{changePwForm.error}</div>}
+              <div style={{display:'flex',gap:8,justifyContent:'flex-end'}}>
+                <button type="button" onClick={closeCp} style={{padding:'6px 14px',background:'transparent',border:'1px solid var(--border2)',color:'var(--sub)',fontSize:11,cursor:'pointer'}}>{lang==='es'?'Cancelar':'Cancel'}</button>
+                <button type="submit" style={{padding:'6px 14px',background:'var(--acc-faint)',border:'1px solid var(--acc-dim)',color:'var(--acc)',fontSize:11,cursor:'pointer'}}>{lang==='es'?'Guardar':'Save'}</button>
+              </div>
+            </form>
+          </div>
+        );
+      })()}
+
+      {/* ── Panel de administración ── */}
+      {adminOpen && authUser?.role === 'admin' && (() => {
+        const closeAdmin = () => { setAdminOpen(false); setAdminEdit(null); setAdminMsg(''); };
+        const refreshUsers = () => api.get('/api/admin/users').then(us => setAdminUsers(us)).catch(() => {});
+        const doAddUser = async e => {
+          e.preventDefault();
+          setAdminForm(f => ({...f, error:'', ok:''}));
+          try {
+            await api.post('/api/admin/users', { username: adminForm.username, email: adminForm.email, quotaMb: adminForm.quotaMb, role: adminForm.role });
+            setAdminForm(f => ({...f, username:'', email:'', quotaMb:'25', role:'user', ok: lang==='es'?'Usuario creado y email enviado':'User created and email sent'}));
+            refreshUsers();
+          } catch (err) { setAdminForm(f => ({...f, error: err.message || 'Error'})); }
+        };
+        const doDeleteUser = (uid, uname) => showConfirm(
+          lang==='es' ? `¿Eliminar "${uname}" y todos sus datos?` : `Delete "${uname}" and all their data?`,
+          async () => { try { await api.del(`/api/admin/users/${uid}`); refreshUsers(); } catch {} }
+        );
+        const doResetPw = (uid, uname) => showConfirm(
+          lang==='es' ? `¿Resetear contraseña de "${uname}"?` : `Reset password for "${uname}"?`,
+          async () => {
+            try {
+              const r = await api.post(`/api/admin/users/${uid}/reset-password`, {});
+              setAdminMsg(r.tempPassword
+                ? `${lang==='es'?'Contraseña temporal':'Temp password'}: ${r.tempPassword}`
+                : (lang==='es'?'Email enviado':'Email sent'));
+            } catch {}
+          }
+        );
+        const doEditQuota  = (uid, current) => setAdminEdit({ uid, type: 'quota',  value: String(Math.round(current/1024/1024)) });
+        const doEditExpiry = (uid, current) => setAdminEdit({ uid, type: 'expiry', value: current ? new Date(current).toISOString().slice(0,10) : '' });
+        const submitEdit = async () => {
+          if (!adminEdit) return;
+          try {
+            if (adminEdit.type === 'quota')
+              await api.patch(`/api/admin/users/${adminEdit.uid}/quota`, { quotaMb: adminEdit.value });
+            else
+              await api.patch(`/api/admin/users/${adminEdit.uid}/expires`, { expiresAt: adminEdit.value || null });
+            refreshUsers();
+          } catch {}
+          setAdminEdit(null);
+        };
+        const fmtMb   = b  => (b/1024/1024).toFixed(1)+' MB';
+        const fmtDate = ts => ts ? new Date(ts).toLocaleDateString(lang==='es'?'es-ES':'en-GB') : '—';
+        const fmtExpiry = ts => {
+          if (!ts) return <span style={{color:'var(--muted)',fontSize:10}}>—</span>;
+          const days = Math.ceil((ts - Date.now()) / 86400000);
+          const date = new Date(ts).toLocaleDateString(lang==='es'?'es-ES':'en-GB');
+          if (days < 0)  return <span style={{color:'#e06c75',fontSize:10}}>✗ {date}</span>;
+          if (days <= 7) return <span style={{color:'#e5c07b',fontSize:10}}>⚠ {date}</span>;
+          return <span style={{color:'var(--muted)',fontSize:10}}>{date}</span>;
+        };
+        const btnSm  = {padding:'2px 6px',background:'transparent',border:'1px solid var(--border2)',color:'var(--sub)',fontSize:10,cursor:'pointer'};
+        const inpSm  = {padding:'2px 4px',background:'var(--deep)',border:'1px solid var(--acc)',color:'var(--text)',fontSize:10,outline:'none'};
+        const InlineEdit = ({type, u}) => adminEdit?.uid===u.id && adminEdit.type===type ? (
+          <span style={{display:'inline-flex',gap:3,alignItems:'center'}}>
+            <input type={type==='quota'?'number':'date'} value={adminEdit.value}
+              style={{...inpSm, width: type==='quota'?54:100}} autoFocus
+              onChange={e => setAdminEdit(a => ({...a, value: e.target.value}))}
+              onKeyDown={e => { if (e.key==='Enter') submitEdit(); if (e.key==='Escape') setAdminEdit(null); }}/>
+            <button onClick={e=>{e.stopPropagation();submitEdit();}} style={{...btnSm,color:'var(--acc)',borderColor:'var(--acc-dim)'}}>✓</button>
+            <button onClick={e=>{e.stopPropagation();setAdminEdit(null);}} style={btnSm}>✗</button>
+          </span>
+        ) : null;
+        return (
+          <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.6)',display:'flex',alignItems:'flex-start',justifyContent:'center',zIndex:9000,paddingTop:60,overflowY:'auto'}} onClick={closeAdmin}>
+            <div style={{background:'var(--surf)',border:'1px solid var(--border2)',padding:24,width:'min(980px,96vw)',display:'flex',flexDirection:'column',gap:20}} onClick={e => e.stopPropagation()}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                <span style={{fontSize:13,fontWeight:600,letterSpacing:.5,color:'var(--text)'}}>{lang==='es'?'ADMINISTRACIÓN DE USUARIOS':'USER MANAGEMENT'}</span>
+                <button onClick={closeAdmin} style={{background:'none',border:'none',color:'var(--muted)',fontSize:16,cursor:'pointer'}}>×</button>
+              </div>
+
+              {adminMsg && (
+                <div style={{padding:'8px 12px',background:'var(--acc-faint)',border:'1px solid var(--acc-dim)',color:'var(--acc)',fontSize:11,display:'flex',justifyContent:'space-between',alignItems:'center',gap:8}}>
+                  <span style={{fontFamily:"'IBM Plex Mono',monospace",userSelect:'all'}}>{adminMsg}</span>
+                  <button onClick={()=>setAdminMsg('')} style={{background:'none',border:'none',color:'var(--acc)',cursor:'pointer',fontSize:14,lineHeight:1,flexShrink:0}}>×</button>
+                </div>
+              )}
+
+              {/* Tabla de usuarios */}
+              <div style={{overflowX:'auto',overflowY:'auto',maxHeight:320}}>
+                <table style={{width:'100%',borderCollapse:'collapse',fontSize:11}}>
+                  <thead style={{position:'sticky',top:0,background:'var(--surf)',zIndex:1}}>
+                    <tr style={{borderBottom:'1px solid var(--border2)',color:'var(--muted)'}}>
+                      <th style={{padding:'4px 8px',textAlign:'left'}}>Usuario</th>
+                      <th style={{padding:'4px 8px',textAlign:'left',maxWidth:140}}>Email</th>
+                      <th style={{padding:'4px 8px',textAlign:'right'}}>{lang==='es'?'Cuota':'Quota'}</th>
+                      <th style={{padding:'4px 8px',textAlign:'right'}}>{lang==='es'?'Usado':'Used'}</th>
+                      <th style={{padding:'4px 8px',textAlign:'center'}}>Rol</th>
+                      <th style={{padding:'4px 8px',textAlign:'center'}}>{lang==='es'?'Expira':'Expires'}</th>
+                      <th style={{padding:'4px 8px',textAlign:'center'}}>{lang==='es'?'Último acceso':'Last login'}</th>
+                      <th style={{padding:'4px 8px',textAlign:'center'}}>{lang==='es'?'Contenido':'Content'}</th>
+                      <th style={{padding:'4px 8px',textAlign:'center'}}>{lang==='es'?'Acciones':'Actions'}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {adminUsers.map(u => (
+                      <tr key={u.id} style={{borderBottom:'1px solid var(--border)'}}>
+                        <td style={{padding:'6px 8px',color:'var(--text)',whiteSpace:'nowrap'}}>{u.username}{u.mustChangePassword&&<span style={{color:'var(--acc)',marginLeft:4,fontSize:9}}>●</span>}</td>
+                        <td style={{padding:'6px 8px',color:'var(--muted)',maxWidth:140,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}} title={u.email||''}>{u.email||'—'}</td>
+                        <td style={{padding:'6px 8px',textAlign:'right',color:'var(--text)',cursor: adminEdit?.uid===u.id && adminEdit.type==='quota' ? 'default' : 'pointer',whiteSpace:'nowrap'}}
+                            onClick={() => { if (!adminEdit || adminEdit.uid!==u.id) doEditQuota(u.id, u.quota); }}
+                            title={lang==='es'?'Click para editar':'Click to edit'}>
+                          <InlineEdit type="quota" u={u}/>
+                          {!(adminEdit?.uid===u.id && adminEdit.type==='quota') && fmtMb(u.quota)}
+                        </td>
+                        <td style={{padding:'6px 8px',textAlign:'right',color: u.used/u.quota>0.85?'#e06c75':'var(--muted)',whiteSpace:'nowrap'}}>{fmtMb(u.used)} ({Math.round(u.used/u.quota*100)}%)</td>
+                        <td style={{padding:'6px 8px',textAlign:'center',color:'var(--muted)'}}>{u.role}</td>
+                        <td style={{padding:'6px 8px',textAlign:'center',cursor: adminEdit?.uid===u.id && adminEdit.type==='expiry' ? 'default' : 'pointer',whiteSpace:'nowrap'}}
+                            onClick={() => { if (!adminEdit || adminEdit.uid!==u.id) doEditExpiry(u.id, u.expiresAt); }}
+                            title={lang==='es'?'Click para cambiar':'Click to change'}>
+                          <InlineEdit type="expiry" u={u}/>
+                          {!(adminEdit?.uid===u.id && adminEdit.type==='expiry') && fmtExpiry(u.expiresAt)}
+                        </td>
+                        <td style={{padding:'6px 8px',textAlign:'center',color:'var(--muted)',fontSize:10,whiteSpace:'nowrap'}}>{fmtDate(u.lastLogin)}</td>
+                        <td style={{padding:'6px 8px',textAlign:'center',color:'var(--muted)',fontSize:10,whiteSpace:'nowrap'}} title={`${u.projects} proy · ${u.photos} fotos · ${u.rooms} salas`}>{u.projects}p · {u.photos}f · {u.rooms}s</td>
+                        <td style={{padding:'6px 8px',textAlign:'center'}}>
+                          <div style={{display:'flex',gap:4,justifyContent:'center'}}>
+                            <button onClick={() => doResetPw(u.id, u.username)} style={btnSm} title={lang==='es'?'Resetear contraseña':'Reset password'}>🔑</button>
+                            {u.id !== authUser?.id && <button onClick={() => doDeleteUser(u.id, u.username)} style={{...btnSm,border:'1px solid #e06c7544',color:'#e06c75'}} title={lang==='es'?'Eliminar usuario':'Delete user'}>×</button>}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Formulario nuevo usuario */}
+              <div style={{borderTop:'1px solid var(--border2)',paddingTop:16}}>
+                <div style={{fontSize:11,fontWeight:600,color:'var(--muted)',marginBottom:10,letterSpacing:.5}}>{lang==='es'?'NUEVO USUARIO':'NEW USER'}</div>
+                <form onSubmit={doAddUser} style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+                  <input style={{padding:'6px 10px',background:'var(--deep)',border:'1px solid var(--border2)',color:'var(--text)',fontSize:12,outline:'none'}} placeholder={lang==='es'?'Usuario':'Username'} value={adminForm.username} onChange={e => setAdminForm(f => ({...f, username: e.target.value}))} required/>
+                  <input type="email" style={{padding:'6px 10px',background:'var(--deep)',border:'1px solid var(--border2)',color:'var(--text)',fontSize:12,outline:'none'}} placeholder="Email" value={adminForm.email} onChange={e => setAdminForm(f => ({...f, email: e.target.value}))} required/>
+                  <input style={{padding:'6px 10px',background:'var(--deep)',border:'1px solid var(--border2)',color:'var(--text)',fontSize:12,outline:'none'}} placeholder={lang==='es'?'Cuota MB (ej. 50)':'Quota MB (e.g. 50)'} value={adminForm.quotaMb} onChange={e => setAdminForm(f => ({...f, quotaMb: e.target.value}))}/>
+                  <select style={{padding:'6px 10px',background:'var(--deep)',border:'1px solid var(--border2)',color:'var(--text)',fontSize:12,outline:'none'}} value={adminForm.role} onChange={e => setAdminForm(f => ({...f, role: e.target.value}))}>
+                    <option value="user">user</option>
+                    <option value="admin">admin</option>
+                  </select>
+                  {adminForm.error && <div style={{color:'#e06c75',fontSize:11,gridColumn:'1/-1'}}>{adminForm.error}</div>}
+                  {adminForm.ok    && <div style={{color:'var(--acc)',fontSize:11,gridColumn:'1/-1'}}>{adminForm.ok}</div>}
+                  <button type="submit" style={{gridColumn:'1/-1',padding:'8px',background:'var(--acc-faint)',border:'1px solid var(--acc-dim)',color:'var(--acc)',fontSize:11,letterSpacing:'.5px',textTransform:'uppercase',cursor:'pointer',fontFamily:"'IBM Plex Mono',monospace"}}>
+                    {lang==='es'?'Crear usuario y enviar email':'Create user and send email'}
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
