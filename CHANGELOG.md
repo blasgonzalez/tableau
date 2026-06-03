@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.11.0] — 2026-06-03
+
+### Añadido
+- Papelera: las fotos y proyectos eliminados se conservan hasta 30 días antes de borrarse definitivamente
+- La papelera se abre desde un botón en la barra lateral con badge de conteo cuando hay elementos
+- Fotos en la papelera muestran el proyecto de origen; se pueden restaurar a la biblioteca o borrar definitivamente
+- Proyectos en la papelera se pueden restaurar completos (con todos sus tableros, fotos y salas)
+- Vaciar papelera elimina todo el contenido de golpe
+- Purga automática de elementos con más de 30 días al arrancar el servidor
+
+### Mejorado
+- Borrar una sala elimina ahora también todos los tableros vinculados a sus paredes, bloques y columnas
+- La pantalla de bienvenida ("Crear primer proyecto") solo aparece cuando no hay proyectos Y la papelera está vacía
+- Arrastrar fotos sin proyecto activo muestra un aviso en rojo en la biblioteca y el canvas, en lugar del color de acento habitual
+
+### Corregido
+- Restaurar una versión anterior de un tablero avisa si alguna foto de esa versión ya no existe en la biblioteca
+
+---
+
 ## [1.10.2] — 2026-06-01
 
 ### Mejorado

@@ -1,6 +1,6 @@
 {
   "name": "tableau",
-  "version": "1.10.2",
+  "version": "1.11.0",
   "description": "Gestión visual de proyectos fotográficos",
   "main": "server.js",
   "scripts": {
@@ -12,7 +12,11 @@
     "@babel/plugin-transform-block-scoping": "^7.29.7",
     "@babel/preset-react": "^7.29.7",
     "adm-zip": "^0.5.17",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.0.0",
+    "nodemailer": "^6.9.0",
     "express": "^4.18.2",
+    "express-session": "^1.18.1",
     "multer": "^1.4.5-lts.1",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",

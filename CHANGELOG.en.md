@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.11.0] — 2026-06-03
+
+### Added
+- Trash bin: deleted photos and projects are kept for up to 30 days before being permanently removed
+- Trash opens from a sidebar button with a count badge when there is content
+- Photos in trash show their source project; they can be restored to the library or permanently deleted
+- Projects in trash can be fully restored (with all their boards, photos and rooms)
+- Empty trash removes all content at once
+- Automatic purge of items older than 30 days on server startup
+
+### Improved
+- Deleting a room now also removes all boards linked to its walls, blocks and columns
+- The welcome screen ("Create first project") only appears when there are no projects AND the trash is empty
+- Dragging photos without an active project shows a red warning on the library and canvas instead of the usual accent color
+
+### Fixed
+- Restoring an older board version now warns if any photo from that version no longer exists in the library
+
+---
+
 ## [1.10.2] — 2026-06-01
 
 ### Improved
