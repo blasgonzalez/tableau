@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.12.0] — 2026-06-04
+
+### Added
+- Visual copy/cut and paste with ghost: Ctrl+C / Ctrl+X copies or cuts selected items; Ctrl+V shows a semi-transparent ghost that follows the cursor — click to place, ESC to cancel
+- Mouse wheel scales the ghost while it is active, letting you resize the selection before placing it
+- ✂ (cut) and ⎘ (copy) buttons visible in the selection bar whenever items are selected
+- "Paste" option in the canvas context menu (right-click) when the clipboard has content
+- Ghost appears centered on the right-click point when pasting from the context menu
+- Works with all item types: photos, notes, zones, text, placeholders and groups
+
+### Fixed
+- Ungrouping did not clear the active selection, causing items to keep moving together until clicking on the canvas
+
+---
+
 ## [1.11.2] — 2026-06-04
 
 ### Fixed

@@ -233,6 +233,7 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .canvas-wrap.panning *{cursor:grab !important}
 .canvas-wrap.lib-expanded .bitem-bar,.canvas-wrap.lib-expanded .zone-hdr{display:none !important}
 .canvas-wrap.frame-painter .bitem:not(.locked){cursor:copy}
+.canvas-wrap.paste-ghost-mode,.canvas-wrap.paste-ghost-mode *{cursor:crosshair !important}
 .canvas{position:relative;min-width:3000px;min-height:2200px;z-index:1}
 .canvas-drop-hint{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(196,137,74,.06);border:3px dashed var(--acc-dim);font-size:14px;letter-spacing:3px;color:var(--acc);pointer-events:none;z-index:500}
 .canvas-drop-hint.no-proj{background:rgba(238,0,85,.05);border-color:#e05;color:#e05}
@@ -271,6 +272,8 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .room-wall-name{font-size:10px;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;cursor:text}
 .room-wall-len{font-size:9px;color:var(--muted);flex-shrink:0;font-variant-numeric:tabular-nums}
 .room-wall-warn{font-size:10px;color:#e87528;flex-shrink:0;cursor:default;line-height:1;user-select:none}
+.room-wall-unlink{opacity:0;transition:opacity .12s}
+.room-wall-row:hover .room-wall-unlink{opacity:1}
 .room-back-btn{padding:8px 10px;border-top:1px solid var(--border);flex-shrink:0}
 .room-wall-rename{font-size:10px;background:var(--input);border:1px solid var(--acc);color:var(--text);padding:1px 5px;border-radius:2px;font-family:inherit;width:80px}
 .room-empty{padding:24px 16px;color:var(--dim);font-size:10px;line-height:1.8;text-align:center}
@@ -856,14 +859,16 @@ const getBoardPx = board => {
 };
 
 const chk = r => { if (!r.ok) throw Object.assign(new Error(r.statusText), {status: r.status}); return r; };
+let _shareToken = null; // set on share-link entry
+const apiH = extra => { const h = { ...extra }; if (_shareToken) h['X-Share-Token'] = _shareToken; return h; };
 const api = {
-  get:    url         => fetch(url).then(chk).then(r => r.json()),
-  post:   (url, body) => fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)}).then(chk).then(r => r.json()),
-  put:    (url, body) => fetch(url, {method:'PUT',  headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)}).then(chk).then(r => r.json()),
-  patch:  (url, body) => fetch(url, {method:'PATCH',headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)}).then(chk).then(r => r.json()),
-  del:    url         => fetch(url, {method:'DELETE'}).then(chk).then(r => r.json()),
-  upload:        (url, file) => { const fd = new FormData(); fd.append('photo', file); return fetch(url, {method:'POST', body:fd}).then(chk).then(r => r.json()); },
-  uploadReplace: (url, file) => { const fd = new FormData(); fd.append('photo', file); return fetch(url, {method:'PUT',  body:fd}).then(chk).then(r => r.json()); },
+  get:    url         => fetch(url, {headers: apiH()}).then(chk).then(r => r.json()),
+  post:   (url, body) => fetch(url, {method:'POST', headers: apiH({'Content-Type':'application/json'}), body:JSON.stringify(body)}).then(chk).then(r => r.json()),
+  put:    (url, body) => fetch(url, {method:'PUT',  headers: apiH({'Content-Type':'application/json'}), body:JSON.stringify(body)}).then(chk).then(r => r.json()),
+  patch:  (url, body) => fetch(url, {method:'PATCH',headers: apiH({'Content-Type':'application/json'}), body:JSON.stringify(body)}).then(chk).then(r => r.json()),
+  del:    url         => fetch(url, {method:'DELETE', headers: apiH()}).then(chk).then(r => r.json()),
+  upload:        (url, file) => { const fd = new FormData(); fd.append('photo', file); return fetch(url, {method:'POST', body:fd, headers: apiH()}).then(chk).then(r => r.json()); },
+  uploadReplace: (url, file) => { const fd = new FormData(); fd.append('photo', file); return fetch(url, {method:'PUT',  body:fd, headers: apiH()}).then(chk).then(r => r.json()); },
 };
 
 const fmtSize = b => b > 1e6 ? (b/1e6).toFixed(1)+' MB' : Math.round(b/1024)+' KB';
@@ -1032,7 +1037,7 @@ const I18N = {
     invalidDims: 'Las dimensiones deben ser mayores que cero',
     pxPreview: (w, h) => `${w} × ${h} px`,
     gridToggle: 'Guías', gridHiddenZoom: 'Guías activas — zoom demasiado bajo para mostrarlas', gridAuto: 'Auto', fitView: 'Ajustar', fitWidth: 'Ajustar al ancho (Ctrl+0)', snapGrid: 'Imán', addNote: '+ Nota', addZone: '+ Zona', zoneColor: 'Color de zona', zoneScaleContent: 'Escalar contenido al redimensionar', copyZoneToBoard: 'Copiar a nuevo tablero', moveZoneToBoard: 'Mover a nuevo tablero', zoneLabelPh: 'Nombre de zona…', zoneCaptureBtn: 'Capturar contenido', gridWrapZone: 'Envolver en zona escalable',
-    salaBtn:'🏛 Sala', salaCreate:'Crear sala', salaDelete:'Eliminar sala', salaDuplicate:'Duplicar sala', salaAdd:'+ Sala', salaDraw:'Dibujar planta', salaEdit:'Editar planta', salaAddSection:'+ Añadir segmento', salaCancel:'Cancelar', salaFinish:'Finalizar', salaCeilLbl:'Altura del techo', salaCeilUnit:'cm', salaWallsHd:'PAREDES', salaNoWalls:'Dibuja la planta para ver las paredes aquí', salaCreateBoard:'+ Tablero', salaWallBoard:'Ver tablero →', salaDrawHint:'Clic → añadir punto · 1er punto → cerrar · Esc/Finalizar → guardar · ⌫ → deshacer · ⇧ → ángulo recto', salaSnapHint:'⊾ enganchado', salaDeleteWall:'Desvincular tablero', salaWallRename:'Renombrar pared', salaAddCol:'+ Columna', salaWallMismatch:'El tablero es más ancho que la pared', salaWallSync:'Sincronizar', salaWallSyncOk:'Tablero sincronizado con la pared', salaWallSyncOverflow:'Hay fotos fuera del nuevo ancho. Mueve o elimina las fotos en el tablero primero.',
+    salaBtn:'🏛 Sala', salaCreate:'Crear sala', salaDelete:'Eliminar sala', salaDuplicate:'Duplicar sala', salaAdd:'+ Sala', salaDraw:'Dibujar planta', salaEdit:'Editar planta', salaAddSection:'+ Añadir segmento', salaCancel:'Cancelar', salaFinish:'Finalizar', salaCeilLbl:'Altura del techo', salaCeilUnit:'cm', salaWallsHd:'PAREDES', salaNoWalls:'Dibuja la planta para ver las paredes aquí', salaCreateBoard:'+ Tablero', salaWallBoard:'Ver tablero →', salaDrawHint:'Clic → añadir punto · 1er punto → cerrar · Esc/Finalizar → guardar · ⌫ → deshacer · ⇧ → ángulo recto', salaSnapHint:'⊾ enganchado', salaDeleteWall:'Desvincular tablero', salaWallRename:'Renombrar pared', salaAddCol:'+ Columna', salaWallMismatch:'El tablero es más ancho que la pared', salaWallSync:'Sincronizar', salaWallSyncOk:'Tablero sincronizado con la pared', salaWallSyncOverflow:'Hay fotos fuera del nuevo ancho. Mueve o elimina las fotos en el tablero primero.', salaAssigned:'Tablero asignado a la pared', salaAssignMismatch:(bw,bh,ww,wh)=>`El tablero mide ${bw}×${bh} cm. La pared mide ${ww}×${wh} cm. ¿Asignar de todas formas?`, salaAssignAndSync:'Asignar y sincronizar', salaAssignOnly:'Asignar tal cual',
     reportHeading:'Tableau — Memoria del Proyecto',
     noScaleConfigured:'sin escala configurada',
     reportDate: d => `Memoria del proyecto · ${d}`,
@@ -1052,6 +1057,8 @@ const I18N = {
     importErrExpired:'Importación expirada, vuelve a subir el archivo',
     importErrGeneric:'Error al importar',
     copied: n => `${n} elemento${n>1?'s':''} copiado${n>1?'s':''}`,
+    cut: n => `${n} elemento${n>1?'s':''} cortado${n>1?'s':''}`,
+    pasteGhostHint:'Clic para colocar · ESC para cancelar',
     pasted: n => `${n} elemento${n>1?'s':''} pegado${n>1?'s':''}`,
     duplicated: n => `${n} elemento${n>1?'s':''} duplicado${n>1?'s':''}`,
     noteColor:'Color',
@@ -1081,6 +1088,7 @@ const I18N = {
     exportPadLabel:'Borde exterior al exportar (px)',
     exportPadHint:'Espacio en blanco alrededor de las fotos en el JPEG',
     addBlock:'+ Bloque', blockLabel:'Nombre', blockHeight:'Alto (cm)', blockFaceN:'Norte', blockFaceS:'Sur', blockFaceE:'Este', blockFaceW:'Oeste', blockFaceTop:'Superior', blockFaceLink:'Vincular tablero', blockFaceUnlink:'Desvincular', blockSyncWarn:'Este bloque tiene tableros vinculados. Redimensionar puede desincronizarlos. ¿Continuar?', blockDelete:'Eliminar bloque',
+    shareProject:'Compartir proyecto', shareModalTitle:'Compartir proyecto', shareViewLink:'Enlace de solo lectura', shareEditLink:'Enlace de edición', shareGenerate:'Generar enlace', shareRevoke:'Revocar', shareCopy:'Copiar enlace', shareCopied:'Enlace copiado', shareGuestView:'Solo lectura', shareGuestEdit:'Editor invitado', shareBoardLocked:'El tablero está siendo editado por otro usuario', shareInvalidLink:'Enlace no válido o expirado',
   },
   en: {
     upload:'↑ Upload', uploadPhotos:'Photos', report:'≡ Report', config:'⚙ Config', exportJpeg:'Export JPEG',
@@ -1180,7 +1188,7 @@ const I18N = {
     invalidDims: 'Dimensions must be greater than zero',
     pxPreview: (w, h) => `${w} × ${h} px`,
     gridToggle: 'Grid', gridHiddenZoom: 'Grid active — zoom too low to display', gridAuto: 'Auto', fitView: 'Fit', fitWidth: 'Fit to width (Ctrl+0)', snapGrid: 'Snap', addNote: '+ Note', addZone: '+ Zone', zoneColor: 'Zone color', zoneScaleContent: 'Scale content on resize', copyZoneToBoard: 'Copy to new board', moveZoneToBoard: 'Move to new board', zoneLabelPh: 'Zone name…', zoneCaptureBtn: 'Capture content', gridWrapZone: 'Wrap in scalable zone',
-    salaBtn:'🏛 Room', salaCreate:'Create room', salaDelete:'Delete room', salaDuplicate:'Duplicate room', salaAdd:'+ Room', salaDraw:'Draw floor plan', salaEdit:'Edit floor plan', salaAddSection:'+ Add section', salaCancel:'Cancel', salaFinish:'Finish', salaCeilLbl:'Ceiling height', salaCeilUnit:'cm', salaWallsHd:'WALLS', salaNoWalls:'Draw the floor plan to see walls here', salaCreateBoard:'+ Board', salaWallBoard:'Go to board →', salaDrawHint:'Click → add point · 1st point → close · Esc/Finish → save · ⌫ → undo · ⇧ → right angle', salaSnapHint:'⊾ snapped', salaDeleteWall:'Unlink board', salaWallRename:'Rename wall', salaAddCol:'+ Column', salaWallMismatch:'Board is wider than the wall', salaWallSync:'Sync', salaWallSyncOk:'Board synced to wall', salaWallSyncOverflow:'Photos would overflow the new width. Move or remove them in the board editor first.',
+    salaBtn:'🏛 Room', salaCreate:'Create room', salaDelete:'Delete room', salaDuplicate:'Duplicate room', salaAdd:'+ Room', salaDraw:'Draw floor plan', salaEdit:'Edit floor plan', salaAddSection:'+ Add section', salaCancel:'Cancel', salaFinish:'Finish', salaCeilLbl:'Ceiling height', salaCeilUnit:'cm', salaWallsHd:'WALLS', salaNoWalls:'Draw the floor plan to see walls here', salaCreateBoard:'+ Board', salaWallBoard:'Go to board →', salaDrawHint:'Click → add point · 1st point → close · Esc/Finish → save · ⌫ → undo · ⇧ → right angle', salaSnapHint:'⊾ snapped', salaDeleteWall:'Unlink board', salaWallRename:'Rename wall', salaAddCol:'+ Column', salaWallMismatch:'Board is wider than the wall', salaWallSync:'Sync', salaWallSyncOk:'Board synced to wall', salaWallSyncOverflow:'Photos would overflow the new width. Move or remove them in the board editor first.', salaAssigned:'Board assigned to wall', salaAssignMismatch:(bw,bh,ww,wh)=>`Board is ${bw}×${bh} cm. Wall is ${ww}×${wh} cm. Assign anyway?`, salaAssignAndSync:'Assign and sync', salaAssignOnly:'Assign as-is',
     reportHeading:'Tableau — Project Report',
     noScaleConfigured:'no scale configured',
     reportDate: d => `Project report · ${d}`,
@@ -1200,6 +1208,8 @@ const I18N = {
     importErrExpired:'Import expired, please re-upload the file',
     importErrGeneric:'Import error',
     copied: n => `${n} item${n>1?'s':''} copied`,
+    cut: n => `${n} item${n>1?'s':''} cut`,
+    pasteGhostHint:'Click to place · ESC to cancel',
     pasted: n => `${n} item${n>1?'s':''} pasted`,
     duplicated: n => `${n} item${n>1?'s':''} duplicated`,
     noteColor:'Color',
@@ -1229,6 +1239,7 @@ const I18N = {
     exportPadLabel:'Export border (px)',
     exportPadHint:'White space around photos in the exported JPEG',
     addBlock:'+ Block', blockLabel:'Name', blockHeight:'Height (cm)', blockFaceN:'North', blockFaceS:'South', blockFaceE:'East', blockFaceW:'West', blockFaceTop:'Top', blockFaceLink:'Link board', blockFaceUnlink:'Unlink', blockSyncWarn:'This block has linked boards. Resizing may desync them. Continue?', blockDelete:'Delete block',
+    shareProject:'Share project', shareModalTitle:'Share project', shareViewLink:'Read-only link', shareEditLink:'Edit link', shareGenerate:'Generate link', shareRevoke:'Revoke', shareCopy:'Copy link', shareCopied:'Link copied', shareGuestView:'Read only', shareGuestEdit:'Guest editor', shareBoardLocked:'Board is being edited by another user', shareInvalidLink:'Invalid or expired link',
   },
 };
 
@@ -1343,6 +1354,7 @@ function App() {
   const [roomNameEdit,   setRoomNameEdit]  = useState(false);
   const [nameVal,       setNameVal]       = useState('');
   const [dragOver,      setDragOver]      = useState(false);
+  const [pasteGhost,    setPasteGhost]    = useState(null); // {items,minX,minY,bboxW,bboxH} | null
   const [libDragOver,   setLibDragOver]   = useState(false);
   const [libDragOverSect, setLibDragOverSect] = useState(null);
   const [libExpanded,   setLibExpanded]   = useState(false);
@@ -1466,6 +1478,13 @@ function App() {
   const [updateInfo,    setUpdateInfo]    = useState(null);
   const [updateDismissed, setUpdateDismissed] = useState(false);
 
+  // Share / guest state
+  const [shareRole,     setShareRole]     = useState(null);   // null=owner, 'view'|'edit'=guest
+  const [shareModal,    setShareModal]    = useState(null);   // null | {pid, view, edit}
+  const [lockState,     setLockState]     = useState({});     // {[bid]: 'pending'|'locked'|'conflict'}
+  const shareRoleRef = useRef(null);
+  useEffect(() => { shareRoleRef.current = shareRole; }, [shareRole]);
+
   // Auth state (solo activo cuando el servidor tiene TABLEAU_AUTH=true)
   const [authMode,      setAuthMode]      = useState(false);
   const [authUser,      setAuthUser]      = useState(null);    // {username, quota, used, role, mustChangePassword}
@@ -1512,6 +1531,11 @@ function App() {
   const uploadSectInput = useRef(null);
   const boardPxRef      = useRef(null);
   const wrapRef         = useRef(null);
+  const pasteGhostRef   = useRef(null);
+  const ghostDivRef     = useRef(null);
+  const ghostPosRef     = useRef({x:0, y:0}); // cursor canvas position while ghost is active
+  const ghostScaleRef   = useRef(1);
+  const clipCutRef      = useRef(null); // {isCut:true, srcBid} | null
   const roomSvgRef      = useRef(null);
   const roomRef         = useRef(null);
   const roomsRef        = useRef([]);
@@ -1586,6 +1610,29 @@ function App() {
     return () => document.removeEventListener('pointerdown', close);
   }, [roomWallCtx !== null]);
 
+  // Non-passive wheel listener for ghost scaling (prevents scroll while scaling)
+  useEffect(() => {
+    if (!pasteGhost) return;
+    const el = wrapRef.current;
+    if (!el) return;
+    const onWheel = (e) => {
+      if (!pasteGhostRef.current || !ghostDivRef.current) return;
+      e.preventDefault();
+      // Normalize to pixels so factor is proportional to how much the user scrolled
+      const px = e.deltaMode === 1 ? e.deltaY * 32 : e.deltaMode === 2 ? e.deltaY * 800 : e.deltaY;
+      const factor = Math.pow(0.999, px); // ~9.5% per 100px (1 mouse notch); smooth on trackpad
+      const newScale = Math.max(0.1, Math.min(10, ghostScaleRef.current * factor));
+      ghostScaleRef.current = newScale;
+      const pg = pasteGhostRef.current;
+      const {x, y} = ghostPosRef.current;
+      ghostDivRef.current.style.left = (x - pg.bboxW * newScale / 2) + 'px';
+      ghostDivRef.current.style.top  = (y - pg.bboxH * newScale / 2) + 'px';
+      ghostDivRef.current.style.transform = `scale(${newScale})`;
+    };
+    el.addEventListener('wheel', onWheel, {passive: false});
+    return () => el.removeEventListener('wheel', onWheel);
+  }, [pasteGhost]);
+
   // keep allBoardItems in sync with current board mutations
   useEffect(() => {
     if (bid) setAllBoardItems(prev => ({ ...prev, [bid]: items }));
@@ -1616,6 +1663,23 @@ function App() {
         setReady(true);
       }).catch(() => setReady(true));
     };
+    // Modo invitado: ?share=TOKEN en la URL
+    const urlShareToken = new URLSearchParams(location.search).get('share');
+    if (urlShareToken) {
+      _shareToken = urlShareToken;
+      fetch(`/api/share/${urlShareToken}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(d => {
+          if (!d) { setReady(true); return; }
+          setShareRole(d.role);
+          shareRoleRef.current = d.role;
+          setProjects([d.project]);
+          setPid(d.project.id);
+          setReady(true);
+        })
+        .catch(() => setReady(true));
+      return () => { clearInterval(hbInterval); clearInterval(updateInterval); document.removeEventListener('visibilitychange', onVisible); };
+    }
     // Comprobar si el servidor requiere autenticación
     api.get('/api/me').then(d => {
       if (d.auth === false) { loadData(); return; } // modo local
@@ -1660,6 +1724,24 @@ function App() {
   useEffect(() => { gridPendingRef.current = gridPending; }, [gridPending]);
   useEffect(() => { gridCellSelRef.current = gridCellSel; }, [gridCellSel]);
   useEffect(() => { setGridDropTarget(null); setGridCellDragOver(null); setGridCellCtx(null); setGridCellSel(null); setZoneDropTarget(null); }, [bid]);
+
+  // Board lock for edit-mode guests
+  useEffect(() => {
+    if (!pid || !bid || shareRoleRef.current !== 'edit') return;
+    setLockState(s => ({ ...s, [bid]: 'pending' }));
+    api.post(`/api/boards/${pid}/${bid}/lock`, {})
+      .then(r => setLockState(s => ({ ...s, [bid]: r.ok ? 'locked' : 'conflict' })))
+      .catch(() => setLockState(s => ({ ...s, [bid]: 'conflict' })));
+    const pingId = setInterval(() => {
+      api.post(`/api/boards/${pid}/${bid}/lock/ping`, {}).catch(() => {});
+    }, 10_000);
+    return () => {
+      clearInterval(pingId);
+      api.del(`/api/boards/${pid}/${bid}/lock`).catch(() => {});
+      setLockState(s => { const n = { ...s }; delete n[bid]; return n; });
+    };
+  }, [bid, pid]);
+
   useEffect(() => {
     setVersions([]); setVerPreviewTs(null); setVerPreviewItems([]);
     if (!pid || !bid) return;
@@ -2554,25 +2636,24 @@ function App() {
         if (e.key === 'c') {
           e.preventDefault();
           const sel = selRef.current.map(id => itemsRef.current.find(i => i.id === id)).filter(Boolean);
-          if (sel.length) { clipboardRef.current = sel.map(i => ({...i})); showToast(t('copied', sel.length)); }
+          if (sel.length) { clipboardRef.current = sel.map(i => ({...i})); clipCutRef.current = null; showToast(t('copied', sel.length)); }
+        }
+        if (e.key === 'x') {
+          e.preventDefault();
+          const sel = selRef.current.map(id => itemsRef.current.find(i => i.id === id)).filter(Boolean);
+          if (!sel.length) return;
+          clipboardRef.current = sel.map(i => ({...i}));
+          clipCutRef.current = {isCut: true, srcBid: bidRef.current};
+          pushUndo();
+          const cutIds = new Set(sel.map(i => i.id));
+          const nit = itemsRef.current.filter(i => !cutIds.has(i.id));
+          selRef.current = []; setSel([]);
+          setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
+          showToast(t('cut', sel.length));
         }
         if (e.key === 'v') {
           e.preventDefault();
-          if (!clipboardRef.current.length || !bidRef.current) return;
-          pushUndo();
-          const maxZ = itemsRef.current.length ? Math.max(...itemsRef.current.map(i => i.z || 0)) : 0;
-          let z = maxZ;
-          const pfx = Date.now().toString(36);
-          const copies = clipboardRef.current.map((it, idx) => ({
-            ...it,
-            id: pfx + idx.toString(36) + Math.random().toString(36).slice(2, 4),
-            x: it.x + 20, y: it.y + 20, z: ++z,
-          })).filter(it => it.type === 'note' || it.type === 'zone' || it.type === 'text' || it.type === 'placeholder' || photosRef.current.some(p => p.id === it.photoId));
-          if (!copies.length) return;
-          const nit = [...itemsRef.current, ...copies];
-          selRef.current = copies.map(c => c.id); setSel(copies.map(c => c.id));
-          setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
-          showToast(t('pasted', copies.length));
+          triggerPasteGhost();
         }
         if (e.key === 'd') {
           e.preventDefault();
@@ -2763,6 +2844,86 @@ function App() {
     setItems(snap); itemsRef.current = snap;
     saveItemsNow(snap);
   }, [saveItemsNow]);
+
+  const clientToCanvas = (cx, cy) => {
+    const el = wrapRef.current;
+    if (!el) return {x: 0, y: 0};
+    const rect = el.getBoundingClientRect();
+    return {
+      x: (cx - rect.left + el.scrollLeft) / zoomRef.current,
+      y: (cy - rect.top  + el.scrollTop)  / zoomRef.current,
+    };
+  };
+
+  const triggerPasteGhost = (canvasX, canvasY) => {
+    if (!clipboardRef.current.length || !bidRef.current) return;
+    const visItems = clipboardRef.current.filter(it =>
+      it.type === 'note' || it.type === 'zone' || it.type === 'text' ||
+      it.type === 'placeholder' || photosRef.current.some(p => p.id === it.photoId)
+    );
+    if (!visItems.length) return;
+    const minX = Math.min(...visItems.map(i => i.x));
+    const minY = Math.min(...visItems.map(i => i.y));
+    const maxX = Math.max(...visItems.map(i => i.x + (i.w || 0)));
+    const maxY = Math.max(...visItems.map(i => i.y + getItemH(i)));
+    const bboxW = Math.max(maxX - minX, 1);
+    const bboxH = Math.max(maxY - minY, 1);
+    const el = wrapRef.current;
+    const z = zoomRef.current;
+    const cx = canvasX !== undefined ? canvasX : (el ? (el.scrollLeft + el.clientWidth / 2) / z : 0);
+    const cy = canvasY !== undefined ? canvasY : (el ? (el.scrollTop  + el.clientHeight / 2) / z : 0);
+    ghostPosRef.current = {x: cx, y: cy};
+    ghostScaleRef.current = 1;
+    const ghost = {items: visItems, minX, minY, bboxW, bboxH};
+    pasteGhostRef.current = ghost;
+    setPasteGhost(ghost);
+    requestAnimationFrame(() => {
+      if (ghostDivRef.current) {
+        ghostDivRef.current.style.left = (cx - bboxW / 2) + 'px';
+        ghostDivRef.current.style.top  = (cy - bboxH / 2) + 'px';
+        ghostDivRef.current.style.transform = 'scale(1)';
+        ghostDivRef.current.style.transformOrigin = 'top left';
+      }
+    });
+  };
+
+  const commitPasteGhost = () => {
+    const pg = pasteGhostRef.current;
+    if (!pg) return;
+    pushUndo();
+    const {items, minX, minY, bboxW, bboxH} = pg;
+    const {x, y} = ghostPosRef.current;
+    const scale = ghostScaleRef.current;
+    const gx = x - bboxW * scale / 2;
+    const gy = y - bboxH * scale / 2;
+    const pfx = Date.now().toString(36);
+    const idMap = {};
+    items.forEach((it, idx) => {
+      idMap[it.id] = pfx + idx.toString(36) + Math.random().toString(36).slice(2, 4);
+    });
+    const maxZ = itemsRef.current.length ? Math.max(...itemsRef.current.map(i => i.z || 0)) : 0;
+    let z = maxZ;
+    const copies = items.map(it => {
+      const copy = {
+        ...it,
+        id: idMap[it.id],
+        x: Math.round(gx + (it.x - minX) * scale),
+        y: Math.round(gy + (it.y - minY) * scale),
+        w: Math.round((it.w || 0) * scale),
+        z: ++z,
+        ...(it.zoneId ? {zoneId: idMap[it.zoneId] ?? undefined} : {}),
+      };
+      if (it.h !== undefined) copy.h = Math.round(it.h * scale);
+      return copy;
+    });
+    const nit = [...itemsRef.current, ...copies];
+    selRef.current = copies.map(c => c.id); setSel(copies.map(c => c.id));
+    setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
+    clipCutRef.current = null;
+    pasteGhostRef.current = null;
+    setPasteGhost(null);
+    showToast(t('pasted', copies.length));
+  };
 
   // ── board config ──────────────────────────────────────────────────────────
   const activeBoardMeta = boards.find(b => b.id === bid);
@@ -3862,6 +4023,7 @@ ${rows}
         return;
       }
       if (e.key !== 'Escape') return;
+      if (pasteGhostRef.current) { pasteGhostRef.current = null; setPasteGhost(null); return; }
       if (sectCtxMenu) { setSectCtxMenu(null); return; }
       if (presZoneIdxRef.current >= 0) { presZoneIdxRef.current = -1; setPresZoneIdx(-1); setPresSwapSel(null); return; }
       if (presentation) { setPresentation(false); return; }
@@ -4215,6 +4377,7 @@ ${rows}
 
   // ── item interactions ─────────────────────────────────────────────────────
   const onItemPD = (e, itemId) => {
+    if (pasteGhostRef.current) return; // ghost mode: don't start drag, let click bubble
     if (e.button === 0 && spaceRef.current) return; // space+drag = pan, handled by lasso effect
     if (presentationRef.current) {
       if (e.button !== 0) return;
@@ -4981,13 +5144,25 @@ ${rows}
     setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
   };
 
+  const zoomAwareSize = (defW, defH) => {
+    const z = zoomRef.current;
+    const el = wrapRef.current;
+    const vw = el ? el.clientWidth  / z : 1200;
+    const vh = el ? el.clientHeight / z : 800;
+    const MIN = 160;
+    const ratio = defH / defW;
+    const w = Math.round(Math.min(Math.max(defW, MIN / z), vw * 0.8));
+    const h = Math.round(Math.min(Math.max(defH, MIN * ratio / z), vh * 0.8));
+    return {w, h};
+  };
+
   const addNote = (pos = null) => {
     if (!bid) return;
     pushUndo();
     const maxZ = itemsRef.current.length ? Math.max(...itemsRef.current.map(i => i.z || 0)) : 0;
     const z = zoomRef.current;
     const wrapEl = wrapRef.current;
-    const w = 220, h = 150;
+    const {w, h} = zoomAwareSize(220, 150);
     const bp = boardPxRef.current;
     let x, y;
     if (pos) {
@@ -5011,7 +5186,7 @@ ${rows}
     const maxZ = itemsRef.current.length ? Math.max(...itemsRef.current.map(i => i.z || 0)) : 0;
     const z = zoomRef.current;
     const wrapEl = wrapRef.current;
-    const w = 420, h = 130;
+    const {w, h} = zoomAwareSize(420, 130);
     const bp = boardPxRef.current;
     let x, y;
     if (pos) {
@@ -5049,7 +5224,7 @@ ${rows}
     const minZ = nonZones.length ? Math.min(...nonZones.map(i => i.z || 0)) - 1 : -1;
     const z = zoomRef.current;
     const wrapEl = wrapRef.current;
-    const w = 440, h = 320;
+    const {w, h} = zoomAwareSize(440, 320);
     const bp = boardPxRef.current;
     let x, y;
     if (pos) {
@@ -5611,6 +5786,80 @@ ${rows}
   };
   const createRoomBoard = wallId => createRoomBoardSide(wallId, 'A');
 
+  const unlinkBoardFromWall = (wallId, side) => {
+    const r = roomRef.current; if (!r) return;
+    const boardField = side === 'A' ? 'boardId' : 'boardIdBack';
+    saveRoom({...r, walls: r.walls.map(w => {
+      if (w.id !== wallId) return w;
+      const {[boardField]: _, ...rest} = w;
+      return rest;
+    })});
+  };
+
+  const handleDropBoardOnWall = (wall, side, bId) => {
+    const r = roomRef.current; if (!r) return;
+    const b = boardsRef.current.find(x => x.id === bId); if (!b) return;
+    const boardField = side === 'A' ? 'boardId' : 'boardIdBack';
+    const existingId = wall[boardField];
+    const len = roomWallLen(wall, r.vertices);
+    const wallH = wall.height ?? (r.ceilingHeight || 280);
+    const isVariable = !b.fixed || !b.fixedW;
+    const hasMismatch = !isVariable && b.units === 'cm' &&
+      (Math.abs((b.fixedW||0) - len) > 0.5 || Math.abs((b.fixedH||0) - wallH) > 0.5);
+
+    const doAssign = async (opts = {}) => {
+      if (opts.fix) {
+        const newW = Math.round(len * 10) / 10;
+        const newH = Math.round(wallH * 10) / 10;
+        const dpi = b.dpi || Math.max(1, Math.round(4000 / newW * 2.54 * 10) / 10);
+        await api.patch(`/api/projects/${pidRef.current}/boards/${b.id}`, {fixed:true, fixedW:newW, fixedH:newH, dpi, units:'cm'});
+        setBoards(bs => bs.map(x => x.id === b.id ? {...x, fixed:true, fixedW:newW, fixedH:newH, dpi, units:'cm'} : x));
+      }
+      const rr = roomRef.current; if (!rr) return;
+      const updated = {...rr, walls: rr.walls.map(w => w.id===wall.id ? {...w, [boardField]: bId} : w)};
+      saveRoom(updated);
+      if (opts.sync) syncWallBoard(wall, b);
+      else showToast(t('salaAssigned'));
+    };
+
+    const askVariable = () => setConfirmModal({
+      message: lang==='es'
+        ? `"${b.name}" no tiene dimensiones fijas y no aparecerá en la vista 3D. ¿Ajustarlo a las medidas de la pared (${Math.round(len)}×${Math.round(wallH)} cm)?`
+        : `"${b.name}" has no fixed size and won't appear in 3D. Adjust it to the wall size (${Math.round(len)}×${Math.round(wallH)} cm)?`,
+      danger: false,
+      confirmLabel: lang==='es' ? 'Ajustar y asignar' : 'Adjust and assign',
+      onConfirm: () => doAssign({fix: true}),
+      extra: <button className="btn" style={{marginTop:4,width:'100%'}} onClick={()=>{setConfirmModal(null);doAssign({});}}>{lang==='es'?'Asignar sin ajustar (sin 3D)':'Assign without adjusting (no 3D)'}</button>,
+    });
+
+    const askMismatch = () => setConfirmModal({
+      message: t('salaAssignMismatch', Math.round(b.fixedW||0), Math.round(b.fixedH||0), Math.round(len), Math.round(wallH)),
+      danger: false,
+      confirmLabel: t('salaAssignAndSync'),
+      onConfirm: () => doAssign({sync: true}),
+      extra: <button className="btn" style={{marginTop:4,width:'100%'}} onClick={()=>{setConfirmModal(null);doAssign({});}}>{t('salaAssignOnly')}</button>,
+    });
+
+    const proceed = () => {
+      if (isVariable) askVariable();
+      else if (hasMismatch) askMismatch();
+      else doAssign({});
+    };
+
+    if (existingId && existingId !== bId) {
+      const existing = boardsRef.current.find(x => x.id === existingId);
+      setConfirmModal({
+        message: lang==='es'
+          ? `La cara ${side} ya tiene el tablero "${existing?.name||''}". ¿Reemplazarlo?`
+          : `Side ${side} already has board "${existing?.name||''}". Replace it?`,
+        danger: false,
+        onConfirm: proceed,
+      });
+    } else {
+      proceed();
+    }
+  };
+
   const syncWallBoard = async (wall, board) => {
     const r = roomRef.current; if (!r) return;
     const len = roomWallLen(wall, r.vertices);
@@ -5950,6 +6199,7 @@ ${rows}
   };
 
   const handleItemClick = (e, item) => {
+    if (pasteGhostRef.current) return; // bubble to canvas → commitPasteGhost
     e.stopPropagation();
     if (wasDragged.current) { wasDragged.current = false; return; }
     if (framePainter && item.photoId) {
@@ -5994,6 +6244,7 @@ ${rows}
     pushUndo();
     const nit = itemsRef.current.map(i => selRef.current.includes(i.id) ? { ...i, groupId: undefined } : i);
     setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
+    selRef.current = []; setSel([]);
   };
 
   const buildExportUrl = (exportDpi) => {
@@ -6473,6 +6724,13 @@ ${rows}
           }
         </div>
         <div style={{flex:1}}/>
+        {shareRole && (
+          <div style={{fontSize:11,padding:'3px 10px',borderRadius:12,background:shareRole==='edit'?'var(--acc)':'var(--muted)',color:'#fff',fontWeight:600,letterSpacing:.3}}>
+            {shareRole === 'edit'
+              ? (lockState[bid] === 'conflict' ? `⚠ ${t('shareBoardLocked')}` : `✏ ${t('shareGuestEdit')}`)
+              : `👁 ${t('shareGuestView')}`}
+          </div>
+        )}
         {!tmplEditMode && bid && roomView === 'board' && <button className="btn" style={{fontSize:9}} onClick={() => setPresentation(true)} title={t('presentationBtn')}>{t('presentationBtn')}</button>}
         {!tmplEditMode && pid && boards.length > 0 && (
           <button className="btn" style={{fontSize:10}} onClick={() => setModal('memoria')} title={t('reportTitle')}>
@@ -6629,9 +6887,9 @@ ${rows}
                 <div className={`sb-sec nav${sbNavOpen ? '' : ' collapsed'}`}>
                   <div className="sb-sec-hd" style={{cursor:'pointer'}} onClick={() => { setSbNavOpen(v => { if (!v) setSbTemplOpen(false); return !v; }); }}>
                     <span className="sb-sec-title">⊞ {t('projBoards')}</span>
-                    {sbNavOpen && <button className="sb-sec-btn" title={t('newProject')}
+                    {!shareRole && sbNavOpen && <button className="sb-sec-btn" title={t('newProject')}
                       onClick={e => { e.stopPropagation(); setNameVal(''); setModal('project'); }}>+</button>}
-                    {sbNavOpen && <button className="sb-sec-btn" title={t('importProjectBtn')}
+                    {!shareRole && sbNavOpen && <button className="sb-sec-btn" title={t('importProjectBtn')}
                       onClick={e => { e.stopPropagation(); importInputRef.current?.click(); }}><SvgImport size={12}/></button>}
                     <input ref={importInputRef} type="file" accept=".zip" style={{display:'none'}}
                       onChange={e => { handleImportFile(e.target.files[0]); e.target.value = ''; }} />
@@ -6645,27 +6903,27 @@ ${rows}
                         {t('noProjectsYet')}<br/>
                         {t('clickToCreate')}
                       </div>
-                    ) : projects.map(p => {
+                    ) : (shareRole ? [projects.find(p => p.id === pid)].filter(Boolean) : projects).map(p => {
                       const isActive = p.id === pid;
                       return (
                         <div key={p.id} className="nproj">
-                          <div className={`nproj-row${isActive ? ' active' : ''}`} onClick={() => setPid(p.id)}
-                            onContextMenu={e => { e.preventDefault(); e.stopPropagation(); setProjCtxMenu({ id: p.id, x: e.clientX, y: e.clientY }); }}>
+                          <div className={`nproj-row${isActive ? ' active' : ''}`} onClick={() => !shareRole && setPid(p.id)}
+                            onContextMenu={e => { if (shareRole) return; e.preventDefault(); e.stopPropagation(); setProjCtxMenu({ id: p.id, x: e.clientX, y: e.clientY }); }}>
                             <span className="nproj-arrow">{isActive ? '▾' : '›'}</span>
-                            {renaming?.type === 'project' && renaming.id === p.id ? (
+                            {!shareRole && renaming?.type === 'project' && renaming.id === p.id ? (
                               <input className="n-rename" autoFocus value={renaming.value}
                                 onChange={e => setRenaming(r => ({ ...r, value: e.target.value }))}
                                 onKeyDown={e => { if (e.key==='Enter') submitRename(); if (e.key==='Escape') setRenaming(null); }}
                                 onBlur={submitRename} onClick={e => e.stopPropagation()}
                               />
                             ) : (
-                              <span className="nproj-name" title={p.name} onDoubleClick={e => { e.stopPropagation(); startRename('project', p.id, p.name, e); }}>{p.name}</span>
+                              <span className="nproj-name" title={p.name}>{p.name}</span>
                             )}
-                            <div className="nrow-acts">
+                            {!shareRole && <div className="nrow-acts">
                               <button className="nact edit" title={t('exportProjectBtn')} onClick={e => exportProject(p.id, e)}><SvgExport size={11}/></button>
                               <button className="nact edit" title={t('renameBtn')} onClick={e => startRename('project', p.id, p.name, e)}>✎</button>
                               <button className="nact del"  title={t('deleteBtn')}  onClick={e => deleteProject(p.id, e)}>×</button>
-                            </div>
+                            </div>}
                           </div>
                           {isActive && (() => {
                             const roomOfBoard = b => rooms.find(r =>
@@ -6684,13 +6942,28 @@ ${rows}
                                 className={`nboard-row${sub?' nboard-sub':''}${b.id===bid&&roomView==='board'&&!tmplEditMode?' active':''}${boardDragOver===b.id?' drag-over':''}`}
                                 onClick={() => { if (tmplEditModeRef.current) exitTmplEdit(); setBid(b.id); setRoomView('board'); }}
                                 draggable
-                                onDragStart={e => { e.dataTransfer.effectAllowed='move'; setBoardDragId(b.id); }}
+                                onDragStart={e => {
+                                  setBoardDragId(b.id);
+                                  e.dataTransfer.setData('board-row', b.id);
+                                  if (roomView === 'room' && room) {
+                                    e.dataTransfer.effectAllowed='copy';
+                                    e.dataTransfer.setData('board-id', b.id);
+                                    const ghost = document.createElement('div');
+                                    ghost.style.cssText = 'position:fixed;left:-9999px;top:0;background:#27211a;border:1px solid #c4894a;color:#e2d6c2;font-family:"IBM Plex Mono",monospace;font-size:10px;padding:4px 10px;border-radius:2px;white-space:nowrap;pointer-events:none;';
+                                    ghost.textContent = b.name + (b.fixed && b.fixedW ? ` · ${Math.round(b.fixedW)}×${Math.round(b.fixedH||0)} cm` : '');
+                                    document.body.appendChild(ghost);
+                                    e.dataTransfer.setDragImage(ghost, 70, 14);
+                                    setTimeout(() => { if (ghost.parentNode) ghost.parentNode.removeChild(ghost); }, 0);
+                                  } else {
+                                    e.dataTransfer.effectAllowed='move';
+                                  }
+                                }}
                                 onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect='move'; setBoardDragOver(b.id); }}
                                 onDragLeave={() => setBoardDragOver(null)}
-                                onDrop={e => { e.preventDefault(); setBoardDragOver(null); if (boardDragId) reorderBoards(boardDragId, b.id); setBoardDragId(null); }}
+                                onDrop={e => { e.preventDefault(); setBoardDragOver(null); if (boardDragId && roomView !== 'room') reorderBoards(boardDragId, b.id); setBoardDragId(null); }}
                                 onDragEnd={() => { setBoardDragId(null); setBoardDragOver(null); }}
                               >
-                                <span className="nboard-drag">⠿</span>
+                                <span className="nboard-drag" title={roomView==='room' && room ? (lang==='es'?'Arrastrar a pared':'Drag to wall') : undefined}>⠿</span>
                                 <span className="nboard-dash">└</span>
                                 {renaming?.type==='board' && renaming.id===b.id ? (
                                   <input className="n-rename" autoFocus value={renaming.value}
@@ -6703,11 +6976,11 @@ ${rows}
                                 {!(renaming?.type==='board' && renaming.id===b.id) && (
                                   <span className="nboard-count">{(allBoardItems[b.id]||[]).filter(i=>!i.type||i.type==='photo').length||''}</span>
                                 )}
-                                <div className="nrow-acts">
+                                {!shareRole && <div className="nrow-acts">
                                   <button className="nact edit" title={t('renameBtn')}      onClick={e => startRename('board', b.id, b.name, e)}>✎</button>
                                   <button className="nact edit" title={t('duplicateBoard')} onClick={e => duplicateBoard(b.id, e)}>⧉</button>
                                   <button className="nact del"  title={t('deleteBtn')}      onClick={e => deleteBoard(b.id, e)}>×</button>
-                                </div>
+                                </div>}
                               </div>
                             );
                             const isSalaActive = r => roomView === 'room' && activeRoomId === r.id && !tmplEditMode;
@@ -6925,6 +7198,33 @@ ${rows}
                                   stroke={fc} strokeWidth={lw} strokeLinecap="round" style={{pointerEvents:'none'}}/>
                               </>;
                             })()}
+                            {boardDragId && !roomDrawing && (
+                              <line x1={v1.x} y1={v1.y} x2={v2.x} y2={v2.y}
+                                stroke="transparent" strokeWidth={Math.max(svgFontSz*2.5, sw*4)}
+                                style={{pointerEvents:'stroke', cursor:'copy'}}
+                                onDragOver={e=>{
+                                  e.preventDefault();
+                                  e.dataTransfer.dropEffect='copy';
+                                  const sp=roomSvgPt(e);
+                                  const ddx=v2.x-v1.x, ddy=v2.y-v1.y;
+                                  const side=(sp.x-mx)*(-ddy)+(sp.y-my)*ddx>0?'A':'B';
+                                  setRoomHovSide({wallId:wall.id,side});
+                                }}
+                                onDragLeave={()=>setRoomHovSide(null)}
+                                onDrop={e=>{
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  const bId=e.dataTransfer.getData('board-id')||boardDragId;
+                                  if(!bId) return;
+                                  const sp=roomSvgPt(e);
+                                  const ddx=v2.x-v1.x, ddy=v2.y-v1.y;
+                                  const side=(sp.x-mx)*(-ddy)+(sp.y-my)*ddx>0?'A':'B';
+                                  setRoomHovSide(null);
+                                  setBoardDragId(null); setBoardDragOver(null);
+                                  handleDropBoardOnWall(wall,side,bId);
+                                }}
+                              />
+                            )}
                           </g>
                         );
                       })}
@@ -7250,6 +7550,11 @@ ${rows}
                         const sideBtn = (side, board, mismatch, color) => (
                           <div style={{display:'flex',alignItems:'center',gap:1,flexShrink:0}}>
                             {mismatch && <span className="room-wall-warn" title={t('salaWallMismatch')} style={{fontSize:9}}>⚠</span>}
+                            {board && (
+                              <button className="btn room-wall-unlink" style={{fontSize:9,padding:'0 3px',flexShrink:0,color:'var(--dim)',lineHeight:1}}
+                                title={t('salaDeleteWall')}
+                                onClick={()=>unlinkBoardFromWall(wall.id,side)}>×</button>
+                            )}
                             <button className={`btn${board?' acc':''}`} style={{fontSize:8,padding:'1px 4px',flexShrink:0,borderLeft:`3px solid ${color}`}}
                               onMouseEnter={()=>setRoomHovSide({wallId:wall.id,side})}
                               onMouseLeave={()=>setRoomHovSide(null)}
@@ -7460,11 +7765,20 @@ ${rows}
             )}
 
             {/* CANVAS */}
-            <div ref={wrapRef} className={`canvas-wrap${libExpanded ? ' lib-expanded' : ''}${framePainter ? ' frame-painter' : ''}${spaceDown ? ' panning' : ''}`}
+            <div ref={wrapRef} className={`canvas-wrap${libExpanded ? ' lib-expanded' : ''}${framePainter ? ' frame-painter' : ''}${spaceDown ? ' panning' : ''}${pasteGhost ? ' paste-ghost-mode' : ''}`}
               style={{...(boardPx ? { background: '#1e1e1e', padding: BOARD_PAD } : {}), ...((roomView==='room'||roomView==='3d')?{display:'none'}:{})}}
-              onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+              onDragOver={e => { e.preventDefault(); if (!e.dataTransfer.types.includes('board-row')) setDragOver(true); }}
               onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget)) setDragOver(false); }}
               onDrop={onCanvasDrop}
+              onPointerMove={e => {
+                if (!pasteGhostRef.current || !ghostDivRef.current) return;
+                const pg = pasteGhostRef.current;
+                const {x, y} = clientToCanvas(e.clientX, e.clientY);
+                const scale = ghostScaleRef.current;
+                ghostPosRef.current = {x, y};
+                ghostDivRef.current.style.left = (x - pg.bboxW * scale / 2) + 'px';
+                ghostDivRef.current.style.top  = (y - pg.bboxH * scale / 2) + 'px';
+              }}
             >
               {dragOver && !gridDropTarget && <div className={`canvas-drop-hint${!pid ? ' no-proj' : ''}`}>{!pid ? t('dropHintNoProj') : zoneDropTarget ? t('dropHintZone') : t('dropHint')}</div>}
               {sel.length >= 1 && (
@@ -7517,6 +7831,23 @@ ${rows}
                     <button className="abt" title={t('ungroupItems')} onClick={ungroupItems}><SvgUngroup/></button>
                   )}
                   <div className="align-bar-sep"/>
+                  <button className="abt" title={lang==='es'?'Cortar (Ctrl+X)':'Cut (Ctrl+X)'} style={{fontSize:13}} onClick={() => {
+                    const sel2 = selRef.current.map(id => itemsRef.current.find(i => i.id === id)).filter(Boolean);
+                    if (!sel2.length) return;
+                    clipboardRef.current = sel2.map(i => ({...i}));
+                    clipCutRef.current = {isCut: true, srcBid: bidRef.current};
+                    pushUndo();
+                    const cutIds = new Set(sel2.map(i => i.id));
+                    const nit = itemsRef.current.filter(i => !cutIds.has(i.id));
+                    selRef.current = []; setSel([]);
+                    setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
+                    showToast(t('cut', sel2.length));
+                  }}>✂</button>
+                  <button className="abt" title={lang==='es'?'Copiar (Ctrl+C)':'Copy (Ctrl+C)'} style={{fontSize:13}} onClick={() => {
+                    const sel2 = selRef.current.map(id => itemsRef.current.find(i => i.id === id)).filter(Boolean);
+                    if (sel2.length) { clipboardRef.current = sel2.map(i => ({...i})); clipCutRef.current = null; showToast(t('copied', sel2.length)); }
+                  }}>⎘</button>
+                  <div className="align-bar-sep"/>
                   <button className="abt" style={{color:'var(--dim)',fontSize:14}} title={t('clearSel')}
                     onClick={() => { selRef.current = []; setSel([]); setCopyBoardInput(null); }}>×</button>
                 </div>
@@ -7537,9 +7868,15 @@ ${rows}
                   backgroundColor: '#fff',
                   boxShadow: '0 8px 48px rgba(0,0,0,.7)',
                   overflow: 'hidden',
-                } : {})
-              }} onClick={e => { if (wasDragged.current) { wasDragged.current = false; e.stopPropagation(); return; } selRef.current = []; setSel([]); setCanvasCtx(null); }}
+                } : {}),
+                ...(shareRole === 'view' ? { pointerEvents: 'none', userSelect: 'none' } : {}),
+              }} onClick={e => {
+                if (pasteGhostRef.current) { commitPasteGhost(); return; }
+                if (wasDragged.current) { wasDragged.current = false; e.stopPropagation(); return; }
+                selRef.current = []; setSel([]); setCanvasCtx(null);
+              }}
               onContextMenu={e => {
+                if (pasteGhostRef.current) { e.preventDefault(); pasteGhostRef.current = null; setPasteGhost(null); return; }
                 if (!bid || presentation) return;
                 e.preventDefault();
                 const wrapEl = wrapRef.current;
@@ -7551,6 +7888,40 @@ ${rows}
                 {lasso && <div className="lasso" style={{left:lasso.x1,top:lasso.y1,width:Math.max(0,lasso.x2-lasso.x1),height:Math.max(0,lasso.y2-lasso.y1)}}/>}
                 {snapGuides.v.map((g, i) => <div key={`sgv${i}`} style={{position:'absolute',left:g.pos,top:g.from,width:1/zoom,height:g.to-g.from,background:g.color||'var(--acc)',opacity:.85,pointerEvents:'none',zIndex:9999}}/>)}
                 {snapGuides.h.map((g, i) => <div key={`sgh${i}`} style={{position:'absolute',left:g.from,top:g.pos,width:g.to-g.from,height:1/zoom,background:g.color||'var(--acc)',opacity:.85,pointerEvents:'none',zIndex:9999}}/>)}
+                {pasteGhost && (() => {
+                  const pg = pasteGhost;
+                  return (
+                    <div ref={ghostDivRef} style={{position:'absolute',left:ghostPosRef.current.x - pg.bboxW / 2,top:ghostPosRef.current.y - pg.bboxH / 2,width:pg.bboxW,height:pg.bboxH,transformOrigin:'top left',opacity:.65,pointerEvents:'none',zIndex:10000,outline:'2px dashed rgba(196,137,74,.7)',outlineOffset:3}}>
+                      {pg.items.map(it => {
+                        const rx = it.x - pg.minX, ry = it.y - pg.minY;
+                        const iH = getItemH(it);
+                        const base = {position:'absolute',left:rx,top:ry,width:it.w,height:iH,overflow:'hidden',boxSizing:'border-box'};
+                        if (it.type === 'zone') {
+                          const zc = ZONE_COLOR_VALS[it.color] || ZONE_COLOR_VALS.blue;
+                          return <div key={it.id} style={{...base,background:zc.fill,border:`2px solid ${zc.border}`,display:'flex',alignItems:'center',justifyContent:'center',color:zc.text,fontSize:10,fontFamily:'monospace'}}>{it.label||''}</div>;
+                        }
+                        if (it.type === 'note') {
+                          const ncv = (it.noteColor && NOTE_COLOR_VALS[it.noteColor]);
+                          const bg = ncv ? ncv[1] : 'rgba(200,168,50,.15)';
+                          const bdr = ncv ? ncv[0] : '#c8a832';
+                          return <div key={it.id} style={{...base,background:bg,border:`1px solid ${bdr}`,padding:5,fontSize:9,color:'var(--fg)'}}>{(it.text||'').slice(0,80)}</div>;
+                        }
+                        if (it.type === 'text') {
+                          return <div key={it.id} style={{...base,background:'rgba(255,255,255,.06)',border:'1px solid rgba(255,255,255,.12)',padding:4,fontSize:9,color:'var(--fg)'}}>{(it.text||'').slice(0,80)}</div>;
+                        }
+                        if (it.type === 'placeholder') {
+                          return <div key={it.id} style={{...base,background:'rgba(196,137,74,.08)',border:'2px dashed rgba(196,137,74,.4)'}}/>;
+                        }
+                        return (
+                          <div key={it.id} style={{...base,background:'#111'}}>
+                            <img src={`/photos/${pid}/${it.photoId}/thumb`} style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}} alt=""/>
+                          </div>
+                        );
+                      })}
+                      <div style={{position:'absolute',bottom:-22,left:0,whiteSpace:'nowrap',fontSize:9,color:'rgba(255,255,255,.55)',background:'rgba(0,0,0,.55)',padding:'2px 6px',letterSpacing:.5,pointerEvents:'none'}}>{t('pasteGhostHint')}</div>
+                    </div>
+                  );
+                })()}
                 {boardPx && sel.length>0 && (() => {
                   const anchor = items.find(i => i.id===sel[0] && i.w);
                   if (!anchor) return null;
@@ -8124,9 +8495,9 @@ ${rows}
               })()}
             </div>
 
-            {/* LIBRARY */}
-            {libOpen && roomView === 'board' && <div className="lib-splitter" onPointerDown={onSplitterPD}/>}
-            {roomView === 'board' && (() => {
+            {/* LIBRARY — hidden for view-only guests */}
+            {libOpen && roomView === 'board' && shareRole !== 'view' && <div className="lib-splitter" onPointerDown={onSplitterPD}/>}
+            {roomView === 'board' && shareRole !== 'view' && (() => {
               const libH = libOpen ? libHeight : 30;
               const sortedPhotos = photoSort === 'name'
                 ? [...photos].sort((a, b) => a.name.localeCompare(b.name))
@@ -8221,9 +8592,11 @@ ${rows}
                       onChange={e => { const v = parseInt(e.target.value); setThumbSize(v); localStorage.setItem('thumbSize', v); }}
                     />
                     <input type="file" accept="image/*" multiple style={{display:'none'}} id="tb-upload"
+                      onClick={e => e.stopPropagation()}
                       onChange={e => { uploadFiles(e.target.files); e.target.value = ''; }}
                     />
                     <input type="file" accept="image/*" multiple webkitdirectory="" style={{display:'none'}} id="tb-upload-folder"
+                      onClick={e => e.stopPropagation()}
                       onChange={e => { uploadFiles(e.target.files); e.target.value = ''; }}
                     />
                     <input type="file" accept="image/*" multiple style={{display:'none'}} ref={uploadSectInput}
@@ -8233,7 +8606,7 @@ ${rows}
                     {sections.length > 0 && <button className={`lib-filter${libFlatView?' active':''}`} onClick={e => { e.stopPropagation(); const v = !libFlatView; setLibFlatView(v); localStorage.setItem('libFlatView', v); }} title={libFlatView ? t('libSectionViewBtn') : t('libFlatViewBtn')}>≡</button>}
                     {!libFlatView && <button className="sect-add-btn" onClick={e => { e.stopPropagation(); addSection(); }} title={t('addSection')}>{t('addSection')}</button>}
                     <button className={`lib-mute-btn${libMuted?' active':''}`} onClick={e => { e.stopPropagation(); setLibMuted(v => !v); }} title={libMuted ? t('libMuteOff') : t('libMuteOn')}>{libMuted ? t('libMuteOff') : t('libMuteOn')}</button>
-                    <button className="btn acc" style={{fontSize:9}} onClick={e => {
+                    {!shareRole && <button className="btn acc" style={{fontSize:9}} onClick={e => {
                         e.stopPropagation();
                         if (uploadDropOpen) { setUploadDropOpen(false); return; }
                         const r = e.currentTarget.getBoundingClientRect();
@@ -8241,7 +8614,7 @@ ${rows}
                         setUploadDropOpen(true);
                       }}>
                         {t('upload')} ▾
-                      </button>
+                      </button>}
                   </>}
                 </div>
                 {libOpen && (
@@ -8670,6 +9043,13 @@ ${rows}
               else setRoomView('room');
             } else { pendingRoomViewRef.current = true; setPid(id); }
           }}>{t('salaBtn')}</button>
+          {authMode && (
+            <button className="ctx-item" onClick={() => {
+              const id = projCtxMenu.id;
+              setProjCtxMenu(null);
+              api.get(`/api/projects/${id}/share`).then(d => setShareModal({ pid: id, ...d })).catch(() => {});
+            }}>⤴ {t('shareProject')}</button>
+          )}
         </div>
       )}
 
@@ -8825,6 +9205,10 @@ ${rows}
             <button className="ctx-item" onClick={() => { setCanvasCtx(null); addNote(canvasCtx); }}>{t('addNote')}</button>
             <button className="ctx-item" onClick={() => { setCanvasCtx(null); addText(canvasCtx); }}>{t('addText')}</button>
             <button className="ctx-item" onClick={() => { setCanvasCtx(null); addZone(canvasCtx); }}>{t('addZone')}</button>
+            {clipboardRef.current?.length > 0 && <>
+              <div className="ctx-sep"/>
+              <button className="ctx-item" onClick={() => { setCanvasCtx(null); triggerPasteGhost(canvasCtx.cx, canvasCtx.cy); }}>{lang==='es'?'Pegar':'Paste'} <span style={{opacity:.5,fontSize:9}}>Ctrl+V</span></button>
+            </>}
           </div>
         </>
       )}
@@ -9024,8 +9408,8 @@ ${rows}
         <>
           <div style={{position:'fixed',inset:0,zIndex:599}} onClick={() => setUploadDropOpen(false)}/>
           <div className="upload-drop" style={{position:'fixed',right:uploadDropPos.right,top:uploadDropPos.top,transform:'translateY(-100%)',zIndex:600}}>
-            <label htmlFor="tb-upload" className="upload-drop-item" onClick={() => setUploadDropOpen(false)}>{t('uploadPhotos')}</label>
-            <label htmlFor="tb-upload-folder" className="upload-drop-item" onClick={() => setUploadDropOpen(false)}>{t('uploadFolder')}</label>
+            <div className="upload-drop-item" onClick={() => { setUploadDropOpen(false); document.getElementById('tb-upload').click(); }}>{t('uploadPhotos')}</div>
+            <div className="upload-drop-item" onClick={() => { setUploadDropOpen(false); document.getElementById('tb-upload-folder').click(); }}>{t('uploadFolder')}</div>
           </div>
         </>
       )}
@@ -9908,6 +10292,52 @@ ${rows}
           </div>
         </div>
       )}
+      {shareModal && (
+        <div className="overlay" style={{zIndex:1100}} onClick={() => setShareModal(null)}>
+          <div className="modal" style={{maxWidth:480}} onClick={e => e.stopPropagation()}>
+            <div className="modal-h">{t('shareModalTitle')}</div>
+            {(['view', 'edit']).map(role => {
+              const info = shareModal[role];
+              return (
+                <div key={role} style={{marginBottom:16}}>
+                  <div style={{fontWeight:600,marginBottom:6,fontSize:13}}>
+                    {role === 'view' ? t('shareViewLink') : t('shareEditLink')}
+                  </div>
+                  {info ? (
+                    <div style={{display:'flex',gap:6,flexDirection:'column'}}>
+                      <div style={{display:'flex',gap:6}}>
+                        <input readOnly value={info.url} style={{flex:1,fontSize:11,padding:'4px 8px',background:'var(--input)',border:'1px solid var(--border)',borderRadius:4,color:'var(--text)'}}
+                          onFocus={e => e.target.select()}/>
+                        <button className="btn" style={{padding:'4px 10px',fontSize:12}}
+                          onClick={() => { navigator.clipboard.writeText(info.url); setToast(t('shareCopied')); }}>
+                          {t('shareCopy')}
+                        </button>
+                      </div>
+                      <button className="btn danger" style={{alignSelf:'flex-start',padding:'3px 10px',fontSize:12}}
+                        onClick={() => api.del(`/api/projects/${shareModal.pid}/share/${role}`)
+                          .then(() => setShareModal(m => ({ ...m, [role]: null })))
+                          .catch(() => {})}>
+                        {t('shareRevoke')}
+                      </button>
+                    </div>
+                  ) : (
+                    <button className="btn acc" style={{padding:'4px 12px',fontSize:12}}
+                      onClick={() => api.post(`/api/projects/${shareModal.pid}/share`, { role })
+                        .then(d => setShareModal(m => ({ ...m, [role]: { token: d.token, url: d.url, created: Date.now() } })))
+                        .catch(() => {})}>
+                      {t('shareGenerate')}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+            <div style={{marginTop:16,display:'flex',justifyContent:'flex-end'}}>
+              <button className="btn" onClick={() => setShareModal(null)}>{t('close')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {confirmModal && (
         <div className="overlay" style={{zIndex:1100}} onClick={() => setConfirmModal(null)}>
           <div className="confirm-dialog" onClick={e => e.stopPropagation()}>
@@ -9917,7 +10347,7 @@ ${rows}
               <button className="btn" onClick={() => setConfirmModal(null)}>{lang === 'es' ? 'Cancelar' : 'Cancel'}</button>
               <button className={`btn${confirmModal.danger ? ' danger' : ' acc'}`}
                 onClick={() => { setConfirmModal(null); confirmModal.onConfirm(); }}>
-                {lang === 'es' ? 'Confirmar' : 'Confirm'}
+                {confirmModal.confirmLabel || (lang === 'es' ? 'Confirmar' : 'Confirm')}
               </button>
             </div>
           </div>

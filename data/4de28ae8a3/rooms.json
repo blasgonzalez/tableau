@@ -1,1 +1,53 @@
-[]
+[
+  {
+    "id": "rmpzfg1ud",
+    "name": "Sala 1",
+    "ceilingHeight": 280,
+    "vertices": [
+      {
+        "id": "vmpzfo18s70i",
+        "x": 272.4609375,
+        "y": 660
+      },
+      {
+        "id": "vmpzfo2oyby4",
+        "x": 272.46093750000006,
+        "y": 79.62422428546483
+      },
+      {
+        "id": "vmpzfo3dy56x",
+        "x": 686.5289722929992,
+        "y": 79.62422428546483
+      },
+      {
+        "id": "vmpzfo463m67",
+        "x": 785.3515625,
+        "y": 239.78514099121094
+      }
+    ],
+    "walls": [
+      {
+        "id": "wmpzfo5ls0",
+        "v1": "vmpzfo18s70i",
+        "v2": "vmpzfo2oyby4",
+        "name": "Pared 1"
+      },
+      {
+        "id": "wmpzfo5ls1",
+        "v1": "vmpzfo2oyby4",
+        "v2": "vmpzfo3dy56x",
+        "name": "Pared 2",
+        "boardId": null
+      },
+      {
+        "id": "wmpzfo5ls2",
+        "v1": "vmpzfo3dy56x",
+        "v2": "vmpzfo463m67",
+        "name": "Pared 3",
+        "boardId": null
+      }
+    ],
+    "columns": [],
+    "closed": false
+  }
+]

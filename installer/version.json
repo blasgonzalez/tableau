@@ -1,6 +1,6 @@
 {
-  "version": "1.11.2",
+  "version": "1.12.0",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-06-04",
-  "notes": "Corregido error al iniciar en Windows cuando la carpeta de datos no existía."
+  "notes": "Copiar/cortar y pegar visual con ghost: los elementos copiados siguen el cursor y se colocan con un clic. La rueda del ratón escala el conjunto antes de soltarlo."
 }

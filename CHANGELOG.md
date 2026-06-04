@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.12.0] — 2026-06-04
+
+### Añadido
+- Copiar/cortar y pegar visual con ghost: Ctrl+C / Ctrl+X copia o corta los elementos seleccionados; Ctrl+V muestra un fantasma semitransparente que sigue el cursor — clic para colocar, ESC para cancelar
+- La rueda del ratón escala el conjunto mientras el ghost está activo, permitiendo ajustar el tamaño antes de colocar
+- Botones ✂ (cortar) y ⎘ (copiar) visibles en la barra de selección cuando hay elementos seleccionados
+- Opción "Pegar" en el menú contextual del canvas (clic derecho) cuando hay algo en el portapapeles
+- El ghost aparece centrado en el punto del clic derecho si se pega desde el menú contextual
+- Compatible con todos los tipos: fotos, notas, zonas, texto, placeholders y grupos
+
+### Corregido
+- Desagrupar no limpiaba la selección activa, lo que provocaba que los elementos se siguieran moviendo juntos hasta hacer clic en el canvas
+
+---
+
 ## [1.11.2] — 2026-06-04
 
 ### Corregido

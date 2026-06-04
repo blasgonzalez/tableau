@@ -4,6 +4,9 @@
     "name": "p",
     "created": 1780298174573,
     "units": "cm",
-    "dpi": 150
+    "dpi": 150,
+    "fixed": true,
+    "fixedW": 580.4,
+    "fixedH": 280
   }
 ]

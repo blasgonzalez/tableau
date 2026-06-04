@@ -204,6 +204,81 @@ function consumeResetToken(token) {
   return entry.userId;
 }
 
+// ── Share tokens ──────────────────────────────────────────────────────────────
+// Only active in AUTH_ENABLED mode. Stored in DATA_DIR/shares.json.
+// { [token]: { ownerId, projectId, role: 'view'|'edit', created } }
+const sharesIndexFile = () => path.join(DATA_DIR, 'shares.json');
+function loadShares() { try { return JSON.parse(fs.readFileSync(sharesIndexFile(), 'utf8')); } catch { return {}; } }
+function saveShares(s) { fs.writeFileSync(sharesIndexFile(), JSON.stringify(s)); }
+function resolveShareToken(token) {
+  if (!AUTH_ENABLED || !token) return null;
+  return loadShares()[token] || null;
+}
+
+// resolveAccess: accepts session auth OR valid share token.
+// Sets req.dd, req.shareRole (null=owner, 'view'|'edit'=guest), req.sharePid, req.shareToken.
+function resolveAccess(req, res, next) {
+  if (!AUTH_ENABLED) { req.dd = DATA_DIR; req.shareRole = null; return next(); }
+  if (req.session?.userId) {
+    const user = loadUsers().find(u => u.id === req.session.userId);
+    if (user && !(user.expiresAt && user.expiresAt < Date.now())) {
+      req.dd = path.join(DATA_DIR, user.id);
+      req.shareRole = null;
+      return next();
+    }
+  }
+  const token = req.headers['x-share-token'] || req.query.token;
+  if (token) {
+    const share = resolveShareToken(token);
+    if (share) {
+      if (req.params.pid && req.params.pid !== share.projectId)
+        return res.status(403).json({ error: 'Token no válido para este proyecto' });
+      req.dd        = path.join(DATA_DIR, share.ownerId);
+      req.shareRole = share.role;
+      req.sharePid  = share.projectId;
+      req.shareToken = token;
+      return next();
+    }
+  }
+  return res.status(401).json({ error: 'No autenticado' });
+}
+
+// requireEditAccess: resolveAccess + must not be view-only
+function requireEditAccess(req, res, next) {
+  resolveAccess(req, res, () => {
+    if (req.shareRole === 'view') return res.status(403).json({ error: 'Acceso de solo lectura' });
+    next();
+  });
+}
+
+// ── Board locks (in-memory, resets on restart) ─────────────────────────────────
+const boardLocks   = {};
+const LOCK_TIMEOUT = 25_000;
+
+function lockKey(dd, pid, bid) { return `${dd}|${pid}|${bid}`; }
+
+function getLock(dd, pid, bid) {
+  const key  = lockKey(dd, pid, bid);
+  const lock = boardLocks[key];
+  if (!lock) return null;
+  if (Date.now() - lock.at > LOCK_TIMEOUT) { delete boardLocks[key]; return null; }
+  return lock;
+}
+
+function acquireLock(dd, pid, bid, token) {
+  const existing = getLock(dd, pid, bid);
+  if (existing && existing.token !== token) return false;
+  boardLocks[lockKey(dd, pid, bid)] = { token, at: Date.now() };
+  return true;
+}
+
+function releaseLock(dd, pid, bid, token) {
+  const key  = lockKey(dd, pid, bid);
+  const lock = boardLocks[key];
+  if (lock && lock.token === token) { delete boardLocks[key]; return true; }
+  return false;
+}
+
 // ── Admin middleware ───────────────────────────────────────────────────────────
 function requireAdmin(req, res, next) {
   if (!AUTH_ENABLED) return res.status(403).json({ error: 'Solo disponible en modo servidor' });
@@ -629,6 +704,59 @@ app.post('/api/admin/users/:uid/reset-password', requireAdmin, async (req, res) 
   res.json({ ok: true, ...(user.email ? {} : { tempPassword: pass }) });
 });
 
+// ── Share management endpoints (AUTH_ENABLED only) ───────────────────────────
+app.get('/api/share/:token', (req, res) => {
+  const share = resolveShareToken(req.params.token);
+  if (!share) return res.status(404).json({ error: 'Enlace no válido' });
+  const dd = path.join(DATA_DIR, share.ownerId);
+  const proj = readJSON(projsFile(dd)).find(p => p.id === share.projectId);
+  if (!proj) return res.status(404).json({ error: 'Proyecto no encontrado' });
+  res.json({ role: share.role, project: { id: proj.id, name: proj.name } });
+});
+
+app.get('/api/projects/:pid/share', requireAuth, (req, res) => {
+  if (!AUTH_ENABLED) return res.json({ view: null, edit: null });
+  const { pid } = req.params;
+  const ownerId = req.session.userId;
+  const result  = { view: null, edit: null };
+  for (const [tok, s] of Object.entries(loadShares())) {
+    if (s.ownerId === ownerId && s.projectId === pid) {
+      result[s.role] = { token: tok, url: `${APP_URL}/?share=${tok}`, created: s.created };
+    }
+  }
+  res.json(result);
+});
+
+app.post('/api/projects/:pid/share', requireAuth, (req, res) => {
+  if (!AUTH_ENABLED) return res.status(400).json({ error: 'Solo disponible en modo servidor' });
+  const { pid } = req.params;
+  const { role } = req.body;
+  if (role !== 'view' && role !== 'edit') return res.status(400).json({ error: 'role debe ser view o edit' });
+  const projects = readJSON(projsFile(req.dd));
+  if (!projects.find(p => p.id === pid)) return res.status(404).json({ error: 'Proyecto no encontrado' });
+  const ownerId = req.session.userId;
+  const shares  = loadShares();
+  for (const [tok, s] of Object.entries(shares)) {
+    if (s.ownerId === ownerId && s.projectId === pid && s.role === role) delete shares[tok];
+  }
+  const token = uuidv4().replace(/-/g, '');
+  shares[token] = { ownerId, projectId: pid, role, created: Date.now() };
+  saveShares(shares);
+  res.json({ token, url: `${APP_URL}/?share=${token}`, role });
+});
+
+app.delete('/api/projects/:pid/share/:role', requireAuth, (req, res) => {
+  if (!AUTH_ENABLED) return res.status(400).json({ error: 'Solo disponible en modo servidor' });
+  const { pid, role } = req.params;
+  const ownerId = req.session.userId;
+  const shares  = loadShares();
+  for (const [tok, s] of Object.entries(shares)) {
+    if (s.ownerId === ownerId && s.projectId === pid && s.role === role) delete shares[tok];
+  }
+  saveShares(shares);
+  res.json({ ok: true });
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 const upload = multer({
@@ -756,7 +884,7 @@ app.delete('/api/projects/:pid', requireAuth, (req, res) => {
 });
 
 // ── Boards ───────────────────────────────────────────────────────────────────
-app.get('/api/projects/:pid/boards', requireAuth, (req, res) => {
+app.get('/api/projects/:pid/boards', resolveAccess, (req, res) => {
   res.json(readJSON(boardsMeta(req.params.pid, req.dd)));
 });
 
@@ -833,7 +961,7 @@ app.put('/api/projects/:pid/boards/order', requireAuth, (req, res) => {
 });
 
 // ── Rooms (multi-room) ────────────────────────────────────────────────────────
-app.get('/api/projects/:pid/rooms', requireAuth, (req, res) => {
+app.get('/api/projects/:pid/rooms', resolveAccess, (req, res) => {
   const { pid } = req.params;
   migrateRooms(pid, req.dd);
   res.json(readJSON(roomsFile(pid, req.dd), []));
@@ -927,7 +1055,7 @@ app.delete('/api/projects/:pid/room', requireAuth, (req, res) => {
 });
 
 // ── Photos – upload ──────────────────────────────────────────────────────────
-app.get('/api/projects/:pid/photos', requireAuth, (req, res) => {
+app.get('/api/projects/:pid/photos', resolveAccess, (req, res) => {
   res.json(readJSON(photosMeta(req.params.pid, req.dd)));
 });
 
@@ -1272,27 +1400,61 @@ app.post('/api/projects/:pid/photos/:photoId/copy-to/:targetPid', requireAuth, (
 });
 
 // ── Serve photos ──────────────────────────────────────────────────────────────
-app.get('/photos/:pid/:id', requireAuth, (req, res) => {
+app.get('/photos/:pid/:id', resolveAccess, (req, res) => {
   const file = path.join(photoDir(req.params.pid, req.dd), `${req.params.id}.jpg`);
   fs.existsSync(file) ? res.sendFile(file) : res.status(404).end();
 });
 
-app.get('/photos/:pid/:id/thumb', requireAuth, (req, res) => {
+app.get('/photos/:pid/:id/thumb', resolveAccess, (req, res) => {
   const file = path.join(photoDir(req.params.pid, req.dd), `${req.params.id}_thumb.jpg`);
   fs.existsSync(file) ? res.sendFile(file) : res.status(404).end();
 });
 
 // ── Board items ───────────────────────────────────────────────────────────────
-app.get('/api/boards/:pid/:bid/items', requireAuth, (req, res) => {
+app.get('/api/boards/:pid/:bid/items', resolveAccess, (req, res) => {
   const { pid, bid } = req.params;
   res.json(readJSON(boardFile(pid, bid, req.dd), []));
 });
 
-app.put('/api/boards/:pid/:bid/items', requireAuth, (req, res) => {
+app.put('/api/boards/:pid/:bid/items', requireEditAccess, (req, res) => {
   const { pid, bid } = req.params;
   if (!Array.isArray(req.body)) return res.status(400).json({ error: 'Array esperado' });
+  if (req.shareRole === 'edit') {
+    const lock = getLock(req.dd, pid, bid);
+    if (!lock || lock.token !== req.shareToken)
+      return res.status(409).json({ error: 'No tienes el bloqueo del tablero' });
+  }
   writeJSON(boardFile(pid, bid, req.dd), req.body);
   res.json({ ok: true });
+});
+
+// ── Board locks ───────────────────────────────────────────────────────────────
+app.post('/api/boards/:pid/:bid/lock', resolveAccess, (req, res) => {
+  if (!req.shareRole) return res.json({ ok: true }); // owners bypass locks
+  if (req.shareRole !== 'edit') return res.status(403).json({ error: 'Acceso de solo lectura' });
+  const { pid, bid } = req.params;
+  if (!acquireLock(req.dd, pid, bid, req.shareToken))
+    return res.status(409).json({ error: 'El tablero está siendo editado por otro usuario' });
+  res.json({ ok: true });
+});
+
+app.post('/api/boards/:pid/:bid/lock/ping', resolveAccess, (req, res) => {
+  if (!req.shareRole) return res.json({ ok: true });
+  const { pid, bid } = req.params;
+  res.json({ ok: acquireLock(req.dd, pid, bid, req.shareToken) });
+});
+
+app.delete('/api/boards/:pid/:bid/lock', resolveAccess, (req, res) => {
+  if (!req.shareRole) return res.json({ ok: true });
+  const { pid, bid } = req.params;
+  releaseLock(req.dd, pid, bid, req.shareToken);
+  res.json({ ok: true });
+});
+
+app.get('/api/boards/:pid/:bid/lock', resolveAccess, (req, res) => {
+  const { pid, bid } = req.params;
+  const lock = getLock(req.dd, pid, bid);
+  res.json({ locked: !!lock, mine: !!(lock && req.shareToken && lock.token === req.shareToken) });
 });
 
 // ── Board versions ────────────────────────────────────────────────────────────
