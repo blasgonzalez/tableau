@@ -10,6 +10,11 @@ nodeExe   = scriptDir & "\runtime\node.exe"
 serverJs  = scriptDir & "\server.js"
 dataDir   = objShell.ExpandEnvironmentStrings("%LOCALAPPDATA%") & "\Tableau\data"
 
+Dim parentDir
+parentDir = objFSO.GetParentFolderName(dataDir)
+If Not objFSO.FolderExists(parentDir) Then
+    objFSO.CreateFolder parentDir
+End If
 If Not objFSO.FolderExists(dataDir) Then
     objFSO.CreateFolder dataDir
 End If

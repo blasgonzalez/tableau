@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.2] — 2026-06-04
+
+### Corregido
+- Error al iniciar en Windows cuando la carpeta de datos (`%LOCALAPPDATA%\Tableau\data`) no existía todavía: el lanzador ahora crea las carpetas intermedias si faltan
+
+---
+
 ## [1.11.0] — 2026-06-03
 
 ### Añadido

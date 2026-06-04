@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.2] — 2026-06-04
+
+### Fixed
+- Startup error on Windows when the data folder (`%LOCALAPPDATA%\Tableau\data`) did not exist yet: the launcher now creates intermediate folders if missing
+
+---
+
 ## [1.11.0] — 2026-06-03
 
 ### Added

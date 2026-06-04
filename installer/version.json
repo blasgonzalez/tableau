@@ -1,6 +1,6 @@
 {
-  "version": "1.11.0",
+  "version": "1.11.2",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-06-03",
-  "notes": "Papelera: fotos y proyectos eliminados se pueden recuperar durante 30 días. Purga automática al arrancar. Badge en la barra lateral cuando hay contenido en la papelera."
+  "releaseDate": "2026-06-04",
+  "notes": "Corregido error al iniciar en Windows cuando la carpeta de datos no existía."
 }
