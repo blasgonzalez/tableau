@@ -1089,6 +1089,8 @@ const I18N = {
     exportPadHint:'Espacio en blanco alrededor de las fotos en el JPEG',
     addBlock:'+ Bloque', blockLabel:'Nombre', blockHeight:'Alto (cm)', blockFaceN:'Norte', blockFaceS:'Sur', blockFaceE:'Este', blockFaceW:'Oeste', blockFaceTop:'Superior', blockFaceLink:'Vincular tablero', blockFaceUnlink:'Desvincular', blockSyncWarn:'Este bloque tiene tableros vinculados. Redimensionar puede desincronizarlos. ¿Continuar?', blockDelete:'Eliminar bloque',
     shareProject:'Compartir proyecto', shareModalTitle:'Compartir proyecto', shareViewLink:'Enlace de solo lectura', shareEditLink:'Enlace de edición', shareGenerate:'Generar enlace', shareRevoke:'Revocar', shareCopy:'Copiar enlace', shareCopied:'Enlace copiado', shareGuestView:'Solo lectura', shareGuestEdit:'Editor invitado', shareBoardLocked:'El tablero está siendo editado por otro usuario', shareInvalidLink:'Enlace no válido o expirado',
+    shareInviteEmail:'Enviar por email', shareInvitePh:'correo@ejemplo.com', shareInviteSend:'Enviar', shareInviteSent:'Invitación enviada', shareInviteError:'Error al enviar el correo', shareNoSmtp:'El servidor no tiene SMTP configurado',
+    shareActiveTitle:'Invitaciones activas', shareActiveEmpty:'No tienes invitaciones activas', shareActiveProject:'Proyecto', shareActiveCreated:'Enviada', shareActiveRevoke:'Revocar', shareActiveRevokeOk:'Invitación revocada',
   },
   en: {
     upload:'↑ Upload', uploadPhotos:'Photos', report:'≡ Report', config:'⚙ Config', exportJpeg:'Export JPEG',
@@ -1240,6 +1242,8 @@ const I18N = {
     exportPadHint:'White space around photos in the exported JPEG',
     addBlock:'+ Block', blockLabel:'Name', blockHeight:'Height (cm)', blockFaceN:'North', blockFaceS:'South', blockFaceE:'East', blockFaceW:'West', blockFaceTop:'Top', blockFaceLink:'Link board', blockFaceUnlink:'Unlink', blockSyncWarn:'This block has linked boards. Resizing may desync them. Continue?', blockDelete:'Delete block',
     shareProject:'Share project', shareModalTitle:'Share project', shareViewLink:'Read-only link', shareEditLink:'Edit link', shareGenerate:'Generate link', shareRevoke:'Revoke', shareCopy:'Copy link', shareCopied:'Link copied', shareGuestView:'Read only', shareGuestEdit:'Guest editor', shareBoardLocked:'Board is being edited by another user', shareInvalidLink:'Invalid or expired link',
+    shareInviteEmail:'Send by email', shareInvitePh:'email@example.com', shareInviteSend:'Send', shareInviteSent:'Invitation sent', shareInviteError:'Error sending email', shareNoSmtp:'SMTP not configured on server',
+    shareActiveTitle:'Active invitations', shareActiveEmpty:'No active invitations', shareActiveProject:'Project', shareActiveCreated:'Sent', shareActiveRevoke:'Revoke', shareActiveRevokeOk:'Invitation revoked',
   },
 };
 
@@ -1481,6 +1485,8 @@ function App() {
   // Share / guest state
   const [shareRole,     setShareRole]     = useState(null);   // null=owner, 'view'|'edit'=guest
   const [shareModal,    setShareModal]    = useState(null);   // null | {pid, view, edit}
+  const [shareInviteEmail, setShareInviteEmail] = useState('');
+  const [sharesPanel,   setSharesPanel]   = useState(null);  // null | [{token, projectName, role, created, url}]
   const [lockState,     setLockState]     = useState({});     // {[bid]: 'pending'|'locked'|'conflict'}
   const shareRoleRef = useRef(null);
   useEffect(() => { shareRoleRef.current = shareRole; }, [shareRole]);
@@ -1669,8 +1675,11 @@ function App() {
       _shareToken = urlShareToken;
       fetch(`/api/share/${urlShareToken}`)
         .then(r => r.ok ? r.json() : null)
-        .then(d => {
+        .then(async d => {
           if (!d) { setReady(true); return; }
+          // Activate the token in the server session so image requests (which
+          // can't send custom headers) are authenticated via the session cookie.
+          await fetch(`/api/share/${urlShareToken}/activate`, { method: 'POST' }).catch(() => {});
           setShareRole(d.role);
           shareRoleRef.current = d.role;
           setProjects([d.project]);
@@ -6731,20 +6740,20 @@ ${rows}
               : `👁 ${t('shareGuestView')}`}
           </div>
         )}
-        {!tmplEditMode && bid && roomView === 'board' && <button className="btn" style={{fontSize:9}} onClick={() => setPresentation(true)} title={t('presentationBtn')}>{t('presentationBtn')}</button>}
-        {!tmplEditMode && pid && boards.length > 0 && (
+        {!shareRole && !tmplEditMode && bid && roomView === 'board' && <button className="btn" style={{fontSize:9}} onClick={() => setPresentation(true)} title={t('presentationBtn')}>{t('presentationBtn')}</button>}
+        {!shareRole && !tmplEditMode && pid && boards.length > 0 && (
           <button className="btn" style={{fontSize:10}} onClick={() => setModal('memoria')} title={t('reportTitle')}>
             {t('report')}
           </button>
         )}
-        {bid && roomView === 'board' && <button className={`btn${showGrid?' acc':''}`}
+        {!shareRole && bid && roomView === 'board' && <button className={`btn${showGrid?' acc':''}`}
             style={{fontSize:9,letterSpacing:.3,opacity:(showGrid && gridCellPx*zoom<1)?0.45:1}}
             onClick={e => { if (gridDropOpen) { setGridDropOpen(false); return; } const r = e.currentTarget.getBoundingClientRect(); setGridDropPos({ left: r.left, top: r.bottom + 4 }); setGridDropOpen(true); }}
             title={showGrid && gridCellPx*zoom<1 ? t('gridHiddenZoom') : t('gridToggle')}>
             {t('gridToggle')}{showGrid && snapGrid ? ' ·' : ''}
           </button>}
-        {(tmplEditMode || bid) && <button className="btn" style={{fontSize:10}} onClick={openBoardConfig} title={t('boardConfig')}>{t('config')}</button>}
-        {!tmplEditMode && bid && <>
+        {!shareRole && (tmplEditMode || bid) && <button className="btn" style={{fontSize:10}} onClick={openBoardConfig} title={t('boardConfig')}>{t('config')}</button>}
+        {!shareRole && !tmplEditMode && bid && <>
           {roomView === 'board' && <button className="btn" style={{fontSize:10, color: versions.length > 0 ? 'var(--acc)' : undefined}} onClick={() => { loadVersions(); setModal('versions'); }} title={t('versionsTitle')}>
             ⏱
           </button>}
@@ -6761,6 +6770,12 @@ ${rows}
         </>}
         {!sbOpen && (
           <button className="btn" style={{fontSize:10}} onClick={() => setSbOpen(true)}>{t('showPanel')}</button>
+        )}
+        {!shareRole && authMode && (
+          <button className="btn" style={{fontSize:10}} title={t('shareActiveTitle')}
+            onClick={() => api.get('/api/shares').then(d => setSharesPanel(d)).catch(() => setSharesPanel([]))}>
+            ⤴
+          </button>
         )}
         <div className="theme-picker" onClick={e => e.stopPropagation()}>
           <button className="btn theme-btn" onClick={() => setThemeOpen(o => !o)} title={t('preferences')}>
@@ -7009,21 +7024,21 @@ ${rows}
                                           🏛 {r.name || (lang==='es'?'Sala':'Room')}
                                         </span>
                                       )}
-                                      <div className="nrow-acts">
+                                      {!shareRole && <div className="nrow-acts">
                                         <button className="nact edit" title={t('renameBtn')}       onClick={e=>startRename('room',r.id,r.name,e)}>✎</button>
                                         <button className="nact edit" title={t('salaDuplicate')}   onClick={e=>duplicateRoom(r.id,e)}>⧉</button>
                                         <button className="nact del"  title={t('salaDelete')}      onClick={e=>{e.stopPropagation();switchRoom(r.id);setTimeout(deleteRoom,0);}}>×</button>
-                                      </div>
+                                      </div>}
                                     </div>
                                     {!collapsedRooms.has(r.id) && (roomBoards[r.id]||[]).map(b => renderBoard(b, true))}
                                   </React.Fragment>
                                 ))}
-                                <div className="nboard-add" onClick={() => { setNameVal(''); setModal('board'); }}>
+                                {!shareRole && <div className="nboard-add" onClick={() => { setNameVal(''); setModal('board'); }}>
                                   {t('addBoard')}
-                                </div>
-                                <div className="nsala-add" onClick={addRoom}>
+                                </div>}
+                                {!shareRole && <div className="nsala-add" onClick={addRoom}>
                                   {t('salaAdd')}
-                                </div>
+                                </div>}
                               </div>
                             );
                           })()}
@@ -7034,7 +7049,7 @@ ${rows}
                 </div>
 
                 {/* PLANTILLAS */}
-                <div className="sb-sec tmpl">
+                {!shareRole && <div className="sb-sec tmpl">
                   <div className="sb-sec-hd" style={{cursor:'pointer'}} onClick={() => setSbTemplOpen(v => !v)}>
                     <span className="sb-sec-title">◈ {t('templatesSection')}</span>
                     {bid && sbTemplOpen && <button className="sb-sec-btn" title={t('saveAsTemplate')}
@@ -7086,21 +7101,23 @@ ${rows}
                       })}
                     </div>
                   )}
-                </div>
+                </div>}
 
                 {/* PAPELERA */}
-                <div className="sb-trash-btn" onClick={() => openTrash('photos')}>
+                {!shareRole && <div className="sb-trash-btn" onClick={() => openTrash('photos')}>
                   <span className="sb-sec-title">⊘ {t('trashTitle')}</span>
                   {trashCount.total > 0 && <span className="sb-trash-badge">{trashCount.total}</span>}
-                </div>
+                </div>}
 
-                {/* INFO */}
-                <div className="sb-sec info">
-                  <div className="sb-sec-hd">
-                    <span className="sb-sec-title">○ {t('infoTitle')}</span>
+                {/* INFO — solo visible cuando hay datos que mostrar */}
+                {(hoverInfo || (boardPx && sel.length > 0)) && (
+                  <div className="sb-sec info">
+                    <div className="sb-sec-hd">
+                      <span className="sb-sec-title">○ {t('infoTitle')}</span>
+                    </div>
+                    <InfoPanel/>
                   </div>
-                  <InfoPanel/>
-                </div>
+                )}
 
               </div>
             </div>
@@ -7134,7 +7151,7 @@ ${rows}
                       onWheel={onRoomSvgWheel}
                       onPointerDown={onRoomSvgPD}
                       onContextMenu={e=>{
-                        if(roomDrawing && !roomAppending)return;
+                        if(shareRole||roomDrawing && !roomAppending)return;
                         e.preventDefault();
                         const pt=roomSvgPt(e);
                         setRoomSvgCtx({x:e.clientX,y:e.clientY,svgX:pt.x,svgY:pt.y});
@@ -7164,7 +7181,7 @@ ${rows}
                           <g key={wall.id}
                             onMouseEnter={()=>!roomDrawing&&setRoomHovWall(wall.id)}
                             onMouseLeave={()=>setRoomHovWall(null)}
-                            onContextMenu={e=>{e.preventDefault();e.stopPropagation();setRoomWallCtx({wallId:wall.id,x:e.clientX,y:e.clientY});}}>
+                            onContextMenu={e=>{if(shareRole)return;e.preventDefault();e.stopPropagation();setRoomWallCtx({wallId:wall.id,x:e.clientX,y:e.clientY});}}>
                             {/* Wide invisible hit area for easier hover */}
                             <line x1={v1.x} y1={v1.y} x2={v2.x} y2={v2.y} stroke="transparent" strokeWidth={Math.max(svgFontSz*1.4, sw*2)} style={{pointerEvents:'stroke'}}/>
                             <line x1={v1.x} y1={v1.y} x2={v2.x} y2={v2.y}
@@ -7343,7 +7360,7 @@ ${rows}
                           fill="var(--text)" opacity={0.65} rx={1}
                           style={{cursor:roomDrawing?'default':'move'}}
                           onPointerDown={e=>onColumnPD(e,col.id)}
-                          onContextMenu={e=>{e.preventDefault();e.stopPropagation();setRoomColCtx({id:col.id,x:e.clientX,y:e.clientY});}}/>
+                          onContextMenu={e=>{if(shareRole)return;e.preventDefault();e.stopPropagation();setRoomColCtx({id:col.id,x:e.clientX,y:e.clientY});}}/>
                       ))}
 
                       {/* Saved vertices (draggable, right-click to delete) */}
@@ -7351,7 +7368,7 @@ ${rows}
                         <circle key={v.id} cx={v.x} cy={v.y} r={svgFontSz*.55}
                           fill="var(--acc)" stroke="var(--bg)" strokeWidth={1.5}
                           style={{cursor:'move'}} onPointerDown={e=>onRoomVertexPD(e,v.id)}
-                          onContextMenu={e=>{e.preventDefault();e.stopPropagation();setRoomVertCtx({id:v.id,x:e.clientX,y:e.clientY});}}/>
+                          onContextMenu={e=>{if(shareRole)return;e.preventDefault();e.stopPropagation();setRoomVertCtx({id:v.id,x:e.clientX,y:e.clientY});}}/>
                       ))}
 
                       {/* Cursor dot */}
@@ -7364,25 +7381,25 @@ ${rows}
 
                     {/* Toolbar */}
                     <div className="room-toolbar">
-                      {!roomDrawing && !room && <button className="btn" onClick={()=>{setRoomDrawing(true);setRoomAppending(false);setRoomTempVerts([]);setRoomCursor(null);}}>
+                      {!shareRole && !roomDrawing && !room && <button className="btn" onClick={()=>{setRoomDrawing(true);setRoomAppending(false);setRoomTempVerts([]);setRoomCursor(null);}}>
                         {t('salaDraw')}
                       </button>}
-                      {!roomDrawing && room && <button className="btn" onClick={()=>{setRoomAppending(true);setRoomDrawing(true);setRoomTempVerts([]);setRoomCursor(null);}}>
+                      {!shareRole && !roomDrawing && room && <button className="btn" onClick={()=>{setRoomAppending(true);setRoomDrawing(true);setRoomTempVerts([]);setRoomCursor(null);}}>
                         {t('salaEdit')}
                       </button>}
-                      {roomDrawing && <button className="btn" onClick={()=>{setRoomDrawing(false);setRoomAppending(false);setRoomTempVerts([]);setRoomCursor(null);}}>
+                      {!shareRole && roomDrawing && <button className="btn" onClick={()=>{setRoomDrawing(false);setRoomAppending(false);setRoomTempVerts([]);setRoomCursor(null);}}>
                         {t('salaCancel')}
                       </button>}
-                      {roomDrawing && roomTempVerts.length >= 2 && (
+                      {!shareRole && roomDrawing && roomTempVerts.length >= 2 && (
                         <button className="btn" onClick={() => finishOpenPolygon(roomTempVerts, roomAppending)}>
                           {t('salaFinish')}
                         </button>
                       )}
                       {room && !roomDrawing && <button className="btn" onClick={openRoom3D}>{lang==='es'?'Vista 3D':'3D View'}</button>}
-                      {room && !roomDrawing && <button className="btn" onClick={exportRoom} title={lang==='es'?'Exportar sala':'Export room'}><SvgExport size={11}/></button>}
-                      {!roomDrawing && <button className="btn" onClick={()=>importRoomRef.current?.click()} title={lang==='es'?'Importar sala':'Import room'}><SvgImport size={11}/></button>}
+                      {!shareRole && room && !roomDrawing && <button className="btn" onClick={exportRoom} title={lang==='es'?'Exportar sala':'Export room'}><SvgExport size={11}/></button>}
+                      {!shareRole && !roomDrawing && <button className="btn" onClick={()=>importRoomRef.current?.click()} title={lang==='es'?'Importar sala':'Import room'}><SvgImport size={11}/></button>}
                       <input ref={importRoomRef} type="file" accept=".json" style={{display:'none'}} onChange={importRoom}/>
-                      {room && !roomDrawing && <button className="btn danger" onClick={deleteRoom}>{t('salaDelete')}</button>}
+                      {!shareRole && room && !roomDrawing && <button className="btn danger" onClick={deleteRoom}>{t('salaDelete')}</button>}
                       <span style={{fontSize:9,color:'var(--muted)',marginLeft:4}}>{lang==='es'?'Rueda → zoom · Arrastrar → desplazar':'Wheel → zoom · Drag → pan'}</span>
                     </div>
 
@@ -8803,7 +8820,7 @@ ${rows}
       )}
 
       {bid && roomView === 'board' && (
-        <div className="zoom-ctrl" style={{bottom: (libOpen ? libHeight : 30) + 20}}>
+        <div className="zoom-ctrl" style={{bottom: libOpen ? libHeight + 20 : 12}}>
           {(() => {
             const linkedRoom = rooms.find(r =>
               r.walls?.some(w => w.boardId === bid || w.boardIdBack === bid) ||
@@ -10293,16 +10310,15 @@ ${rows}
         </div>
       )}
       {shareModal && (
-        <div className="overlay" style={{zIndex:1100}} onClick={() => setShareModal(null)}>
+        <div className="overlay" style={{zIndex:1100}} onClick={() => { setShareModal(null); setShareInviteEmail(''); }}>
           <div className="modal" style={{maxWidth:480}} onClick={e => e.stopPropagation()}>
             <div className="modal-h">{t('shareModalTitle')}</div>
-            {(['view', 'edit']).map(role => {
-              const info = shareModal[role];
+            {/* Solo rol visor — el modo editor se habilita más adelante */}
+            {(() => {
+              const info = shareModal.view;
               return (
-                <div key={role} style={{marginBottom:16}}>
-                  <div style={{fontWeight:600,marginBottom:6,fontSize:13}}>
-                    {role === 'view' ? t('shareViewLink') : t('shareEditLink')}
-                  </div>
+                <div style={{marginBottom:8}}>
+                  <div style={{fontWeight:600,marginBottom:8,fontSize:13}}>{t('shareViewLink')}</div>
                   {info ? (
                     <div style={{display:'flex',gap:6,flexDirection:'column'}}>
                       <div style={{display:'flex',gap:6}}>
@@ -10313,26 +10329,82 @@ ${rows}
                           {t('shareCopy')}
                         </button>
                       </div>
-                      <button className="btn danger" style={{alignSelf:'flex-start',padding:'3px 10px',fontSize:12}}
-                        onClick={() => api.del(`/api/projects/${shareModal.pid}/share/${role}`)
-                          .then(() => setShareModal(m => ({ ...m, [role]: null })))
-                          .catch(() => {})}>
-                        {t('shareRevoke')}
-                      </button>
+                      {/* Invitación por email */}
+                      <div style={{display:'flex',gap:6,marginTop:4}}>
+                        <input className="inp" value={shareInviteEmail} placeholder={t('shareInvitePh')}
+                          style={{flex:1,fontSize:11,padding:'4px 8px'}}
+                          onChange={e => setShareInviteEmail(e.target.value)}
+                          onKeyDown={e => { if (e.key === 'Enter' && shareInviteEmail.trim()) {
+                            api.post(`/api/projects/${shareModal.pid}/share/invite`, { email: shareInviteEmail.trim() })
+                              .then(() => { setToast(t('shareInviteSent')); setShareInviteEmail(''); })
+                              .catch(err => setToast(err?.error || t('shareInviteError')));
+                          }}}/>
+                        <button className="btn acc" style={{padding:'4px 10px',fontSize:12,whiteSpace:'nowrap'}}
+                          disabled={!shareInviteEmail.trim()}
+                          onClick={() => {
+                            if (!shareInviteEmail.trim()) return;
+                            api.post(`/api/projects/${shareModal.pid}/share/invite`, { email: shareInviteEmail.trim() })
+                              .then(() => { setToast(t('shareInviteSent')); setShareInviteEmail(''); })
+                              .catch(err => setToast(err?.error || t('shareInviteError')));
+                          }}>
+                          {t('shareInviteSend')}
+                        </button>
+                      </div>
                     </div>
                   ) : (
                     <button className="btn acc" style={{padding:'4px 12px',fontSize:12}}
-                      onClick={() => api.post(`/api/projects/${shareModal.pid}/share`, { role })
-                        .then(d => setShareModal(m => ({ ...m, [role]: { token: d.token, url: d.url, created: Date.now() } })))
+                      onClick={() => api.post(`/api/projects/${shareModal.pid}/share`, { role: 'view' })
+                        .then(d => setShareModal(m => ({ ...m, view: { token: d.token, url: d.url, created: Date.now() } })))
                         .catch(() => {})}>
                       {t('shareGenerate')}
                     </button>
                   )}
                 </div>
               );
-            })}
+            })()}
             <div style={{marginTop:16,display:'flex',justifyContent:'flex-end'}}>
-              <button className="btn" onClick={() => setShareModal(null)}>{t('close')}</button>
+              <button className="btn" onClick={() => { setShareModal(null); setShareInviteEmail(''); }}>{t('close')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {sharesPanel && (
+        <div className="overlay" style={{zIndex:1100}} onClick={() => setSharesPanel(null)}>
+          <div className="modal" style={{maxWidth:520,minWidth:340}} onClick={e => e.stopPropagation()}>
+            <div className="modal-h">{t('shareActiveTitle')}</div>
+            {sharesPanel.length === 0 ? (
+              <div style={{color:'var(--muted)',fontSize:11,padding:'8px 0'}}>{t('shareActiveEmpty')}</div>
+            ) : (
+              <div style={{display:'flex',flexDirection:'column',gap:8,maxHeight:400,overflowY:'auto'}}>
+                {sharesPanel.map(inv => (
+                  <div key={inv.token} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 10px',background:'var(--panel2)',borderRadius:4}}>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontWeight:600,fontSize:12,marginBottom:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{inv.projectName}</div>
+                      <div style={{fontSize:10,color:'var(--muted)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{inv.url}</div>
+                      <div style={{fontSize:9,color:'var(--dim)',marginTop:2}}>{new Date(inv.created).toLocaleDateString()}</div>
+                    </div>
+                    <button className="btn" style={{fontSize:11,padding:'3px 8px',flexShrink:0}}
+                      onClick={() => { navigator.clipboard.writeText(inv.url); setToast(t('shareCopied')); }}>
+                      {t('shareCopy')}
+                    </button>
+                    <button className="btn danger" style={{fontSize:11,padding:'3px 8px',flexShrink:0}}
+                      onClick={() => {
+                        api.del(`/api/projects/${inv.projectId}/share/view`)
+                          .then(() => {
+                            setSharesPanel(p => p.filter(i => i.token !== inv.token));
+                            setToast(t('shareActiveRevokeOk'));
+                          })
+                          .catch(() => {});
+                      }}>
+                      {t('shareActiveRevoke')}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div style={{marginTop:16,display:'flex',justifyContent:'flex-end'}}>
+              <button className="btn" onClick={() => setSharesPanel(null)}>{t('close')}</button>
             </div>
           </div>
         </div>

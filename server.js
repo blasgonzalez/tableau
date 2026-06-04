@@ -227,6 +227,21 @@ function resolveAccess(req, res, next) {
       return next();
     }
   }
+  // Session-activated share (set by POST /api/share/:token/activate — allows image requests
+  // to work without custom headers since the browser sends the session cookie automatically).
+  if (req.session?.shareInfo) {
+    const share = resolveShareToken(req.session.shareInfo.token);
+    if (share) {
+      if (req.params.pid && req.params.pid !== share.projectId)
+        return res.status(403).json({ error: 'Token no válido para este proyecto' });
+      req.dd        = path.join(DATA_DIR, share.ownerId);
+      req.shareRole = share.role;
+      req.sharePid  = share.projectId;
+      req.shareToken = req.session.shareInfo.token;
+      return next();
+    }
+    delete req.session.shareInfo; // token revoked
+  }
   const token = req.headers['x-share-token'] || req.query.token;
   if (token) {
     const share = resolveShareToken(token);
@@ -714,6 +729,21 @@ app.get('/api/share/:token', (req, res) => {
   res.json({ role: share.role, project: { id: proj.id, name: proj.name } });
 });
 
+// Todas las invitaciones activas del usuario autenticado (para panel de gestión)
+app.get('/api/shares', requireAuth, (req, res) => {
+  if (!AUTH_ENABLED) return res.json([]);
+  const ownerId  = req.session.userId;
+  const allProjs = readJSON(projsFile(req.dd));
+  const result   = [];
+  for (const [token, s] of Object.entries(loadShares())) {
+    if (s.ownerId !== ownerId) continue;
+    const proj = allProjs.find(p => p.id === s.projectId);
+    result.push({ token, projectId: s.projectId, projectName: proj?.name || s.projectId, role: s.role, created: s.created, url: `${APP_URL}/?share=${token}` });
+  }
+  result.sort((a, b) => b.created - a.created);
+  res.json(result);
+});
+
 app.get('/api/projects/:pid/share', requireAuth, (req, res) => {
   if (!AUTH_ENABLED) return res.json({ view: null, edit: null });
   const { pid } = req.params;
@@ -755,6 +785,59 @@ app.delete('/api/projects/:pid/share/:role', requireAuth, (req, res) => {
   }
   saveShares(shares);
   res.json({ ok: true });
+});
+
+// Stores the share token in the browser session so image requests (which can't send
+// custom headers) are automatically authenticated via the session cookie.
+app.post('/api/share/:token/activate', (req, res) => {
+  const share = resolveShareToken(req.params.token);
+  if (!share) return res.status(404).json({ error: 'Token no válido' });
+  if (req.session) req.session.shareInfo = { token: req.params.token };
+  res.json({ ok: true });
+});
+
+app.post('/api/projects/:pid/share/invite', requireAuth, async (req, res) => {
+  if (!AUTH_ENABLED) return res.status(400).json({ error: 'Solo disponible en modo servidor' });
+  const { pid } = req.params;
+  const { email } = req.body || {};
+  if (!email) return res.status(400).json({ error: 'Email requerido' });
+  const sender = loadUsers().find(u => u.id === req.session.userId);
+  const shares = loadShares();
+  let token = null;
+  for (const [tok, s] of Object.entries(shares)) {
+    if (s.ownerId === req.session.userId && s.projectId === pid && s.role === 'view') { token = tok; break; }
+  }
+  if (!token) {
+    const projects = readJSON(projsFile(req.dd));
+    if (!projects.find(p => p.id === pid)) return res.status(404).json({ error: 'Proyecto no encontrado' });
+    token = uuidv4().replace(/-/g, '');
+    shares[token] = { ownerId: req.session.userId, projectId: pid, role: 'view', created: Date.now() };
+    saveShares(shares);
+  }
+  const url        = `${APP_URL}/?share=${token}`;
+  const proj       = readJSON(projsFile(req.dd)).find(p => p.id === pid);
+  const projName   = proj?.name || 'Tableau';
+  const senderName = sender?.username || 'Un usuario';
+  const replyTo    = sender?.email || null;
+  const mailer = getMailer();
+  if (!mailer) return res.status(500).json({ error: 'El servidor no tiene SMTP configurado.' });
+  const from = process.env.TABLEAU_SMTP_FROM || process.env.TABLEAU_SMTP_USER;
+  try {
+    await mailer.sendMail({
+      from,
+      to: email,
+      ...(replyTo ? { replyTo } : {}),
+      subject: `${senderName} te comparte "${projName}" — Tableau`,
+      html: `<p>${senderName} te ha dado acceso de solo lectura al proyecto <strong>${projName}</strong> en Tableau.</p>
+             <p><a href="${url}">${url}</a></p>
+             <hr style="border:none;border-top:1px solid #eee;margin:16px 0"/>
+             <p style="color:#999;font-size:11px">Este es un mensaje automático generado por Tableau. No respondas a este correo${replyTo ? ` — si quieres contactar con ${senderName} escribe directamente a <a href="mailto:${replyTo}">${replyTo}</a>` : ''}.</p>`,
+    });
+  } catch (e) {
+    console.error('[mail] Error enviando invitación:', e.message);
+    return res.status(500).json({ error: 'Error enviando el correo. Comprueba la configuración SMTP.' });
+  }
+  res.json({ ok: true, token, url });
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
