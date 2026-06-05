@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.14.1] — 2026-06-05
+
+### Corregido
+- Control de zoom: se elimina el valor numérico del porcentaje (confuso para el usuario)
+- Correo de invitación: texto más natural ("acceso de visitante", asunto "te invita a")
+- Usuarios registrados que abren un link de invitación ahora acceden correctamente como invitados al proyecto compartido, tanto en llamadas API como en imágenes
+
+---
+
 ## [1.14.0] — 2026-06-05
 
 ### Añadido

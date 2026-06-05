@@ -222,6 +222,33 @@ function resolveAccess(req, res, next) {
   if (req.session?.userId) {
     const user = loadUsers().find(u => u.id === req.session.userId);
     if (user && !(user.expiresAt && user.expiresAt < Date.now())) {
+      // If a share token for another user's project is present, grant guest access.
+      // This handles the case where a registered Tableau user opens a share link.
+      const tok = req.headers['x-share-token'] || req.query.token;
+      if (tok) {
+        const share = resolveShareToken(tok);
+        if (share && share.ownerId !== user.id) {
+          if (req.params.pid && req.params.pid !== share.projectId)
+            return res.status(403).json({ error: 'Token no válido para este proyecto' });
+          req.dd        = path.join(DATA_DIR, share.ownerId);
+          req.shareRole = share.role;
+          req.sharePid  = share.projectId;
+          req.shareToken = tok;
+          return next();
+        }
+      }
+      // Image requests (no custom headers possible) from a logged-in user in share mode:
+      // use shareInfo from session when the pid matches the shared project.
+      if (!tok && req.session.shareInfo && req.params.pid) {
+        const share = resolveShareToken(req.session.shareInfo.token);
+        if (share && share.ownerId !== user.id && share.projectId === req.params.pid) {
+          req.dd        = path.join(DATA_DIR, share.ownerId);
+          req.shareRole = share.role;
+          req.sharePid  = share.projectId;
+          req.shareToken = req.session.shareInfo.token;
+          return next();
+        }
+      }
       req.dd = path.join(DATA_DIR, user.id);
       req.shareRole = null;
       return next();
@@ -827,8 +854,8 @@ app.post('/api/projects/:pid/share/invite', requireAuth, async (req, res) => {
       from,
       to: email,
       ...(replyTo ? { replyTo } : {}),
-      subject: `${senderName} te comparte "${projName}" — Tableau`,
-      html: `<p>${senderName} te ha dado acceso de solo lectura al proyecto <strong>${projName}</strong> en Tableau.</p>
+      subject: `${senderName} te invita a "${projName}" — Tableau`,
+      html: `<p>${senderName} te ha dado acceso de visitante al proyecto <strong>${projName}</strong> en Tableau.</p>
              <p><a href="${url}">${url}</a></p>
              <hr style="border:none;border-top:1px solid #eee;margin:16px 0"/>
              <p style="color:#999;font-size:11px">Este es un mensaje automático generado por Tableau. No respondas a este correo${replyTo ? ` — si quieres contactar con ${senderName} escribe directamente a <a href="mailto:${replyTo}">${replyTo}</a>` : ''}.</p>`,

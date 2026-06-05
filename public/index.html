@@ -1684,6 +1684,22 @@ function App() {
     return () => ro.disconnect();
   }, [ready]);
 
+  // When returning from room/3D view (where canvas-wrap is display:none) the
+  // ResizeObserver may have recorded {0,0}. Re-measure on the next animation
+  // frame so the canvas always covers the full viewport.
+  useEffect(() => {
+    if (roomView !== 'board') return;
+    const el = wrapRef.current;
+    if (!el) return;
+    const id = requestAnimationFrame(() => {
+      setWrapSize(prev => {
+        const w = el.clientWidth, h = el.clientHeight;
+        return (prev.w === w && prev.h === h) ? prev : { w, h };
+      });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [roomView]);
+
   // Non-passive wheel listener for ghost scaling (prevents scroll while scaling)
   useEffect(() => {
     if (!pasteGhost) return;
@@ -3000,11 +3016,24 @@ function App() {
   boardPxRef.current = boardPx;
 
   // ── grid ──────────────────────────────────────────────────────────────────
+  // Nice physical step values (cm) used to generate proportional grid options.
+  const NICE_CM = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500];
+  const NICE_PX = [10, 25, 50, 100, 200, 500, 1000, 2000];
   // Compute the actual grid cell size in canvas pixels.
-  // gridStep===0 means "auto": physical 1cm for DPI boards, 50px otherwise.
+  // gridStep===0 means "auto": choose ~20 cells across the shorter dimension
+  // for fixed DPI boards (so it's always proportional), 50px otherwise.
   const gridCellPx = (() => {
     if (gridStep > 0) return gridStep;
-    if (boardDpi && boardUnits !== 'px') return Math.round(boardDpi / 2.54); // 1 cm
+    if (boardDpi && boardUnits !== 'px') {
+      if (boardPx) {
+        const pxPerCm = boardDpi / 2.54;
+        const minDimCm = Math.min(boardPx.w, boardPx.h) / pxPerCm;
+        const targetCm = minDimCm / 20;
+        const nearest = NICE_CM.reduce((a, b) => Math.abs(b - targetCm) < Math.abs(a - targetCm) ? b : a);
+        return Math.max(1, Math.round(nearest * pxPerCm));
+      }
+      return Math.round(boardDpi / 2.54); // 1 cm fallback for variable DPI boards
+    }
     return 50;
   })();
   // The grid is only shown/snapped when its cells are large enough on screen to
@@ -3016,21 +3045,36 @@ function App() {
   // never exceeding ~45% of the cell so a small free-placement dead zone
   // remains in the middle. At zoom 1 this equals the previous 12px behaviour.
   const snapVal = (v, cell) => { const s = Math.round(v / cell) * cell; const thresh = Math.min(cell * 0.45, 12 / zoom); return Math.abs(v - s) <= thresh ? s : v; };
-  // Possible grid step options for the current board
+  // Possible grid step options — proportional to board dimensions so options
+  // are always meaningful (no 1mm steps on a 16m wall).
   const gridOptions = (() => {
     const opts = [];
     opts.push({ v: 0, label: t('gridAuto') });
     if (boardDpi && boardUnits !== 'px') {
-      const mm1 = Math.round(boardDpi / 25.4);
-      const mm5 = Math.round(5 * boardDpi / 25.4);
-      const cm1 = Math.round(boardDpi / 2.54);
-      const cm5 = Math.round(5 * boardDpi / 2.54);
-      opts.push({ v: mm1, label: '1 mm' });
-      opts.push({ v: mm5, label: '5 mm' });
-      opts.push({ v: cm1, label: '1 cm' });
-      opts.push({ v: cm5, label: '5 cm' });
+      const pxPerCm = boardDpi / 2.54;
+      if (boardPx) {
+        const minDimCm = Math.min(boardPx.w, boardPx.h) / pxPerCm;
+        // Keep steps that give between 3 and 100 grid lines across the short side
+        NICE_CM.filter(cm => { const n = minDimCm / cm; return n >= 3 && n <= 100; })
+          .slice(0, 5)
+          .forEach(cm => {
+            const px = Math.max(1, Math.round(cm * pxPerCm));
+            const label = cm < 1 ? `${Math.round(cm * 10)} mm` : cm >= 100 ? `${cm / 100} m` : `${cm} cm`;
+            opts.push({ v: px, label });
+          });
+      } else {
+        // Variable DPI board: sensible fixed set
+        [0.5, 1, 5, 10, 50].forEach(cm => {
+          opts.push({ v: Math.max(1, Math.round(cm * pxPerCm)), label: cm < 1 ? `${Math.round(cm*10)} mm` : `${cm} cm` });
+        });
+      }
     } else {
-      [10, 25, 50, 100, 200].forEach(px => opts.push({ v: px, label: `${px} px` }));
+      // Pixel board: filter by board size if known, else fixed defaults
+      const minPx = boardPx ? Math.min(boardPx.w, boardPx.h) : null;
+      (minPx
+        ? NICE_PX.filter(px => { const n = minPx / px; return n >= 3 && n <= 100; }).slice(0, 5)
+        : [25, 50, 100, 200]
+      ).forEach(px => opts.push({ v: px, label: `${px} px` }));
     }
     return opts;
   })();
@@ -6933,6 +6977,7 @@ ${rows}
                   {lang === id && <span style={{color:'var(--acc)',fontSize:11}}>✓</span>}
                 </div>
               ))}
+              {!shareRole && <>
               <div className="pref-divider"/>
               <div className="pref-sec-hd">{t('libTitle')}</div>
               <div className={`theme-opt${showLibPreview ? ' active' : ''}`}
@@ -6941,6 +6986,7 @@ ${rows}
                 <span className="theme-opt-label">{t('libPreviewToggle')}</span>
                 {showLibPreview && <span style={{color:'var(--acc)',fontSize:11}}>✓</span>}
               </div>
+              </>}
               {authUser && <>
                 <div className="pref-divider"/>
                 <div className="pref-sec-hd">{lang === 'es' ? 'Almacenamiento' : 'Storage'}</div>
@@ -7050,8 +7096,7 @@ ${rows}
                       const isActive = p.id === pid;
                       return (
                         <div key={p.id} className="nproj">
-                          <div className={`nproj-row${isActive ? ' active' : ''}`} onClick={() => !shareRole && setPid(p.id)}
-                            onContextMenu={e => { if (shareRole) return; e.preventDefault(); e.stopPropagation(); setProjCtxMenu({ id: p.id, x: e.clientX, y: e.clientY }); }}>
+                          <div className={`nproj-row${isActive ? ' active' : ''}`} onClick={() => !shareRole && setPid(p.id)}>
                             <span className="nproj-arrow">{isActive ? '▾' : '▸'}</span>
                             {!shareRole && renaming?.type === 'project' && renaming.id === p.id ? (
                               <input className="n-rename" autoFocus value={renaming.value}
@@ -7065,6 +7110,7 @@ ${rows}
                             {!shareRole && <div className="nrow-acts">
                               <button className="nact edit" title={t('exportProjectBtn')} onClick={e => exportProject(p.id, e)}><SvgExport size={11}/></button>
                               <button className="nact edit" title={t('renameBtn')} onClick={e => startRename('project', p.id, p.name, e)}>✎</button>
+                              {authMode && <button className="nact edit" title={t('shareProject')} onClick={e => { e.stopPropagation(); api.get(`/api/projects/${p.id}/share`).then(d => setShareModal({ pid: p.id, ...d })).catch(() => {}); }}><SvgShareNet size={11}/></button>}
                               <button className="nact del"  title={t('deleteBtn')}  onClick={e => deleteProject(p.id, e)}>×</button>
                             </div>}
                           </div>
@@ -8996,7 +9042,7 @@ ${rows}
       )}
 
       {bid && roomView === 'board' && (
-        <div className="zoom-ctrl" style={{bottom: libOpen ? libHeight + 20 : 12}}>
+        <div className="zoom-ctrl" style={{bottom: (!shareRole && libOpen) ? libHeight + 20 : 12}}>
           {(() => {
             const linkedRoom = rooms.find(r =>
               r.walls?.some(w => w.boardId === bid || w.boardIdBack === bid) ||
@@ -9014,10 +9060,6 @@ ${rows}
             );
           })()}
           <button className="zc-btn" title="Zoom − (Ctrl+−)" onClick={() => zoomStep(-1)}>−</button>
-          <span className="zc-pct" onClick={boardPx ? fitBoard : fitWidth}
-            title={boardPx ? `${t('fitView')} (Ctrl+0)` : t('fitWidth')}>
-            {Math.round(zoom * 100)}%
-          </span>
           <button className="zc-btn" title={boardPx ? `${t('fitView')} (Ctrl+0)` : t('fitWidth')}
             onClick={boardPx ? fitBoard : fitWidth} style={{fontSize:13}}>⇔</button>
           <button className="zc-btn" title="Zoom + (Ctrl++)" onClick={() => zoomStep(1)}>+</button>
@@ -9225,26 +9267,6 @@ ${rows}
         );
       })()}
 
-      {projCtxMenu && (
-        <div className="ctx-menu" style={{left: projCtxMenu.x, top: projCtxMenu.y}}
-          onPointerDown={e => e.stopPropagation()} onContextMenu={e => e.preventDefault()}>
-          <button className="ctx-item" onClick={() => {
-            const id = projCtxMenu.id;
-            setProjCtxMenu(null);
-            if (id === pidRef.current) {
-              if (roomsRef.current.length === 0) addRoom();
-              else setRoomView('room');
-            } else { pendingRoomViewRef.current = true; setPid(id); }
-          }}>{t('salaBtn')}</button>
-          {authMode && (
-            <button className="ctx-item" onClick={() => {
-              const id = projCtxMenu.id;
-              setProjCtxMenu(null);
-              api.get(`/api/projects/${id}/share`).then(d => setShareModal({ pid: id, ...d })).catch(() => {});
-            }}>⤴ {t('shareProject')}</button>
-          )}
-        </div>
-      )}
 
       {roomVertCtx && (
         <div className="ctx-menu" style={{left: roomVertCtx.x, top: roomVertCtx.y}}

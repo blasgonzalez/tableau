@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.14.1] — 2026-06-05
+
+### Fixed
+- Zoom control: numeric percentage value removed (confusing for users)
+- Invitation email: more natural wording ("visitor access", subject "invites you to")
+- Registered users opening a share link now correctly access the shared project as guests, for both API calls and image requests
+
+---
+
 ## [1.14.0] — 2026-06-05
 
 ### Added
