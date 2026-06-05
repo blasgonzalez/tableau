@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.14.0] — 2026-06-05
+
+### Añadido
+- Tablero privado (modo servidor): nuevo atributo en la configuración del tablero; los invitados no ven ni pueden acceder a los tableros marcados como privados
+
+### Mejorado
+- Las fotos bloqueadas dentro de una zona ya no impiden mover la zona
+- Segundo clic sobre una foto dentro de una zona seleccionada (estilo Figma): selecciona la foto directamente sin necesidad de deseleccionar la zona primero
+- La barra de control de una foto en la parte superior de una zona ya no se solapa con la cabecera de la zona
+- Una foto debe estar completamente dentro de la zona para pertenecer a ella; arrastrarla parcialmente fuera la desvincula
+- Las zonas se pueden superponer libremente sin rebote
+- Panel de información siempre visible al pie del panel izquierdo; los invitados no lo ven
+- Jerarquía visual corregida: las salas aparecen claramente anidadas bajo el proyecto en la barra lateral
+- Botones `+ Nueva sala` y `+ Nuevo tablero` al mismo nivel jerárquico
+
+---
+
 ## [1.12.0] — 2026-06-04
 
 ### Añadido

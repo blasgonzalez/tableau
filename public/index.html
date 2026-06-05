@@ -36,6 +36,15 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .btn:hover{color:var(--text);border-color:var(--acc-dim)}
 .btn.acc{border-color:var(--acc-dim);color:var(--acc)}
 .btn.acc:hover{background:var(--acc-faint)}
+/* Topbar icon buttons — coherent icon-only group (paired with tooltips) */
+.tb-actions{display:flex;align-items:center;gap:0;flex-shrink:0}
+.tb-group{display:flex;align-items:center;gap:2px;flex-shrink:0}
+.tb-sep{width:1px;height:22px;background:var(--border2);flex-shrink:0;margin:0 9px}
+.tbtn{width:30px;height:30px;border:1px solid transparent;background:transparent;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;position:relative}
+.tbtn:hover{color:var(--text);border-color:var(--acc-dim);background:var(--surf)}
+.tbtn.on{color:var(--acc);border-color:var(--acc-dim)}
+.tbtn.muted{opacity:.45}
+.tbtn .tbtn-dot{position:absolute;top:3px;right:3px;width:5px;height:5px;border-radius:50%;background:var(--acc)}
 .btn.active{border-color:var(--acc-dim);color:var(--acc);background:var(--acc-faint)}
 .btn:disabled{opacity:.35;cursor:default}
 .update-banner{background:#1e2e0a;border-bottom:1px solid #3a5c14;padding:5px 14px;display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:.4px;color:#a8cc60;flex-shrink:0;z-index:300}
@@ -89,6 +98,7 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .sb-tmpl-add{padding:4px 10px 6px;display:flex;gap:4px;align-items:center}
 .sb-sec-hd{height:32px;display:flex;align-items:center;gap:5px;padding:0 8px 0 10px;border-bottom:1px solid var(--border);background:var(--deep);flex-shrink:0}
 .sb-sec-title{font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:var(--dim);flex:1}
+.sb-sec-caret{font-size:9px;color:var(--dim);flex-shrink:0;width:11px;text-align:center;line-height:1;user-select:none}
 .sb-sec-btn{width:18px;height:18px;border:1px solid var(--border2);background:transparent;color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;transition:all .12s;line-height:1}
 .sb-sec-btn:hover{color:var(--acc);border-color:var(--acc-dim)}
 .sb-scroll{overflow-y:auto;overflow-x:hidden;flex:1}
@@ -278,11 +288,11 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .room-wall-rename{font-size:10px;background:var(--input);border:1px solid var(--acc);color:var(--text);padding:1px 5px;border-radius:2px;font-family:inherit;width:80px}
 .room-empty{padding:24px 16px;color:var(--dim);font-size:10px;line-height:1.8;text-align:center}
 .room-no-sala{display:flex;flex:1;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:var(--dim);font-size:10px}
-.nsala-row{display:flex;align-items:center;padding:5px 8px 5px 8px;cursor:pointer;color:var(--dim);font-size:9px;letter-spacing:.5px;transition:color .12s;border-left:2px solid transparent}
+.nsala-row{display:flex;align-items:center;padding:5px 8px 5px 16px;cursor:pointer;color:var(--dim);font-size:9px;letter-spacing:.5px;transition:color .12s;border-left:2px solid transparent}
 .nsala-row:hover{color:var(--acc)}.nsala-row.active{color:var(--acc);border-left-color:var(--acc);background:var(--acc-faint)}
 .nsala-arrow{font-size:8px;width:12px;flex-shrink:0;color:var(--dim);margin-right:3px;transition:color .12s}
 .nsala-row:hover .nsala-arrow,.nsala-row.active .nsala-arrow{color:var(--acc)}
-.nsala-add{display:flex;align-items:center;padding:4px 8px 4px 14px;cursor:pointer;color:var(--muted);font-size:9px;letter-spacing:.4px;transition:color .12s}
+.nsala-add{display:flex;align-items:center;padding:4px 8px 4px 22px;cursor:pointer;color:var(--muted);font-size:9px;letter-spacing:.4px;transition:color .12s}
 .nsala-add:hover{color:var(--acc)}
 .nboard-row.nboard-sub{padding-left:30px}
 .info-room-badge{font-size:9px;color:var(--muted);padding:5px 10px 0;letter-spacing:.3px;display:flex;align-items:center;gap:4px}
@@ -295,8 +305,10 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .lock-badge svg{width:100%;height:100%}
 .bitem-img{display:block;pointer-events:none}
 .bitem-img-wrap{position:relative;overflow:hidden}
-.bitem.sel .bitem-img-wrap{outline:2px dashed var(--acc-dim);outline-offset:2px}
-.bitem.sel.anchor .bitem-img-wrap{outline:2px solid var(--acc);outline-offset:2px}
+.bitem.sel .bitem-img-wrap{box-shadow:0 0 0 2px rgba(255,255,255,0.8),0 0 0 4px var(--acc-dim)}
+.bitem.sel.anchor .bitem-img-wrap{box-shadow:0 0 0 2px rgba(255,255,255,0.9),0 0 0 4px var(--acc)}
+.canvas.board-white .bitem.sel .bitem-img-wrap{box-shadow:0 0 0 2px rgba(0,0,0,0.25),0 0 0 4px var(--acc)}
+.canvas.board-white .bitem.sel.anchor .bitem-img-wrap{box-shadow:0 0 0 2px rgba(0,0,0,0.4),0 0 0 4px var(--acc)}
 .bitem.replacing .bitem-img-wrap{outline:2px solid #e06060 !important;outline-offset:3px;animation:replacing-pulse 1s ease-in-out infinite}
 .bitem.swap-target .bitem-img-wrap{outline:3px solid var(--acc) !important;outline-offset:3px}
 .bitem-bar{position:absolute;bottom:100%;right:0;display:flex;gap:3px;opacity:0;transition:opacity .12s;zoom:calc(1 / var(--canvas-zoom,1));z-index:250}
@@ -308,6 +320,7 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .props-color{width:24px;height:22px;padding:0;border:1px solid var(--border2);border-radius:2px;cursor:pointer;background:none;flex-shrink:0}
 .frame-painter-banner{position:fixed;bottom:0;left:50%;transform:translateX(-50%);background:var(--acc);color:var(--bg);font-size:9px;letter-spacing:.8px;padding:6px 18px;z-index:600;pointer-events:none;white-space:nowrap;border-radius:4px 4px 0 0}
 .bitem:hover .bitem-bar{opacity:1}
+.canvas.zone-sel .bitem:not(.sel):hover .bitem-bar{opacity:0;pointer-events:none}
 
 .ibc{width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;border:none;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-weight:500;background:var(--surf);color:var(--sub)}
 .ibc:hover{color:var(--text)}
@@ -396,10 +409,17 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .zrh{position:absolute;opacity:0;transition:opacity .12s;z-index:20}
 .zitem:hover .zrh,.zitem.sel .zrh{opacity:1}
 .zrh.nw,.zrh.ne,.zrh.sw,.zrh.se{width:10px;height:10px;background:rgba(255,255,255,.75);zoom:calc(1/var(--canvas-zoom,1))}
-.zrh.nw{top:calc(-4px / var(--canvas-zoom,1));left:calc(-4px / var(--canvas-zoom,1));cursor:nw-resize}
-.zrh.ne{top:calc(-4px / var(--canvas-zoom,1));right:calc(-4px / var(--canvas-zoom,1));cursor:ne-resize}
-.zrh.sw{bottom:calc(-4px / var(--canvas-zoom,1));left:calc(-4px / var(--canvas-zoom,1));cursor:sw-resize}
-.zrh.se{bottom:calc(-4px / var(--canvas-zoom,1));right:calc(-4px / var(--canvas-zoom,1));cursor:se-resize}
+.canvas.board-white .zrh.nw,.canvas.board-white .zrh.ne,.canvas.board-white .zrh.sw,.canvas.board-white .zrh.se{background:rgba(0,0,0,.55)}
+.canvas.board-white .zitem:hover .zrh.n,.canvas.board-white .zitem.sel .zrh.n{border-top-color:rgba(0,0,0,.3)}
+.canvas.board-white .zitem:hover .zrh.s,.canvas.board-white .zitem.sel .zrh.s{border-bottom-color:rgba(0,0,0,.3)}
+.canvas.board-white .zitem:hover .zrh.e,.canvas.board-white .zitem.sel .zrh.e{border-right-color:rgba(0,0,0,.3)}
+.canvas.board-white .zitem:hover .zrh.w,.canvas.board-white .zitem.sel .zrh.w{border-left-color:rgba(0,0,0,.3)}
+.canvas.board-white .zitem.sel .zitem-body{outline-color:rgba(0,0,0,.45)}
+.canvas.board-white .zitem.anchor .zitem-body{outline-color:rgba(0,0,0,.7)}
+.zrh.nw{top:-4px;left:-4px;cursor:nw-resize}
+.zrh.ne{top:-4px;right:-4px;cursor:ne-resize}
+.zrh.sw{bottom:-4px;left:-4px;cursor:sw-resize}
+.zrh.se{bottom:-4px;right:-4px;cursor:se-resize}
 .zrh.n{top:0;left:0;right:0;height:12px;cursor:n-resize;border-top:2px solid transparent}
 .zrh.s{bottom:0;left:0;right:0;height:12px;cursor:s-resize;border-bottom:2px solid transparent}
 .zrh.e{right:0;top:0;bottom:0;width:12px;cursor:e-resize;border-right:2px solid transparent}
@@ -645,7 +665,7 @@ select.inp{cursor:pointer;appearance:none;padding-right:28px;background-image:ur
 .zone-hdr input::placeholder{opacity:.35;font-weight:400;text-transform:none;letter-spacing:.3px}
 .zone-hdr-grip{font-size:calc(13px / var(--canvas-zoom,1));opacity:.5;flex-shrink:0;line-height:1}
 .zone-hdr-sc{font-size:calc(10px / var(--canvas-zoom,1));opacity:.7;flex-shrink:0;line-height:1}
-.zone-hdr .ibc{width:calc(22px / var(--canvas-zoom,1));height:calc(22px / var(--canvas-zoom,1));font-size:calc(11px / var(--canvas-zoom,1));flex-shrink:0}
+.zone-hdr .ibc{width:22px;height:22px;font-size:11px;flex-shrink:0;zoom:calc(1 / var(--canvas-zoom,1))}
 /* ── THUMB COPY BUTTON ── */
 .thumb-cp{position:absolute;bottom:2px;right:22px;width:18px;height:18px;background:rgba(0,0,0,.62);color:rgba(255,255,255,.82);border:1px solid rgba(255,255,255,.18);cursor:pointer;font-size:10px;border-radius:2px;display:none;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;line-height:1;z-index:2}
 .thumb:hover .thumb-cp{display:flex}
@@ -744,6 +764,12 @@ select.btn option,select.inp option{background:var(--panel);color:var(--text)}
 .splash-dots span:nth-child(3){animation-delay:.4s}
 @keyframes splash-breathe{0%,100%{opacity:.35}50%{opacity:.9}}
 @keyframes splash-dot{0%,80%,100%{transform:scale(.5);opacity:.3}40%{transform:scale(1);opacity:1}}
+/* ── CLIPBOARD BANNER ── */
+.clip-banner{display:flex;align-items:center;gap:10px;padding:7px 14px;background:var(--panel2);border-bottom:1px solid var(--acc-dim);flex-shrink:0;z-index:10}
+.clip-banner-icon{font-size:13px;color:var(--acc);flex-shrink:0}
+.clip-banner-msg{font-size:9.5px;color:var(--sub);letter-spacing:.3px;flex:1;line-height:1.3}
+.clip-banner-cancel{background:none;border:1px solid var(--border2);color:var(--muted);font-size:9px;padding:3px 10px;cursor:pointer;font-family:inherit;letter-spacing:.4px;flex-shrink:0;transition:border-color .15s,color .15s}
+.clip-banner-cancel:hover{border-color:var(--danger);color:var(--danger)}
 </style>
 </head>
 <body>
@@ -811,7 +837,14 @@ const THEMES = {
   },
 };
 
-const ZOOM_STEPS = [0.125, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 4, 6, 8, 12, 16];
+// Progressive zoom stops (each ≤ ~1.34× the previous, no brutal jumps) that
+// still land on familiar round values (25 %, 50 %, 100 %…). Spans 2 %–1600 %.
+const ZOOM_STEPS = [0.02, 0.025, 0.03, 0.04, 0.05, 0.0625, 0.08, 0.1, 0.125, 0.15, 0.2, 0.25, 0.33, 0.4, 0.5, 0.67, 0.75, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10, 12, 16];
+const MIN_ZOOM = 0.01;  // allow auto-fit to shrink large boards fully into view
+const MAX_ZOOM = 16;
+// Below this on-screen cell size (px) the grid is too dense to be useful, so we
+// hide it (and stop snapping to it) instead of drawing an unreadable mush.
+const GRID_MIN_PX = 4;
 
 const NOTE_FONT_CYCLE = [null, 9, 14, 18]; // null = default M (11px)
 const NOTE_FONT_LABEL = v => v === 9 ? 'S' : v === 14 ? 'L' : v === 18 ? 'XL' : 'M';
@@ -985,6 +1018,7 @@ const I18N = {
     dpi72:'72 dpi — pantalla', dpi96:'96 dpi — web', dpi150:'150 dpi — borrador',
     dpi300:'300 dpi — imprenta', dpi600:'600 dpi — alta calidad',
     boardConfigNote:'Las dimensiones físicas aparecen sobre cada foto al pasar el ratón\ny en el panel de información lateral.',
+    boardPrivate:'Tablero privado', boardPrivateHint:'Los invitados no pueden ver ni acceder a este tablero',
     save:'Guardar', close:'Cerrar',
     reportTitle:'Memoria del proyecto', noBoardsInProject:'Sin tableros en este proyecto',
     exInfoHd:'Información del proyecto', exTitlePh:'Título…', exSubtitlePh:'Descripción breve…',
@@ -1037,7 +1071,7 @@ const I18N = {
     invalidDims: 'Las dimensiones deben ser mayores que cero',
     pxPreview: (w, h) => `${w} × ${h} px`,
     gridToggle: 'Guías', gridHiddenZoom: 'Guías activas — zoom demasiado bajo para mostrarlas', gridAuto: 'Auto', fitView: 'Ajustar', fitWidth: 'Ajustar al ancho (Ctrl+0)', snapGrid: 'Imán', addNote: '+ Nota', addZone: '+ Zona', zoneColor: 'Color de zona', zoneScaleContent: 'Escalar contenido al redimensionar', copyZoneToBoard: 'Copiar a nuevo tablero', moveZoneToBoard: 'Mover a nuevo tablero', zoneLabelPh: 'Nombre de zona…', zoneCaptureBtn: 'Capturar contenido', gridWrapZone: 'Envolver en zona escalable',
-    salaBtn:'🏛 Sala', salaCreate:'Crear sala', salaDelete:'Eliminar sala', salaDuplicate:'Duplicar sala', salaAdd:'+ Sala', salaDraw:'Dibujar planta', salaEdit:'Editar planta', salaAddSection:'+ Añadir segmento', salaCancel:'Cancelar', salaFinish:'Finalizar', salaCeilLbl:'Altura del techo', salaCeilUnit:'cm', salaWallsHd:'PAREDES', salaNoWalls:'Dibuja la planta para ver las paredes aquí', salaCreateBoard:'+ Tablero', salaWallBoard:'Ver tablero →', salaDrawHint:'Clic → añadir punto · 1er punto → cerrar · Esc/Finalizar → guardar · ⌫ → deshacer · ⇧ → ángulo recto', salaSnapHint:'⊾ enganchado', salaDeleteWall:'Desvincular tablero', salaWallRename:'Renombrar pared', salaAddCol:'+ Columna', salaWallMismatch:'El tablero es más ancho que la pared', salaWallSync:'Sincronizar', salaWallSyncOk:'Tablero sincronizado con la pared', salaWallSyncOverflow:'Hay fotos fuera del nuevo ancho. Mueve o elimina las fotos en el tablero primero.', salaAssigned:'Tablero asignado a la pared', salaAssignMismatch:(bw,bh,ww,wh)=>`El tablero mide ${bw}×${bh} cm. La pared mide ${ww}×${wh} cm. ¿Asignar de todas formas?`, salaAssignAndSync:'Asignar y sincronizar', salaAssignOnly:'Asignar tal cual',
+    salaBtn:'🏛 Sala', salaCreate:'Crear sala', salaDelete:'Eliminar sala', salaDuplicate:'Duplicar sala', salaAdd:'+ Nueva sala', salaDraw:'Dibujar planta', salaEdit:'Editar planta', salaAddSection:'+ Añadir segmento', salaCancel:'Cancelar', salaFinish:'Finalizar', salaCeilLbl:'Altura del techo', salaCeilUnit:'cm', salaWallsHd:'PAREDES', salaNoWalls:'Dibuja la planta para ver las paredes aquí', salaCreateBoard:'+ Tablero', salaWallBoard:'Ver tablero →', salaDrawHint:'Clic → añadir punto · 1er punto → cerrar · Esc/Finalizar → guardar · ⌫ → deshacer · ⇧ → ángulo recto', salaSnapHint:'⊾ enganchado', salaDeleteWall:'Desvincular tablero', salaWallRename:'Renombrar pared', salaAddCol:'+ Columna', salaWallMismatch:'El tablero es más ancho que la pared', salaWallSync:'Sincronizar', salaWallSyncOk:'Tablero sincronizado con la pared', salaWallSyncOverflow:'Hay fotos fuera del nuevo ancho. Mueve o elimina las fotos en el tablero primero.', salaAssigned:'Tablero asignado a la pared', salaAssignMismatch:(bw,bh,ww,wh)=>`El tablero mide ${bw}×${bh} cm. La pared mide ${ww}×${wh} cm. ¿Asignar de todas formas?`, salaAssignAndSync:'Asignar y sincronizar', salaAssignOnly:'Asignar tal cual',
     reportHeading:'Tableau — Memoria del Proyecto',
     noScaleConfigured:'sin escala configurada',
     reportDate: d => `Memoria del proyecto · ${d}`,
@@ -1059,6 +1093,9 @@ const I18N = {
     copied: n => `${n} elemento${n>1?'s':''} copiado${n>1?'s':''}`,
     cut: n => `${n} elemento${n>1?'s':''} cortado${n>1?'s':''}`,
     pasteGhostHint:'Clic para colocar · ESC para cancelar',
+    clipBannerCopy: n => `${n} elemento${n>1?'s':''} copiado${n>1?'s':''} — navega al tablero destino y pulsa Ctrl+V para posicionar`,
+    clipBannerCut:  n => `${n} elemento${n>1?'s':''} cortado${n>1?'s':''} — navega al tablero destino y pulsa Ctrl+V para posicionar`,
+    clipBannerCancel:'Cancelar',
     pasted: n => `${n} elemento${n>1?'s':''} pegado${n>1?'s':''}`,
     duplicated: n => `${n} elemento${n>1?'s':''} duplicado${n>1?'s':''}`,
     noteColor:'Color',
@@ -1067,7 +1104,7 @@ const I18N = {
     photoCopied:'Foto copiada al proyecto',
     noOtherProjects:'Sin otros proyectos',
     uploadFolder:'Carpeta',
-    exportSelJpeg:'Exportar selección JPEG',
+    exportSelJpeg:'Exportar selección JPEG', wrapSelInZone:'Crear zona con selección',
     groupItems:'Agrupar',
     ungroupItems:'Desagrupar',
     batchTagBtn:'# Etiquetas', batchTagHd: n => `Etiquetar ${n} fotos`,
@@ -1138,6 +1175,7 @@ const I18N = {
     dpi72:'72 dpi — screen', dpi96:'96 dpi — web', dpi150:'150 dpi — draft',
     dpi300:'300 dpi — press', dpi600:'600 dpi — high quality',
     boardConfigNote:'Physical dimensions appear on each photo on hover\nand in the side info panel.',
+    boardPrivate:'Private board', boardPrivateHint:'Guests cannot see or access this board',
     save:'Save', close:'Close',
     reportTitle:'Project report', noBoardsInProject:'No boards in this project',
     exInfoHd:'Project info', exTitlePh:'Title…', exSubtitlePh:'Short description…',
@@ -1190,7 +1228,7 @@ const I18N = {
     invalidDims: 'Dimensions must be greater than zero',
     pxPreview: (w, h) => `${w} × ${h} px`,
     gridToggle: 'Grid', gridHiddenZoom: 'Grid active — zoom too low to display', gridAuto: 'Auto', fitView: 'Fit', fitWidth: 'Fit to width (Ctrl+0)', snapGrid: 'Snap', addNote: '+ Note', addZone: '+ Zone', zoneColor: 'Zone color', zoneScaleContent: 'Scale content on resize', copyZoneToBoard: 'Copy to new board', moveZoneToBoard: 'Move to new board', zoneLabelPh: 'Zone name…', zoneCaptureBtn: 'Capture content', gridWrapZone: 'Wrap in scalable zone',
-    salaBtn:'🏛 Room', salaCreate:'Create room', salaDelete:'Delete room', salaDuplicate:'Duplicate room', salaAdd:'+ Room', salaDraw:'Draw floor plan', salaEdit:'Edit floor plan', salaAddSection:'+ Add section', salaCancel:'Cancel', salaFinish:'Finish', salaCeilLbl:'Ceiling height', salaCeilUnit:'cm', salaWallsHd:'WALLS', salaNoWalls:'Draw the floor plan to see walls here', salaCreateBoard:'+ Board', salaWallBoard:'Go to board →', salaDrawHint:'Click → add point · 1st point → close · Esc/Finish → save · ⌫ → undo · ⇧ → right angle', salaSnapHint:'⊾ snapped', salaDeleteWall:'Unlink board', salaWallRename:'Rename wall', salaAddCol:'+ Column', salaWallMismatch:'Board is wider than the wall', salaWallSync:'Sync', salaWallSyncOk:'Board synced to wall', salaWallSyncOverflow:'Photos would overflow the new width. Move or remove them in the board editor first.', salaAssigned:'Board assigned to wall', salaAssignMismatch:(bw,bh,ww,wh)=>`Board is ${bw}×${bh} cm. Wall is ${ww}×${wh} cm. Assign anyway?`, salaAssignAndSync:'Assign and sync', salaAssignOnly:'Assign as-is',
+    salaBtn:'🏛 Room', salaCreate:'Create room', salaDelete:'Delete room', salaDuplicate:'Duplicate room', salaAdd:'+ New room', salaDraw:'Draw floor plan', salaEdit:'Edit floor plan', salaAddSection:'+ Add section', salaCancel:'Cancel', salaFinish:'Finish', salaCeilLbl:'Ceiling height', salaCeilUnit:'cm', salaWallsHd:'WALLS', salaNoWalls:'Draw the floor plan to see walls here', salaCreateBoard:'+ Board', salaWallBoard:'Go to board →', salaDrawHint:'Click → add point · 1st point → close · Esc/Finish → save · ⌫ → undo · ⇧ → right angle', salaSnapHint:'⊾ snapped', salaDeleteWall:'Unlink board', salaWallRename:'Rename wall', salaAddCol:'+ Column', salaWallMismatch:'Board is wider than the wall', salaWallSync:'Sync', salaWallSyncOk:'Board synced to wall', salaWallSyncOverflow:'Photos would overflow the new width. Move or remove them in the board editor first.', salaAssigned:'Board assigned to wall', salaAssignMismatch:(bw,bh,ww,wh)=>`Board is ${bw}×${bh} cm. Wall is ${ww}×${wh} cm. Assign anyway?`, salaAssignAndSync:'Assign and sync', salaAssignOnly:'Assign as-is',
     reportHeading:'Tableau — Project Report',
     noScaleConfigured:'no scale configured',
     reportDate: d => `Project report · ${d}`,
@@ -1212,6 +1250,9 @@ const I18N = {
     copied: n => `${n} item${n>1?'s':''} copied`,
     cut: n => `${n} item${n>1?'s':''} cut`,
     pasteGhostHint:'Click to place · ESC to cancel',
+    clipBannerCopy: n => `${n} item${n>1?'s':''} copied — navigate to the destination board and press Ctrl+V to position`,
+    clipBannerCut:  n => `${n} item${n>1?'s':''} cut — navigate to the destination board and press Ctrl+V to position`,
+    clipBannerCancel:'Cancel',
     pasted: n => `${n} item${n>1?'s':''} pasted`,
     duplicated: n => `${n} item${n>1?'s':''} duplicated`,
     noteColor:'Color',
@@ -1220,7 +1261,7 @@ const I18N = {
     photoCopied:'Photo copied to project',
     noOtherProjects:'No other projects',
     uploadFolder:'Folder',
-    exportSelJpeg:'Export selection JPEG',
+    exportSelJpeg:'Export selection JPEG', wrapSelInZone:'Wrap selection in zone',
     groupItems:'Group',
     ungroupItems:'Ungroup',
     batchTagBtn:'# Tags', batchTagHd: n => `Tag ${n} photos`,
@@ -1283,11 +1324,21 @@ const SvgAlignCV = () => <svg viewBox="0 0 16 16" width="14" height="14" fill="c
 const SvgAlignB  = () => <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><rect x="2" y="12.5" width="12" height="1.5"/><rect x="2.5" y="3.5" width="4.5" height="9"/><rect x="9" y="7.5" width="4.5" height="5"/></svg>;
 const SvgDistH   = () => <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><rect x="1" y="3" width="3" height="10"/><rect x="6.5" y="3" width="3" height="10"/><rect x="12" y="3" width="3" height="10"/></svg>;
 const SvgDistV   = () => <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><rect x="3" y="1" width="10" height="3"/><rect x="3" y="6.5" width="10" height="3"/><rect x="3" y="12" width="10" height="3"/></svg>;
-const SvgEqW     = () => <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><rect x="2" y="3" width="12" height="4"/><rect x="2" y="9" width="12" height="4"/></svg>;
+const SvgEqW     = () => <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><rect x="2.5" y="1.5" width="11" height="3.2" fill="currentColor" stroke="none" rx=".4"/><rect x="2.5" y="11.3" width="11" height="3.2" fill="currentColor" stroke="none" rx=".4"/><line x1="2.5" y1="8" x2="13.5" y2="8"/><polyline points="4.4,6.4 2.7,8 4.4,9.6"/><polyline points="11.6,6.4 13.3,8 11.6,9.6"/></svg>;
+const SvgWrapZone= () => <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.1"><rect x="1.5" y="3.5" width="13" height="11" strokeDasharray="2.5 1.5" rx=".5"/><rect x="3" y="5.5" width="4" height="3" fill="currentColor" stroke="none" rx=".3"/><rect x="9" y="5.5" width="4" height="3" fill="currentColor" stroke="none" rx=".3"/><rect x="3" y="10" width="10" height="2.5" fill="currentColor" stroke="none" rx=".3"/><line x1="4" y1="1.5" x2="12" y2="1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>;
 const SvgGroup   = () => <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.1"><rect x="1.5" y="1.5" width="13" height="13" strokeDasharray="2.5 1.5" rx=".5"/><rect x="3" y="3" width="4" height="4" fill="currentColor" stroke="none"/><rect x="9" y="9" width="4" height="4" fill="currentColor" stroke="none"/></svg>;
 const SvgUngroup = () => <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.1"><rect x="1.5" y="1.5" width="6" height="6" strokeDasharray="2.5 1.5" rx=".5"/><rect x="8.5" y="8.5" width="6" height="6" strokeDasharray="2.5 1.5" rx=".5"/><rect x="3" y="3" width="3" height="3" fill="currentColor" stroke="none"/><rect x="10" y="10" width="3" height="3" fill="currentColor" stroke="none"/></svg>;
 const SvgExport  = ({size=14}) => <svg viewBox="0 0 16 16" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="4,6 8,10 12,6"/><line x1="8" y1="2" x2="8" y2="10"/><rect x="2" y="12" width="12" height="2" fill="currentColor" stroke="none" rx=".5"/></svg>;
 const SvgImport  = ({size=14}) => <svg viewBox="0 0 16 16" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="4,10 8,6 12,10"/><line x1="8" y1="14" x2="8" y2="6"/><rect x="2" y="2" width="12" height="2" fill="currentColor" stroke="none" rx=".5"/></svg>;
+// Topbar icon set — same clean SVG language as the format/export icons above.
+const SvgGrid     = ({size=15}) => <svg viewBox="0 0 16 16" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.2"><rect x="2" y="2" width="12" height="12" rx="1"/><line x1="2" y1="6" x2="14" y2="6"/><line x1="2" y1="10" x2="14" y2="10"/><line x1="6" y1="2" x2="6" y2="14"/><line x1="10" y1="2" x2="10" y2="14"/></svg>;
+const SvgPresent  = ({size=15}) => <svg viewBox="0 0 16 16" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"><rect x="1.5" y="2.5" width="13" height="9" rx="1"/><path d="M6.4 5.3l3.3 2-3.3 2z" fill="currentColor" stroke="none"/><line x1="8" y1="11.5" x2="8" y2="14" strokeLinecap="round"/><line x1="5.5" y1="14" x2="10.5" y2="14" strokeLinecap="round"/></svg>;
+const SvgConfig   = ({size=15}) => <svg viewBox="0 0 16 16" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"><circle cx="8" cy="8" r="2.3"/><path d="M8 1.4v2.1M8 12.5v2.1M1.4 8h2.1M12.5 8h2.1M3.3 3.3l1.5 1.5M11.2 11.2l1.5 1.5M12.7 3.3l-1.5 1.5M4.8 11.2l-1.5 1.5"/></svg>;
+const SvgVersions = ({size=15}) => <svg viewBox="0 0 16 16" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="8" r="5.6"/><polyline points="8,4.6 8,8 10.4,9.4"/></svg>;
+const SvgReport   = ({size=15}) => <svg viewBox="0 0 16 16" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 2h4l3.5 3.5V14h-8z"/><polyline points="8.5,2 8.5,5.5 12,5.5"/><line x1="6" y1="9" x2="10" y2="9"/><line x1="6" y1="11.2" x2="10" y2="11.2"/></svg>;
+const SvgShareNet = ({size=15}) => <svg viewBox="0 0 16 16" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="3.6" r="1.8"/><circle cx="12" cy="12.4" r="1.8"/><circle cx="4" cy="8" r="1.8"/><line x1="5.6" y1="7.1" x2="10.4" y2="4.5"/><line x1="5.6" y1="8.9" x2="10.4" y2="11.5"/></svg>;
+const SvgHelp     = ({size=15}) => <svg viewBox="0 0 16 16" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="8" r="6"/><path d="M6.1 6.1c0-1 .8-1.7 1.9-1.7s1.9.7 1.9 1.6c0 1.4-1.9 1.3-1.9 2.8"/><circle cx="8" cy="11.3" r=".75" fill="currentColor" stroke="none"/></svg>;
+const SvgPanel    = ({size=15}) => <svg viewBox="0 0 16 16" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.2"><rect x="2" y="2.5" width="12" height="11" rx="1"/><line x1="6.5" y1="2.5" x2="6.5" y2="13.5"/></svg>;
 
 function App() {
   React.useEffect(() => {
@@ -1304,6 +1355,7 @@ function App() {
   const [allBoardItems, setAllBoardItems] = useState({}); // {boardId: items[]}
   const [sel,           setSel]           = useState([]);
   const [zoom,          setZoom]          = useState(1);
+  const [wrapSize,      setWrapSize]      = useState({w: 0, h: 0}); // canvas-wrap client size, tracked so the variable-board grid fills it at any zoom
   const [ready,         setReady]         = useState(false);
   const [uploadProgress, setUploadProgress] = useState(null); // null | {done,total,name}
   const [toast,         setToast]         = useState(null);
@@ -1311,7 +1363,6 @@ function App() {
   const [confirmModal,  setConfirmModal]  = useState(null); // {message, onConfirm, danger}
   const [memDraft,      setMemDraft]      = useState({ exTitle:'', subtitle:'', memSections:[] });
   const [memIncludeHeader, setMemIncludeHeader] = useState(true);
-  const [zoneConvertPending, setZoneConvertPending] = useState(null); // {zoneId, move}
   const [rooms,          setRooms]         = useState([]);       // [{id, name, ceilingHeight, vertices, walls, columns}]
   const [activeRoomId,   setActiveRoomId]  = useState(null);
   const [collapsedRooms, setCollapsedRooms] = useState(new Set());
@@ -1359,6 +1410,7 @@ function App() {
   const [nameVal,       setNameVal]       = useState('');
   const [dragOver,      setDragOver]      = useState(false);
   const [pasteGhost,    setPasteGhost]    = useState(null); // {items,minX,minY,bboxW,bboxH} | null
+  const [clipBanner,    setClipBanner]    = useState(null); // {count, isCut} | null — persistent banner while clipboard has cross-board content
   const [libDragOver,   setLibDragOver]   = useState(false);
   const [libDragOverSect, setLibDragOverSect] = useState(null);
   const [libExpanded,   setLibExpanded]   = useState(false);
@@ -1411,7 +1463,6 @@ function App() {
   const [tmplEditMode,   setTmplEditMode]   = useState(null); // null | {id, name}
   const tmplEditModeRef  = useRef(null);
   const [selectedTemplate,  setSelectedTemplate]  = useState(null);
-  const [copyBoardInput,    setCopyBoardInput]    = useState(null); // null=oculto, string=activo
   const [fillPlaceholder,setFillPlaceholder]= useState(null); // {itemId}
   const [dupModal,       setDupModal]       = useState(null); // {imageFiles, duplicates, dropPos, sectionId}
   const [exportDropOpen, setExportDropOpen] = useState(false);
@@ -1422,7 +1473,7 @@ function App() {
   const [trashPhotos,    setTrashPhotos]    = useState([]);
   const [trashProjects,  setTrashProjects]  = useState([]);
   const [trashLoading,   setTrashLoading]   = useState(false);
-  const [gridDropPos,    setGridDropPos]    = useState({left:0,top:0});
+  const [gridDropPos,    setGridDropPos]    = useState({right:0,top:0});
   const [versions,       setVersions]       = useState([]); // [{ts, itemCount}]
   const [verPreviewTs,   setVerPreviewTs]   = useState(null);
   const [verPreviewItems,setVerPreviewItems]= useState([]);
@@ -1457,6 +1508,7 @@ function App() {
   const [cfgFixed,      setCfgFixed]      = useState(false);
   const [cfgBoardW,     setCfgBoardW]     = useState('');
   const [cfgBoardH,     setCfgBoardH]     = useState('');
+  const [cfgPrivate,    setCfgPrivate]    = useState(false);
   const [showGrid,      setShowGrid]      = useState(() => localStorage.getItem('tb-grid') !== 'off');
   const [gridStep,      setGridStep]      = useState(() => parseInt(localStorage.getItem('tb-gridstep')) || 0); // 0 = auto
   const [snapGrid,      setSnapGrid]      = useState(() => localStorage.getItem('tb-snap') === 'on');
@@ -1615,6 +1667,22 @@ function App() {
     document.addEventListener('pointerdown', close);
     return () => document.removeEventListener('pointerdown', close);
   }, [roomWallCtx !== null]);
+
+  // Track the canvas-wrap client size so the variable-board grid can always be
+  // made at least as large as the viewport (the grid is the .canvas background,
+  // and .canvas uses CSS `zoom`, so at zoom<1 a fixed-size canvas would leave the
+  // wrap background showing without grid around it).
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => {
+      setWrapSize(prev => (prev.w === el.clientWidth && prev.h === el.clientHeight)
+        ? prev : {w: el.clientWidth, h: el.clientHeight});
+    });
+    ro.observe(el);
+    setWrapSize({w: el.clientWidth, h: el.clientHeight});
+    return () => ro.disconnect();
+  }, [ready]);
 
   // Non-passive wheel listener for ghost scaling (prevents scroll while scaling)
   useEffect(() => {
@@ -2603,10 +2671,10 @@ function App() {
     setZoom(z => {
       if (dir > 0) {
         const above = ZOOM_STEPS.filter(s => s > z + 0.001);
-        return above.length ? above[0] : Math.min(20, z * 1.25);
+        return above.length ? above[0] : Math.min(MAX_ZOOM, z * 1.25);
       } else {
         const below = ZOOM_STEPS.filter(s => s < z - 0.001);
-        return below.length ? below[below.length - 1] : Math.max(0.001, z / 1.25);
+        return below.length ? below[below.length - 1] : Math.max(MIN_ZOOM, z / 1.25);
       }
     });
   }, []);
@@ -2642,23 +2710,10 @@ function App() {
         if (e.key === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); }
         if (e.key === 'y') { e.preventDefault(); redo(); }
         if (e.key === 'a') { e.preventDefault(); const ids = itemsRef.current.map(i => i.id); selRef.current = ids; setSel(ids); }
-        if (e.key === 'c') {
-          e.preventDefault();
-          const sel = selRef.current.map(id => itemsRef.current.find(i => i.id === id)).filter(Boolean);
-          if (sel.length) { clipboardRef.current = sel.map(i => ({...i})); clipCutRef.current = null; showToast(t('copied', sel.length)); }
-        }
+        if (e.key === 'c') { e.preventDefault(); copySelToBoardClipboard(false); }
         if (e.key === 'x') {
           e.preventDefault();
-          const sel = selRef.current.map(id => itemsRef.current.find(i => i.id === id)).filter(Boolean);
-          if (!sel.length) return;
-          clipboardRef.current = sel.map(i => ({...i}));
-          clipCutRef.current = {isCut: true, srcBid: bidRef.current};
-          pushUndo();
-          const cutIds = new Set(sel.map(i => i.id));
-          const nit = itemsRef.current.filter(i => !cutIds.has(i.id));
-          selRef.current = []; setSel([]);
-          setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
-          showToast(t('cut', sel.length));
+          copySelToBoardClipboard(true);
         }
         if (e.key === 'v') {
           e.preventDefault();
@@ -2871,6 +2926,8 @@ function App() {
       it.type === 'placeholder' || photosRef.current.some(p => p.id === it.photoId)
     );
     if (!visItems.length) return;
+    // Clear selection so the align-bar doesn't float over the canvas and intercept clicks
+    selRef.current = []; setSel([]);
     const minX = Math.min(...visItems.map(i => i.x));
     const minY = Math.min(...visItems.map(i => i.y));
     const maxX = Math.max(...visItems.map(i => i.x + (i.w || 0)));
@@ -2931,6 +2988,7 @@ function App() {
     clipCutRef.current = null;
     pasteGhostRef.current = null;
     setPasteGhost(null);
+    setClipBanner(null);
     showToast(t('pasted', copies.length));
   };
 
@@ -2949,7 +3007,15 @@ function App() {
     if (boardDpi && boardUnits !== 'px') return Math.round(boardDpi / 2.54); // 1 cm
     return 50;
   })();
-  const snapVal = (v, cell) => { const s = Math.round(v / cell) * cell; return Math.abs(v - s) <= Math.min(12, cell / 3) ? s : v; };
+  // The grid is only shown/snapped when its cells are large enough on screen to
+  // be useful; at very low zoom it is dropped entirely (see GRID_MIN_PX).
+  const gridVisible = showGrid && gridCellPx * zoom >= GRID_MIN_PX;
+  // Snap a value to the nearest grid line. `cell` is the real gridCellPx so the
+  // magnet always lands exactly on the lines that are drawn (no coarsening).
+  // The catch radius is kept ~constant on screen (12 screen px via 12/zoom),
+  // never exceeding ~45% of the cell so a small free-placement dead zone
+  // remains in the middle. At zoom 1 this equals the previous 12px behaviour.
+  const snapVal = (v, cell) => { const s = Math.round(v / cell) * cell; const thresh = Math.min(cell * 0.45, 12 / zoom); return Math.abs(v - s) <= thresh ? s : v; };
   // Possible grid step options for the current board
   const gridOptions = (() => {
     const opts = [];
@@ -2980,6 +3046,7 @@ function App() {
     setCfgBoardH(meta?.fixedH != null ? String(meta.fixedH) : '');
     setCfgDefaultFrame(String(meta?.defaultFrame || 0));
     setCfgExportPad(String(meta?.exportPad ?? 60));
+    setCfgPrivate(!!meta?.private);
     setModal('boardcfg');
   };
 
@@ -2999,7 +3066,7 @@ function App() {
     const dpi = parseInt(cfgDpi) || 150;
     let fixedW = null, fixedH = null;
     const doSave = async () => {
-      const patch = { units: cfgUnits, dpi, fixed: cfgFixed, fixedW: cfgFixed ? fixedW : null, fixedH: cfgFixed ? fixedH : null, defaultFrame: parseFloat(cfgDefaultFrame) || 0, exportPad: cfgFixed ? null : Math.max(0, parseInt(cfgExportPad) || 0) };
+      const patch = { units: cfgUnits, dpi, fixed: cfgFixed, fixedW: cfgFixed ? fixedW : null, fixedH: cfgFixed ? fixedH : null, defaultFrame: parseFloat(cfgDefaultFrame) || 0, exportPad: cfgFixed ? null : Math.max(0, parseInt(cfgExportPad) || 0), private: cfgPrivate };
       await api.patch(`/api/projects/${pid}/boards/${bid}`, patch);
       setBoards(bs => bs.map(b => b.id === bid ? { ...b, ...patch } : b));
       setModal(null);
@@ -3383,7 +3450,7 @@ ${rows}
     if (!bp || !wrap) return;
     const avW = wrap.clientWidth  - BOARD_PAD * 2 - 8;
     const avH = wrap.clientHeight - BOARD_PAD * 2 - 8;
-    const z = Math.max(0.05, Math.min(4, Math.min(avW / bp.w, avH / bp.h)));
+    const z = Math.max(MIN_ZOOM, Math.min(4, Math.min(avW / bp.w, avH / bp.h)));
     setZoom(z); zoomRef.current = z; fitZoomRef.current = z;
     requestAnimationFrame(() => {
       const bpNow = boardPxRef.current;
@@ -3924,20 +3991,70 @@ ${rows}
     }, false);
   };
 
-  const copySelectionToNewBoard = async (name) => {
-    if (!name?.trim() || !pidRef.current) return;
-    const selectedItems = itemsRef.current.filter(i => selRef.current.includes(i.id));
-    if (!selectedItems.length) return;
-    const b = await api.post(`/api/projects/${pidRef.current}/boards`, { name: name.trim() });
-    setBoards(bs => [...bs, b]);
-    const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-    const newItems = selectedItems.map(item => ({ ...item, id: uid(), groupId: undefined }));
-    await api.put(`/api/boards/${pidRef.current}/${b.id}/items`, newItems);
-    setAllBoardItems(prev => ({ ...prev, [b.id]: newItems }));
-    setBid(b.id); bidRef.current = b.id;
-    setCopyBoardInput(null);
-    setSel([]); selRef.current = [];
-    showToast(lang === 'es' ? 'Tablero creado' : 'Board created');
+  // Puts current selection into the clipboard and shows the cross-board banner.
+  // isCut=true also removes items from the current board (Ctrl+X semantics).
+  // Zones are expanded: their children are included automatically.
+  const copySelToBoardClipboard = (isCut) => {
+    const directSel = selRef.current.map(id => itemsRef.current.find(i => i.id === id)).filter(Boolean);
+    if (!directSel.length) return;
+    // Expand zones to include their children
+    const expanded = [...directSel];
+    directSel.forEach(item => {
+      if (item.type === 'zone') {
+        itemsRef.current.filter(i => i.zoneId === item.id).forEach(child => {
+          if (!expanded.find(e => e.id === child.id)) expanded.push(child);
+        });
+      }
+    });
+    // Sort by z so zones (lower z) come before their children in the clipboard
+    expanded.sort((a, b) => (a.z || 0) - (b.z || 0));
+    clipboardRef.current = expanded.map(i => ({...i}));
+    if (isCut) {
+      clipCutRef.current = {isCut: true, srcBid: bidRef.current};
+      pushUndo();
+      const cutIds = new Set(expanded.map(i => i.id));
+      const nit = itemsRef.current.filter(i => !cutIds.has(i.id));
+      selRef.current = []; setSel([]);
+      setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
+    } else {
+      clipCutRef.current = null;
+    }
+    setClipBanner({count: directSel.length, isCut});
+  };
+
+
+  const wrapSelectionInZone = () => {
+    const ids = selRef.current;
+    if (ids.length < 1) return;
+    // zones are not nestable — only wrap non-zone items
+    const selItems = itemsRef.current.filter(i => ids.includes(i.id) && i.type !== 'zone');
+    if (!selItems.length) return;
+    pushUndo();
+    const PADB = 28, PADTOP = 40, PADV = 28;
+    const bp = boardPxRef.current;
+    const minX = Math.min(...selItems.map(i => i.x));
+    const minY = Math.min(...selItems.map(i => i.y));
+    const maxX = Math.max(...selItems.map(i => i.x + (i.w || 0)));
+    const maxY = Math.max(...selItems.map(i => {
+      const p = photosRef.current.find(ph => ph.id === i.photoId);
+      return i.y + (p ? Math.round(i.w * p.h / p.w) : (i.h || i.w || 0));
+    }));
+    const nonZones = itemsRef.current.filter(i => i.type !== 'zone');
+    const minZ = nonZones.length ? Math.min(...nonZones.map(i => i.z || 0)) - 1 : -1;
+    const zid = Date.now().toString(36) + Math.random().toString(36).slice(2, 4) + 'z';
+    let zx = minX - PADV, zy = minY - PADTOP;
+    let zw = maxX - minX + PADV * 2, zh = maxY - minY + PADB + PADTOP;
+    if (zx < 0) { zw += zx; zx = 0; }
+    if (zy < 0) { zh += zy; zy = 0; }
+    if (bp) { zw = Math.min(zw, bp.w - zx); zh = Math.min(zh, bp.h - zy); }
+    const zone = { id: zid, type: 'zone', label: '', color: 'blue', scaleContent: true, x: zx, y: zy, w: zw, h: zh, z: minZ };
+    const updated = [
+      ...itemsRef.current.map(i => ids.includes(i.id) && i.type !== 'zone' ? { ...i, zoneId: zid } : i),
+      zone,
+    ];
+    const norm = applyNormalized(updated);
+    selRef.current = [zid]; setSel([zid]);
+    saveItemsNow(norm);
   };
 
   const assignPhotoToPlaceholder = async (photoId, placeholderId) => {
@@ -4032,7 +4149,8 @@ ${rows}
         return;
       }
       if (e.key !== 'Escape') return;
-      if (pasteGhostRef.current) { pasteGhostRef.current = null; setPasteGhost(null); return; }
+      if (pasteGhostRef.current) { pasteGhostRef.current = null; setPasteGhost(null); setClipBanner(null); return; }
+      if (clipBanner) { setClipBanner(null); clipboardRef.current = []; clipCutRef.current = null; return; }
       if (sectCtxMenu) { setSectCtxMenu(null); return; }
       if (presZoneIdxRef.current >= 0) { presZoneIdxRef.current = -1; setPresZoneIdx(-1); setPresSwapSel(null); return; }
       if (presentation) { setPresentation(false); return; }
@@ -4212,7 +4330,7 @@ ${rows}
     }
     let nit = [...itemsRef.current, ...newItems];
     if (wrapZone && newItems.length) {
-      const PADB = 16, PADTOP = 40, PADV = 16; // PADTOP: zone-hdr (26px) sits above the zone body, plus breathing room
+      const PADB = 28, PADTOP = 40, PADV = 28;
       const bp = boardPxRef.current;
       const minX = Math.min(...newItems.map(i => i.x));
       const minY = Math.min(...newItems.map(i => i.y));
@@ -4410,6 +4528,21 @@ ${rows}
     if (e.target.closest('.lbl,.ibc,.rh')) return;
     e.stopPropagation(); e.preventDefault();
 
+    // If the clicked item belongs to a zone that's already selected (and the
+    // item itself is not), redirect the drag to the zone — standard container
+    // behavior: the first click selects the zone, a second click (after
+    // deselecting the zone) is needed to target an individual child.
+    {
+      const clickedIt = itemsRef.current.find(i => i.id === itemId);
+      if (clickedIt?.zoneId && !selRef.current.includes(itemId)) {
+        // Redirect to zone when: zone already selected (container behavior)
+        // OR item is locked (locked = frozen relative to zone, not canvas)
+        if (selRef.current.includes(clickedIt.zoneId) || clickedIt.locked) {
+          itemId = clickedIt.zoneId;
+        }
+      }
+    }
+
     const beforeDrag = itemsRef.current.map(i => ({ ...i }));
     // Update selection — preClickSel saves the state before this change
     // so handleItemClick can toggle correctly using the pre-click baseline
@@ -4440,7 +4573,7 @@ ${rows}
       while (queue.length) {
         const id = queue.shift();
         const it = itemsRef.current.find(i => i.id === id);
-        if (it?.type === 'zone') {
+        if (it?.type === 'zone' && !it.locked) {
           itemsRef.current.filter(i => i.zoneId === id).forEach(i => {
             if (!result.has(i.id)) { result.add(i.id); queue.push(i.id); }
           });
@@ -4454,10 +4587,16 @@ ${rows}
         .filter(id => itemsRef.current.find(i => i.id === id)?.locked)
         .flatMap(id => { const it = itemsRef.current.find(i => i.id === id); return it?.groupId ? [it.groupId] : []; })
     );
+    const expandedSet = new Set(expandedIds);
     const dragIds = expandedIds.filter(id => {
       const it = itemsRef.current.find(i => i.id === id);
-      if (!it || it.locked) return false;
+      if (!it) return false;
+      if (it.locked) {
+        // locked item can still move if its parent zone is the one being dragged
+        return !!(it.zoneId && expandedSet.has(it.zoneId));
+      }
       if (it.groupId && lockedGroups.has(it.groupId)) return false;
+      if (it.zoneId && itemsRef.current.find(i => i.id === it.zoneId)?.locked) return false;
       return true;
     });
     // Record start positions
@@ -4625,8 +4764,12 @@ ${rows}
       }
       setSnapGuides({ h: [], v: [] });
       // ── Fall back to grid snap ─────────────────────────────────────────────
-      if (!showGrid || dragIds.length === 0) return { sdx: rawDx, sdy: rawDy };
+      // Skip when the grid is hidden (toggle off, or too dense at low zoom) so
+      // we never snap to lines the user can't see.
+      if (!showGrid || gridCellPx * zoom < GRID_MIN_PX || dragIds.length === 0) return { sdx: rawDx, sdy: rawDy };
       const anchor = starts[dragIds[0]];
+      // Snap to the real grid cell — the same spacing that is drawn — so the
+      // magnet always matches the lines the user actually sees, at any zoom.
       const snappedX = snapVal(anchor.x + rawDx, gridCellPx);
       const snappedY = snapVal(anchor.y + rawDy, gridCellPx);
       return { sdx: snappedX - anchor.x, sdy: snappedY - anchor.y };
@@ -4708,32 +4851,18 @@ ${rows}
         const { x, y } = clampItem(i, rx, ry);
         return { ...i, x, y };
       });
-      // Prevent zones from being dropped inside other zones — snap all back
-      const movedZones = dragIds.filter(id => nit.find(i => i.id === id)?.type === 'zone');
-      if (movedZones.length > 0) {
-        const otherZones = nit.filter(i => i.type === 'zone' && !movedZones.includes(i.id));
-        const hasConflict = movedZones.some(zid => {
-          const z = nit.find(i => i.id === zid);
-          const zcx = z.x + z.w / 2, zcy = z.y + (z.h || 320) / 2;
-          return otherZones.some(oz => zcx >= oz.x && zcx <= oz.x + oz.w && zcy >= oz.y && zcy <= oz.y + (oz.h || 320));
-        });
-        if (hasConflict) {
-          nit = nit.map(i => dragIds.includes(i.id) ? { ...i, x: starts[i.id].x, y: starts[i.id].y } : i);
-          setItems(nit); itemsRef.current = nit;
-          return;
-        }
-      }
-      // Update zone membership for moved non-zone items
+      // Update zone membership for moved non-zone items (zones may overlap freely, no zone-in-zone)
       const movedNonZone = dragIds.filter(id => nit.find(i => i.id === id)?.type !== 'zone');
       if (movedNonZone.length > 0) {
         const zones = nit.filter(i => i.type === 'zone');
         nit = nit.map(i => {
           if (!movedNonZone.includes(i.id)) return i;
-          const cx = i.x + i.w / 2, cy = i.y + getItemH(i) / 2;
+          const ih = getItemH(i);
           const oldZid = i.zoneId ?? null;
+          const fullyIn = zz => i.x >= zz.x && i.x + i.w <= zz.x + zz.w &&
+                                 i.y >= zz.y && i.y + ih  <= zz.y + (zz.h || 320);
           const currentZone = oldZid ? zones.find(zz => zz.id === oldZid) : null;
-          const stillInCurrent = currentZone && cx >= currentZone.x && cx <= currentZone.x + currentZone.w && cy >= currentZone.y && cy <= currentZone.y + (currentZone.h || 320);
-          const match = stillInCurrent ? currentZone : zones.find(zz => cx >= zz.x && cx <= zz.x + zz.w && cy >= zz.y && cy <= zz.y + (zz.h || 320));
+          const match = (currentZone && fullyIn(currentZone)) ? currentZone : zones.find(fullyIn);
           const newZid = match?.id ?? null;
           if (newZid === oldZid) return i;
           if (newZid) return { ...i, zoneId: newZid };
@@ -5246,12 +5375,12 @@ ${rows}
     if (bp) { x = Math.max(0, Math.min(x, bp.w - w)); y = Math.max(0, Math.min(y, bp.h - h)); }
     const item = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), type: 'zone', label: '', color: 'blue', x, y, w, h, z: minZ };
     let nit = [...itemsRef.current, item];
-    // auto-capture items inside the new zone (only unclaimed items)
+    // auto-capture items fully inside the new zone (only unclaimed items)
     nit = nit.map(i => {
       if (i.type === 'zone') return i;
       if (i.zoneId) return i;
-      const cx = i.x + i.w / 2, cy = i.y + getItemH(i) / 2;
-      if (cx >= x && cx <= x + w && cy >= y && cy <= y + h) return { ...i, zoneId: item.id };
+      const ih = getItemH(i);
+      if (i.x >= x && i.x + i.w <= x + w && i.y >= y && i.y + ih <= y + h) return { ...i, zoneId: item.id };
       return i;
     });
     selRef.current = [item.id]; setSel([item.id]);
@@ -5264,37 +5393,6 @@ ${rows}
     setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
   };
 
-  const convertZoneToBoard = (zoneId, move = false) => {
-    const zone = itemsRef.current.find(i => i.id === zoneId);
-    if (!zone || !pidRef.current) return;
-    const members = itemsRef.current.filter(i => i.type !== 'zone' && i.zoneId === zoneId);
-    if (!members.length) { showToast(lang === 'es' ? 'La zona está vacía' : 'Zone is empty', true); return; }
-    const defaultName = zone.label?.trim() || (lang === 'es' ? `Tablero ${boardsRef.current.length + 1}` : `Board ${boardsRef.current.length + 1}`);
-    setNameVal(defaultName);
-    setZoneConvertPending({ zoneId, move });
-    setModal('convertzone');
-  };
-
-  const doConvertZone = async () => {
-    if (!nameVal.trim() || !zoneConvertPending) return;
-    const { zoneId, move } = zoneConvertPending;
-    const name = nameVal.trim();
-    setModal(null); setZoneConvertPending(null);
-    const members = itemsRef.current.filter(i => i.type !== 'zone' && i.zoneId === zoneId);
-    const b = await api.post(`/api/projects/${pidRef.current}/boards`, { name });
-    setBoards(bs => [...bs, b]);
-    const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-    const newItems = members.map(({ zoneId: _z, groupId: _g, ...rest }) => ({ ...rest, id: uid() }));
-    await api.put(`/api/boards/${pidRef.current}/${b.id}/items`, newItems);
-    setAllBoardItems(prev => ({ ...prev, [b.id]: newItems }));
-    if (move) {
-      const memberIds = new Set(members.map(i => i.id));
-      const nit = itemsRef.current.filter(i => i.id !== zoneId && !memberIds.has(i.id));
-      setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
-    }
-    setBid(b.id); bidRef.current = b.id;
-    showToast(lang === 'es' ? `Tablero "${name}" creado` : `Board "${name}" created`);
-  };
 
   // ── Room editor ───────────────────────────────────────────────────────────
   const roomSvgPt = e => {
@@ -6008,6 +6106,18 @@ ${rows}
         if (mode.includes('w')) { nw = Math.max(40, ow - dx); nx = ox + ow - nw; }
         if (mode.includes('s')) nh = Math.max(30, oh + dy);
         if (mode.includes('n')) { nh = Math.max(30, oh - dy); ny = oy + oh - nh; }
+        if (e.shiftKey) {
+          // Proportional (Photoshop-like): lock aspect ratio.
+          // Take the larger of the two factors so the zone always encloses
+          // what the handle is pointing at, then re-anchor the fixed corner.
+          const hasH = mode.includes('e') || mode.includes('w');
+          const hasV = mode.includes('n') || mode.includes('s');
+          const fW = nw / ow, fH = nh / oh;
+          const f = Math.max(hasH && hasV ? Math.max(fW, fH) : hasH ? fW : fH, 40 / ow, 30 / oh);
+          nw = ow * f; nh = oh * f;
+          if (mode.includes('w')) nx = ox + ow - nw;
+          if (mode.includes('n')) ny = oy + oh - nh;
+        }
       } else {
         const PAD = 16;
         const members = itemsRef.current.filter(i => i.zoneId === itemId && i.type !== 'zone');
@@ -6050,11 +6160,11 @@ ${rows}
         });
       } else {
         nit = itemsRef.current.map(i => i.id === itemId ? { ...i, x: rx, y: ry, w: rw, h: rh } : i);
-        // recompute membership, never steal from other zones
+        // recompute membership (full containment), never steal from other zones
         nit = nit.map(i => {
           if (i.type === 'zone') return i;
-          const icx = i.x + i.w / 2, icy = i.y + getItemH(i) / 2;
-          const inside = icx >= rx && icx <= rx + rw && icy >= ry && icy <= ry + rh;
+          const ih = getItemH(i);
+          const inside = i.x >= rx && i.x + i.w <= rx + rw && i.y >= ry && i.y + ih <= ry + rh;
           const oldZid = i.zoneId ?? null;
           let newZid;
           if (inside && (oldZid === null || oldZid === itemId)) newZid = itemId;
@@ -6123,8 +6233,7 @@ ${rows}
   // ── alignment ────────────────────────────────────────────────���────────────
   const findZoneAt = (x, y, w, h) => {
     const zones = itemsRef.current.filter(i => i.type === 'zone');
-    const cx = x + w / 2, cy = y + h / 2;
-    return zones.find(z => cx >= z.x && cx <= z.x + z.w && cy >= z.y && cy <= z.y + (z.h || 320)) || null;
+    return zones.find(z => x >= z.x && x + w <= z.x + z.w && y >= z.y && y + h <= z.y + (z.h || 320)) || null;
   };
 
   const captureZoneContent = (zoneId) => {
@@ -6151,6 +6260,7 @@ ${rows}
       return calcGridLayout(item, photosRef.current, board?.dpi || 150, board?.units || 'px').totalH;
     }
     if (item.type === 'note' || item.type === 'zone') return item.h || item.w;
+    if (item.type === 'text') return item.h || 130;
     const p = photosRef.current.find(ph => ph.id === item.photoId);
     if (!p) return item.w;
     return (item.rot || 0) % 180 !== 0
@@ -6469,7 +6579,7 @@ ${rows}
     localStorage.setItem('tb-libh', newH);
     if (startCanvasH > 0 && bidRef.current) {
       const newCanvasH = window.innerHeight - TOPBAR - 5 - newH;
-      const newZoom = Math.max(0.25, Math.min(zoomRef.current * newCanvasH / startCanvasH, 2.0));
+      const newZoom = Math.max(MIN_ZOOM, Math.min(zoomRef.current * newCanvasH / startCanvasH, 2.0));
       zoomRef.current = newZoom; setZoom(newZoom);
       boardZoom.current[bidRef.current] = newZoom;
       localStorage.setItem(`tb-zoom-${bidRef.current}`, String(newZoom));
@@ -6528,7 +6638,7 @@ ${rows}
       setLibHeight(newH);
       if (startCanvasH > 0) {
         const newCanvasH = window.innerHeight - TOPBAR - 5 - newH;
-        const newZoom = Math.max(0.25, Math.min(startZoom * newCanvasH / startCanvasH, 2.0));
+        const newZoom = Math.max(MIN_ZOOM, Math.min(startZoom * newCanvasH / startCanvasH, 2.0));
         zoomRef.current = newZoom;
         setZoom(newZoom);
       }
@@ -6740,43 +6850,61 @@ ${rows}
               : `👁 ${t('shareGuestView')}`}
           </div>
         )}
-        {!shareRole && !tmplEditMode && bid && roomView === 'board' && <button className="btn" style={{fontSize:9}} onClick={() => setPresentation(true)} title={t('presentationBtn')}>{t('presentationBtn')}</button>}
-        {!shareRole && !tmplEditMode && pid && boards.length > 0 && (
-          <button className="btn" style={{fontSize:10}} onClick={() => setModal('memoria')} title={t('reportTitle')}>
-            {t('report')}
-          </button>
-        )}
-        {!shareRole && bid && roomView === 'board' && <button className={`btn${showGrid?' acc':''}`}
-            style={{fontSize:9,letterSpacing:.3,opacity:(showGrid && gridCellPx*zoom<1)?0.45:1}}
-            onClick={e => { if (gridDropOpen) { setGridDropOpen(false); return; } const r = e.currentTarget.getBoundingClientRect(); setGridDropPos({ left: r.left, top: r.bottom + 4 }); setGridDropOpen(true); }}
-            title={showGrid && gridCellPx*zoom<1 ? t('gridHiddenZoom') : t('gridToggle')}>
-            {t('gridToggle')}{showGrid && snapGrid ? ' ·' : ''}
-          </button>}
-        {!shareRole && (tmplEditMode || bid) && <button className="btn" style={{fontSize:10}} onClick={openBoardConfig} title={t('boardConfig')}>{t('config')}</button>}
-        {!shareRole && !tmplEditMode && bid && <>
-          {roomView === 'board' && <button className="btn" style={{fontSize:10, color: versions.length > 0 ? 'var(--acc)' : undefined}} onClick={() => { loadVersions(); setModal('versions'); }} title={t('versionsTitle')}>
-            ⏱
-          </button>}
-          <button className="btn" style={{fontSize:10,gap:5}} title={t('exportJpeg')}
-            onClick={e => {
-              if (exportDropOpen) { setExportDropOpen(false); return; }
-              setGridDropOpen(false);
-              const r = e.currentTarget.getBoundingClientRect();
-              setExportDropPos({ right: window.innerWidth - r.right, top: r.bottom + 4 });
-              setExportDropOpen(true);
-            }}>
-            <SvgExport/>{t('exportJpeg')} ▾
-          </button>
-        </>}
-        {!sbOpen && (
-          <button className="btn" style={{fontSize:10}} onClick={() => setSbOpen(true)}>{t('showPanel')}</button>
-        )}
-        {!shareRole && authMode && (
-          <button className="btn" style={{fontSize:10}} title={t('shareActiveTitle')}
-            onClick={() => api.get('/api/shares').then(d => setSharesPanel(d)).catch(() => setSharesPanel([]))}>
-            ⤴
-          </button>
-        )}
+        {/* Action buttons — coherent icon-only set, grouped by function with separators */}
+        {(() => {
+          const mk = {
+            // Ver
+            grid: (!shareRole && bid && roomView === 'board') ? (
+              <button key="grid" className={`tbtn${showGrid?' on':''}`}
+                title={t('gridToggle')}
+                onClick={e => { if (gridDropOpen) { setGridDropOpen(false); return; } const r = e.currentTarget.getBoundingClientRect(); setGridDropPos({ right: window.innerWidth - r.right, top: r.bottom + 4 }); setGridDropOpen(true); }}>
+                <SvgGrid/>{showGrid && snapGrid && <span className="tbtn-dot"/>}
+              </button>) : null,
+            present: (!shareRole && !tmplEditMode && bid && roomView === 'board') ? (
+              <button key="present" className="tbtn" title={t('presentationBtn')} onClick={() => setPresentation(true)}><SvgPresent/></button>) : null,
+            // Tablero
+            config: (!shareRole && (tmplEditMode || bid)) ? (
+              <button key="config" className="tbtn" title={t('boardConfig')} onClick={openBoardConfig}><SvgConfig/></button>) : null,
+            versions: (!shareRole && !tmplEditMode && bid && roomView === 'board') ? (
+              <button key="versions" className="tbtn" title={t('versionsTitle')} onClick={() => { loadVersions(); setModal('versions'); }}>
+                <SvgVersions/>{versions.length > 0 && <span className="tbtn-dot"/>}
+              </button>) : null,
+            // Salida
+            export: (!shareRole && !tmplEditMode && bid) ? (
+              <button key="export" className="tbtn" title={t('exportJpeg')}
+                onClick={e => { if (exportDropOpen) { setExportDropOpen(false); return; } setGridDropOpen(false); const r = e.currentTarget.getBoundingClientRect(); setExportDropPos({ right: window.innerWidth - r.right, top: r.bottom + 4 }); setExportDropOpen(true); }}>
+                <SvgExport size={15}/>
+              </button>) : null,
+            report: (!shareRole && !tmplEditMode && pid && boards.length > 0) ? (
+              <button key="report" className="tbtn" title={t('reportTitle')} onClick={() => setModal('memoria')}><SvgReport/></button>) : null,
+          };
+          const groups = [
+            [mk.present, mk.report],  // Presentación + memoria
+            [mk.versions, mk.export], // Utilidades: historial + descargar
+            [mk.grid, mk.config],     // Configuración: guías + configuración
+          ].map(g => g.filter(Boolean)).filter(g => g.length);
+          // Utility / account group (panel toggle + shares)
+          const util = [
+            !sbOpen ? <button key="panel" className="tbtn" title={t('showPanel')} onClick={() => setSbOpen(true)}><SvgPanel/></button> : null,
+            (!shareRole && authMode) ? (
+              <button key="invites" className="tbtn" title={t('shareActiveTitle')}
+                onClick={() => api.get('/api/shares').then(d => setSharesPanel(d)).catch(() => setSharesPanel([]))}>
+                <SvgShareNet/>
+              </button>) : null,
+          ].filter(Boolean);
+          if (util.length) groups.push(util);
+          if (!groups.length) return null;
+          return (
+            <div className="tb-actions">
+              {groups.map((g, i) => (
+                <React.Fragment key={'tg'+i}>
+                  {i > 0 && <div className="tb-sep"/>}
+                  <div className="tb-group">{g}</div>
+                </React.Fragment>
+              ))}
+            </div>
+          );
+        })()}
         <div className="theme-picker" onClick={e => e.stopPropagation()}>
           <button className="btn theme-btn" onClick={() => setThemeOpen(o => !o)} title={t('preferences')}>
             <span className="theme-dot" style={{background: THEMES[theme]?.acc}}/>
@@ -6901,14 +7029,14 @@ ${rows}
                 {/* NAV: Projects & Boards */}
                 <div className={`sb-sec nav${sbNavOpen ? '' : ' collapsed'}`}>
                   <div className="sb-sec-hd" style={{cursor:'pointer'}} onClick={() => { setSbNavOpen(v => { if (!v) setSbTemplOpen(false); return !v; }); }}>
-                    <span className="sb-sec-title">⊞ {t('projBoards')}</span>
+                    <span className="sb-sec-caret">{sbNavOpen ? '▾' : '▸'}</span>
+                    <span className="sb-sec-title">{t('projBoards')}</span>
                     {!shareRole && sbNavOpen && <button className="sb-sec-btn" title={t('newProject')}
                       onClick={e => { e.stopPropagation(); setNameVal(''); setModal('project'); }}>+</button>}
                     {!shareRole && sbNavOpen && <button className="sb-sec-btn" title={t('importProjectBtn')}
                       onClick={e => { e.stopPropagation(); importInputRef.current?.click(); }}><SvgImport size={12}/></button>}
                     <input ref={importInputRef} type="file" accept=".zip" style={{display:'none'}}
                       onChange={e => { handleImportFile(e.target.files[0]); e.target.value = ''; }} />
-                    <button className="sb-sec-btn" style={{marginLeft:2}}>{sbNavOpen ? '▾' : '›'}</button>
                     <button className="sb-sec-btn" title={t('collapsePanel')}
                       onClick={e => { e.stopPropagation(); setSbOpen(false); }}>◀</button>
                   </div>
@@ -6924,7 +7052,7 @@ ${rows}
                         <div key={p.id} className="nproj">
                           <div className={`nproj-row${isActive ? ' active' : ''}`} onClick={() => !shareRole && setPid(p.id)}
                             onContextMenu={e => { if (shareRole) return; e.preventDefault(); e.stopPropagation(); setProjCtxMenu({ id: p.id, x: e.clientX, y: e.clientY }); }}>
-                            <span className="nproj-arrow">{isActive ? '▾' : '›'}</span>
+                            <span className="nproj-arrow">{isActive ? '▾' : '▸'}</span>
                             {!shareRole && renaming?.type === 'project' && renaming.id === p.id ? (
                               <input className="n-rename" autoFocus value={renaming.value}
                                 onChange={e => setRenaming(r => ({ ...r, value: e.target.value }))}
@@ -6988,9 +7116,10 @@ ${rows}
                                 ) : (
                                   <span className="nboard-name" title={b.name} onDoubleClick={e => { e.stopPropagation(); startRename('board', b.id, b.name, e); }}>{b.name}</span>
                                 )}
-                                {!(renaming?.type==='board' && renaming.id===b.id) && (
+                                {!(renaming?.type==='board' && renaming.id===b.id) && (<>
+                                  {b.private && !shareRole && authMode && <span style={{fontSize:8,color:'var(--muted)',flexShrink:0}} title={t('boardPrivate')}>⊘</span>}
                                   <span className="nboard-count">{(allBoardItems[b.id]||[]).filter(i=>!i.type||i.type==='photo').length||''}</span>
-                                )}
+                                </>)}
                                 {!shareRole && <div className="nrow-acts">
                                   <button className="nact edit" title={t('renameBtn')}      onClick={e => startRename('board', b.id, b.name, e)}>✎</button>
                                   <button className="nact edit" title={t('duplicateBoard')} onClick={e => duplicateBoard(b.id, e)}>⧉</button>
@@ -7011,7 +7140,7 @@ ${rows}
                                           if (next.has(r.id)) next.delete(r.id); else next.add(r.id);
                                           return next;
                                         })}>
-                                        {collapsedRooms.has(r.id)?'›':'⌄'}
+                                        {collapsedRooms.has(r.id)?'▸':'▾'}
                                       </span>
                                       {renaming?.type==='room' && renaming.id===r.id ? (
                                         <input className="n-rename" autoFocus value={renaming.value}
@@ -7051,10 +7180,10 @@ ${rows}
                 {/* PLANTILLAS */}
                 {!shareRole && <div className="sb-sec tmpl">
                   <div className="sb-sec-hd" style={{cursor:'pointer'}} onClick={() => setSbTemplOpen(v => !v)}>
-                    <span className="sb-sec-title">◈ {t('templatesSection')}</span>
+                    <span className="sb-sec-caret">{sbTemplOpen ? '▾' : '▸'}</span>
+                    <span className="sb-sec-title">{t('templatesSection')}</span>
                     {bid && sbTemplOpen && <button className="sb-sec-btn" title={t('saveAsTemplate')}
                       onClick={e => { e.stopPropagation(); setSbTmplInput(v => v === null ? (activeBoardMeta?.name || '') : null); }}>+</button>}
-                    <button className="sb-sec-btn" style={{marginLeft:2}}>{sbTemplOpen ? '▾' : '›'}</button>
                   </div>
                   {sbTemplOpen && (
                     <div className="sb-scroll">
@@ -7109,8 +7238,9 @@ ${rows}
                   {trashCount.total > 0 && <span className="sb-trash-badge">{trashCount.total}</span>}
                 </div>}
 
-                {/* INFO — solo visible cuando hay datos que mostrar */}
-                {(hoverInfo || (boardPx && sel.length > 0)) && (
+                {/* INFO — panel fijo (placeholder vacío si no hay datos);
+                    solo se oculta en la vista de sala para no reflujar el panel */}
+                {!shareRole && roomView !== 'room' && (
                   <div className="sb-sec info">
                     <div className="sb-sec-hd">
                       <span className="sb-sec-title">○ {t('infoTitle')}</span>
@@ -7781,12 +7911,27 @@ ${rows}
               </div>
             )}
 
+            {/* CLIPBOARD BANNER — persistent while items are ready to paste in another board */}
+            {clipBanner && (
+              <div className="clip-banner">
+                <span className="clip-banner-icon">{clipBanner.isCut ? '✂' : '⎘'}</span>
+                <span className="clip-banner-msg">{t(clipBanner.isCut ? 'clipBannerCut' : 'clipBannerCopy', clipBanner.count)}</span>
+                <button className="clip-banner-cancel" onClick={() => { setClipBanner(null); clipboardRef.current = []; clipCutRef.current = null; }}>{t('clipBannerCancel')}</button>
+              </div>
+            )}
+
             {/* CANVAS */}
             <div ref={wrapRef} className={`canvas-wrap${libExpanded ? ' lib-expanded' : ''}${framePainter ? ' frame-painter' : ''}${spaceDown ? ' panning' : ''}${pasteGhost ? ' paste-ghost-mode' : ''}`}
               style={{...(boardPx ? { background: '#1e1e1e', padding: BOARD_PAD } : {}), ...((roomView==='room'||roomView==='3d')?{display:'none'}:{})}}
               onDragOver={e => { e.preventDefault(); if (!e.dataTransfer.types.includes('board-row')) setDragOver(true); }}
               onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget)) setDragOver(false); }}
               onDrop={onCanvasDrop}
+              onClick={e => {
+                // The board (.canvas) may be smaller than this scroll container.
+                // Commit the paste ghost on clicks anywhere in the wrap, including
+                // the empty padding outside the board where .canvas onClick never fires.
+                if (pasteGhostRef.current) { commitPasteGhost(); return; }
+              }}
               onPointerMove={e => {
                 if (!pasteGhostRef.current || !ghostDivRef.current) return;
                 const pg = pasteGhostRef.current;
@@ -7798,7 +7943,7 @@ ${rows}
               }}
             >
               {dragOver && !gridDropTarget && <div className={`canvas-drop-hint${!pid ? ' no-proj' : ''}`}>{!pid ? t('dropHintNoProj') : zoneDropTarget ? t('dropHintZone') : t('dropHint')}</div>}
-              {sel.length >= 1 && (
+              {sel.length >= 1 && !pasteGhost && (
                 <div className="align-bar" onClick={e => e.stopPropagation()}>
                   <span className="abt-label">{sel.length}</span>
                   {sel.length >= 2 && <>
@@ -7822,61 +7967,43 @@ ${rows}
                       <button className="abt" title={t('swapPos')} onClick={swapItems} style={{fontSize:16}}>⇄</button>
                     </>}
                   </>}
+                  {/* Portapapeles: cortar, copiar */}
                   <div className="align-bar-sep"/>
-                  <button className="abt" title={t('exportSelJpeg')} onClick={exportSelection}><SvgExport/></button>
-                  {copyBoardInput === null ? (
-                    <button className="abt" style={{fontSize:12}} title={lang==='es'?'Copiar selección a nuevo tablero':'Copy selection to new board'}
-                      onClick={() => setCopyBoardInput('')}>⊞</button>
-                  ) : (
-                    <>
-                      <input autoFocus className="inp" style={{width:110,fontSize:9,padding:'2px 5px'}}
-                        placeholder={t('boardNamePh')}
-                        value={copyBoardInput}
-                        onChange={e => setCopyBoardInput(e.target.value)}
-                        onKeyDown={e => { if (e.key==='Enter') copySelectionToNewBoard(copyBoardInput); if (e.key==='Escape') setCopyBoardInput(null); }}
-                        onClick={e => e.stopPropagation()}
-                        onPointerDown={e => e.stopPropagation()}
-                      />
-                      <button className="abt" style={{color:'var(--acc)'}} onClick={() => copySelectionToNewBoard(copyBoardInput)}>✓</button>
-                      <button className="abt" onClick={() => setCopyBoardInput(null)}>✕</button>
-                    </>
-                  )}
+                  <button className="abt" title={lang==='es'?'Cortar (Ctrl+X)':'Cut (Ctrl+X)'} style={{fontSize:13}} onClick={() => copySelToBoardClipboard(true)}>✂</button>
+                  <button className="abt" title={lang==='es'?'Copiar (Ctrl+C)':'Copy (Ctrl+C)'} style={{fontSize:13}} onClick={() => copySelToBoardClipboard(false)}>⎘</button>
+                  {/* Selección: agrupar, desagrupar, limpiar */}
+                  <div className="align-bar-sep"/>
                   {sel.length >= 2 && (
                     <button className="abt" title={t('groupItems')} onClick={groupItems}><SvgGroup/></button>
                   )}
                   {sel.some(id => items.find(i => i.id === id)?.groupId) && (
                     <button className="abt" title={t('ungroupItems')} onClick={ungroupItems}><SvgUngroup/></button>
                   )}
-                  <div className="align-bar-sep"/>
-                  <button className="abt" title={lang==='es'?'Cortar (Ctrl+X)':'Cut (Ctrl+X)'} style={{fontSize:13}} onClick={() => {
-                    const sel2 = selRef.current.map(id => itemsRef.current.find(i => i.id === id)).filter(Boolean);
-                    if (!sel2.length) return;
-                    clipboardRef.current = sel2.map(i => ({...i}));
-                    clipCutRef.current = {isCut: true, srcBid: bidRef.current};
-                    pushUndo();
-                    const cutIds = new Set(sel2.map(i => i.id));
-                    const nit = itemsRef.current.filter(i => !cutIds.has(i.id));
-                    selRef.current = []; setSel([]);
-                    setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
-                    showToast(t('cut', sel2.length));
-                  }}>✂</button>
-                  <button className="abt" title={lang==='es'?'Copiar (Ctrl+C)':'Copy (Ctrl+C)'} style={{fontSize:13}} onClick={() => {
-                    const sel2 = selRef.current.map(id => itemsRef.current.find(i => i.id === id)).filter(Boolean);
-                    if (sel2.length) { clipboardRef.current = sel2.map(i => ({...i})); clipCutRef.current = null; showToast(t('copied', sel2.length)); }
-                  }}>⎘</button>
-                  <div className="align-bar-sep"/>
                   <button className="abt" style={{color:'var(--dim)',fontSize:14}} title={t('clearSel')}
-                    onClick={() => { selRef.current = []; setSel([]); setCopyBoardInput(null); }}>×</button>
+                    onClick={() => { selRef.current = []; setSel([]); }}>×</button>
+                  {/* Crear zona con selección — solo si hay al menos un item que no sea zona */}
+                  {sel.length > 0 && sel.every(id => { const it = items.find(i => i.id === id); return it && it.type !== 'zone'; }) && (
+                    <button className="abt" title={t('wrapSelInZone')} onClick={wrapSelectionInZone}><SvgWrapZone/></button>
+                  )}
+                  {/* Descargar (siempre el último) */}
+                  <div className="align-bar-sep"/>
+                  <button className="abt" title={t('exportSelJpeg')} onClick={exportSelection}><SvgExport/></button>
                 </div>
               )}
               {(() => {
                 const gridColor = boardPx ? 'rgba(0,0,0,0.09)' : 'var(--grid)';
+                // The canvas uses CSS `zoom`, which also scales the background.
+                // A 1px gradient line becomes 1*zoom px on screen → invisible at
+                // low zoom. Compensate the line thickness by 1/zoom so the grid
+                // stays ~1px on screen at any zoom. Cap it at 40% of the cell so a
+                // very dense grid (low zoom + fine step) doesn't fill solid.
+                const gridLW = Math.min(Math.max(1, 1 / zoom), gridCellPx * 0.4);
               return (
-              <div className="canvas" style={{
+              <div className={`canvas${boardPx ? ' board-white' : ''}${sel.some(id => items.find(i => i.id === id)?.type === 'zone') ? ' zone-sel' : ''}`} style={{
                 zoom,
                 '--canvas-zoom': zoom,
-                backgroundImage: (showGrid && gridCellPx * zoom >= 1)
-                  ? `linear-gradient(${gridColor} 1px,transparent 1px),linear-gradient(90deg,${gridColor} 1px,transparent 1px)`
+                backgroundImage: gridVisible
+                  ? `linear-gradient(${gridColor} ${gridLW}px,transparent ${gridLW}px),linear-gradient(90deg,${gridColor} ${gridLW}px,transparent ${gridLW}px)`
                   : 'none',
                 backgroundSize: `${gridCellPx}px ${gridCellPx}px`,
                 ...(boardPx ? {
@@ -7885,7 +8012,13 @@ ${rows}
                   backgroundColor: '#fff',
                   boxShadow: '0 8px 48px rgba(0,0,0,.7)',
                   overflow: 'hidden',
-                } : {}),
+                } : {
+                  // Variable board: grow the canvas (and thus the grid background)
+                  // so it always covers the viewport. .canvas uses CSS `zoom`, so a
+                  // canvas-px size of wrap/zoom renders exactly the wrap size on screen.
+                  minWidth:  Math.max(3000, Math.ceil(wrapSize.w / zoom)),
+                  minHeight: Math.max(2200, Math.ceil(wrapSize.h / zoom)),
+                }),
                 ...(shareRole === 'view' ? { pointerEvents: 'none', userSelect: 'none' } : {}),
               }} onClick={e => {
                 if (pasteGhostRef.current) { commitPasteGhost(); return; }
@@ -7893,7 +8026,7 @@ ${rows}
                 selRef.current = []; setSel([]); setCanvasCtx(null);
               }}
               onContextMenu={e => {
-                if (pasteGhostRef.current) { e.preventDefault(); pasteGhostRef.current = null; setPasteGhost(null); return; }
+                if (pasteGhostRef.current) { e.preventDefault(); pasteGhostRef.current = null; setPasteGhost(null); setClipBanner(null); return; }
                 if (!bid || presentation) return;
                 e.preventDefault();
                 const wrapEl = wrapRef.current;
@@ -7909,7 +8042,7 @@ ${rows}
                   const pg = pasteGhost;
                   return (
                     <div ref={ghostDivRef} style={{position:'absolute',left:ghostPosRef.current.x - pg.bboxW / 2,top:ghostPosRef.current.y - pg.bboxH / 2,width:pg.bboxW,height:pg.bboxH,transformOrigin:'top left',opacity:.65,pointerEvents:'none',zIndex:10000,outline:'2px dashed rgba(196,137,74,.7)',outlineOffset:3}}>
-                      {pg.items.map(it => {
+                      {[...pg.items].sort((a,b) => (a.z||0)-(b.z||0)).map(it => {
                         const rx = it.x - pg.minX, ry = it.y - pg.minY;
                         const iH = getItemH(it);
                         const base = {position:'absolute',left:rx,top:ry,width:it.w,height:iH,overflow:'hidden',boxSizing:'border-box'};
@@ -7977,7 +8110,20 @@ ${rows}
                   </div>
                 )}
 
-                {[...items].sort((a, b) => (a.z||0)-(b.z||0)).map(item => {
+                {(() => {
+                  // When a zone is selected, its children must not capture pointer
+                  // events — zones have no explicit zIndex while photos do, so photos
+                  // always win the hit-test and the zone can never be dragged from
+                  // an area covered by a child item. Setting pointer-events:none on
+                  // the children lets clicks pass through to the zone's .zitem.
+                  const selectedZoneIds = new Set(
+                    sel.filter(id => items.find(i => i.id === id)?.type === 'zone')
+                  );
+                  return [...items].sort((a, b) => (a.z||0)-(b.z||0)).map(item => {
+                    const inSelectedZone = !!(item.zoneId && selectedZoneIds.has(item.zoneId));
+                    const _pz = item.zoneId ? items.find(i => i.id === item.zoneId) : null;
+                    const _relY = _pz ? item.y - _pz.y : item.y;
+                    const _bbarBelow = _relY * zoom < 52 ? {bottom:'auto',top:'100%'} : undefined;
                   if (item.type === 'zone') {
                     const zClr = ZONE_COLOR_VALS[item.color] || ZONE_COLOR_VALS.blue;
                     return (
@@ -8030,6 +8176,35 @@ ${rows}
                         </div>
                         <div className="zitem-body" style={{background: zClr.fill, border:`2px dashed ${zClr.border}`}}/>
 
+                        {sel.includes(item.id) && (
+                          <div style={{
+                            position:'absolute',
+                            top: `calc(28px / var(--canvas-zoom, 1))`,
+                            left:0, right:0, bottom:0,
+                            zIndex: 99999,
+                            cursor: 'grab',
+                          }} onPointerDown={e => {
+                            e.stopPropagation();
+                            // Hit-test zone children — Figma-like click-through:
+                            // first click selects zone, second click selects child under cursor.
+                            const zRect = e.currentTarget.parentElement.getBoundingClientRect();
+                            const z = zoomRef.current;
+                            const cx = item.x + (e.clientX - zRect.left) / z;
+                            const cy = item.y + (e.clientY - zRect.top)  / z;
+                            const hit = itemsRef.current
+                              .filter(i => i.zoneId === item.id && !i.locked)
+                              .sort((a, b) => (b.z||0) - (a.z||0))
+                              .find(i => cx >= i.x && cx <= i.x + i.w && cy >= i.y && cy <= i.y + getItemH(i));
+                            if (hit) {
+                              // Temporarily remove zone from sel so onItemPD redirect doesn't fire
+                              selRef.current = selRef.current.filter(id => id !== item.id);
+                              onItemPD(e, hit.id);
+                            } else {
+                              onItemPD(e, item.id);
+                            }
+                          }}/>
+                        )}
+
                         <div className="zrh nw" onPointerDown={e => onResizeZonePD(e, item.id, 'nw')}/>
                         <div className="zrh ne" onPointerDown={e => onResizeZonePD(e, item.id, 'ne')}/>
                         <div className="zrh sw" onPointerDown={e => onResizeZonePD(e, item.id, 'sw')}/>
@@ -8051,7 +8226,7 @@ ${rows}
                     const setTextProp = (prop, val) => { const nit = itemsRef.current.map(i => i.id === item.id ? {...i, [prop]: val} : i); setItems(nit); itemsRef.current = nit; saveItemsNow(nit); };
                     return (
                       <div key={item.id} className={`titem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}${item.locked?' locked':''}${item.groupId?' grouped':''}`}
-                        style={{ left: item.x, top: item.y, width: item.w, height: item.h || 130, zIndex: item.z||1, color: textColor, ...(item.freeRot ? {transform:`rotate(${item.freeRot}deg)`,transformOrigin:'center center'} : {}) }}
+                        style={{ left: item.x, top: item.y, width: item.w, height: item.h || 130, zIndex: item.z||1, color: textColor, ...(inSelectedZone ? {pointerEvents:'none'} : {}), ...(item.freeRot ? {transform:`rotate(${item.freeRot}deg)`,transformOrigin:'center center'} : {}) }}
                         onPointerDown={e => onItemPD(e, item.id)}
                         onClick={e => handleItemClick(e, item)}
                         onContextMenu={e => openCtxMenu(e, item.id)}
@@ -8059,7 +8234,7 @@ ${rows}
                         onMouseLeave={clearHoverInfo}
                       >
                         {item.locked && <div className="lock-badge"><SvgLock/></div>}
-                        <div className="bitem-bar" onPointerDown={e => e.stopPropagation()} style={item.y * zoom < 40 ? {bottom:'auto',top:'100%'} : undefined}>
+                        <div className="bitem-bar" onPointerDown={e => e.stopPropagation()} style={_bbarBelow}>
                           <button className="ibc rot" title={t('rotateBtn')} onPointerDown={e => { e.stopPropagation(); if (!item.locked) onFreeRotatePD(e, item.id); }} onClick={e => { e.stopPropagation(); if (rotBtnDraggedRef.current) { rotBtnDraggedRef.current = false; return; } rotateItem(item.id); }}>↻</button>
                           <button className={`ibc${tFmtOpen?' active':''}`} title={lang==='es'?'Formato':'Format'} onClick={e => { e.stopPropagation(); setTextFmtPanelId(tFmtOpen ? null : item.id); }}>T▾</button>
                           <button className="ibc" title={t(item.locked ? 'unlockBtn' : 'lockBtn')} style={{color: item.locked ? 'var(--acc)' : undefined}} onClick={e => { e.stopPropagation(); updateItemLocked(item.id, !item.locked); }}>{item.locked ? <SvgUnlock/> : <SvgLock/>}</button>
@@ -8223,7 +8398,7 @@ ${rows}
 
                   if (item.type === 'placeholder') return (
                     <div key={item.id} className={`bitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}${item.groupId?' grouped':''}`}
-                      style={{ position:'absolute', left: item.x, top: item.y, width: item.w, zIndex: item.z||1, ...(item.freeRot ? {transform:`rotate(${item.freeRot}deg)`,transformOrigin:'center center'} : {}) }}
+                      style={{ position:'absolute', left: item.x, top: item.y, width: item.w, zIndex: item.z||1, ...(inSelectedZone ? {pointerEvents:'none'} : {}), ...(item.freeRot ? {transform:`rotate(${item.freeRot}deg)`,transformOrigin:'center center'} : {}) }}
                       onPointerDown={e => onItemPD(e, item.id)}
                       onClick={e => handleItemClick(e, item)}
                       onContextMenu={e => openCtxMenu(e, item.id)}
@@ -8232,7 +8407,7 @@ ${rows}
                         onClick={e => { e.stopPropagation(); if (tmplEditModeRef.current) return; if (sel.length === 1 && sel[0] === item.id) { setFillPlaceholder({itemId: item.id}); if (!libOpen) { setLibOpen(true); localStorage.setItem('libOpen','true'); } } }}>
                         <span className="ph-icon">+</span>
                       </div>
-                      <div className="bitem-bar" onPointerDown={e => e.stopPropagation()} style={item.y * zoom < 40 ? {bottom:'auto',top:'100%'} : undefined}>
+                      <div className="bitem-bar" onPointerDown={e => e.stopPropagation()} style={_bbarBelow}>
                         <button className="ibc del" title={t('deleteBtn')} onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
                       </div>
                       <div className="rh" onPointerDown={e => onResizePD(e, item.id)}/>
@@ -8247,14 +8422,14 @@ ${rows}
                   const noteTxtColor = noteDark ? '#1a1005' : undefined;
                   return (
                     <div key={item.id} className={`nitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}${item.inMemory?' inmem':''}${item.locked?' locked':''}${item.groupId?' grouped':''}`}
-                      style={{ left: item.x, top: item.y, width: item.w, height: item.h || 150, zIndex: item.z||1, ...(item.freeRot ? {transform:`rotate(${item.freeRot}deg)`,transformOrigin:'center center'} : {}) }}
+                      style={{ left: item.x, top: item.y, width: item.w, height: item.h || 150, zIndex: item.z||1, ...(inSelectedZone ? {pointerEvents:'none'} : {}), ...(item.freeRot ? {transform:`rotate(${item.freeRot}deg)`,transformOrigin:'center center'} : {}) }}
                       onPointerDown={e => onItemPD(e, item.id)}
                       onClick={e => handleItemClick(e, item)}
                       onContextMenu={e => openCtxMenu(e, item.id)}
                       onMouseEnter={() => showItemInfo('note', item.label || item.text?.split('\n')[0], item.w, item.h || 150)}
                       onMouseLeave={clearHoverInfo}
                     >
-                      <div className="bitem-bar" onPointerDown={e => e.stopPropagation()} style={item.y * zoom < 40 ? {bottom:'auto',top:'100%'} : undefined}>
+                      <div className="bitem-bar" onPointerDown={e => e.stopPropagation()} style={_bbarBelow}>
                         <button className="ibc" title={t('noteColor')}
                           onClick={e => { e.stopPropagation(); setNoteColorPanelId(id => id === item.id ? null : item.id); }}
                           style={{background: item.noteColor ? NOTE_COLOR_VALS[item.noteColor]?.[0] : undefined, color: item.noteColor ? 'rgba(255,255,255,.85)' : undefined}}>■</button>
@@ -8349,7 +8524,7 @@ ${rows}
                   const offY = (displayH - naturalH) / 2;
                   return (
                     <div key={item.id} className={`bitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}${item.locked?' locked':''}${item.groupId?' grouped':''}${replaceMode?.itemId===item.id?' replacing':''}${dragSwapTarget===item.id?' swap-target':''}${presentation&&presSwapSel===item.id?' pres-swap-sel':''}`}
-                      style={{ left: item.x, top: item.y, width: item.w, zIndex: propsPanelId === item.id ? 9999 : item.z||1, ...(item.freeRot ? {transform:`rotate(${item.freeRot}deg)`,transformOrigin:'center center'} : {}) }}
+                      style={{ left: item.x, top: item.y, width: item.w, zIndex: propsPanelId === item.id ? 9999 : item.z||1, ...(inSelectedZone ? {pointerEvents:'none'} : {}), ...(item.freeRot ? {transform:`rotate(${item.freeRot}deg)`,transformOrigin:'center center'} : {}) }}
                       onPointerDown={e => onItemPD(e, item.id)}
                       onClick={e => handleItemClick(e, item)}
                       onContextMenu={e => openCtxMenu(e, item.id)}
@@ -8357,7 +8532,7 @@ ${rows}
                       onMouseLeave={clearHoverInfo}
                     >
                       {item.locked && <div className="lock-badge"><SvgLock/></div>}
-                      <div className="bitem-bar" onPointerDown={e => e.stopPropagation()} style={item.y * zoom < 40 ? {bottom:'auto',top:'100%'} : undefined}>
+                      <div className="bitem-bar" onPointerDown={e => e.stopPropagation()} style={_bbarBelow}>
                         <button className="ibc rot" title={t('rotateBtn')}
                           onPointerDown={e => { e.stopPropagation(); if (!item.locked) onFreeRotatePD(e, item.id); }}
                           onClick={e => { e.stopPropagation(); if (rotBtnDraggedRef.current) { rotBtnDraggedRef.current = false; return; } rotateItem(item.id); }}>↻</button>
@@ -8431,7 +8606,8 @@ ${rows}
                       {!item.locked && <div className="rh" onPointerDown={e => onResizePD(e, item.id)}/>}
                     </div>
                   );
-                })}
+                  }); // end map
+                })()} {/* end selectedZoneIds IIFE */}
                 {gridPending && bid && (() => {
                   const board = boards.find(b => b.id === bid);
                   const dpi = board?.dpi || boardDpi;
@@ -8764,7 +8940,7 @@ ${rows}
                                 onDragLeave={onSectDragLeave}
                                 onDrop={e => onSectDrop(e, s.id)}>
                                 <div className="sect-header" onClick={() => { setSectCollapsed(c => ({...c, [s.id]: !c[s.id]})); setLibPreview(null); clearTimeout(previewTimer.current); hoveredThumbRef.current = null; }}>
-                                  <span className="sect-toggle">{collapsed ? '▶' : '▼'}</span>
+                                  <span className="sect-toggle">{collapsed ? '▸' : '▾'}</span>
                                   {renamingSect === s.id
                                     ? <input autoFocus className="sect-name-input" defaultValue={s.name}
                                         onClick={e => e.stopPropagation()}
@@ -9273,11 +9449,6 @@ ${rows}
                 const nit = itemsRef.current.map(i => i.id === ctxItem.id ? {...i, scaleContent: !ctxItem.scaleContent} : i);
                 setItems(nit); itemsRef.current = nit; saveItemsNow(nit); setCtxMenu(null);
               }}>{ctxItem.scaleContent ? '☑' : '☐'} {t('zoneScaleContent')}</button>
-              {hasMembers && <>
-                <div className="ctx-sep"/>
-                <button className="ctx-item" onClick={() => { convertZoneToBoard(ctxMenu.itemId, false); setCtxMenu(null); }}>⊞ {t('copyZoneToBoard')}</button>
-                <button className="ctx-item" onClick={() => { convertZoneToBoard(ctxMenu.itemId, true); setCtxMenu(null); }}>⊞ {t('moveZoneToBoard')}</button>
-              </>}
               <div className="ctx-sep"/>
               <button className="ctx-item ctx-danger" onClick={() => {
                 setCtxMenu(null);
@@ -9434,7 +9605,7 @@ ${rows}
       {gridDropOpen && (
         <>
           <div style={{position:'fixed',inset:0,zIndex:599}} onClick={() => setGridDropOpen(false)}/>
-          <div className="upload-drop" style={{position:'fixed',left:gridDropPos.left,top:gridDropPos.top,zIndex:600,minWidth:160,padding:'6px 0'}}>
+          <div className="upload-drop" style={{position:'fixed',right:gridDropPos.right,top:gridDropPos.top,zIndex:600,minWidth:160,padding:'6px 0'}}>
             <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'4px 12px 6px',borderBottom:'1px solid var(--border)'}}>
               <span style={{fontSize:9,letterSpacing:.4,color:'var(--dim)'}}>{t('gridToggle')}</span>
               <button className={`btn${showGrid?' acc':''}`} style={{fontSize:9,padding:'3px 10px'}}
@@ -9450,6 +9621,11 @@ ${rows}
                 {gridOptions.map(o => <option key={o.v} value={o.v}>{o.label}</option>)}
               </select>
             </div>
+            {showGrid && !gridVisible && (
+              <div style={{padding:'6px 12px',fontSize:8.5,lineHeight:1.4,color:'var(--muted)',borderBottom:'1px solid var(--border)'}}>
+                {t('gridHiddenZoom')}
+              </div>
+            )}
             <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'6px 12px 4px',opacity:showGrid?1:0.4,pointerEvents:showGrid?'auto':'none'}}>
               <span style={{fontSize:9,letterSpacing:.4,color:'var(--dim)'}}>{t('snapGrid')}</span>
               <button className={`btn${snapGrid?' acc':''}`} style={{fontSize:9,padding:'3px 10px'}}
@@ -9687,22 +9863,6 @@ ${rows}
         </div>
       )}
 
-      {modal === 'convertzone' && (
-        <div className="overlay" onClick={() => { setModal(null); setZoneConvertPending(null); }}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <div className="modal-h">{t(zoneConvertPending?.move ? 'moveZoneToBoard' : 'copyZoneToBoard')}</div>
-            <input className="inp" value={nameVal} autoFocus
-              onChange={e => setNameVal(e.target.value)}
-              onKeyDown={e => e.key==='Enter' && doConvertZone()}
-              placeholder={t('boardNamePh')}
-            />
-            <div className="modal-row">
-              <button className="btn" onClick={() => { setModal(null); setZoneConvertPending(null); }}>{t('cancel')}</button>
-              <button className="btn acc" onClick={doConvertZone}>{t('create')}</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {modal === 'boardcfg' && (
         <div className="overlay" onClick={() => setModal(null)}>
@@ -9789,6 +9949,14 @@ ${rows}
             <div style={{fontSize:9,color:'var(--muted)',lineHeight:1.8}}>
               {t('boardConfigNote').split('\n').map((s,i,a) => <React.Fragment key={i}>{s}{i<a.length-1&&<br/>}</React.Fragment>)}
             </div>
+            {/* ── Privado (solo en modo online) ── */}
+            {!tmplEditMode && authMode && <div style={{borderTop:'1px solid var(--border)',paddingTop:10,marginTop:4}}>
+              <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',userSelect:'none'}}>
+                <input type="checkbox" checked={cfgPrivate} onChange={e => setCfgPrivate(e.target.checked)}/>
+                <span style={{fontSize:10,color:'var(--text)',fontWeight:cfgPrivate?600:400}}>{t('boardPrivate')}</span>
+              </label>
+              {cfgPrivate && <div style={{fontSize:8,color:'var(--muted)',marginTop:4,lineHeight:1.5,paddingLeft:20}}>{t('boardPrivateHint')}</div>}
+            </div>}
             {/* ── Guardar como plantilla ── */}
             {!tmplEditMode && <div style={{borderTop:'1px solid var(--border)',paddingTop:10,marginTop:4}}>
               {tmplNameInput === null ? (

@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.14.0] — 2026-06-05
+
+### Added
+- Private board (server mode): new option in board settings; guests cannot see or access boards marked as private
+
+### Improved
+- Locked items inside a zone no longer prevent the zone from being moved
+- Second click on a photo inside a selected zone (Figma-style): selects the photo directly without first deselecting the zone
+- The control bar of a photo near the top of a zone no longer overlaps the zone header
+- A photo must be entirely inside a zone to belong to it; dragging it partially outside unlinks it
+- Zones can freely overlap without snap-back
+- Info panel always visible at the bottom of the left panel; hidden from guests
+- Visual hierarchy fix: rooms now clearly appear nested under the project in the sidebar
+- `+ New room` and `+ New board` buttons at the same hierarchical level
+
+---
+
 ## [1.12.0] — 2026-06-04
 
 ### Added

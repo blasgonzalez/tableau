@@ -968,7 +968,8 @@ app.delete('/api/projects/:pid', requireAuth, (req, res) => {
 
 // ── Boards ───────────────────────────────────────────────────────────────────
 app.get('/api/projects/:pid/boards', resolveAccess, (req, res) => {
-  res.json(readJSON(boardsMeta(req.params.pid, req.dd)));
+  const boards = readJSON(boardsMeta(req.params.pid, req.dd));
+  res.json(req.shareRole ? boards.filter(b => !b.private) : boards);
 });
 
 app.post('/api/projects/:pid/boards', requireAuth, (req, res) => {
@@ -1000,6 +1001,7 @@ app.patch('/api/projects/:pid/boards/:bid', requireAuth, (req, res) => {
     if (defaultW     !== undefined) u.defaultW     = defaultW;
     if (exportPad    !== undefined) u.exportPad    = exportPad == null ? undefined : Math.max(0, Number(exportPad) || 0);
     if (req.body.inMemory !== undefined) u.inMemory = req.body.inMemory;
+    if (req.body.private  !== undefined) u.private  = !!req.body.private;
     return u;
   });
   writeJSON(boardsMeta(pid, req.dd), boards);
@@ -1496,6 +1498,10 @@ app.get('/photos/:pid/:id/thumb', resolveAccess, (req, res) => {
 // ── Board items ───────────────────────────────────────────────────────────────
 app.get('/api/boards/:pid/:bid/items', resolveAccess, (req, res) => {
   const { pid, bid } = req.params;
+  if (req.shareRole) {
+    const board = readJSON(boardsMeta(pid, req.dd)).find(b => b.id === bid);
+    if (board?.private) return res.status(403).json({ error: 'Acceso denegado' });
+  }
   res.json(readJSON(boardFile(pid, bid, req.dd), []));
 });
 

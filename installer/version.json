@@ -1,6 +1,6 @@
 {
-  "version": "1.12.0",
+  "version": "1.14.0",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-06-04",
-  "notes": "Copiar/cortar y pegar visual con ghost: los elementos copiados siguen el cursor y se colocan con un clic. La rueda del ratón escala el conjunto antes de soltarlo."
+  "releaseDate": "2026-06-05",
+  "notes": "Mejoras en zonas: contención total, clic directo en foto dentro de zona y superposición libre. Tableros privados en modo online. Correcciones de jerarquía visual en la barra lateral."
 }
