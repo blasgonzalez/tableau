@@ -2,6 +2,17 @@
   {
     "id": "4de28ae8a3",
     "name": "pro",
-    "created": 1780496281970
+    "created": 1780496281970,
+    "sections": [
+      {
+        "id": "mpzz4bgclgn",
+        "name": "Coches"
+      }
+    ]
+  },
+  {
+    "id": "5ecd812443",
+    "name": "pro2",
+    "created": 1780673111635
   }
 ]

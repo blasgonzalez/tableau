@@ -62,37 +62,6 @@
     }
   },
   {
-    "id": "dccc3fa9bad4",
-    "name": "IMG_20201008_082655.jpg",
-    "w": 1350,
-    "h": 1800,
-    "size": 247653,
-    "dominant": {
-      "r": 200,
-      "g": 216,
-      "b": 248
-    },
-    "brightness": 0.52,
-    "meanColor": {
-      "r": 126,
-      "g": 133,
-      "b": 148
-    },
-    "created": 1780249038704,
-    "origW": 3000,
-    "origH": 4000,
-    "origDpi": 72,
-    "exif": {
-      "make": "Xiaomi",
-      "model": "Mi 9T",
-      "dateTaken": "2020:10:08 08:26:56",
-      "shutter": "1/33",
-      "aperture": 1.8,
-      "iso": 1037,
-      "focalLength": 5
-    }
-  },
-  {
     "id": "4adfb7c26ce7",
     "name": "IMG_20201103_163856.jpg",
     "w": 1332,
@@ -152,7 +121,8 @@
       "aperture": 1.8,
       "iso": 112,
       "focalLength": 5
-    }
+    },
+    "sectionId": "mpzz4bgclgn"
   },
   {
     "id": "13c126e62839",
@@ -183,7 +153,8 @@
       "aperture": 2.4,
       "iso": 100,
       "focalLength": 2
-    }
+    },
+    "sectionId": "mpzz4bgclgn"
   },
   {
     "id": "77047a80539f",
@@ -214,6 +185,7 @@
       "aperture": 1.8,
       "iso": 112,
       "focalLength": 5
-    }
+    },
+    "sectionId": "mpzz4bgclgn"
   }
 ]

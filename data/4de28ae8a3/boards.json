@@ -8,5 +8,22 @@
     "fixed": true,
     "fixedW": 580.4,
     "fixedH": 280
+  },
+  {
+    "id": "03245ad234",
+    "name": "ddddd",
+    "created": 1780604279724,
+    "units": "cm",
+    "dpi": 150
+  },
+  {
+    "id": "8fe6732fda",
+    "name": "Tablero 3",
+    "created": 1780645894436,
+    "units": "cm",
+    "dpi": 150,
+    "fixed": true,
+    "fixedW": 580.4,
+    "fixedH": 280
   }
 ]
