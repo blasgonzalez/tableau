@@ -1,0 +1,138 @@
+name: Build Mac & Linux
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g. v1.9.9)'
+        required: true
+
+env:
+  NODE_VERSION: "20.19.0"
+
+jobs:
+  mac:
+    runs-on: macos-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get version
+        id: ver
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.tag }}"
+          else
+            TAG="$GITHUB_REF_NAME"
+          fi
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "v=${TAG#v}" >> $GITHUB_OUTPUT
+
+      - name: Download Node.js (arm64 + x64) and create universal binary
+        run: |
+          curl -fsSL "https://nodejs.org/dist/v${{ env.NODE_VERSION }}/node-v${{ env.NODE_VERSION }}-darwin-arm64.tar.gz" | tar -xz
+          curl -fsSL "https://nodejs.org/dist/v${{ env.NODE_VERSION }}/node-v${{ env.NODE_VERSION }}-darwin-x64.tar.gz" | tar -xz
+          lipo -create \
+            "node-v${{ env.NODE_VERSION }}-darwin-arm64/bin/node" \
+            "node-v${{ env.NODE_VERSION }}-darwin-x64/bin/node" \
+            -output node-universal
+          chmod +x node-universal
+
+      - name: Install production dependencies
+        run: npm install --production
+
+      - name: Build Tableau.app
+        run: |
+          V=${{ steps.ver.outputs.v }}
+          APP="Tableau.app"
+          mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$APP/Contents/node" "$APP/Contents/app"
+
+          cp node-universal "$APP/Contents/node/node"
+          cp server.js package.json "$APP/Contents/app/"
+          cp -r public node_modules "$APP/Contents/app/"
+          [ -d fonts ] && cp -r fonts "$APP/Contents/app/"
+
+          cat > "$APP/Contents/Info.plist" << PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>CFBundleName</key><string>Tableau</string>
+            <key>CFBundleDisplayName</key><string>Tableau</string>
+            <key>CFBundleIdentifier</key><string>com.blasgonzalez.tableau</string>
+            <key>CFBundleVersion</key><string>$V</string>
+            <key>CFBundleShortVersionString</key><string>$V</string>
+            <key>CFBundleExecutable</key><string>tableau</string>
+            <key>CFBundlePackageType</key><string>APPL</string>
+            <key>LSMinimumSystemVersion</key><string>11.0</string>
+            <key>NSHighResolutionCapable</key><true/>
+          </dict></plist>
+          PLIST
+
+          cp installer/mac-launcher.sh "$APP/Contents/MacOS/tableau"
+          chmod +x "$APP/Contents/MacOS/tableau"
+
+      - name: Create DMG
+        run: |
+          V=${{ steps.ver.outputs.v }}
+          mkdir dmg-stage
+          cp -r Tableau.app dmg-stage/
+          cp installer/install-mac.command "dmg-stage/Instalar Tableau.command"
+          chmod +x "dmg-stage/Instalar Tableau.command"
+          ln -s /Applications dmg-stage/Applications
+          touch dmg-stage/.metadata_never_index
+          sleep 3
+          hdiutil create -volname "Tableau $V" -srcfolder dmg-stage -ov -format UDZO "tableau-mac-${V}.dmg"
+
+      - name: Upload to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          V=${{ steps.ver.outputs.v }}
+          gh release upload "${{ steps.ver.outputs.tag }}" "tableau-mac-${V}.dmg" --clobber
+
+  linux:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get version
+        id: ver
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.tag }}"
+          else
+            TAG="$GITHUB_REF_NAME"
+          fi
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "v=${TAG#v}" >> $GITHUB_OUTPUT
+
+      - name: Download portable Node.js (Linux x64)
+        run: |
+          curl -fsSL "https://nodejs.org/dist/v${{ env.NODE_VERSION }}/node-v${{ env.NODE_VERSION }}-linux-x64.tar.gz" | tar -xz
+          mv "node-v${{ env.NODE_VERSION }}-linux-x64" node-dist
+
+      - name: Install production dependencies
+        run: npm install --production
+
+      - name: Build Linux bundle
+        run: |
+          V=${{ steps.ver.outputs.v }}
+          DIR="tableau-linux-$V"
+          mkdir -p "$DIR/runtime"
+          cp node-dist/bin/node "$DIR/runtime/node"
+          cp server.js package.json "$DIR/"
+          cp -r public node_modules "$DIR/"
+          [ -d fonts ] && cp -r fonts "$DIR/"
+          cp installer/linux-launch.sh "$DIR/launch.sh"
+          chmod +x "$DIR/launch.sh"
+          zip -r "$DIR.zip" "$DIR/"
+
+      - name: Upload to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${{ steps.ver.outputs.tag }}" "tableau-linux-${{ steps.ver.outputs.v }}.zip" --clobber
