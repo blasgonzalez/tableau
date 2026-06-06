@@ -1730,9 +1730,19 @@ function App() {
 
   // ── init ──────────────────────────────────────────────────────────────────
   useEffect(() => {
-    const hb = () => fetch('/api/heartbeat', { method: 'POST' }).catch(() => {});
+    // 204 = modo local (servidor necesita latidos para auto-apagarse).
+    // Cualquier otro status = modo servidor: el host gestiona el ciclo de vida,
+    // no necesitamos seguir enviando. Se cancela el intervalo y el listener.
+    let hbActive = true;
+    let hbInterval;
+    const hb = () => {
+      if (!hbActive) return;
+      fetch('/api/heartbeat', { method: 'POST' })
+        .then(r => { if (r.status !== 204) { hbActive = false; clearInterval(hbInterval); } })
+        .catch(() => {});
+    };
     hb();
-    const hbInterval = setInterval(hb, 30_000);
+    hbInterval = setInterval(hb, 30_000);
     const onVisible = () => { if (document.visibilityState === 'visible') hb(); };
     document.addEventListener('visibilitychange', onVisible);
     api.get('/api/version').then(d => setAppVersion(d.version || '')).catch(() => {});
@@ -3038,7 +3048,7 @@ function App() {
   })();
   // The grid is only shown/snapped when its cells are large enough on screen to
   // be useful; at very low zoom it is dropped entirely (see GRID_MIN_PX).
-  const gridVisible = showGrid && gridCellPx * zoom >= GRID_MIN_PX;
+  const gridVisible = !shareRole && showGrid && gridCellPx * zoom >= GRID_MIN_PX;
   // Snap a value to the nearest grid line. `cell` is the real gridCellPx so the
   // magnet always lands exactly on the lines that are drawn (no coarsening).
   // The catch radius is kept ~constant on screen (12 screen px via 12/zoom),

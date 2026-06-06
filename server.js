@@ -77,6 +77,18 @@ const THUMB_PX       = 260;
 const JPEG_QUALITY   = parseInt(process.env.TABLEAU_JPEG_QUALITY || '87');    // calidad JPEG 1-100
 const IMAGE_EXT      = new Set(['.jpg', '.jpeg', '.png', '.webp', '.tiff', '.tif', '.avif']);
 
+// ── Backup config ─────────────────────────────────────────────────────────────
+// TABLEAU_BACKUP=false         → desactivar backup automático
+// TABLEAU_BACKUP_DIR           → carpeta destino (defecto: backups/ junto a data/)
+// TABLEAU_BACKUP_INTERVAL_MIN  → intervalo en minutos (defecto: 60)
+// TABLEAU_BACKUP_MAX_KEEP      → máximo de ZIPs a retener (defecto: 10)
+const BACKUP_ENABLED      = process.env.TABLEAU_BACKUP !== 'false';
+const BACKUP_DIR          = process.env.TABLEAU_BACKUP_DIR
+  || path.join(path.dirname(DATA_DIR), 'backups');
+const BACKUP_INTERVAL_MIN = parseInt(process.env.TABLEAU_BACKUP_INTERVAL_MIN || '60');
+const BACKUP_INTERVAL_MS  = BACKUP_INTERVAL_MIN * 60_000;
+const BACKUP_MAX_KEEP     = parseInt(process.env.TABLEAU_BACKUP_MAX_KEEP || '10');
+
 // ── File system helpers ──────────────────────────────────────────────────────
 const ensureDir = d => { if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true }); };
 
@@ -166,6 +178,47 @@ function runStartupPurge() {
   }
 }
 
+// ── Backup ────────────────────────────────────────────────────────────────────
+function rotateBackups() {
+  try {
+    const files = fs.readdirSync(BACKUP_DIR)
+      .filter(f => /^tableau_\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}\.zip$/.test(f))
+      .sort();
+    for (let i = 0; i < files.length - BACKUP_MAX_KEEP; i++) {
+      fs.unlinkSync(path.join(BACKUP_DIR, files[i]));
+      console.log(`[backup] Rotado (eliminado): ${files[i]}`);
+    }
+  } catch (e) {
+    console.error(`[backup] Error en rotación: ${e.message}`);
+  }
+}
+
+async function runBackup() {
+  if (!BACKUP_ENABLED) return { ok: false, skipped: true };
+  try { ensureDir(BACKUP_DIR); } catch (e) {
+    console.error(`[backup] No se puede crear directorio: ${e.message}`);
+    return { ok: false, error: e.message };
+  }
+  const stamp   = new Date().toISOString().replace(/:/g, '-').slice(0, 19);
+  const name    = `tableau_${stamp}.zip`;
+  const tmpPath = path.join(BACKUP_DIR, `${name}.tmp`);
+  const zipPath = path.join(BACKUP_DIR, name);
+  try {
+    const zip = new AdmZip();
+    zip.addLocalFolder(DATA_DIR, 'data');
+    zip.writeZip(tmpPath);
+    fs.renameSync(tmpPath, zipPath);
+    const mb = (fs.statSync(zipPath).size / 1024 / 1024).toFixed(2);
+    console.log(`[backup] OK  → ${zipPath} (${mb} MB)`);
+    rotateBackups();
+    return { ok: true, file: zipPath, mb: parseFloat(mb) };
+  } catch (e) {
+    console.error(`[backup] Error: ${e.message}`);
+    try { fs.unlinkSync(tmpPath); } catch {}
+    return { ok: false, error: e.message };
+  }
+}
+
 // ── Gestión de usuarios (solo cuando AUTH_ENABLED) ───────────────────────────
 const usersFile = () => path.join(DATA_DIR, 'users.json');
 const loadUsers = () => { try { return JSON.parse(fs.readFileSync(usersFile(), 'utf8')); } catch { return []; } };
@@ -222,12 +275,13 @@ function resolveAccess(req, res, next) {
   if (req.session?.userId) {
     const user = loadUsers().find(u => u.id === req.session.userId);
     if (user && !(user.expiresAt && user.expiresAt < Date.now())) {
-      // If a share token for another user's project is present, grant guest access.
-      // This handles the case where a registered Tableau user opens a share link.
+      // If a share token is present, grant guest access regardless of ownership.
+      // This lets the owner preview their own share link as a guest would see it,
+      // and lets registered users open another user's share link correctly.
       const tok = req.headers['x-share-token'] || req.query.token;
       if (tok) {
         const share = resolveShareToken(tok);
-        if (share && share.ownerId !== user.id) {
+        if (share) {
           if (req.params.pid && req.params.pid !== share.projectId)
             return res.status(403).json({ error: 'Token no válido para este proyecto' });
           req.dd        = path.join(DATA_DIR, share.ownerId);
@@ -897,9 +951,12 @@ async function checkForUpdates() {
   } catch {}
 }
 
-checkForUpdates();
-setInterval(checkForUpdates, 24 * 60 * 60 * 1000);
-runStartupPurge();
+if (require.main === module) {
+  checkForUpdates();
+  setInterval(checkForUpdates, 24 * 60 * 60 * 1000);
+  runStartupPurge();
+  if (BACKUP_ENABLED) setInterval(runBackup, BACKUP_INTERVAL_MS).unref();
+}
 
 // ── Link preview ─────────────────────────────────────────────────────────────
 app.get('/api/linkpreview', async (req, res) => {
@@ -933,8 +990,10 @@ app.get('/api/version', (_req, res) => res.json({ version: APP_VERSION }));
 app.get('/api/update',  (_req, res) => res.json({ current: APP_VERSION, update: updateAvailable }));
 
 // ── Heartbeat ─────────────────────────────────────────────────────────────────
-// TABLEAU_AUTO_SHUTDOWN=false desactiva el cierre automático (útil en servidor)
-const AUTO_SHUTDOWN = process.env.TABLEAU_AUTO_SHUTDOWN !== 'false';
+// En modo servidor (AUTH_ENABLED=true) el ciclo de vida lo gestiona el host (systemd,
+// pm2…): nunca se arma el temporizador. En modo local el cierre automático es una
+// conveniencia; TABLEAU_AUTO_SHUTDOWN=false lo desactiva explícitamente (tests, etc.).
+const AUTO_SHUTDOWN = !AUTH_ENABLED && process.env.TABLEAU_AUTO_SHUTDOWN !== 'false';
 const HEARTBEAT_TIMEOUT = 300_000; // ms sin heartbeat antes de cerrar (5 min)
 let heartbeatTimer = null;
 const resetHeartbeat = () => {
@@ -942,8 +1001,38 @@ const resetHeartbeat = () => {
   clearTimeout(heartbeatTimer);
   heartbeatTimer = setTimeout(() => process.exit(0), HEARTBEAT_TIMEOUT);
 };
-resetHeartbeat();
-app.post('/api/heartbeat', (_req, res) => { resetHeartbeat(); res.sendStatus(204); });
+if (require.main === module) resetHeartbeat();
+// 204 → modo local, cliente sigue enviando latidos.
+// 200 → modo servidor, cliente cancela el intervalo y no vuelve a enviar.
+app.post('/api/heartbeat', (_req, res) => {
+  if (!AUTO_SHUTDOWN) return res.sendStatus(200);
+  resetHeartbeat();
+  res.sendStatus(204);
+});
+
+// ── Backup endpoints ──────────────────────────────────────────────────────────
+const requireBackupAccess = (req, res, next) =>
+  AUTH_ENABLED ? requireAdmin(req, res, next) : next();
+
+app.post('/api/backup', requireBackupAccess, async (_req, res) => {
+  res.json(await runBackup());
+});
+
+app.get('/api/backup/list', requireBackupAccess, (_req, res) => {
+  try {
+    ensureDir(BACKUP_DIR);
+    const files = fs.readdirSync(BACKUP_DIR)
+      .filter(f => /^tableau_\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}\.zip$/.test(f))
+      .sort().reverse()
+      .map(f => {
+        const { size, mtime } = fs.statSync(path.join(BACKUP_DIR, f));
+        return { name: f, size, created: mtime };
+      });
+    res.json({ dir: BACKUP_DIR, interval_min: BACKUP_INTERVAL_MIN, max_keep: BACKUP_MAX_KEEP, files });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
 
 // ── Projects ─────────────────────────────────────────────────────────────────
 app.get('/api/projects', requireAuth, (req, res) => {
@@ -1993,8 +2082,9 @@ app.post('/api/projects/import/:tempId/confirm', requireAuth, (req, res) => {
 });
 
 // ── Start ─────────────────────────────────────────────────────────────────────
-const server = app.listen(PORT, () => {
-  console.log(`
+if (require.main === module) {
+  const server = app.listen(PORT, () => {
+    console.log(`
   ╔══════════════════════════════════════╗
   ║           T A B L E A U              ║
   ╠══════════════════════════════════════╣
@@ -2002,11 +2092,11 @@ const server = app.listen(PORT, () => {
   ╚══════════════════════════════════════╝
   Datos → ${DATA_DIR}
 `);
-});
+  });
 
-server.on('error', err => {
-  if (err.code === 'EADDRINUSE') {
-    console.error(`
+  server.on('error', err => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`
   [ERROR] El puerto ${PORT} ya está en uso / Port ${PORT} is already in use.
 
   Cierra la otra ventana del servidor y vuelve a intentarlo.
@@ -2015,8 +2105,11 @@ server.on('error', err => {
   O libera el puerto con / Or free the port with:
     for /f "tokens=5" %a in ('netstat -aon ^| findstr :${PORT}') do taskkill /F /PID %a
 `);
-  } else {
-    console.error('[ERROR]', err.message);
-  }
-  process.exit(1);
-});
+    } else {
+      console.error('[ERROR]', err.message);
+    }
+    process.exit(1);
+  });
+}
+
+module.exports = app;
