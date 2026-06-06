@@ -550,12 +550,15 @@ function compileHtml() {
   });
 }
 
-// Compilar en el primer tick del event loop. setImmediate garantiza que:
-//   - modo standalone : listen() completa (fase I/O poll) y el puerto queda
-//     activo ANTES de que Babel bloquee (fase check). Passenger ve el puerto.
-//   - modo integración (Passenger/Apache/Nginx): el módulo exporta la app
-//     inmediatamente; Babel compila en el primer tick sin bloquear el require().
-// El safety net del GET / cubre el caso límite de petición anticipada.
+// Estrategia de compilación JSX según modo de arranque:
+//   - modo standalone : el callback de listen() (fase poll) inicia compileHtml()
+//     explícitamente, garantizando que el puerto está activo antes de que Babel
+//     bloquee. Si _built.html ya existe y es válido (npm run build), la llamada
+//     es una lectura de disco instantánea y no hay bloqueo.
+//   - modo integración (Passenger/Apache/Nginx): listen() no se llama desde aquí;
+//     setImmediate dispara la compilación en el primer tick. Con npm run build
+//     pre-compilado esto también es instantáneo.
+// El safety net del GET / cubre el caso límite de petición antes de compileHtml().
 setImmediate(() => { if (!_htmlReady) _htmlReady = compileHtml(); });
 
 app.get('/', async (req, res) => {
@@ -2094,6 +2097,7 @@ app.post('/api/projects/import/:tempId/confirm', requireAuth, (req, res) => {
 // ── Start ─────────────────────────────────────────────────────────────────────
 if (require.main === module) {
   const server = app.listen(PORT, () => {
+    if (!_htmlReady) _htmlReady = compileHtml();
     console.log(`
   ╔══════════════════════════════════════╗
   ║           T A B L E A U              ║

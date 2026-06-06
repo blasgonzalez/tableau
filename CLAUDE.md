@@ -7,11 +7,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 npm start          # production server on http://localhost:3000
 npm run dev        # development with nodemon auto-reload
+npm run build      # pre-compile public/index.html → public/_built.html (production only)
 npm test           # server-route test suite (added in Fase 0)
 installer\build.bat  # build all installers into dist/
 ```
 
-No linter. There is no manual build step for the frontend.
+No linter. In development there is no manual build step for the frontend — the server compiles JSX on first request and caches the result. **In production (Phusion Passenger or any managed host), run `npm run build` once after each deployment** before restarting the server. This pre-compiles `public/index.html` to `public/_built.html` so the server starts with no blocking event-loop work.
 
 **Tests:** `npm test` runs the server-route suite against an **isolated temporary data dir** — tests must never touch the real `DATA_DIR`. Run it after any change that touches `server.js`.
 
@@ -26,7 +27,12 @@ Runner: Node.js built-in `node:test` (Node 18+), HTTP assertions via `supertest`
 
 ### JSX pre-compilation
 
-On server start, `server.js` compiles `public/index.html` (which contains JSX) using `@babel/core` + `@babel/preset-react` + `@babel/plugin-transform-block-scoping` and caches the result to `public/_built.html`. Subsequent requests serve the cached file (instant). The cache invalidates automatically when `index.html` changes (mtime check). React and ReactDOM are served locally from `node_modules` — no CDN dependency. `_built.html` is gitignored.
+`public/index.html` contains JSX that must be compiled before serving. Two paths:
+
+- **Development / local mode:** on first request, `server.js` compiles `index.html` using `@babel/core` + `@babel/preset-react` + `@babel/plugin-transform-block-scoping`, caches the result to `public/_built.html`, and serves the cached file on all subsequent requests. The cache invalidates automatically when `index.html` changes (mtime check). The loading screen (`#splash`) covers the ~10 s compilation on slow machines.
+- **Production (Passenger / managed host):** run `npm run build` once after each deployment. `scripts/build.js` performs the same Babel transform and writes `_built.html`. The server then reads it from disk at startup (instant, no blocking). In standalone mode, `server.listen()` triggers `compileHtml()` explicitly once the port is active; in integration mode (Apache/Nginx with `passenger_nodejs`), `setImmediate` triggers it on the first event-loop tick.
+
+React and ReactDOM are served locally from `node_modules` — no CDN dependency. `_built.html` is gitignored.
 
 ## Architecture
 

@@ -1,6 +1,6 @@
 {
-  "version": "1.20.2",
+  "version": "1.20.3",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-06-06",
-  "notes": "Correccion del arranque en Passenger integration mode: la compilacion Babel ahora arranca en el primer tick del event loop independientemente de como se cargue el modulo."
+  "notes": "Script npm run build para precompilar JSX antes del arranque en produccion; server.listen() ahora inicia la compilacion Babel explicitamente en su callback (modo standalone)."
 }

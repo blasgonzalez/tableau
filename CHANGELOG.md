@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.20.3] — 2026-06-06
+
+### Añadido
+- Script `npm run build` (`scripts/build.js`) que precompila `public/index.html` a `public/_built.html` con la misma configuración Babel que usa el servidor; se debe ejecutar una vez después de cada despliegue en producción antes de reiniciar el servidor, eliminando así el bloqueo del event loop durante el arranque
+
+### Cambiado
+- En modo standalone (Node.js directo), el callback de `server.listen()` inicia explícitamente la compilación Babel una vez que el puerto ya está activo; si `_built.html` está precompilado (`npm run build`), la llamada es una lectura de disco instantánea y no hay bloqueo
+
+---
+
 ## [1.20.2] — 2026-06-06
 
 ### Corregido
