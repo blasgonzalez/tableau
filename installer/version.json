@@ -1,5 +1,5 @@
 {
-  "version": "1.20.4",
+  "version": "1.20.5",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-06-06",
   "notes": "El arranque del servidor ya no bloquea el event loop: GET / sirve _built.html con res.sendFile() asincrono cuando existe (npm run build), y compila bajo demanda solo en desarrollo."

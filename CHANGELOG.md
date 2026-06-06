@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.20.5] — 2026-06-06
+
+### Corregido
+- Solución definitiva al timeout de Passenger: cuando `_built.html` no existe o está desactualizado, `GET /` responde **de inmediato** con una página de espera animada (auto-refresh cada 8 s) y lanza la compilación Babel en un proceso hijo independiente (`scripts/build.js` vía `child_process.execFile`). El event loop nunca se bloquea; Passenger recibe respuesta HTTP instantánea en cualquier modo de arranque. Una vez finalizado el build, el siguiente acceso a `/` sirve `_built.html` por el fast path asíncrono (`res.sendFile`). Eliminadas `compileHtml()` y la variable `_htmlReady` de `server.js` (la compilación vive exclusivamente en `scripts/build.js`)
+
+---
+
 ## [1.20.4] — 2026-06-06
 
 ### Corregido

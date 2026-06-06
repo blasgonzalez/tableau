@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.20.5] — 2026-06-06
+
+### Fixed
+- Definitive fix for the Passenger startup timeout: when `_built.html` is missing or stale, `GET /` responds **immediately** with an animated loading page (auto-refresh every 8 s) and spawns the Babel compilation in a separate child process (`scripts/build.js` via `child_process.execFile`). The event loop is never blocked; Passenger receives an instant HTTP response in any startup mode. Once the build completes, the next visit to `/` is served via the async fast path (`res.sendFile`). Removed `compileHtml()` and `_htmlReady` from `server.js` (compilation now lives exclusively in `scripts/build.js`)
+
+---
+
 ## [1.20.4] — 2026-06-06
 
 ### Fixed

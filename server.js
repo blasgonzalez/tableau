@@ -515,56 +515,32 @@ const REACT_DOM_JS = path.join(path.dirname(require.resolve('react-dom/package.j
 app.get('/vendor/react.js',     (_, res) => res.sendFile(REACT_JS));
 app.get('/vendor/react-dom.js', (_, res) => res.sendFile(REACT_DOM_JS));
 
-// ── index.html con JSX pre-transpilado (babel, ~2s, cacheado en disco) ───────
+// ── index.html con JSX pre-transpilado (cacheado en disco como _built.html) ──
 const HTML_SRC   = path.join(__dirname, 'public', 'index.html');
 const HTML_BUILT = path.join(__dirname, 'public', '_built.html');
-let _htmlReady   = null; // Promise<string>
+let _building    = false; // build en proceso hijo en curso
 
-function compileHtml() {
-  return new Promise((resolve) => {
-    try {
-      const srcMtime = fs.statSync(HTML_SRC).mtimeMs;
-      try {
-        if (fs.statSync(HTML_BUILT).mtimeMs >= srcMtime)
-          return resolve(fs.readFileSync(HTML_BUILT, 'utf8'));
-      } catch {}
-      const raw  = fs.readFileSync(HTML_SRC, 'utf8');
-      const m    = raw.match(/<script type="text\/babel">([\s\S]*?)<\/script>/);
-      if (!m) { fs.writeFileSync(HTML_BUILT, raw); return resolve(raw); }
-      const babel  = require('@babel/core');
-      const { code } = babel.transformSync(m[1], {
-        presets: [['@babel/preset-react', { runtime: 'classic' }]],
-        plugins: ['@babel/plugin-transform-block-scoping'],
-        compact: false, sourceMaps: false
-      });
-      const built = raw
-        .replace(/<script[^>]+unpkg\.com[^>]*><\/script>/g, '')
-        .replace(m[0], `<script>${code}</script>`)
-        .replace('</head>', '<script src="/vendor/react.js"></script>\n<script src="/vendor/react-dom.js"></script>\n</head>');
-      fs.writeFileSync(HTML_BUILT, built);
-      resolve(built);
-    } catch (e) {
-      console.error('HTML build error:', e.message);
-      resolve(fs.readFileSync(HTML_SRC, 'utf8'));
-    }
-  });
-}
-
-// Fast path: si _built.html existe y es más reciente que index.html, se sirve
-// de forma asíncrona con sendFile (cero bloqueo del event loop, compatible con
-// Passenger en cualquier modo). Slow path: compilación bajo demanda solo cuando
-// _built.html está ausente o index.html cambió (desarrollo sin npm run build).
+// Fast path  : _built.html existe y es más reciente → res.sendFile() async.
+//              Cero bloqueo del event loop. Passenger responde de inmediato.
+// Slow path  : _built.html ausente o index.html cambió → lanza scripts/build.js
+//              como proceso hijo (verdaderamente async) y responde con splash de
+//              espera con auto-refresh. Passenger recibe respuesta instantánea.
+//              Al finalizar el build el siguiente GET / toma el fast path.
 app.get('/', (req, res) => {
   try {
     if (fs.statSync(HTML_BUILT).mtimeMs >= fs.statSync(HTML_SRC).mtimeMs)
       return res.sendFile(HTML_BUILT);
-    _htmlReady = null; // index.html cambió, invalidar caché
   } catch {}
-  if (!_htmlReady) _htmlReady = compileHtml();
-  _htmlReady.then(html => {
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.send(html);
-  }).catch(() => res.status(500).send('Build error — run npm run build'));
+  if (!_building) {
+    _building = true;
+    const { execFile } = require('child_process');
+    execFile(process.execPath, [path.join(__dirname, 'scripts', 'build.js')], err => {
+      _building = false;
+      if (err) console.error('[build]', err.message);
+    });
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(`<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta http-equiv="refresh" content="8"><title>Tableau</title><style>*{box-sizing:border-box}body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#1a1a2e;font-family:system-ui,sans-serif;color:#e0e0e0}.w{text-align:center;padding:2rem}.s{width:40px;height:40px;border:3px solid #333;border-top-color:#7c6af7;border-radius:50%;animation:r 1s linear infinite;margin:0 auto 1.5rem}@keyframes r{to{transform:rotate(360deg)}}p{margin:.5rem 0}small{opacity:.5}</style></head><body><div class="w"><div class="s"></div><p>Iniciando Tableau…</p><small>Esta p\xe1gina se actualizar\xe1 en unos segundos</small></div></body></html>`);
 });
 
 // ── Middleware ───────────────────────────────────────────────────────────────
