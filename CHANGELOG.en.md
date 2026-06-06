@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.20.1] — 2026-06-06
+
+### Fixed
+- Server no longer times out under Phusion Passenger (or other process managers) on startup: `server.listen()` is now called before Babel compiles the JSX, so the port becomes active within milliseconds; the synchronous compilation (~10 s on slow CPUs) happens afterward, with the port already visible to the process manager
+
+---
+
 ## [1.20.0] — 2026-06-06
 
 ### Fixed
