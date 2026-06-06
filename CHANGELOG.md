@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.20.2] — 2026-06-06
+
+### Corregido
+- Corrección del arranque en Passenger integration mode (Apache/Nginx con `passenger_nodejs`): en ese modo el módulo se carga con `require()`, no como main, por lo que el bloque `if (require.main === module)` no se ejecuta y la compilación Babel nunca arrancaba, dejando el servidor bloqueado en el primer request; ahora `setImmediate` dispara la compilación en el primer tick del event loop independientemente del modo de ejecución
+
+---
+
 ## [1.20.1] — 2026-06-06
 
 ### Corregido

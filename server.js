@@ -550,10 +550,14 @@ function compileHtml() {
   });
 }
 
-// La compilación arranca desde el callback de listen() para que el puerto
-// quede activo antes de que Babel bloquee el event loop (ver bloque Start).
-// Si por alguna razón llega una petición antes de que listen haya disparado
-// su callback, se compila bajo demanda aquí.
+// Compilar en el primer tick del event loop. setImmediate garantiza que:
+//   - modo standalone : listen() completa (fase I/O poll) y el puerto queda
+//     activo ANTES de que Babel bloquee (fase check). Passenger ve el puerto.
+//   - modo integración (Passenger/Apache/Nginx): el módulo exporta la app
+//     inmediatamente; Babel compila en el primer tick sin bloquear el require().
+// El safety net del GET / cubre el caso límite de petición anticipada.
+setImmediate(() => { if (!_htmlReady) _htmlReady = compileHtml(); });
+
 app.get('/', async (req, res) => {
   if (!_htmlReady) _htmlReady = compileHtml();
   const html = await _htmlReady;
@@ -2089,9 +2093,6 @@ app.post('/api/projects/import/:tempId/confirm', requireAuth, (req, res) => {
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 if (require.main === module) {
-  // listen() primero: el puerto queda activo antes de iniciar Babel.
-  // Passenger y otros gestores de procesos detectan el puerto aquí,
-  // antes de que babel.transformSync bloquee el event loop (~10 s en CPUs lentas).
   const server = app.listen(PORT, () => {
     console.log(`
   ╔══════════════════════════════════════╗
@@ -2101,11 +2102,6 @@ if (require.main === module) {
   ╚══════════════════════════════════════╝
   Datos → ${DATA_DIR}
 `);
-    // La compilación JSX arranca aquí, con el puerto ya activo.
-    // babel.transformSync bloquea el event loop pero el puerto ya es visible.
-    // Las peticiones que lleguen durante la compilación quedan en cola TCP
-    // y se sirven en cuanto el event loop queda libre.
-    _htmlReady = compileHtml();
   });
 
   server.on('error', err => {
