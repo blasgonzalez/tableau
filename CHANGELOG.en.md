@@ -1,5 +1,65 @@
 # Changelog
 
+## [1.20.0] — 2026-06-06
+
+### Fixed
+- Syncing a board with its wall or block face no longer leaves items that fall outside the new dimensions as "dangling" entries in the JSON: if affected items exist, a confirmation dialog is shown ("Sync (N photos to library)") and, on accept, they are removed from the board — the photo remains available as "unplaced" in the library
+
+### Changed
+- Overflow detection during sync now checks both axes (width and height), not just width
+- The sync-with-overflow flow changes from a blocking error toast to a destructive confirmation dialog showing the count of affected items
+
+---
+
+## [1.19.0] — 2026-06-06
+
+### Added
+- Progressive contextual onboarding: three independent moments with no blocking wizard, persisted in `localStorage` under `tb-onboarding`
+- Welcome screen (no projects): value proposition rewritten as a direct benefit
+- Empty library: enriched state with title, subtitle, "Upload photos" button, drag-drop hint, and a "What can I do?" link that opens an overlay with the 3 main app capabilities (visual boards, image repository, 3D room view); falls back to the minimal state if already dismissed
+- Empty board with photos in the library: subtle one-line hint with an individual × dismiss button; disappears automatically when the first item is placed
+- "What can I do?" overlay: closes with ×, ESC, or click outside; "Don't show again" checkbox permanently hides the help link on future visits without removing the other guides
+- "↺ Reset getting-started guides" button in Settings → General: clears the `tb-onboarding` state and shows a confirmation toast
+
+---
+
+## [1.18.0] — 2026-06-06
+
+### Added
+- Left-clicking a wall or block face with an associated board while the clipboard has content automatically navigates to that board and opens the paste ghost; the cursor changes to a crosshair while the clipboard is active in the 3D view
+- Zones take priority over their photos in 3D raycasting: right-clicking a photo that belongs to a zone copies the whole zone (zone + children) instead of the individual photo; the context menu shows "Copy zone" / "Cut zone"
+- Hover visual in the 3D view: moving the cursor over a photo or text dims the element (or all members of the zone it belongs to) slightly; the cursor changes to a pointer
+- ESC in the 3D view with an active clipboard cancels the destination-selection mode (crosshair cursor) without clearing the clipboard, allowing paste with Ctrl+V in the 2D canvas
+
+---
+
+## [1.17.0] — 2026-06-06
+
+### Added
+- Right-clicking a photo or text in the 3D room view shows a context menu with "Copy" and "Cut"; the action loads the item into the existing clipboard (the same one used by Ctrl+C/X in the 2D canvas), activating the clipboard banner so the user can paste with Ctrl+V into any board
+
+---
+
+## [1.16.0] — 2026-06-06
+
+### Added
+- Settings modal (⚙ in the preferences dropdown): General tab with theme, language, library toggle and About block; Project tab (visible when a project is active) with editable name, free-form notes, defaults for new boards (units, DPI, frame width, export format), and share-link status with generate/revoke buttons
+- Project notes and board defaults are stored in `projects.json` and travel with the ZIP export/import
+- New boards inherit the units, DPI, and default frame configured in the project settings
+- The project's default export format is applied automatically when switching projects
+- The preferences dropdown is simplified to Theme + Language + "Settings…"
+
+---
+
+## [1.15.0] — 2026-06-06
+
+### Added
+- Export board as PNG with transparent background: the export dropdown now has a JPEG / PNG toggle at the top and a single set of quality presets (96 / 150 / 300 dpi); the choice is remembered across sessions; in PNG mode the area around photos, free-rotation corners, and the configurable export border are all transparent
+- Block faces linked to a board: ⚠ warning and "Sync" button in the block panel when the face's physical dimensions (N/S use width×height, E/W use depth×height, Top uses width×depth) differ from the board's fixedW/fixedH; same behaviour as walls
+- Account avatar in the topbar (server mode): circular button with the user's initial that opens a dropdown with storage bar, change-password button, admin access (admins only), and sign-out; these controls are removed from the preferences dropdown
+
+---
+
 ## [1.14.1] — 2026-06-05
 
 ### Fixed

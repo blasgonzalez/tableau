@@ -1,5 +1,65 @@
 # Changelog
 
+## [1.20.0] — 2026-06-06
+
+### Corregido
+- Al sincronizar un tablero con su pared o cara de bloque, los ítems que quedan fuera de las nuevas dimensiones ya no permanecen en el JSON como elementos «colgados»: si hay ítems afectados, se muestra un diálogo de confirmación («Sincronizar (N fotos a biblioteca)») y, al aceptar, se eliminan del tablero — la foto sigue disponible como «sin colocar» en la biblioteca
+
+### Cambiado
+- La detección de desbordamiento en la sincronización ahora comprueba ambos ejes (ancho y alto), no solo el ancho
+- El flujo de sincronización con desbordamiento pasa de bloqueo con toast de error a diálogo de confirmación destructiva con recuento de ítems afectados
+
+---
+
+## [1.19.0] — 2026-06-06
+
+### Añadido
+- Onboarding progresivo y contextual: tres momentos independientes sin wizard bloqueante, persistidos en `localStorage` bajo `tb-onboarding`
+- Pantalla de bienvenida (sin proyectos): propuesta de valor reescrita como beneficio directo
+- Biblioteca vacía: estado enriquecido con título, subtítulo, botón «Subir fotos», hint de drag-drop y enlace «¿Qué puedo hacer?» que abre un overlay con las 3 capacidades principales de la app (tableros visuales, repositorio de imágenes, vista de sala 3D); se cae al estado minimalista si ya fue descartado
+- Tablero vacío con fotos en biblioteca: hint sutil de una línea con botón × individual; desaparece automáticamente al colocar el primer ítem
+- Overlay «¿Qué puedo hacer?»: cierra con ×, ESC o clic fuera; checkbox «No mostrar de nuevo» oculta permanentemente el enlace de ayuda en futuras visitas sin eliminar las otras guías
+- Botón «↺ Reiniciar guías de inicio» en Ajustes → General: borra el estado `tb-onboarding` y muestra toast de confirmación
+
+---
+
+## [1.18.0] — 2026-06-06
+
+### Añadido
+- Clic izquierdo sobre una pared o cara de bloque con tablero mientras el portapapeles tiene contenido navega automáticamente a ese tablero y abre el ghost de pegado; el cursor cambia a punto de mira mientras el portapapeles está activo en la vista 3D
+- Las zonas tienen prioridad sobre sus fotos en el raycasting 3D: hacer clic derecho sobre una foto que pertenece a una zona copia la zona completa (foto + hijos) en lugar de la foto individual; el menú contextual muestra «Copiar zona» / «Cortar zona»
+- Hover visual en la vista 3D: al pasar el cursor sobre una foto o texto, el elemento (o todos los miembros de la zona a la que pertenece) se atenúa ligeramente; el cursor cambia a puntero
+- ESC en vista 3D con portapapeles activo cancela el modo de selección de destino (cursor punto de mira) sin borrar el portapapeles, permitiendo pegar con Ctrl+V en el canvas 2D
+
+---
+
+## [1.17.0] — 2026-06-06
+
+### Añadido
+- Clic derecho sobre una foto o texto en la vista 3D de sala muestra un menú contextual con «Copiar» y «Cortar»; la acción carga el ítem en el portapapeles existente (el mismo que usa Ctrl+C/X en el canvas 2D), activando el banner de portapapeles para que el usuario pueda pegar con Ctrl+V en cualquier tablero
+
+---
+
+## [1.16.0] — 2026-06-06
+
+### Añadido
+- Modal de Ajustes (⚙ en dropdown de preferencias): tab General con selección de tema, idioma, toggle de biblioteca y bloque «Acerca de»; tab Proyecto (visible cuando hay un proyecto activo) con nombre editable, notas libres, valores por defecto para nuevos tableros (unidades, DPI, marco, formato de exportación) y estado del link de compartir con botones de generar/revocar
+- Notas de proyecto y valores por defecto de tablero se guardan en `projects.json` y viajan con el ZIP de exportación/importación
+- Los nuevos tableros heredan las unidades, DPI y marco por defecto configurados en los ajustes del proyecto
+- El formato de exportación por defecto del proyecto se aplica automáticamente al cambiar de proyecto
+- El dropdown de preferencias se simplifica a Tema + Idioma + «Ajustes…»
+
+---
+
+## [1.15.0] — 2026-06-06
+
+### Añadido
+- Exportar tablero como PNG con fondo transparente: el desplegable de exportación tiene ahora un toggle JPEG / PNG en la cabecera y una sola terna de presets de calidad (96 / 150 / 300 dpi); la elección se recuerda entre sesiones; en modo PNG el área alrededor de las fotos, los bordes de rotación libre y el borde exterior configurable quedan transparentes
+- Caras de bloque vinculadas a tablero: aviso ⚠ y botón «Sincronizar» en el panel de bloque cuando las dimensiones físicas de la cara (N/S usan ancho×alto, E/O usan fondo×alto, Superior usa ancho×fondo) difieren de fixedW/fixedH del tablero; mismo comportamiento que las paredes
+- Avatar de cuenta en el topbar (modo servidor): botón circular con la inicial del usuario que abre un dropdown con barra de almacenamiento, botón de cambio de clave, acceso a administración (solo admin) y cierre de sesión; estos controles se eliminan del desplegable de preferencias
+
+---
+
 ## [1.14.1] — 2026-06-05
 
 ### Corregido

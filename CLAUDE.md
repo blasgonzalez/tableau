@@ -7,10 +7,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 npm start          # production server on http://localhost:3000
 npm run dev        # development with nodemon auto-reload
+npm test           # server-route test suite (added in Fase 0)
 installer\build.bat  # build all installers into dist/
 ```
 
-No test suite, no linter. There is no manual build step for the frontend.
+No linter. There is no manual build step for the frontend.
+
+**Tests:** `npm test` runs the server-route suite against an **isolated temporary data dir** — tests must never touch the real `DATA_DIR`. Run it after any change that touches `server.js`.
+
+Runner: Node.js built-in `node:test` (Node 18+), HTTP assertions via `supertest` (devDependency). Each file runs in its own child process so `TABLEAU_AUTH` and `TABLEAU_DATA_DIR` can be set before `require('../server')` — those constants are captured at load time and cannot change afterwards. 60 tests total:
+
+| File | Auth | Covers |
+|---|---|---|
+| `tests/local.test.js` | off | Projects, boards, items, rename, trash basics |
+| `tests/auth.test.js` | on | Login, lockout, expiry, session, change-password, admin, user isolation |
+| `tests/share.test.js` | on | Share tokens, guest board filtering, private boards, locks, owner-as-guest regression |
+| `tests/trash.test.js` | off | Full photo/project trash cycle: delete → restore → permanent delete → empty |
 
 ### JSX pre-compilation
 
@@ -18,11 +30,16 @@ On server start, `server.js` compiles `public/index.html` (which contains JSX) u
 
 ## Architecture
 
-**Tableau is a local-only, single-user web app** — Express serves both the API and the single-page frontend. There is no database; all data is stored as JSON files and JPEGs on disk.
+**Tableau is a web app for visual photography project management** — Express serves both the REST API and the single-page frontend. There is no database; all data is stored as JSON files and JPEGs on disk.
+
+### Two run modes
+
+- **Local mode (default):** single user, no auth. The server auto-shuts down on inactivity (see *Server auto-shutdown* below). This is the mature, most battle-tested mode.
+- **Server mode (`TABLEAU_AUTH=true`):** multiple users with their own accounts and **isolated data spaces**. Adds login/auth, password recovery by email (SMTP), project sharing by link (read-only or edit) with email invitations, private boards (invisible/inaccessible to guests), and a primitive board lock (the first editor holds a lock; others see the board read-only). A registered user who opens an invitation link accesses the shared project **as a guest**, not as the owner of their own account. Newer and less battle-tested than local mode. Hosted on an external server (ISP); its process lifecycle is managed by the host, not the browser.
 
 ### Two files contain the entire application
 
-- **`server.js`** — Express REST API + static serving. All file I/O, image processing (sharp), ZIP export/import.
+- **`server.js`** — Express REST API + static serving. All file I/O, image processing (sharp), ZIP export/import, and (in server mode) auth, sharing, user management.
 - **`public/index.html`** — The complete frontend: all CSS, the React app (single `App()` component), JSX via Babel standalone, and both ES/EN translations. No bundler, no sub-components, no imports.
 
 ### Data layout (`DATA_DIR`, default `./data`)
@@ -40,6 +57,30 @@ data/
 ```
 
 Board items: `type: 'photo'` (or absent) = photo, `type: 'text'` = free text, `type: 'note'` = post-it (internal-only, never rendered in 3D).
+
+**Trash (papelera):** deleted photos and whole projects are retained for 30 days before automatic purge on server start (`runStartupPurge`); they can be restored until then.
+
+```
+{dd}/{pid}/trash/photos/          ← JPEG + thumb files of deleted photos
+{dd}/{pid}/trash/photos.json      ← [{id, name, w, h, size, deletedAt}]
+
+{dd}/.trash/{pid}/                ← full project directory copy
+{dd}/.trash/{pid}/_meta.json      ← {name, deletedAt}
+```
+
+`dd` is `DATA_DIR` in local mode, `DATA_DIR/{userId}` in server mode.
+
+**Server mode:** each user has an isolated data space. Global state under `DATA_DIR`:
+
+```
+data/
+  users.json          [{id, username, email, passwordHash, role, quota, expiresAt, …}]
+  shares.json         {[token]: {ownerId, projectId, role:'view'|'edit', created}}
+  reset-tokens.json   {[token]: {userId, expires}}   ← transient, cleaned on use
+  {userId}/           ← each user's full data dir (same layout as local mode's DATA_DIR)
+```
+
+Board locks are **in-memory only** (`boardLocks` object, `LOCK_TIMEOUT = 25 s`); they reset on server restart. `users.json` must not be committed to git (gitignored).
 
 Room model:
 - `walls`: segments of a closed polygon. Each wall has `boardId` (interior, side A) and/or `boardIdBack` (exterior, side B).
@@ -77,7 +118,27 @@ For photos with `item.rot` of 90° or 270° on a top-face board, the display hei
 
 ### Server auto-shutdown
 
-The browser sends `POST /api/heartbeat` periodically. If the server receives no heartbeat for 90 s it calls `process.exit(0)`. This is how the server shuts down when all browser tabs are closed.
+Behaviour depends on the run mode:
+
+- **Local mode:** the browser sends `POST /api/heartbeat` every 30 s (and on tab-visibility change). If the server receives no heartbeat for **5 min** (`HEARTBEAT_TIMEOUT = 300 000 ms`) it calls `process.exit(0)`. The endpoint returns `204`. This is how the desktop server shuts down when all browser tabs are closed, avoiding an orphaned Node process.
+- **Server mode (`TABLEAU_AUTH=true`):** heartbeats are **ignored** and the server **never auto-shuts-down**. The endpoint returns `200`; on receiving that status the client cancels its interval and stops sending entirely. Do not re-introduce heartbeat-based shutdown in this mode.
+
+Implementation (`server.js`): `const AUTO_SHUTDOWN = !AUTH_ENABLED && process.env.TABLEAU_AUTO_SHUTDOWN !== 'false'`. When `AUTO_SHUTDOWN` is false, `resetHeartbeat()` is a no-op and the timer is never armed. `TABLEAU_AUTO_SHUTDOWN=false` also overrides in local mode (used by the test suite).
+
+### Data auto-backup (Fase 0)
+
+A configurable auto-backup periodically snapshots `DATA_DIR` as a timestamped ZIP with retention/rotation, plus an on-demand manual trigger. Failures are logged without crashing the server.
+
+| Env var | Default | Description |
+|---|---|---|
+| `TABLEAU_BACKUP` | `true` | Set to `false` to disable |
+| `TABLEAU_BACKUP_DIR` | `backups/` sibling to `DATA_DIR` | Absolute path for ZIP output |
+| `TABLEAU_BACKUP_INTERVAL_MIN` | `60` | Minutes between automatic snapshots |
+| `TABLEAU_BACKUP_MAX_KEEP` | `10` | Maximum ZIPs to retain; oldest deleted on rotation |
+
+ZIP names: `tableau_YYYY-MM-DDTHH-MM-SS.zip`. Written atomically (`.zip.tmp` → rename). The interval timer uses `.unref()` so it does not block process exit.
+
+Manual trigger: `POST /api/backup` (local: no auth; server mode: admin only). List backups: `GET /api/backup/list`.
 
 ## Version bumps
 

@@ -1052,7 +1052,7 @@ app.post('/api/projects', requireAuth, (req, res) => {
 
 app.patch('/api/projects/:pid', requireAuth, (req, res) => {
   const { pid } = req.params;
-  const allowed = ['name','exTitle','subtitle','memSections'];
+  const allowed = ['name','exTitle','subtitle','memSections','notes','defaults'];
   const patch = {};
   for (const k of allowed) if (req.body[k] !== undefined) patch[k] = req.body[k];
   if (patch.name) patch.name = patch.name.trim();
@@ -1092,8 +1092,12 @@ app.post('/api/projects/:pid/boards', requireAuth, (req, res) => {
   const { pid } = req.params;
   const { name } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: 'Nombre requerido' });
+  const proj = readJSON(projsFile(req.dd)).find(p => p.id === pid);
+  const def = proj?.defaults || {};
   const boards = readJSON(boardsMeta(pid, req.dd));
-  const b = { id: newId(), name: name.trim(), created: Date.now(), units: 'cm', dpi: 150 };
+  const b = { id: newId(), name: name.trim(), created: Date.now(),
+    units: def.units || 'cm', dpi: def.dpi || 150,
+    ...(def.defaultFrame != null ? { defaultFrame: def.defaultFrame } : {}) };
   boards.push(b);
   writeJSON(boardsMeta(pid, req.dd), boards);
   writeJSON(boardFile(pid, b.id, req.dd), []);
@@ -1729,6 +1733,7 @@ app.get('/api/boards/:pid/:bid/export', requireAuth, async (req, res) => {
   const boardDpi = board?.dpi || 150;
   const exportDpi = Math.min(600, Math.max(72, parseInt(req.query.exportDpi) || boardDpi));
   const exportScale = exportDpi / boardDpi;  // scale all pixel values to target resolution
+  const isPng = req.query.fmt === 'png';
   const sorted = [...boardItems].sort((a, b) => (a.z || 0) - (b.z || 0));
 
   // Expand grid items into individual photo pseudo-items (at export scale)
@@ -1819,7 +1824,7 @@ app.get('/api/boards/:pid/:bid/export', requireAuth, async (req, res) => {
       let sharpChain = sharp(pFile).resize(resizeW, resizeH, { fit: 'fill' });
       if (item.flipH) sharpChain = sharpChain.flop();
       if (item.flipV) sharpChain = sharpChain.flip();
-      sharpChain = sharpChain.rotate(rot, { background: { r: 255, g: 255, b: 255 } });
+      sharpChain = sharpChain.rotate(rot, { background: isPng ? { r: 0, g: 0, b: 0, alpha: 0 } : { r: 255, g: 255, b: 255 } });
       let imgBuf = await sharpChain.png({ compressionLevel: 1 }).toBuffer();
 
       // Step 2: mat (paspartú) then molding borders — symmetric, so center stays at cx/cy
@@ -1827,7 +1832,7 @@ app.get('/api/boards/:pid/:bid/export', requireAuth, async (req, res) => {
       if (moldPx > 0) imgBuf = await sharp(imgBuf).extend({ top: moldPx, bottom: moldPx, left: moldPx, right: moldPx, background: item.frameColor || '#5a3e1b' }).png({ compressionLevel: 1 }).toBuffer();
 
       // Step 3: free rotation on the framed photo
-      if (freeRot) imgBuf = await sharp(imgBuf).rotate(freeRot, { background: { r: 255, g: 255, b: 255 } }).png({ compressionLevel: 1 }).toBuffer();
+      if (freeRot) imgBuf = await sharp(imgBuf).rotate(freeRot, { background: isPng ? { r: 0, g: 0, b: 0, alpha: 0 } : { r: 255, g: 255, b: 255 } }).png({ compressionLevel: 1 }).toBuffer();
 
       const { width: rw, height: rh } = await sharp(imgBuf).metadata();
       const cx = item.x * exportScale + scaledW  / 2;
@@ -1886,14 +1891,13 @@ app.get('/api/boards/:pid/:bid/export', requireAuth, async (req, res) => {
 
   try {
     const exportQ = Math.min(100, Math.max(1, parseInt(req.query.quality) || 92));
-    const output = await sharp({ create: { width: outW, height: outH, channels: 3, background: { r: 255, g: 255, b: 255 } } })
-      .composite(composites)
-      .jpeg({ quality: exportQ, mozjpeg: true })
-      .toBuffer();
+    const canvas = sharp({ create: { width: outW, height: outH, channels: isPng ? 4 : 3, background: isPng ? { r: 0, g: 0, b: 0, alpha: 0 } : { r: 255, g: 255, b: 255 } } })
+      .composite(composites);
+    const output = await (isPng ? canvas.png({ compressionLevel: 6 }) : canvas.jpeg({ quality: exportQ, mozjpeg: true })).toBuffer();
 
     const safeName = (board?.name || 'tableau').replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '_') || 'export';
-    res.set('Content-Type', 'image/jpeg');
-    res.set('Content-Disposition', `attachment; filename="${safeName}.jpg"`);
+    res.set('Content-Type', isPng ? 'image/png' : 'image/jpeg');
+    res.set('Content-Disposition', `attachment; filename="${safeName}.${isPng ? 'png' : 'jpg'}"`);
     res.send(output);
   } catch (e) {
     console.error('Export error:', e.message);

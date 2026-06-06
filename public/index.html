@@ -555,10 +555,38 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .thumb-x{position:absolute;top:2px;right:2px;width:18px;height:18px;background:rgba(196,74,74,.9);color:#fff;border:none;cursor:pointer;font-size:12px;border-radius:50%;display:none;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;line-height:1;z-index:2}
 .thumb:hover .thumb-x{display:flex}
 .lib-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--dim);font-size:10px;letter-spacing:1px;text-align:center;line-height:2}
+.lib-empty-title{font-size:11px;letter-spacing:.5px;color:var(--sub);margin-bottom:2px}
+.lib-empty-sub{font-size:9px;color:var(--muted);margin-bottom:6px}
+.lib-empty-upload-btn{background:none;border:1px solid var(--border2);color:var(--acc-dim);font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.5px;padding:5px 14px;cursor:pointer;border-radius:2px}
+.lib-empty-upload-btn:hover{border-color:var(--acc);color:var(--acc)}
+.lib-empty-drag{font-size:9px;color:var(--muted);letter-spacing:.3px}
+.lib-empty-help{background:none;border:none;color:var(--acc-dim);font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.3px;cursor:pointer;padding:2px 0;text-decoration:underline;text-underline-offset:3px;margin-top:4px}
+.lib-empty-help:hover{color:var(--acc)}
 
 /* ── HINT ── */
 .hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:var(--muted);font-size:11px;letter-spacing:1.5px;line-height:2.4;pointer-events:none;user-select:none}
 .hint em{font-family:'Playfair Display',serif;font-style:italic;font-size:22px;color:var(--border2);display:block;margin-bottom:10px;letter-spacing:0}
+.hint-ob{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:var(--muted);font-size:10px;letter-spacing:1px;line-height:2;pointer-events:auto;user-select:none;display:flex;align-items:center;gap:8px}
+.hint-ob-x{background:none;border:none;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:12px;cursor:pointer;padding:0 2px;line-height:1;opacity:.6}
+.hint-ob-x:hover{opacity:1;color:var(--text)}
+
+/* ── ONBOARDING HELP OVERLAY ── */
+.ob-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1200;display:flex;align-items:center;justify-content:center}
+.ob-box{background:var(--panel);border:1px solid var(--border2);padding:28px 32px;min-width:320px;max-width:420px;box-shadow:0 12px 40px rgba(0,0,0,.7);position:relative}
+.ob-box-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+.ob-box-title{font-family:'Playfair Display',serif;font-style:italic;font-size:16px;color:var(--text);letter-spacing:.3px}
+.ob-box-close{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:0;line-height:1;font-family:'IBM Plex Mono',monospace}
+.ob-box-close:hover{color:var(--text)}
+.ob-cap{display:flex;gap:14px;margin-bottom:18px;align-items:flex-start}
+.ob-cap-icon{font-size:20px;line-height:1;flex-shrink:0;margin-top:1px}
+.ob-cap-body{}
+.ob-cap-t{font-size:11px;color:var(--text);letter-spacing:.3px;margin-bottom:3px}
+.ob-cap-d{font-size:10px;color:var(--muted);letter-spacing:.2px;line-height:1.6}
+.ob-box-footer{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:16px;border-top:1px solid var(--border2)}
+.ob-dont-show{display:flex;align-items:center;gap:6px;font-size:9px;color:var(--muted);cursor:pointer;user-select:none;letter-spacing:.2px}
+.ob-dont-show input{accent-color:var(--acc);cursor:pointer}
+.ob-close-btn{background:none;border:1px solid var(--border2);color:var(--sub);font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.3px;padding:5px 18px;cursor:pointer;border-radius:2px}
+.ob-close-btn:hover{border-color:var(--acc);color:var(--acc)}
 
 /* ── CONTEXT MENU ── */
 .ctx-menu{position:fixed;background:var(--panel);border:1px solid var(--border2);z-index:950;box-shadow:0 6px 20px rgba(0,0,0,.55);min-width:170px;padding:4px 0}
@@ -590,6 +618,9 @@ select.inp{cursor:pointer;appearance:none;padding-right:28px;background-image:ur
 
 /* ── THEME PICKER ── */
 .theme-picker{position:relative;flex-shrink:0}
+.avatar-picker{position:relative;flex-shrink:0}
+.avatar-btn{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--acc-dim);background:var(--acc-faint);color:var(--acc);cursor:pointer;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;flex-shrink:0;transition:all .15s;line-height:1}
+.avatar-btn:hover{border-color:var(--acc);background:var(--acc);color:var(--bg)}
 .theme-btn{padding:5px 9px !important}
 .theme-dot{display:inline-block;width:10px;height:10px;border-radius:50%;border:1.5px solid rgba(255,255,255,.25);vertical-align:middle;transition:transform .15s}
 .theme-btn:hover .theme-dot{transform:scale(1.25)}
@@ -973,7 +1004,7 @@ const dimLabel = (w, h, dpi, units, frame = 0) => {
 
 const I18N = {
   es: {
-    upload:'↑ Subir', uploadPhotos:'Fotos', report:'≡ Memoria', config:'⚙ Config', exportJpeg:'Exportar JPEG',
+    upload:'↑ Subir', uploadPhotos:'Fotos', report:'≡ Memoria', config:'⚙ Config', exportJpeg:'Exportar',
     showPanel:'▶ Panel', preferences:'Preferencias', themeLabel:'Tema', langLabel:'Idioma',
     noProjHint:'Sin proyecto — crea uno en el panel izquierdo', noProjHintEmpty:'Sin proyecto',
     projBoards:'Proyectos y Tableros', newProject:'Nuevo proyecto', collapsePanel:'Colapsar panel',
@@ -1027,7 +1058,7 @@ const I18N = {
     noPhysScale:'sin escala física', emptyBoardMem:'Tablero vacío',
     reportConfigNote:'Configura DPI y unidades en cada tablero (⚙ Config) para ver las dimensiones físicas.',
     printPdf:'⎙ Imprimir / Guardar PDF',
-    startSub:'Gestión visual de proyectos fotográficos',
+    startSub:'Organiza tus fotos en tableros visuales, sin complicaciones.',
     startDesc:'Tableros libres · Repositorio de imágenes · Almacenamiento local',
     createFirstProject:'Crear primer proyecto',
     selectProjectFirst:'Selecciona un proyecto primero',
@@ -1071,7 +1102,7 @@ const I18N = {
     invalidDims: 'Las dimensiones deben ser mayores que cero',
     pxPreview: (w, h) => `${w} × ${h} px`,
     gridToggle: 'Guías', gridHiddenZoom: 'Guías activas — zoom demasiado bajo para mostrarlas', gridAuto: 'Auto', fitView: 'Ajustar', fitWidth: 'Ajustar al ancho (Ctrl+0)', snapGrid: 'Imán', addNote: '+ Nota', addZone: '+ Zona', zoneColor: 'Color de zona', zoneScaleContent: 'Escalar contenido al redimensionar', copyZoneToBoard: 'Copiar a nuevo tablero', moveZoneToBoard: 'Mover a nuevo tablero', zoneLabelPh: 'Nombre de zona…', zoneCaptureBtn: 'Capturar contenido', gridWrapZone: 'Envolver en zona escalable',
-    salaBtn:'🏛 Sala', salaCreate:'Crear sala', salaDelete:'Eliminar sala', salaDuplicate:'Duplicar sala', salaAdd:'+ Nueva sala', salaDraw:'Dibujar planta', salaEdit:'Editar planta', salaAddSection:'+ Añadir segmento', salaCancel:'Cancelar', salaFinish:'Finalizar', salaCeilLbl:'Altura del techo', salaCeilUnit:'cm', salaWallsHd:'PAREDES', salaNoWalls:'Dibuja la planta para ver las paredes aquí', salaCreateBoard:'+ Tablero', salaWallBoard:'Ver tablero →', salaDrawHint:'Clic → añadir punto · 1er punto → cerrar · Esc/Finalizar → guardar · ⌫ → deshacer · ⇧ → ángulo recto', salaSnapHint:'⊾ enganchado', salaDeleteWall:'Desvincular tablero', salaWallRename:'Renombrar pared', salaAddCol:'+ Columna', salaWallMismatch:'El tablero es más ancho que la pared', salaWallSync:'Sincronizar', salaWallSyncOk:'Tablero sincronizado con la pared', salaWallSyncOverflow:'Hay fotos fuera del nuevo ancho. Mueve o elimina las fotos en el tablero primero.', salaAssigned:'Tablero asignado a la pared', salaAssignMismatch:(bw,bh,ww,wh)=>`El tablero mide ${bw}×${bh} cm. La pared mide ${ww}×${wh} cm. ¿Asignar de todas formas?`, salaAssignAndSync:'Asignar y sincronizar', salaAssignOnly:'Asignar tal cual',
+    salaBtn:'🏛 Sala', salaCreate:'Crear sala', salaDelete:'Eliminar sala', salaDuplicate:'Duplicar sala', salaAdd:'+ Nueva sala', salaDraw:'Dibujar planta', salaEdit:'Editar planta', salaAddSection:'+ Añadir segmento', salaCancel:'Cancelar', salaFinish:'Finalizar', salaCeilLbl:'Altura del techo', salaCeilUnit:'cm', salaWallsHd:'PAREDES', salaNoWalls:'Dibuja la planta para ver las paredes aquí', salaCreateBoard:'+ Tablero', salaWallBoard:'Ver tablero →', salaDrawHint:'Clic → añadir punto · 1er punto → cerrar · Esc/Finalizar → guardar · ⌫ → deshacer · ⇧ → ángulo recto', salaSnapHint:'⊾ enganchado', salaDeleteWall:'Desvincular tablero', salaWallRename:'Renombrar pared', salaAddCol:'+ Columna', salaWallMismatch:'El tablero es más ancho que la pared', salaWallSync:'Sincronizar', salaWallSyncOk:'Tablero sincronizado con la pared', syncOverflowConfirm: n => `${n} foto${n!==1?'s':''} quedar${n!==1?'án':'á'} fuera del nuevo tamaño y volverán a la biblioteca. ¿Continuar?`, syncOverflowBtn: n => `Sincronizar (${n} foto${n!==1?'s':''} a biblioteca)`, salaAssigned:'Tablero asignado a la pared', salaAssignMismatch:(bw,bh,ww,wh)=>`El tablero mide ${bw}×${bh} cm. La pared mide ${ww}×${wh} cm. ¿Asignar de todas formas?`, salaAssignAndSync:'Asignar y sincronizar', salaAssignOnly:'Asignar tal cual',
     reportHeading:'Tableau — Memoria del Proyecto',
     noScaleConfigured:'sin escala configurada',
     reportDate: d => `Memoria del proyecto · ${d}`,
@@ -1124,13 +1155,30 @@ const I18N = {
     libMuteOn:'◎ Silenciar', libMuteOff:'◎ Silenciada',
     exportPadLabel:'Borde exterior al exportar (px)',
     exportPadHint:'Espacio en blanco alrededor de las fotos en el JPEG',
-    addBlock:'+ Bloque', blockLabel:'Nombre', blockHeight:'Alto (cm)', blockFaceN:'Norte', blockFaceS:'Sur', blockFaceE:'Este', blockFaceW:'Oeste', blockFaceTop:'Superior', blockFaceLink:'Vincular tablero', blockFaceUnlink:'Desvincular', blockSyncWarn:'Este bloque tiene tableros vinculados. Redimensionar puede desincronizarlos. ¿Continuar?', blockDelete:'Eliminar bloque',
+    exportFmtJpeg:'JPEG', exportFmtPng:'fondo transparente',
+    addBlock:'+ Bloque', blockLabel:'Nombre', blockHeight:'Alto (cm)', blockFaceN:'Norte', blockFaceS:'Sur', blockFaceE:'Este', blockFaceW:'Oeste', blockFaceTop:'Superior', blockFaceLink:'Vincular tablero', blockFaceUnlink:'Desvincular', blockFaceMismatch:'El tablero no coincide con las dimensiones de esta cara', blockFaceSyncOk:'Tablero sincronizado con la cara', blockSyncWarn:'Este bloque tiene tableros vinculados. Redimensionar puede desincronizarlos. ¿Continuar?', blockDelete:'Eliminar bloque',
     shareProject:'Compartir proyecto', shareModalTitle:'Compartir proyecto', shareViewLink:'Enlace de solo lectura', shareEditLink:'Enlace de edición', shareGenerate:'Generar enlace', shareRevoke:'Revocar', shareCopy:'Copiar enlace', shareCopied:'Enlace copiado', shareGuestView:'Solo lectura', shareGuestEdit:'Editor invitado', shareBoardLocked:'El tablero está siendo editado por otro usuario', shareInvalidLink:'Enlace no válido o expirado',
     shareInviteEmail:'Enviar por email', shareInvitePh:'correo@ejemplo.com', shareInviteSend:'Enviar', shareInviteSent:'Invitación enviada', shareInviteError:'Error al enviar el correo', shareNoSmtp:'El servidor no tiene SMTP configurado',
     shareActiveTitle:'Invitaciones activas', shareActiveEmpty:'No tienes invitaciones activas', shareActiveProject:'Proyecto', shareActiveCreated:'Enviada', shareActiveRevoke:'Revocar', shareActiveRevokeOk:'Invitación revocada',
+    menu3DCopy:'Copiar', menu3DCut:'Cortar', menu3DCopyZone:'Copiar zona', menu3DCutZone:'Cortar zona',
+    acctChangePass:'Cambiar clave', acctAdmin:'⚙ Admin', acctSignOut:'Cerrar sesión',
+    settingsTitle:'Ajustes', settingsOpen:'Ajustes…', settingsGeneral:'General', settingsProject:'Proyecto',
+    projNotes:'Notas', projNotesPh:'Descripción, referencias, ideas…',
+    boardDefaults:'Tableros nuevos', defFrame:'Marco por defecto', projSaved:'Guardado',
+    obLibTitle:'Tu biblioteca está vacía', obLibSub:'Empieza añadiendo algunas fotos.',
+    obLibUpload:'↑ Subir fotos', obLibDrag:'o arrastra archivos aquí',
+    obLibHelpLink:'¿Qué puedo hacer?',
+    obHelpTitle:'¿Qué puedo hacer en Tableau?',
+    obHelpCap1T:'Tableros visuales', obHelpCap1D:'Coloca y mueve fotos libremente en lienzos a escala real.',
+    obHelpCap2T:'Repositorio de imágenes', obHelpCap2D:'Reutiliza tus fotos en varios tableros sin duplicarlas.',
+    obHelpCap3T:'Vista de sala 3D', obHelpCap3D:'Previsualiza tus tableros sobre paredes en un espacio 3D.',
+    obHelpClose:'Entendido',
+    obBoardHint:'Arrastra una foto desde la biblioteca para colocarla en el tablero.',
+    obDontShowAgain:'No mostrar de nuevo', obDismissTitle:'Ocultar esta guía',
+    obSettingsTitle:'Guías de inicio', obResetBtn:'↺ Reiniciar guías de inicio', obResetDone:'Guías de inicio reiniciadas',
   },
   en: {
-    upload:'↑ Upload', uploadPhotos:'Photos', report:'≡ Report', config:'⚙ Config', exportJpeg:'Export JPEG',
+    upload:'↑ Upload', uploadPhotos:'Photos', report:'≡ Report', config:'⚙ Config', exportJpeg:'Export',
     showPanel:'▶ Panel', preferences:'Preferences', themeLabel:'Theme', langLabel:'Language',
     noProjHint:'No project — create one in the left panel', noProjHintEmpty:'No project',
     projBoards:'Projects & Boards', newProject:'New project', collapsePanel:'Collapse panel',
@@ -1184,7 +1232,7 @@ const I18N = {
     noPhysScale:'no physical scale', emptyBoardMem:'Empty board',
     reportConfigNote:'Configure DPI and units in each board (⚙ Config) to see physical dimensions.',
     printPdf:'⎙ Print / Save PDF',
-    startSub:'Visual management of photography projects',
+    startSub:'Organize your photos on visual boards, no fuss.',
     startDesc:'Free boards · Image repository · Local storage',
     createFirstProject:'Create first project',
     selectProjectFirst:'Select a project first',
@@ -1228,7 +1276,7 @@ const I18N = {
     invalidDims: 'Dimensions must be greater than zero',
     pxPreview: (w, h) => `${w} × ${h} px`,
     gridToggle: 'Grid', gridHiddenZoom: 'Grid active — zoom too low to display', gridAuto: 'Auto', fitView: 'Fit', fitWidth: 'Fit to width (Ctrl+0)', snapGrid: 'Snap', addNote: '+ Note', addZone: '+ Zone', zoneColor: 'Zone color', zoneScaleContent: 'Scale content on resize', copyZoneToBoard: 'Copy to new board', moveZoneToBoard: 'Move to new board', zoneLabelPh: 'Zone name…', zoneCaptureBtn: 'Capture content', gridWrapZone: 'Wrap in scalable zone',
-    salaBtn:'🏛 Room', salaCreate:'Create room', salaDelete:'Delete room', salaDuplicate:'Duplicate room', salaAdd:'+ New room', salaDraw:'Draw floor plan', salaEdit:'Edit floor plan', salaAddSection:'+ Add section', salaCancel:'Cancel', salaFinish:'Finish', salaCeilLbl:'Ceiling height', salaCeilUnit:'cm', salaWallsHd:'WALLS', salaNoWalls:'Draw the floor plan to see walls here', salaCreateBoard:'+ Board', salaWallBoard:'Go to board →', salaDrawHint:'Click → add point · 1st point → close · Esc/Finish → save · ⌫ → undo · ⇧ → right angle', salaSnapHint:'⊾ snapped', salaDeleteWall:'Unlink board', salaWallRename:'Rename wall', salaAddCol:'+ Column', salaWallMismatch:'Board is wider than the wall', salaWallSync:'Sync', salaWallSyncOk:'Board synced to wall', salaWallSyncOverflow:'Photos would overflow the new width. Move or remove them in the board editor first.', salaAssigned:'Board assigned to wall', salaAssignMismatch:(bw,bh,ww,wh)=>`Board is ${bw}×${bh} cm. Wall is ${ww}×${wh} cm. Assign anyway?`, salaAssignAndSync:'Assign and sync', salaAssignOnly:'Assign as-is',
+    salaBtn:'🏛 Room', salaCreate:'Create room', salaDelete:'Delete room', salaDuplicate:'Duplicate room', salaAdd:'+ New room', salaDraw:'Draw floor plan', salaEdit:'Edit floor plan', salaAddSection:'+ Add section', salaCancel:'Cancel', salaFinish:'Finish', salaCeilLbl:'Ceiling height', salaCeilUnit:'cm', salaWallsHd:'WALLS', salaNoWalls:'Draw the floor plan to see walls here', salaCreateBoard:'+ Board', salaWallBoard:'Go to board →', salaDrawHint:'Click → add point · 1st point → close · Esc/Finish → save · ⌫ → undo · ⇧ → right angle', salaSnapHint:'⊾ snapped', salaDeleteWall:'Unlink board', salaWallRename:'Rename wall', salaAddCol:'+ Column', salaWallMismatch:'Board is wider than the wall', salaWallSync:'Sync', salaWallSyncOk:'Board synced to wall', syncOverflowConfirm: n => `${n} photo${n!==1?'s':''} will fall outside the new size and return to the library. Continue?`, syncOverflowBtn: n => `Sync (${n} photo${n!==1?'s':''} to library)`, salaAssigned:'Board assigned to wall', salaAssignMismatch:(bw,bh,ww,wh)=>`Board is ${bw}×${bh} cm. Wall is ${ww}×${wh} cm. Assign anyway?`, salaAssignAndSync:'Assign and sync', salaAssignOnly:'Assign as-is',
     reportHeading:'Tableau — Project Report',
     noScaleConfigured:'no scale configured',
     reportDate: d => `Project report · ${d}`,
@@ -1281,10 +1329,27 @@ const I18N = {
     libMuteOn:'◎ Mute', libMuteOff:'◎ Muted',
     exportPadLabel:'Export border (px)',
     exportPadHint:'White space around photos in the exported JPEG',
-    addBlock:'+ Block', blockLabel:'Name', blockHeight:'Height (cm)', blockFaceN:'North', blockFaceS:'South', blockFaceE:'East', blockFaceW:'West', blockFaceTop:'Top', blockFaceLink:'Link board', blockFaceUnlink:'Unlink', blockSyncWarn:'This block has linked boards. Resizing may desync them. Continue?', blockDelete:'Delete block',
+    exportFmtJpeg:'JPEG', exportFmtPng:'transparent background',
+    addBlock:'+ Block', blockLabel:'Name', blockHeight:'Height (cm)', blockFaceN:'North', blockFaceS:'South', blockFaceE:'East', blockFaceW:'West', blockFaceTop:'Top', blockFaceLink:'Link board', blockFaceUnlink:'Unlink', blockFaceMismatch:"Board doesn't match this face's dimensions", blockFaceSyncOk:'Board synced to face', blockSyncWarn:'This block has linked boards. Resizing may desync them. Continue?', blockDelete:'Delete block',
     shareProject:'Share project', shareModalTitle:'Share project', shareViewLink:'Read-only link', shareEditLink:'Edit link', shareGenerate:'Generate link', shareRevoke:'Revoke', shareCopy:'Copy link', shareCopied:'Link copied', shareGuestView:'Read only', shareGuestEdit:'Guest editor', shareBoardLocked:'Board is being edited by another user', shareInvalidLink:'Invalid or expired link',
     shareInviteEmail:'Send by email', shareInvitePh:'email@example.com', shareInviteSend:'Send', shareInviteSent:'Invitation sent', shareInviteError:'Error sending email', shareNoSmtp:'SMTP not configured on server',
     shareActiveTitle:'Active invitations', shareActiveEmpty:'No active invitations', shareActiveProject:'Project', shareActiveCreated:'Sent', shareActiveRevoke:'Revoke', shareActiveRevokeOk:'Invitation revoked',
+    menu3DCopy:'Copy', menu3DCut:'Cut', menu3DCopyZone:'Copy zone', menu3DCutZone:'Cut zone',
+    acctChangePass:'Change password', acctAdmin:'⚙ Admin', acctSignOut:'Sign out',
+    settingsTitle:'Settings', settingsOpen:'Settings…', settingsGeneral:'General', settingsProject:'Project',
+    projNotes:'Notes', projNotesPh:'Description, references, ideas…',
+    boardDefaults:'New boards', defFrame:'Default frame', projSaved:'Saved',
+    obLibTitle:'Your library is empty', obLibSub:'Start by adding some photos.',
+    obLibUpload:'↑ Upload photos', obLibDrag:'or drag files here',
+    obLibHelpLink:'What can I do?',
+    obHelpTitle:'What can I do in Tableau?',
+    obHelpCap1T:'Visual boards', obHelpCap1D:'Place and move photos freely on real-scale canvases.',
+    obHelpCap2T:'Image repository', obHelpCap2D:'Reuse your photos across boards without duplicating them.',
+    obHelpCap3T:'3D room view', obHelpCap3D:'Preview your boards on walls in a 3D space.',
+    obHelpClose:'Got it',
+    obBoardHint:'Drag a photo from the library to place it on the board.',
+    obDontShowAgain:"Don't show again", obDismissTitle:'Hide this guide',
+    obSettingsTitle:'Getting-started guides', obResetBtn:'↺ Reset getting-started guides', obResetDone:'Getting-started guides reset',
   },
 };
 
@@ -1451,6 +1516,7 @@ function App() {
   const [projCtxMenu,   setProjCtxMenu]   = useState(null); // {x, y, id}
   const pendingRoomViewRef = useRef(false);
   const [canvasCtx,     setCanvasCtx]     = useState(null); // {x, y, cx, cy} canvas right-click
+  const [ctx3DMenu,     setCtx3DMenu]     = useState(null); // {x, y, boardId, itemId, photoId} 3D right-click
   const [showLibPreview, setShowLibPreview] = useState(() => localStorage.getItem('tb-lib-preview') !== 'false');
   const [libMuted,       setLibMuted]       = useState(false);
   const [uploadDropOpen, setUploadDropOpen] = useState(false);
@@ -1466,6 +1532,7 @@ function App() {
   const [fillPlaceholder,setFillPlaceholder]= useState(null); // {itemId}
   const [dupModal,       setDupModal]       = useState(null); // {imageFiles, duplicates, dropPos, sectionId}
   const [exportDropOpen, setExportDropOpen] = useState(false);
+  const [exportFmt,      setExportFmt]      = useState(() => localStorage.getItem('tb-exportfmt') || 'jpg');
   const [gridDropOpen,   setGridDropOpen]   = useState(false);
   const [trashCount,     setTrashCount]     = useState({ photos: 0, projects: 0, total: 0 });
   const [trashModal,     setTrashModal]     = useState(false);
@@ -1530,9 +1597,31 @@ function App() {
 
   const [theme,         setTheme]         = useState(() => { const s = localStorage.getItem('tb-theme'); return (s && THEMES[s]) ? s : 'dark-amber'; });
   const [themeOpen,     setThemeOpen]     = useState(false);
+  const [avatarOpen,    setAvatarOpen]    = useState(false);
+  const [settingsOpen,  setSettingsOpen]  = useState(false);
+  const [settingsTab,   setSettingsTab]   = useState(() => localStorage.getItem('tb-settings-tab') || 'general');
+  const [settingsShare, setSettingsShare] = useState(null); // {view, edit} para el tab Proyecto
+  const [settingsProjName,  setSettingsProjName]  = useState('');
+  const [settingsProjNotes, setSettingsProjNotes] = useState('');
+  const [settingsProjDefs,  setSettingsProjDefs]  = useState({ units:'cm', dpi:150, defaultFrame:0, exportFmt:'jpg' });
   const [appVersion,    setAppVersion]    = useState('');
   const [updateInfo,    setUpdateInfo]    = useState(null);
   const [updateDismissed, setUpdateDismissed] = useState(false);
+
+  // Onboarding guides state
+  const OB_DEFAULT = { v:1, lib:{ dismissed:false }, board:{ dismissed:false }, helpDismissed:false };
+  const readOnboarding = () => { try { const s = localStorage.getItem('tb-onboarding'); if (!s) return OB_DEFAULT; const p = JSON.parse(s); return (p && p.v === 1) ? p : OB_DEFAULT; } catch { return OB_DEFAULT; } };
+  const [onboarding,    setOnboarding]    = useState(() => readOnboarding());
+  const [showHelpOverlay, setShowHelpOverlay] = useState(false);
+  const [helpDontShow,  setHelpDontShow]  = useState(false);
+  const dismissGuide = key => {
+    setOnboarding(prev => {
+      const next = { ...prev, [key]: { ...prev[key], dismissed: true } };
+      localStorage.setItem('tb-onboarding', JSON.stringify(next));
+      return next;
+    });
+  };
+  const resetOnboarding = () => { localStorage.removeItem('tb-onboarding'); setOnboarding(OB_DEFAULT); };
 
   // Share / guest state
   const [shareRole,     setShareRole]     = useState(null);   // null=owner, 'view'|'edit'=guest
@@ -1605,6 +1694,8 @@ function App() {
   const toggle3DPersonRef    = useRef(null);
   const togglePersonMoveRef  = useRef(null);
   const toggle3DWalkRef      = useRef(null);
+  const copy3DItemRef        = useRef(null);
+  const roomViewRef          = useRef('board');
   const undoStack       = useRef([]);
   const redoStack       = useRef([]);
   const wasDragged      = useRef(false);
@@ -1626,6 +1717,7 @@ function App() {
   useEffect(() => { showLibPreviewRef.current = showLibPreview; }, [showLibPreview]);
   useEffect(() => { allBoardItemsRef.current = allBoardItems; }, [allBoardItems]);
   useEffect(() => { boardsRef.current        = boards;        }, [boards]);
+  useEffect(() => { roomViewRef.current      = roomView;      }, [roomView]);
   useEffect(() => {
     if (!ctxMenu) return;
     const close = () => setCtxMenu(null);
@@ -1861,6 +1953,28 @@ function App() {
   useEffect(() => { if (pid) localStorage.setItem('tb-lastpid', pid); }, [pid]);
   useEffect(() => { if (pid && bid) localStorage.setItem(`tb-lastbid-${pid}`, bid); }, [bid, pid]);
 
+  // Sync exportFmt from active project defaults when switching projects
+  useEffect(() => {
+    const proj = projects.find(p => p.id === pid);
+    if (proj?.defaults?.exportFmt) setExportFmt(proj.defaults.exportFmt);
+  }, [pid]);
+
+  // Init settings modal state when it opens or active project changes
+  useEffect(() => {
+    if (!settingsOpen) return;
+    const proj = projects.find(p => p.id === pid);
+    setSettingsProjName(proj?.name || '');
+    setSettingsProjNotes(proj?.notes || '');
+    const d = proj?.defaults || {};
+    setSettingsProjDefs({ units: d.units||'cm', dpi: d.dpi||150, defaultFrame: d.defaultFrame||0, exportFmt: d.exportFmt||'jpg' });
+  }, [settingsOpen, pid]);
+
+  // Load share links when PROYECTO tab is active in settings
+  useEffect(() => {
+    if (!settingsOpen || settingsTab !== 'project' || !pid || !authMode || shareRole) return;
+    api.get(`/api/projects/${pid}/share`).then(d => setSettingsShare(d)).catch(() => setSettingsShare(null));
+  }, [settingsOpen, settingsTab, pid]);
+
   useEffect(() => {
     if (!pid) {
       setRooms([]); roomsRef.current = [];
@@ -2013,6 +2127,7 @@ function App() {
 
       const loader  = new THREE.TextureLoader();
       const walkTargets = [];
+      const itemMeshes  = []; // all photo/text pMeshes — used for right-click raycasting
 
       const vertexPosts = new Map();
       room.walls.forEach(wall => {
@@ -2050,6 +2165,9 @@ function App() {
         wMesh.position.set((x1+x2)/2, wh/2, (z1+z2)/2);
         wMesh.rotation.y = rotY;
         wMesh.userData.isWalkTarget = true;
+        // Unambiguous single-board wall: expose boardId for paste-click navigation
+        if (wall.boardId && !wall.boardIdBack) wMesh.userData.boardId = wall.boardId;
+        else if (!wall.boardId && wall.boardIdBack) wMesh.userData.boardId = wall.boardIdBack;
         scene.add(wMesh);
         walkTargets.push(wMesh);
 
@@ -2123,8 +2241,13 @@ function App() {
           );
           pMesh.rotation.z = itemRotRad;
           pMesh.userData.isWalkTarget = true;
+          pMesh.userData.itemId  = item.id;
+          pMesh.userData.boardId = boardId;
+          pMesh.userData.photoId = item.photoId;
+          pMesh.userData.zoneId  = item.zoneId || null;
           faceGroup.add(pMesh);
           walkTargets.push(pMesh);
+          itemMeshes.push(pMesh);
           if (isText) {
             const SCALE = 2;
             const cvW = Math.max(1, Math.round(item.w * SCALE));
@@ -2308,7 +2431,12 @@ function App() {
               new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, transparent: true })
             );
             pMesh.rotation.z = itemRotRad;
+            pMesh.userData.itemId  = item.id;
+            pMesh.userData.boardId = faceLink.boardId;
+            pMesh.userData.photoId = item.photoId;
+            pMesh.userData.zoneId  = item.zoneId || null;
             faceGroup.add(pMesh);
+            itemMeshes.push(pMesh);
             applyBlockItemMat(pMesh, item, itemH, hexBlock(face));
           });
         });
@@ -2359,7 +2487,12 @@ function App() {
                   new THREE.PlaneGeometry(iw, ih),
                   new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, transparent: true })
                 );
+                pMesh.userData.itemId  = item.id;
+                pMesh.userData.boardId = topLink.boardId;
+                pMesh.userData.photoId = item.photoId;
+                pMesh.userData.zoneId  = item.zoneId || null;
                 mkFlat(pMesh, 0);
+                itemMeshes.push(pMesh);
                 applyBlockItemMat(pMesh, item, itemH, hexBlock('t'));
               });
             }
@@ -2528,6 +2661,32 @@ function App() {
       };
       toggle3DWalkRef.current = () => walkActive ? exitWalk() : enterWalk();
 
+      // Expose clipboard function for 3D right-click copy/cut
+      copy3DItemRef.current = ({ boardId, itemId, photoId, isCut }) => {
+        const rawItems = boardItemsMap[boardId] || [];
+        const item = itemId
+          ? rawItems.find(i => i.id === itemId)
+          : rawItems.find(i => i.photoId === photoId);
+        if (!item) return;
+        // Zones: expand to include all child items (mirrors 2D copySelToBoardClipboard)
+        const expanded = [item];
+        if (item.type === 'zone') {
+          rawItems.filter(i => i.zoneId === item.id).forEach(child => {
+            if (!expanded.find(e => e.id === child.id)) expanded.push(child);
+          });
+          expanded.sort((a, b) => (a.z || 0) - (b.z || 0));
+        }
+        clipboardRef.current = expanded.map(i => ({ ...i }));
+        clipCutRef.current = isCut ? { isCut: true, srcBid: boardId } : null;
+        setClipBanner({ count: 1, isCut });
+        if (isCut) {
+          expanded.forEach(i => {
+            api.delete(`/api/projects/${pid}/boards/${boardId}/items/${i.id}`).catch(() => {});
+          });
+          setRoom(r => r ? { ...r } : r); // force scene rebuild to reflect deletion
+        }
+      };
+
       // Click on canvas while walking:
       //   hit wall/photo → snap camera in front of it
       //   hit empty space → request pointer lock for free look
@@ -2586,6 +2745,105 @@ function App() {
         releaseLock();
       };
 
+      // Right-click on 3D canvas: raycast itemMeshes and show copy/cut menu
+      const ctxRay = new THREE.Raycaster();
+      const onCtxMenu = e => {
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const mx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        const my = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        ctxRay.setFromCamera(new THREE.Vector2(mx, my), camera);
+        const hits = ctxRay.intersectObjects(itemMeshes);
+        if (hits.length > 0) {
+          const ud = hits[0].object.userData;
+          if (ud.photoId || ud.itemId) {
+            // Zone takes priority over its member photo
+            const isZone = !!ud.zoneId;
+            const resolvedId    = ud.zoneId  || ud.itemId;
+            const resolvedPhoto = isZone ? undefined : ud.photoId;
+            setCtx3DMenu({ x: e.clientX, y: e.clientY, boardId: ud.boardId, itemId: resolvedId, photoId: resolvedPhoto, isZone });
+            return;
+          }
+        }
+        setCtx3DMenu(null);
+      };
+      canvas.addEventListener('contextmenu', onCtxMenu);
+      controls._ctxCleanup = () => { canvas.removeEventListener('contextmenu', onCtxMenu); };
+
+      // Hover highlight: dim hovered item mesh (or all meshes in the same zone)
+      const hoverRay = new THREE.Raycaster();
+      let hoveredGroup = []; // currently highlighted meshes
+      const applyHover = meshes => {
+        hoveredGroup.forEach(m => {
+          if (!m.material) return;
+          m.material.opacity = m.userData._hoverBaseOp ?? 1;
+          m.material.transparent = m.userData._hoverWasTrans ?? false;
+          m.material.needsUpdate = true;
+        });
+        hoveredGroup = meshes;
+        meshes.forEach(m => {
+          if (!m.material) return;
+          m.userData._hoverBaseOp     = m.userData._hoverBaseOp     ?? m.material.opacity;
+          m.userData._hoverWasTrans   = m.userData._hoverWasTrans   ?? m.material.transparent;
+          m.material.opacity = 0.55;
+          m.material.transparent = true;
+          m.material.needsUpdate = true;
+        });
+      };
+      const onHoverMM = e => {
+        if (document.pointerLockElement === canvas) return;
+        const rect = canvas.getBoundingClientRect();
+        const mx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        const my = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        hoverRay.setFromCamera(new THREE.Vector2(mx, my), camera);
+        const hits = hoverRay.intersectObjects(itemMeshes);
+        if (hits.length > 0) {
+          const ud = hits[0].object.userData;
+          const group = ud.zoneId
+            ? itemMeshes.filter(m => m.userData.boardId === ud.boardId && m.userData.zoneId === ud.zoneId)
+            : [hits[0].object];
+          if (group.length !== hoveredGroup.length || group[0] !== hoveredGroup[0]) applyHover(group);
+          canvas.style.cursor = 'pointer';
+        } else {
+          if (hoveredGroup.length) applyHover([]);
+          canvas.style.cursor = clipboardRef.current.length > 0 ? 'crosshair' : '';
+        }
+      };
+      canvas.addEventListener('mousemove', onHoverMM);
+      controls._hoverCleanup = () => {
+        canvas.removeEventListener('mousemove', onHoverMM);
+        applyHover([]); // restore all materials on exit
+        canvas.style.cursor = '';
+      };
+
+      // Paste-click: left-click on a board surface while clipboard is non-empty
+      // → navigate to that board and immediately arm paste ghost
+      const pasteRay = new THREE.Raycaster();
+      const onPasteClick = e => {
+        if (walkActive) return; // walk mode has its own click handler
+        if (!clipboardRef.current.length) return;
+        const rect = canvas.getBoundingClientRect();
+        const mx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        const my = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        pasteRay.setFromCamera(new THREE.Vector2(mx, my), camera);
+        const allTargets = [...walkTargets, ...itemMeshes];
+        const hits = pasteRay.intersectObjects(allTargets);
+        if (hits.length > 0) {
+          const ud = hits[0].object.userData;
+          if (ud.boardId) {
+            setBid(ud.boardId); bidRef.current = ud.boardId;
+            setRoomView('board');
+            // triggerPasteGhost runs after React re-renders with the new bid
+            requestAnimationFrame(() => triggerPasteGhost());
+          }
+        }
+      };
+      canvas.addEventListener('click', onPasteClick);
+      controls._pasteClickCleanup = () => { canvas.removeEventListener('click', onPasteClick); };
+
+      // Set initial cursor if clipboard already has content on 3D mount
+      if (clipboardRef.current.length > 0) canvas.style.cursor = 'crosshair';
+
       const animate = () => {
         animId = requestAnimationFrame(animate);
         if (walkActive) {
@@ -2627,11 +2885,15 @@ function App() {
       toggle3DPersonRef.current = null;
       togglePersonMoveRef.current = null;
       toggle3DWalkRef.current = null;
+      copy3DItemRef.current  = null;
       if (animId) cancelAnimationFrame(animId);
       if (controls?._wheelCleanup)   controls._wheelCleanup();
       if (controls?._resizeCleanup)  controls._resizeCleanup();
       if (controls?._personCleanup)  controls._personCleanup();
-      if (controls?._walkCleanup)    controls._walkCleanup();
+      if (controls?._walkCleanup)       controls._walkCleanup();
+      if (controls?._ctxCleanup)        controls._ctxCleanup();
+      if (controls?._hoverCleanup)      controls._hoverCleanup();
+      if (controls?._pasteClickCleanup) controls._pasteClickCleanup();
       if (controls) controls.dispose();
       if (renderer) {
         renderer._threeScene?.traverse(obj => {
@@ -4204,6 +4466,8 @@ ${rows}
       }
       if (e.key !== 'Escape') return;
       if (pasteGhostRef.current) { pasteGhostRef.current = null; setPasteGhost(null); setClipBanner(null); return; }
+      // In 3D paste mode: ESC exits crosshair/banner but keeps clipboard for later Ctrl+V in 2D
+      if (roomViewRef.current === '3d' && clipboardRef.current.length > 0) { setClipBanner(null); return; }
       if (clipBanner) { setClipBanner(null); clipboardRef.current = []; clipCutRef.current = null; return; }
       if (sectCtxMenu) { setSectCtxMenu(null); return; }
       if (presZoneIdxRef.current >= 0) { presZoneIdxRef.current = -1; setPresZoneIdx(-1); setPresSwapSel(null); return; }
@@ -6021,22 +6285,39 @@ ${rows}
     }
   };
 
-  const syncWallBoard = async (wall, board) => {
+  const performBoardSync = async (board, newW, newH, successKey) => {
+    const newBPx = getBoardPx({...board, fixedW: newW, fixedH: newH});
+    if (!newBPx) return;
+    const currentPid = pidRef.current;
+    const allItems = await api.get(`/api/boards/${currentPid}/${board.id}/items`);
+    const overflowItems = (allItems || []).filter(item => {
+      if (item.type === 'note' || item.type === 'zone') return false;
+      return (item.x || 0) + (item.w || 0) > newBPx.w || (item.y || 0) + (item.h || 0) > newBPx.h;
+    });
+    const proceed = async () => {
+      await api.patch(`/api/projects/${currentPid}/boards/${board.id}`, {fixedW: newW, fixedH: newH});
+      setBoards(bs => bs.map(b => b.id === board.id ? {...b, fixedW: newW, fixedH: newH} : b));
+      if (overflowItems.length > 0) {
+        const kept = (allItems || []).filter(i => !overflowItems.some(o => o.id === i.id));
+        await api.put(`/api/boards/${currentPid}/${board.id}/items`, kept);
+        if (board.id === bidRef.current) { setItems(kept); itemsRef.current = kept; }
+      }
+      showToast(t(successKey));
+    };
+    if (overflowItems.length > 0) {
+      const n = overflowItems.length;
+      setConfirmModal({ message: t('syncOverflowConfirm', n), confirmLabel: t('syncOverflowBtn', n), danger: false, onConfirm: proceed });
+    } else {
+      proceed();
+    }
+  };
+
+  const syncWallBoard = (wall, board) => {
     const r = roomRef.current; if (!r) return;
     const len = roomWallLen(wall, r.vertices);
     const newW = Math.round(len * 10) / 10;
     const newH = Math.round((wall.height ?? (r.ceilingHeight || 280)) * 10) / 10;
-    const newBPx = getBoardPx({...board, fixedW: newW, fixedH: newH});
-    if (!newBPx) return;
-    const items = await api.get(`/api/boards/${pidRef.current}/${board.id}/items`);
-    const overflow = (items || []).some(item => {
-      if (item.type === 'note' || item.type === 'zone') return false;
-      return (item.x || 0) + (item.w || 0) > newBPx.w;
-    });
-    if (overflow) { showToast(t('salaWallSyncOverflow'), true); return; }
-    await api.patch(`/api/projects/${pidRef.current}/boards/${board.id}`, {fixedW: newW, fixedH: newH});
-    setBoards(bs => bs.map(b => b.id === board.id ? {...b, fixedW: newW, fixedH: newH} : b));
-    showToast(t('salaWallSyncOk'));
+    performBoardSync(board, newW, newH, 'salaWallSyncOk');
   };
 
   const deleteRoom = () => {
@@ -6420,8 +6701,8 @@ ${rows}
     selRef.current = []; setSel([]);
   };
 
-  const buildExportUrl = (exportDpi) => {
-    const q = `quality=92&exportDpi=${exportDpi}`;
+  const buildExportUrl = (exportDpi, fmt = 'jpg') => {
+    const q = `quality=92&exportDpi=${exportDpi}${fmt === 'png' ? '&fmt=png' : ''}`;
     return boardPx
       ? `/api/boards/${pid}/${bid}/export?useBoard=1&${q}`
       : `/api/boards/${pid}/${bid}/export?pad=${activeBoardMeta?.exportPad ?? 60}&${q}`;
@@ -6859,7 +7140,7 @@ ${rows}
   }
 
   return (
-    <div className={`app${presentation ? ' presentation' : ''}`} onClick={() => { selRef.current = []; setSel([]); renaming && setRenaming(null); setThemeOpen(false); setPropsPanelId(null); setTextFmtPanelId(null); setFramePainter(null); }}>
+    <div className={`app${presentation ? ' presentation' : ''}`} onClick={() => { selRef.current = []; setSel([]); renaming && setRenaming(null); setThemeOpen(false); setAvatarOpen(false); setPropsPanelId(null); setTextFmtPanelId(null); setFramePainter(null); setCtx3DMenu(null); }}>
 
       {updateInfo && !updateDismissed && (
         <div className="update-banner">
@@ -6987,21 +7268,23 @@ ${rows}
                   {lang === id && <span style={{color:'var(--acc)',fontSize:11}}>✓</span>}
                 </div>
               ))}
-              {!shareRole && <>
               <div className="pref-divider"/>
-              <div className="pref-sec-hd">{t('libTitle')}</div>
-              <div className={`theme-opt${showLibPreview ? ' active' : ''}`}
-                onClick={() => { const v = !showLibPreview; setShowLibPreview(v); localStorage.setItem('tb-lib-preview', v); }}>
-                <span style={{fontSize:13,lineHeight:1}}>{showLibPreview ? '◉' : '○'}</span>
-                <span className="theme-opt-label">{t('libPreviewToggle')}</span>
-                {showLibPreview && <span style={{color:'var(--acc)',fontSize:11}}>✓</span>}
+              <div className="theme-opt" onClick={() => { setThemeOpen(false); setSettingsOpen(true); }}>
+                <span style={{fontSize:13,lineHeight:1}}>⚙</span>
+                <span className="theme-opt-label">{t('settingsOpen')}</span>
               </div>
-              </>}
-              {authUser && <>
-                <div className="pref-divider"/>
-                <div className="pref-sec-hd">{lang === 'es' ? 'Almacenamiento' : 'Storage'}</div>
-                <div className="pref-about" onClick={e => e.stopPropagation()} style={{gap:6}}>
-                  <span style={{fontSize:11,color:'var(--text)'}}>{authUser.username}</span>
+            </div>
+          )}
+        </div>
+        {authUser && (
+          <div className="avatar-picker" onClick={e => e.stopPropagation()}>
+            <button className="avatar-btn" onClick={() => setAvatarOpen(o => !o)} title={authUser.username}>
+              {authUser.username[0].toUpperCase()}
+            </button>
+            {avatarOpen && (
+              <div className="theme-dropdown" style={{minWidth:200}}>
+                <div className="pref-sec-hd" style={{padding:'8px 12px 4px',fontSize:9,letterSpacing:1}}>{authUser.username}</div>
+                <div className="pref-about" onClick={e => e.stopPropagation()} style={{gap:5,paddingTop:2}}>
                   {(() => {
                     const pct = authUser.quota ? Math.round(authUser.used / authUser.quota * 100) : 0;
                     const usedMb = (authUser.used / 1024 / 1024).toFixed(1);
@@ -7021,37 +7304,25 @@ ${rows}
                   })()}
                   <div style={{display:'flex',gap:6,marginTop:4,flexWrap:'wrap'}}>
                     {authUser?.role === 'admin' && (
-                      <button onClick={() => { setThemeOpen(false); api.get('/api/admin/users').then(us => { setAdminUsers(us); setAdminOpen(true); }).catch(() => {}); }}
+                      <button onClick={() => { setAvatarOpen(false); api.get('/api/admin/users').then(us => { setAdminUsers(us); setAdminOpen(true); }).catch(() => {}); }}
                         style={{padding:'4px 8px',background:'var(--acc-faint)',border:'1px solid var(--acc-dim)',color:'var(--acc)',fontSize:10,letterSpacing:'.5px',textTransform:'uppercase',cursor:'pointer',fontFamily:"'IBM Plex Mono',monospace"}}>
-                        {lang === 'es' ? '⚙ Admin' : '⚙ Admin'}
+                        {t('acctAdmin')}
                       </button>
                     )}
-                    <button onClick={() => { setThemeOpen(false); setChangePwForm({current:'',next:'',next2:'',error:''}); setChangePwOpen(true); }}
+                    <button onClick={() => { setAvatarOpen(false); setChangePwForm({current:'',next:'',next2:'',error:''}); setChangePwOpen(true); }}
                       style={{padding:'4px 8px',background:'transparent',border:'1px solid var(--border2)',color:'var(--sub)',fontSize:10,letterSpacing:'.5px',textTransform:'uppercase',cursor:'pointer',fontFamily:"'IBM Plex Mono',monospace"}}>
-                      {lang === 'es' ? 'Cambiar clave' : 'Change password'}
+                      {t('acctChangePass')}
                     </button>
                     <button onClick={async () => { await api.post('/api/logout'); setAuthUser(null); setProjects([]); setPid(null); setBid(null); setPhotos([]); setItems([]); }}
                       style={{padding:'4px 8px',background:'transparent',border:'1px solid var(--border2)',color:'var(--sub)',fontSize:10,letterSpacing:'.5px',textTransform:'uppercase',cursor:'pointer',fontFamily:"'IBM Plex Mono',monospace"}}>
-                      {lang === 'es' ? 'Cerrar sesión' : 'Sign out'}
+                      {t('acctSignOut')}
                     </button>
                   </div>
                 </div>
-              </>}
-              <div className="pref-divider"/>
-              <div className="pref-sec-hd">{t('aboutLabel')}</div>
-              <div className="pref-about" onClick={e => e.stopPropagation()}>
-                <span className="pref-about-name">Tableau{appVersion ? ` · v${appVersion}` : ''}</span>
-                <span className="pref-about-ver">{t('authorLabel')}: Blas González</span>
-                <a className="pref-about-link"
-                  href="https://blasgonzalezfotografia.com"
-                  target="_blank"
-                  rel="noopener noreferrer">
-                  blasgonzalezfotografia.com
-                </a>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* ── MAIN ── */}
@@ -7622,6 +7893,9 @@ ${rows}
                             const linked = block.faces?.[face];
                             const board = linked?.boardId ? boards.find(b=>b.id===linked.boardId) : null;
                             const faceColor = block.faceColors?.[face] || block.color || '#b8b0a4';
+                            const faceW = face==='t' ? block.w : (face==='n'||face==='s') ? block.w : block.d;
+                            const faceH = face==='t' ? block.d : block.h;
+                            const mm = board && board.fixed && board.units==='cm' && (Math.abs(board.fixedW-faceW)>0.5 || Math.abs((board.fixedH||0)-faceH)>0.5);
                             return (
                               <div key={face} style={{display:'flex',gap:1,alignItems:'stretch'}}
                                 onMouseEnter={()=>setRoomHovBlock({blockId:block.id,face})}
@@ -7633,8 +7907,6 @@ ${rows}
                                     if (board) {
                                       setBid(board.id); bidRef.current = board.id; setRoomView('board');
                                     } else {
-                                      const faceW = face==='t' ? block.w : (face==='n'||face==='s') ? block.w : block.d;
-                                      const faceH = face==='t' ? block.d : block.h;
                                       const dpi = Math.max(1, Math.round(4000 / faceW * 2.54 * 10) / 10);
                                       const defaultW = Math.round(60 / 2.54 * dpi);
                                       const label = `${block.label||(lang==='es'?'Bloque':'Block')} ${faceLabels[face]}`;
@@ -7652,6 +7924,13 @@ ${rows}
                                     }
                                   }}
                                 >{faceLabels[face]}{board?' ▶':' +'}</button>
+                                {mm && <span className="room-wall-warn" title={t('blockFaceMismatch')} style={{fontSize:9,alignSelf:'center'}}>⚠</span>}
+                                {mm && board && (
+                                  <button className="btn" style={{fontSize:8,padding:'1px 3px',flexShrink:0,color:'#e87528',borderColor:'#e87528',alignSelf:'stretch'}}
+                                    onClick={() => performBoardSync(board, Math.round(faceW * 10) / 10, Math.round(faceH * 10) / 10, 'blockFaceSyncOk')}>
+                                    {t('salaWallSync')}
+                                  </button>
+                                )}
                                 <input type="color" value={faceColor}
                                   style={{width:12,padding:0,border:'1px solid var(--border2)',cursor:'pointer',flexShrink:0,background:'none'}}
                                   title={lang==='es'?`Color ${faceLabels[face]}`:`${faceLabels[face]} color`}
@@ -7822,21 +8101,7 @@ ${rows}
                                   {mm && <span className="room-wall-warn" title={t('salaWallMismatch')} style={{fontSize:9}}>⚠</span>}
                                   {mm && board && (
                                     <button className="btn" style={{fontSize:8,padding:'1px 4px',flexShrink:0,color:'#e87528',borderColor:'#e87528'}}
-                                      onClick={async () => {
-                                        const newW = Math.round(faceW * 10) / 10;
-                                        const newH = Math.round(faceH * 10) / 10;
-                                        const newBPx = getBoardPx({...board, fixedW: newW, fixedH: newH});
-                                        if (!newBPx) return;
-                                        const items = await api.get(`/api/boards/${pidRef.current}/${board.id}/items`);
-                                        const overflow = (items || []).some(item => {
-                                          if (item.type === 'note' || item.type === 'zone') return false;
-                                          return (item.x || 0) + (item.w || 0) > newBPx.w;
-                                        });
-                                        if (overflow) { showToast(t('salaWallSyncOverflow'), true); return; }
-                                        await api.patch(`/api/projects/${pidRef.current}/boards/${board.id}`, {fixedW: newW, fixedH: newH});
-                                        setBoards(bs => bs.map(b => b.id === board.id ? {...b, fixedW: newW, fixedH: newH} : b));
-                                        showToast(t('salaWallSyncOk'));
-                                      }}>
+                                      onClick={() => performBoardSync(board, Math.round(faceW * 10) / 10, Math.round(faceH * 10) / 10, 'salaWallSyncOk')}>
                                       {t('salaWallSync')}
                                     </button>
                                   )}
@@ -7914,6 +8179,13 @@ ${rows}
                   {walkMode3D && walkStarted && walkLocked && (
                     <div style={{position:'absolute',bottom:14,left:'50%',transform:'translateX(-50%)',background:'rgba(0,0,0,.5)',color:'rgba(255,255,255,.5)',fontSize:9,padding:'3px 12px',pointerEvents:'none',whiteSpace:'nowrap',zIndex:5}}>
                       {lang==='es'?'↑↓ avanzar · ←→ girar · Esc soltar ratón':'↑↓ move · ←→ turn · Esc release mouse'}
+                    </div>
+                  )}
+                  {ctx3DMenu && (
+                    <div style={{position:'fixed',left:ctx3DMenu.x,top:ctx3DMenu.y,zIndex:300,background:'var(--modal,var(--bg))',border:'1px solid var(--border)',borderRadius:4,padding:'4px 0',minWidth:130,boxShadow:'0 4px 20px rgba(0,0,0,.35)'}}
+                      onClick={e => e.stopPropagation()}>
+                      <button className="ctx-item" onClick={() => { const d=ctx3DMenu; setCtx3DMenu(null); copy3DItemRef.current?.({boardId:d.boardId,itemId:d.itemId,photoId:d.photoId,isCut:false}); }}>{t(ctx3DMenu.isZone ? 'menu3DCopyZone' : 'menu3DCopy')}</button>
+                      <button className="ctx-item" onClick={() => { const d=ctx3DMenu; setCtx3DMenu(null); copy3DItemRef.current?.({boardId:d.boardId,itemId:d.itemId,photoId:d.photoId,isCut:true}); }}>{t(ctx3DMenu.isZone ? 'menu3DCutZone' : 'menu3DCut')}</button>
                     </div>
                   )}
                   <div className="room-toolbar room-toolbar-3d">
@@ -8158,12 +8430,19 @@ ${rows}
                   </div>
                 )}
                 {bid && items.length === 0 && (
-                  <div className="hint">
-                    <em>{t('emptyBoard')}</em>
-                    {t('dragHint1')}<br/>
-                    {t('dragHint2')}<br/>
-                    {t('dragHint3')}
-                  </div>
+                  photos.length > 0 && !onboarding.board.dismissed ? (
+                    <div className="hint-ob">
+                      <span>{t('obBoardHint')}</span>
+                      <button className="hint-ob-x" title={t('obDismissTitle')} onClick={() => dismissGuide('board')}>×</button>
+                    </div>
+                  ) : (
+                    <div className="hint">
+                      <em>{t('emptyBoard')}</em>
+                      {t('dragHint1')}<br/>
+                      {t('dragHint2')}<br/>
+                      {t('dragHint3')}
+                    </div>
+                  )
                 )}
 
                 {(() => {
@@ -8874,10 +9153,16 @@ ${rows}
                     <div className="lib-scroll">
                       {photos.length === 0 ? (
                         <div className="lib-empty">
-                          <label htmlFor="tb-upload" style={{cursor:'pointer',color:'var(--acc-dim)'}}>
-                            {t('uploadHint')}
-                          </label>
-                          <span style={{fontSize:9,color:'var(--muted)'}}>{t('dragFilesHint')}</span>
+                          {!onboarding.lib.dismissed ? (<>
+                            <span className="lib-empty-title">{t('obLibTitle')}</span>
+                            <span className="lib-empty-sub">{t('obLibSub')}</span>
+                            <label htmlFor="tb-upload" className="lib-empty-upload-btn">{t('obLibUpload')}</label>
+                            <span className="lib-empty-drag">{t('obLibDrag')}</span>
+                            {!onboarding.helpDismissed && <button className="lib-empty-help" onClick={() => { setHelpDontShow(false); setShowHelpOverlay(true); }}>{t('obLibHelpLink')}</button>}
+                          </>) : (<>
+                            <label htmlFor="tb-upload" style={{cursor:'pointer',color:'var(--acc-dim)'}}>{t('uploadHint')}</label>
+                            <span style={{fontSize:9,color:'var(--muted)'}}>{t('dragFilesHint')}</span>
+                          </>)}
                         </div>
                       ) : (() => {
                         const plItem = fillPlaceholder ? items.find(i => i.id === fillPlaceholder.itemId) : null;
@@ -9673,9 +9958,19 @@ ${rows}
         <>
           <div style={{position:'fixed',inset:0,zIndex:599}} onClick={() => setExportDropOpen(false)}/>
           <div className="upload-drop" style={{position:'fixed',right:exportDropPos.right,top:exportDropPos.top,zIndex:600}}>
+            <div style={{display:'flex',gap:3,padding:'6px 8px 2px'}}>
+              {[['jpg', t('exportFmtJpeg')], ['png', 'PNG']].map(([fmt, label]) => (
+                <button key={fmt} className={`btn${exportFmt===fmt?' acc':''}`}
+                  style={{flex:1,fontSize:9,padding:'2px 6px'}}
+                  onClick={() => { setExportFmt(fmt); localStorage.setItem('tb-exportfmt', fmt); }}>
+                  {label}
+                </button>
+              ))}
+            </div>
+            {exportFmt === 'png' && <div style={{fontSize:8,color:'var(--dim)',padding:'1px 10px 4px',textAlign:'center'}}>↳ {t('exportFmtPng')}</div>}
             {[[96, lang==='es'?'Pantalla / web':'Screen / web','96 dpi'],[150, lang==='es'?'Borrador / uso general':'Draft / general use','150 dpi'],[300, lang==='es'?'Imprenta / alta calidad':'Press / high quality','300 dpi']].map(([dpi, label, sub]) => (
               <a key={dpi} className="upload-drop-item" style={{display:'flex',justifyContent:'space-between',gap:16,textDecoration:'none'}}
-                href={buildExportUrl(dpi)} download onClick={() => setExportDropOpen(false)}>
+                href={buildExportUrl(dpi, exportFmt)} download onClick={() => setExportDropOpen(false)}>
                 <span>{label}</span><span style={{color:'var(--dim)'}}>{sub}</span>
               </a>
             ))}
@@ -10806,6 +11101,233 @@ ${rows}
           </div>
         );
       })()}
+
+      {/* ── SETTINGS MODAL ── */}
+      {settingsOpen && (
+        <div className="overlay" style={{zIndex:1100}} onClick={() => setSettingsOpen(false)}>
+          <div className="modal" style={{maxWidth:620,width:'92vw',padding:0,display:'flex',flexDirection:'column',maxHeight:'85vh'}} onClick={e => e.stopPropagation()}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'12px 18px',borderBottom:'1px solid var(--border)',flexShrink:0}}>
+              <span style={{fontWeight:600,fontSize:13,letterSpacing:.3}}>{t('settingsTitle')}</span>
+              <button style={{background:'none',border:'none',color:'var(--sub)',cursor:'pointer',fontSize:20,lineHeight:1,padding:'0 2px'}} onClick={() => setSettingsOpen(false)}>×</button>
+            </div>
+            <div style={{display:'flex',flex:1,overflow:'hidden',minHeight:0}}>
+              {/* Sidebar */}
+              <div style={{width:120,flexShrink:0,borderRight:'1px solid var(--border)',padding:'8px 0',display:'flex',flexDirection:'column',gap:1}}>
+                {[['general', t('settingsGeneral')], ...(pid ? [['project', t('settingsProject')]] : [])].map(([tab, label]) => (
+                  <button key={tab}
+                    style={{padding:'9px 14px',background:settingsTab===tab?'var(--acc-faint)':'transparent',border:'none',borderLeft:settingsTab===tab?'2px solid var(--acc)':'2px solid transparent',color:settingsTab===tab?'var(--acc)':'var(--sub)',textAlign:'left',cursor:'pointer',fontSize:11,letterSpacing:.3,fontFamily:"'IBM Plex Mono',monospace",transition:'all .12s'}}
+                    onClick={() => { setSettingsTab(tab); localStorage.setItem('tb-settings-tab', tab); }}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+              {/* Content */}
+              <div style={{flex:1,overflowY:'auto',padding:'18px 22px',display:'flex',flexDirection:'column',gap:18}}>
+                {(settingsTab === 'general' || !pid) && (() => (
+                  <>
+                    <div>
+                      <div className="pref-sec-hd" style={{padding:'0 0 6px'}}>{t('themeLabel')}</div>
+                      {Object.entries(THEMES).map(([id, th]) => (
+                        <div key={id} className={`theme-opt${theme === id ? ' active' : ''}`} onClick={() => applyTheme(id)}>
+                          <div className="theme-swatches">
+                            <div className="theme-sw" style={{background: th.bg, border:'1px solid #8884'}}/>
+                            <div className="theme-sw" style={{background: th.acc}}/>
+                          </div>
+                          <span className="theme-opt-label">{th.label}</span>
+                          {theme === id && <span style={{color:'var(--acc)',fontSize:11}}>✓</span>}
+                        </div>
+                      ))}
+                    </div>
+                    <div>
+                      <div className="pref-sec-hd" style={{padding:'0 0 6px'}}>{t('langLabel')}</div>
+                      {[['es','Español'],['en','English']].map(([id, label]) => (
+                        <div key={id} className={`theme-opt${lang === id ? ' active' : ''}`} onClick={() => applyLang(id)}>
+                          <span style={{fontSize:13,lineHeight:1}}>{id==='es'?'ES':'EN'}</span>
+                          <span className="theme-opt-label">{label}</span>
+                          {lang === id && <span style={{color:'var(--acc)',fontSize:11}}>✓</span>}
+                        </div>
+                      ))}
+                    </div>
+                    {!shareRole && (
+                      <div>
+                        <div className="pref-sec-hd" style={{padding:'0 0 6px'}}>{t('libTitle')}</div>
+                        <div className={`theme-opt${showLibPreview ? ' active' : ''}`}
+                          onClick={() => { const v = !showLibPreview; setShowLibPreview(v); localStorage.setItem('tb-lib-preview', v); }}>
+                          <span style={{fontSize:13,lineHeight:1}}>{showLibPreview ? '◉' : '○'}</span>
+                          <span className="theme-opt-label">{t('libPreviewToggle')}</span>
+                          {showLibPreview && <span style={{color:'var(--acc)',fontSize:11}}>✓</span>}
+                        </div>
+                      </div>
+                    )}
+                    <div>
+                      <div className="pref-sec-hd" style={{padding:'0 0 6px'}}>{t('obSettingsTitle')}</div>
+                      <button className="theme-opt" style={{width:'100%',border:'none',cursor:'pointer',justifyContent:'flex-start',gap:8}}
+                        onClick={() => { resetOnboarding(); showToast(t('obResetDone')); }}>
+                        <span style={{fontSize:12,lineHeight:1,color:'var(--acc-dim)'}}>{t('obResetBtn')}</span>
+                      </button>
+                    </div>
+                    <div className="pref-divider" style={{margin:0}}/>
+                    <div className="pref-about" style={{padding:0}}>
+                      <span className="pref-about-name">Tableau{appVersion ? ` · v${appVersion}` : ''}</span>
+                      <span className="pref-about-ver">{t('authorLabel')}: Blas González</span>
+                      <a className="pref-about-link" href="https://blasgonzalezfotografia.com" target="_blank" rel="noopener noreferrer">blasgonzalezfotografia.com</a>
+                    </div>
+                  </>
+                ))()}
+                {settingsTab === 'project' && pid && (() => {
+                  const inpSt = { width:'100%', padding:'6px 9px', background:'var(--input)', border:'1px solid var(--border)', borderRadius:4, color:'var(--text)', fontSize:12, outline:'none', boxSizing:'border-box' };
+                  const saveProj = async patch => {
+                    await api.patch(`/api/projects/${pid}`, patch);
+                    setProjects(ps => ps.map(p => p.id === pid ? { ...p, ...patch } : p));
+                    showToast(t('projSaved'));
+                  };
+                  const saveDefs = newDefs => {
+                    setSettingsProjDefs(newDefs);
+                    if (newDefs.exportFmt) setExportFmt(newDefs.exportFmt);
+                    api.patch(`/api/projects/${pid}`, { defaults: newDefs });
+                    setProjects(ps => ps.map(p => p.id === pid ? { ...p, defaults: newDefs } : p));
+                  };
+                  return <>
+                    <div>
+                      <div className="pref-sec-hd" style={{padding:'0 0 4px'}}>{t('newProjectTitle')}</div>
+                      <input value={settingsProjName} style={inpSt}
+                        onChange={e => setSettingsProjName(e.target.value)}
+                        onBlur={() => { if (settingsProjName.trim() && settingsProjName.trim() !== activeProject?.name) saveProj({name: settingsProjName.trim()}); }}
+                        onKeyDown={e => { if (e.key === 'Enter') e.target.blur(); }}/>
+                    </div>
+                    <div>
+                      <div className="pref-sec-hd" style={{padding:'0 0 4px'}}>{t('projNotes')}</div>
+                      <textarea value={settingsProjNotes} placeholder={t('projNotesPh')}
+                        style={{...inpSt, minHeight:80, resize:'vertical', fontFamily:'inherit', lineHeight:1.5}}
+                        onChange={e => setSettingsProjNotes(e.target.value)}
+                        onBlur={() => { if (settingsProjNotes !== (activeProject?.notes||'')) saveProj({notes: settingsProjNotes}); }}/>
+                    </div>
+                    <div>
+                      <div className="pref-sec-hd" style={{padding:'0 0 8px'}}>{t('boardDefaults')}</div>
+                      <div style={{display:'grid',gridTemplateColumns:'auto 1fr',gap:'8px 12px',alignItems:'center'}}>
+                        <span style={{fontSize:11,color:'var(--sub)'}}>{t('unitsLabel')}</span>
+                        <select value={settingsProjDefs.units} style={{...inpSt,width:'auto'}}
+                          onChange={e => saveDefs({...settingsProjDefs, units: e.target.value})}>
+                          <option value="cm">cm</option><option value="mm">mm</option>
+                          <option value="in">in</option><option value="px">px</option>
+                        </select>
+                        <span style={{fontSize:11,color:'var(--sub)'}}>{t('resolutionLabel')}</span>
+                        <select value={settingsProjDefs.dpi} style={{...inpSt,width:'auto'}}
+                          onChange={e => saveDefs({...settingsProjDefs, dpi: Number(e.target.value)})}>
+                          <option value={72}>72 dpi</option><option value={96}>96 dpi</option>
+                          <option value={150}>150 dpi</option><option value={300}>300 dpi</option>
+                          <option value={600}>600 dpi</option>
+                        </select>
+                        <span style={{fontSize:11,color:'var(--sub)'}}>{t('defFrame')} (cm)</span>
+                        <input type="number" min={0} step={0.5} value={settingsProjDefs.defaultFrame}
+                          style={{...inpSt,width:80}}
+                          onChange={e => saveDefs({...settingsProjDefs, defaultFrame: parseFloat(e.target.value)||0})}/>
+                        <span style={{fontSize:11,color:'var(--sub)'}}>{t('exportJpeg')}</span>
+                        <div style={{display:'flex',gap:4}}>
+                          {[['jpg', t('exportFmtJpeg')], ['png','PNG']].map(([fmt, label]) => (
+                            <button key={fmt} className={`btn${settingsProjDefs.exportFmt===fmt?' acc':''}`}
+                              style={{fontSize:10,padding:'3px 10px'}}
+                              onClick={() => saveDefs({...settingsProjDefs, exportFmt: fmt})}>
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    {authMode && !shareRole && (
+                      <div>
+                        <div className="pref-sec-hd" style={{padding:'0 0 8px'}}>{t('shareProject')}</div>
+                        {settingsShare === null
+                          ? <span style={{fontSize:11,color:'var(--muted)'}}>…</span>
+                          : [['view', t('shareViewLink')], ['edit', t('shareEditLink')]].map(([role, label]) => {
+                              const info = settingsShare?.[role];
+                              return (
+                                <div key={role} style={{marginBottom:10}}>
+                                  <div style={{fontSize:10,color:'var(--sub)',marginBottom:4,letterSpacing:.3}}>{label}</div>
+                                  {info ? (
+                                    <div style={{display:'flex',gap:5,alignItems:'center',flexWrap:'wrap'}}>
+                                      <input readOnly value={info.url} style={{flex:1,minWidth:0,fontSize:10,padding:'3px 7px',background:'var(--input)',border:'1px solid var(--border)',borderRadius:3,color:'var(--muted)'}}
+                                        onFocus={e => e.target.select()}/>
+                                      <button className="btn" style={{fontSize:10,padding:'3px 8px',whiteSpace:'nowrap'}}
+                                        onClick={() => { navigator.clipboard.writeText(info.url); showToast(t('shareCopied')); }}>
+                                        {t('shareCopy')}
+                                      </button>
+                                      <button className="btn" style={{fontSize:10,padding:'3px 8px',whiteSpace:'nowrap',color:'var(--danger,#e06c75)',borderColor:'var(--danger,#e06c75)'}}
+                                        onClick={() => api.delete(`/api/projects/${pid}/share/${role}`)
+                                          .then(() => setSettingsShare(s => ({...s, [role]: null})))
+                                          .catch(() => {})}>
+                                        {t('shareRevoke')}
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <button className="btn acc" style={{fontSize:10,padding:'3px 10px'}}
+                                      onClick={() => api.post(`/api/projects/${pid}/share`, {role})
+                                        .then(d => setSettingsShare(s => ({...s, [role]: {token:d.token, url:d.url, created:Date.now()}})))
+                                        .catch(() => {})}>
+                                      {t('shareGenerate')}
+                                    </button>
+                                  )}
+                                </div>
+                              );
+                            })
+                        }
+                      </div>
+                    )}
+                  </>;
+                })()}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showHelpOverlay && (
+        <div className="ob-overlay" onClick={() => setShowHelpOverlay(false)}>
+          <div className="ob-box" onClick={e => e.stopPropagation()}>
+            <div className="ob-box-hd">
+              <span className="ob-box-title">{t('obHelpTitle')}</span>
+              <button className="ob-box-close" onClick={() => setShowHelpOverlay(false)}>×</button>
+            </div>
+            <div className="ob-cap">
+              <span className="ob-cap-icon">🗂</span>
+              <div className="ob-cap-body">
+                <div className="ob-cap-t">{t('obHelpCap1T')}</div>
+                <div className="ob-cap-d">{t('obHelpCap1D')}</div>
+              </div>
+            </div>
+            <div className="ob-cap">
+              <span className="ob-cap-icon">🖼</span>
+              <div className="ob-cap-body">
+                <div className="ob-cap-t">{t('obHelpCap2T')}</div>
+                <div className="ob-cap-d">{t('obHelpCap2D')}</div>
+              </div>
+            </div>
+            <div className="ob-cap">
+              <span className="ob-cap-icon">🧊</span>
+              <div className="ob-cap-body">
+                <div className="ob-cap-t">{t('obHelpCap3T')}</div>
+                <div className="ob-cap-d">{t('obHelpCap3D')}</div>
+              </div>
+            </div>
+            <div className="ob-box-footer">
+              <label className="ob-dont-show">
+                <input type="checkbox" checked={helpDontShow} onChange={e => setHelpDontShow(e.target.checked)}/>
+                {t('obDontShowAgain')}
+              </label>
+              <button className="ob-close-btn" onClick={() => {
+                if (helpDontShow) {
+                  setOnboarding(prev => {
+                    const next = { ...prev, helpDismissed: true };
+                    localStorage.setItem('tb-onboarding', JSON.stringify(next));
+                    return next;
+                  });
+                }
+                setShowHelpOverlay(false);
+              }}>{t('obHelpClose')}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
