@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.20.4] — 2026-06-06
+
+### Corregido
+- El arranque del servidor ya no bloquea el event loop en ningún modo de Passenger: `GET /` sirve `_built.html` con `res.sendFile()` totalmente asíncrono cuando el fichero existe y es válido (`npm run build`); la compilación Babel solo ocurre bajo demanda en desarrollo (cuando `_built.html` está ausente o `index.html` cambió). Eliminados `setImmediate` y la pre-carga en el callback de `listen()` que seguían bloqueando el event loop con un `fs.readFileSync` síncrono incluso en el fast path
+
+---
+
 ## [1.20.3] — 2026-06-06
 
 ### Añadido

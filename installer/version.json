@@ -1,6 +1,6 @@
 {
-  "version": "1.20.3",
+  "version": "1.20.4",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-06-06",
-  "notes": "Script npm run build para precompilar JSX antes del arranque en produccion; server.listen() ahora inicia la compilacion Babel explicitamente en su callback (modo standalone)."
+  "notes": "El arranque del servidor ya no bloquea el event loop: GET / sirve _built.html con res.sendFile() asincrono cuando existe (npm run build), y compila bajo demanda solo en desarrollo."
 }

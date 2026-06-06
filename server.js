@@ -550,26 +550,21 @@ function compileHtml() {
   });
 }
 
-// Estrategia de compilación JSX según modo de arranque:
-//   - modo standalone : el callback de listen() (fase poll) inicia compileHtml()
-//     explícitamente, garantizando que el puerto está activo antes de que Babel
-//     bloquee. Si _built.html ya existe y es válido (npm run build), la llamada
-//     es una lectura de disco instantánea y no hay bloqueo.
-//   - modo integración (Passenger/Apache/Nginx): listen() no se llama desde aquí;
-//     setImmediate dispara la compilación en el primer tick. Con npm run build
-//     pre-compilado esto también es instantáneo.
-// El safety net del GET / cubre el caso límite de petición antes de compileHtml().
-setImmediate(() => { if (!_htmlReady) _htmlReady = compileHtml(); });
-
-app.get('/', async (req, res) => {
-  if (!_htmlReady) _htmlReady = compileHtml();
-  const html = await _htmlReady;
+// Fast path: si _built.html existe y es más reciente que index.html, se sirve
+// de forma asíncrona con sendFile (cero bloqueo del event loop, compatible con
+// Passenger en cualquier modo). Slow path: compilación bajo demanda solo cuando
+// _built.html está ausente o index.html cambió (desarrollo sin npm run build).
+app.get('/', (req, res) => {
   try {
-    if (fs.statSync(HTML_SRC).mtimeMs > fs.statSync(HTML_BUILT).mtimeMs)
-      _htmlReady = compileHtml();
+    if (fs.statSync(HTML_BUILT).mtimeMs >= fs.statSync(HTML_SRC).mtimeMs)
+      return res.sendFile(HTML_BUILT);
+    _htmlReady = null; // index.html cambió, invalidar caché
   } catch {}
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.send(html);
+  if (!_htmlReady) _htmlReady = compileHtml();
+  _htmlReady.then(html => {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(html);
+  }).catch(() => res.status(500).send('Build error — run npm run build'));
 });
 
 // ── Middleware ───────────────────────────────────────────────────────────────
@@ -2097,7 +2092,6 @@ app.post('/api/projects/import/:tempId/confirm', requireAuth, (req, res) => {
 // ── Start ─────────────────────────────────────────────────────────────────────
 if (require.main === module) {
   const server = app.listen(PORT, () => {
-    if (!_htmlReady) _htmlReady = compileHtml();
     console.log(`
   ╔══════════════════════════════════════╗
   ║           T A B L E A U              ║
