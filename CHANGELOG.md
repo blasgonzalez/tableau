@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.20.6] — 2026-06-06
+
+### Corregido
+- Passenger (integración Apache/Nginx con `passenger_nodejs`) ya no necesita ejecutar el fichero como módulo principal: los tres bloques de arranque (`app.listen`, `checkForUpdates`/`runStartupPurge`/backup, `resetHeartbeat`) ahora también se activan cuando la variable de entorno `PASSENGER_USE_FEEDBACK_FD` está definida, que es la señal estándar de Passenger en modo integrado
+
+---
+
 ## [1.20.5] — 2026-06-06
 
 ### Corregido

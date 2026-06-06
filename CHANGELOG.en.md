@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.20.6] — 2026-06-06
+
+### Fixed
+- Passenger (Apache/Nginx integration mode with `passenger_nodejs`) no longer requires the file to run as the main module: the three startup blocks (`app.listen`, `checkForUpdates`/`runStartupPurge`/backup, `resetHeartbeat`) now also activate when the `PASSENGER_USE_FEEDBACK_FD` environment variable is defined, which is Passenger's standard signal in integration mode
+
+---
+
 ## [1.20.5] — 2026-06-06
 
 ### Fixed

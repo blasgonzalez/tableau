@@ -931,7 +931,7 @@ async function checkForUpdates() {
   } catch {}
 }
 
-if (require.main === module) {
+if (require.main === module || process.env.PASSENGER_USE_FEEDBACK_FD) {
   checkForUpdates();
   setInterval(checkForUpdates, 24 * 60 * 60 * 1000);
   runStartupPurge();
@@ -981,7 +981,7 @@ const resetHeartbeat = () => {
   clearTimeout(heartbeatTimer);
   heartbeatTimer = setTimeout(() => process.exit(0), HEARTBEAT_TIMEOUT);
 };
-if (require.main === module) resetHeartbeat();
+if (require.main === module || process.env.PASSENGER_USE_FEEDBACK_FD) resetHeartbeat();
 // 204 → modo local, cliente sigue enviando latidos.
 // 200 → modo servidor, cliente cancela el intervalo y no vuelve a enviar.
 app.post('/api/heartbeat', (_req, res) => {
@@ -2066,7 +2066,7 @@ app.post('/api/projects/import/:tempId/confirm', requireAuth, (req, res) => {
 });
 
 // ── Start ─────────────────────────────────────────────────────────────────────
-if (require.main === module) {
+if (require.main === module || process.env.PASSENGER_USE_FEEDBACK_FD) {
   const server = app.listen(PORT, () => {
     console.log(`
   ╔══════════════════════════════════════╗
