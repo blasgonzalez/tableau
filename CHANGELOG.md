@@ -1,5 +1,99 @@
 # Changelog
 
+## [1.20.16] — 2026-06-07
+
+### Mejorado
+- **Figura de escala humana — ajuste de proporciones:**
+  - **Cabeza:** +35% de tamaño (`SphereGeometry(15)`), óvalo más pronunciado en Y×1.2 respecto a X/Z (≈24 cm ancho × 29 cm alto)
+  - **Torso:** 10% más corto (y=82→147); hombros +28% más anchos (54 cm ⌀, era 42 cm); cintura más estrangulada (26 cm ⌀) para silueta de maniquí clara; diferencia visual mayor entre hombros/cintura/caderas
+  - **Brazos:** total ~68 cm (brazo 37 cm + antebrazo 31 cm); hombro bajado a y=133 para no parecer pegado al cuello; manos a mitad del muslo (y≈61)
+  - **Juntas:** esfera de codo reducida a r=4 (= radio del antebrazo, discreta); esfera de rodilla reducida a r=5.5 (= radio de la pantorrilla, discreta)
+  - **Pies:** 30 cm de largo, 8 cm de alto (más volumen); girados 180° en Y para que la figura mire hacia el interior de la sala (dirección −Z, hacia la cámara por defecto); inclinación talón/punta `rotation.x=−0.08`
+
+---
+
+## [1.20.15] — 2026-06-07
+
+### Mejorado
+- **Figura de escala humana — aspecto maniquí y figura en modo invitado:**
+  - Color sandy/taupe cálido (`#C4AA8A`, roughness 0.75) en lugar del blanco marfil anterior
+  - Esferas de junta en hombros, codos, caderas y rodillas que solapan con los segmentos de cápsula, eliminando los huecos visibles en las articulaciones
+  - Pies rediseñados: `SphereGeometry` escalada de forma no uniforme (28 cm largo × 10 cm ancho × 6 cm alto, orientados en Z, con ligera inclinación talón/punta)
+  - Los botones **👤 Persona** y **↔ Mover** son ahora visibles en la barra de controles 3D mínima que se muestra al invitado (`?room=TOKEN`), sin necesitar el topbar completo
+
+---
+
+## [1.20.14] — 2026-06-07
+
+### Mejorado
+- **Figura de escala humana (vista 3D) — rediseño tipo maniquí:** silueta más reconocible y proporciones corregidas (canon 7,5 cabezas, 175 cm). Cabeza como óvalo vertical; torso con `LatheGeometry` cerrado en crotch y cuello (hombros 42 cm, cintura 28 cm, caderas 35 cm); brazos y piernas como cápsulas suaves (perfil de semiesferas en `LatheGeometry`) sin articulaciones esféricas visibles; manos y pies como ovoides planos. Material `MeshStandardMaterial` blanco marfil (`#E8E4DF`, roughness 0.85, metalness 0) en sustitución del beige opaco anterior
+
+---
+
+## [1.20.13] — 2026-06-07
+
+### Seguridad
+- **Unicidad de tokens de compartición:** revisión de seguridad en los endpoints `POST /api/projects/:pid/share` y `POST /api/projects/:pid/rooms/:rid/share`. Confirmado que ambos generan siempre un UUID v4 aleatorio nuevo (`uuidv4()`) en cada petición, sin derivar el token de datos del proyecto ni reutilizar el token anterior. Se añaden tests de regresión que verifican que dos llamadas consecutivas producen tokens distintos
+
+---
+
+## [1.20.12] — 2026-06-07
+
+### Corregido
+- **Tooltips inconsistentes:** se unifica el estilo visual de todos los tooltips usando el atributo personalizado `data-tooltip` (estilo CSS custom de Tableau) en lugar de mezclar con `title=""` (tooltips nativos del navegador). Se eliminan tooltips redundantes que solo repetían el texto ya visible en botones
+- **Buttons de formato de texto (Bold, Italic) y color picker de notas:** convertidos a `data-tooltip` para mantener consistencia visual
+- **Grid panel — botones ESC y Enter:** convertidos a `data-tooltip` con los atajos de teclado
+- **Botones de zoom y alineación:** se elimina el atributo `title=""` que coexistía con `data-tooltip`, evitando tooltips duplicados
+
+---
+
+## [1.20.11] — 2026-06-07
+
+### Añadido
+- **Compartir sala — modal rediseñado:** estructura equivalente al modal «Compartir proyecto»: enlace con botón «Copiar», campo de correo y botón «Enviar invitación». Se elimina el acceso a Regenerar/Revocar desde este modal (ahora centralizado en «Invitaciones activas»)
+- **Compartir sala — botón en el menú lateral:** el icono de compartir aparece en la fila de cada sala del panel izquierdo cuando `AUTH_ENABLED=true`
+- **Invitaciones activas — lista unificada:** la ventana muestra ahora tanto links de proyecto como de sala. Cada entrada incluye nombre del proyecto (+ sala si corresponde), tipo («Proyecto — solo lectura» / «Sala — vista 3D»), correo del destinatario si se envió por email (o «—»), fecha de creación, y botones «Copiar enlace» y «Revocar»
+- **Tablero privado — indicador visual:** el icono EyeOff se desplaza a la izquierda del nombre del tablero en el sidebar. Se añade un badge en la miga de pan del topbar y una franja de puntos en la parte superior del canvas cuando el propietario está editando un tablero privado
+
+### Corregido
+- **Hint de onboarding (arrastrar foto al tablero):** el hint de «Momento 3» y el de tablero vacío aparecían fuera del área visible del canvas porque estaban posicionados al 50% de la altura total del canvas (mínimo 2200 px). Ahora usan `position:fixed` y siempre se centran en el viewport
+
+---
+
+## [1.20.10] — 2026-06-07
+
+### Corregido
+- **Sala compartida — fotos no se renderizaban en el visor 3D:** el endpoint `GET /api/projects/:pid/boards` devolvía 403 en scope de sala, lo que dejaba el state `boards` vacío. El renderer 3D necesita los metadatos del tablero (`fixedW`, `dpi`, `units`) para calcular la posición de cada foto en la pared; sin ellos, cortocircuitaba inmediatamente y las superficies aparecían vacías. El servidor ahora devuelve solo los tableros no privados enlazados a esa sala; el cliente los carga junto con las fotos antes de activar la vista 3D
+- **Sala compartida — pantalla de bienvenida errónea con token inválido:** si el token estaba revocado o era malformado, la app mostraba la pantalla de onboarding «Crear primer proyecto» en lugar de un mensaje de error. Ahora se muestra una pantalla de error clara («Este enlace ya no está disponible») cuando el token no puede resolverse. Además, la pantalla de bienvenida queda suprimida permanentemente en cualquier contexto de sala compartida
+
+---
+
+## [1.20.9] — 2026-06-07
+
+### Corregido
+- **Grid cortado al hacer zoom out (tableros variables):** el canvas del grid calculaba su tamaño mínimo con `max(3000, wrapSize / zoom)`. Si `wrapSize` estaba en 0 (por haberse medido mientras el elemento estaba oculto con `display:none` en la vista de sala), el canvas quedaba en 3000 px de canvas, que a zoom muy bajo puede ser menos de 300 px en pantalla. Ahora se usa `window.innerWidth/innerHeight` como fallback cuando `wrapSize` es 0
+- **Grid desaparece en modo auto al hacer zoom out:** la condición `gridVisible` comparaba `gridCellPx × zoom` con `GRID_MIN_PX`, lo que hacía desaparecer el grid a zoom bajo aunque estuviera activado. La visibilidad ahora comprueba el tamaño de celda base (`gridCellPx >= GRID_MIN_PX`), independiente del zoom. La comprobación de zoom para el snap permanece sin cambios
+
+---
+
+## [1.20.8] — 2026-06-07
+
+### Añadido
+- **Compartir sala (modo servidor):** botón de compartir en la barra de herramientas del editor de sala (solo propietarios, solo en modo servidor). Genera un link público `?room=TOKEN` que abre la app directamente en la vista 3D de esa sala sin necesidad de cuenta. Un solo token activo por sala; regenerar revoca el anterior. Incluye modal con copiar, regenerar y revocar
+- **Acceso restringido al scope de sala:** el link de sala da acceso solo a la geometría de esa sala, a los items de los tableros enlazados a sus paredes y bloques, y a las fotos estrictamente referenciadas por esos items. Cualquier otro recurso del proyecto devuelve 403
+- **Layout de sala compartida:** el visitante ve únicamente el canvas 3D con los controles de navegación (orbital + modo paseo) y una cabecera mínima con el nombre de la sala. Sin topbar de edición, sin panel lateral, sin biblioteca
+- **Icono de tablero privado:** los tableros marcados como privados muestran ahora el icono de ojo tachado (Lucide EyeOff) en lugar del símbolo `⊘`, visible solo para el propietario
+
+---
+
+## [1.20.7] — 2026-06-07
+
+### Añadido
+- **Tooltips contextuales en botones:** regla CSS global `[data-tooltip]` que muestra un tooltip estilizado al pasar el ratón sobre cualquier botón con ese atributo. Aplicado a los botones del topbar (Presentación, Memoria, Versiones, Exportar, Preferencias, ?), la barra de selección del canvas (Cortar, Copiar, Agrupar, Desagrupar, Intercambiar), los controles de zoom (Acercar, Ajustar, Alejar) y la barra hover de foto (Rotar, Bloquear, Eliminar)
+- **Panel de atajos de teclado (F1):** botón `?` en el topbar (siempre visible) y tecla F1 para abrir el panel; ESC y clic en el backdrop para cerrarlo. El panel lista todos los atajos organizados en secciones (General, Canvas—selección/edición/movimiento/zoom/rotación, Biblioteca, Vista 3D/Walk, Plano de sala, Galería) con badges `<kbd>` estilizados y marca ⚠️ para los atajos no visibles en la interfaz
+
+---
+
 ## [1.20.6] — 2026-06-06
 
 ### Corregido

@@ -1,5 +1,99 @@
 # Changelog
 
+## [1.20.16] — 2026-06-07
+
+### Improved
+- **Human scale figure — proportion adjustments:**
+  - **Head:** +35% larger (`SphereGeometry(15)`), more oval in Y×1.2 vs X/Z (≈24 cm wide × 29 cm tall)
+  - **Torso:** 10% shorter (y=82→147); shoulders +28% wider (54 cm ⌀, was 42 cm); narrower waist (26 cm ⌀) for a clear mannequin silhouette; pronounced contrast between shoulders, waist and hips
+  - **Arms:** ~68 cm total (upper arm 37 cm + forearm 31 cm); shoulder attachment lowered to y=133 so arms don't look attached to the neck; hands reach mid-thigh (y≈61)
+  - **Joints:** elbow sphere reduced to r=4 (= forearm radius, discrete); knee sphere reduced to r=5.5 (= calf radius, discrete)
+  - **Feet:** 30 cm long, 8 cm tall (more volume); rotated 180° on Y so the figure faces into the room (−Z direction, toward the default camera); heel/toe tilt `rotation.x=−0.08`
+
+---
+
+## [1.20.15] — 2026-06-07
+
+### Improved
+- **Human scale figure — mannequin look and figure in guest mode:**
+  - Sandy/warm taupe colour (`#C4AA8A`, roughness 0.75) replacing the previous ivory white
+  - Joint spheres at shoulders, elbows, hips and knees that overlap adjacent capsule segments, eliminating visible gaps at articulations
+  - Feet redesigned: non-uniformly scaled `SphereGeometry` (28 cm long × 10 cm wide × 6 cm tall, oriented in Z, with a slight heel/toe tilt)
+  - **👤 Person** and **↔ Move** buttons are now visible in the minimal 3D control bar shown to guests (`?room=TOKEN`), without requiring the full topbar
+
+---
+
+## [1.20.14] — 2026-06-07
+
+### Improved
+- **Human scale figure (3D view) — mannequin redesign:** more recognisable silhouette with corrected proportions (7.5-head canon, 175 cm). Head as a vertical oval; torso via closed `LatheGeometry` (shoulders 42 cm, waist 28 cm, hips 35 cm); arms and legs as smooth capsules (hemisphere-profile `LatheGeometry`) with no visible sphere joints; hands and feet as flat ovoids. `MeshStandardMaterial` in ivory white (`#E8E4DF`, roughness 0.85, metalness 0) replacing the previous flat beige
+
+---
+
+## [1.20.13] — 2026-06-07
+
+### Security
+- **Share token uniqueness:** security review of `POST /api/projects/:pid/share` and `POST /api/projects/:pid/rooms/:rid/share` endpoints. Confirmed that both always generate a fresh random UUID v4 (`uuidv4()`) on each request — no token is derived from project data or reused from a previous call. Regression tests added to verify that two consecutive calls produce different tokens
+
+---
+
+## [1.20.12] — 2026-06-07
+
+### Fixed
+- **Inconsistent tooltip styles:** all tooltips now use the custom `data-tooltip` attribute (Tableau's styled CSS tooltips) instead of mixing with `title=""` (native browser tooltips). Redundant tooltips that only repeated visible button text have been removed
+- **Text formatting buttons (Bold, Italic) and note color picker:** converted to `data-tooltip` for visual consistency
+- **Grid panel — ESC and Enter buttons:** converted to `data-tooltip` showing keyboard shortcuts
+- **Zoom and alignment buttons:** the `title=""` attribute coexisting with `data-tooltip` has been removed, eliminating duplicate tooltips
+
+---
+
+## [1.20.11] — 2026-06-07
+
+### Added
+- **Share room — redesigned modal:** matches the «Share project» modal structure: link with «Copy» button, email field, and «Send invitation» button. Regenerate/Revoke removed from this modal (now centralised in «Active invitations»)
+- **Share room — sidebar button:** a share icon appears on each room row in the left panel when `AUTH_ENABLED=true`
+- **Active invitations — unified list:** the panel now shows both project and room links. Each entry shows project name (+ room name if applicable), type («Project — read only» / «Room — 3D view»), recipient email if sent (or «—»), creation date, and «Copy link» / «Revoke» buttons
+- **Private board — visual indicator:** the EyeOff icon moves to the left of the board name in the sidebar. A badge appears in the topbar breadcrumb and a dashed ribbon at the top of the canvas while the owner edits a private board
+
+### Fixed
+- **Onboarding hint (drag photo to board):** the «Moment 3» hint and the empty-board hint appeared outside the visible canvas area because they were positioned at 50% of the full canvas height (minimum 2200 px). They now use `position:fixed` and always centre in the viewport
+
+---
+
+## [1.20.10] — 2026-06-07
+
+### Fixed
+- **Room share — photos not rendering in 3D viewer:** the `GET /api/projects/:pid/boards` endpoint was returning 403 in room scope, leaving the `boards` state empty. The 3D renderer needs board metadata (`fixedW`, `dpi`, `units`) to calculate each photo's position on the wall; without it, it short-circuited immediately and surfaces appeared blank. The server now returns only the non-private boards linked to that room; the client loads them together with photos before activating the 3D view
+- **Room share — welcome screen shown on invalid token:** if the token was revoked or malformed, the app displayed the «Create first project» onboarding screen instead of an error. A clear error screen («This link is no longer available») is now shown when the token cannot be resolved. The welcome screen is also permanently suppressed in any room-share context
+
+---
+
+## [1.20.9] — 2026-06-07
+
+### Fixed
+- **Grid cut off on zoom-out (variable boards):** the grid canvas calculated its minimum size as `max(3000, wrapSize / zoom)`. If `wrapSize` was 0 (measured while the element was hidden via `display:none` in room view), the canvas stayed at 3000 canvas px, which at very low zoom can be less than 300 screen px. Now `window.innerWidth/innerHeight` is used as fallback when `wrapSize` is 0
+- **Grid disappears in auto mode on zoom-out:** the `gridVisible` condition compared `gridCellPx × zoom` against `GRID_MIN_PX`, causing the grid to vanish at low zoom even when enabled. Visibility now checks the base cell size (`gridCellPx >= GRID_MIN_PX`), zoom-independent. The zoom check for snap remains unchanged
+
+---
+
+## [1.20.8] — 2026-06-07
+
+### Added
+- **Room sharing (server mode):** share button in the room editor toolbar (owners only, server mode only). Generates a public `?room=TOKEN` link that opens the app directly in the 3D view of that room with no account required. One active token per room; regenerating revokes the previous one. Modal includes copy, regenerate, and revoke actions
+- **Room-scoped access control:** the room link grants access only to that room's geometry, items on boards linked to its walls and blocks, and photos strictly referenced by those items. Any other project resource returns 403
+- **Room share layout:** visitors see only the 3D canvas with navigation controls (orbital + walk mode) and a minimal header showing the room name. No edit topbar, no sidebar, no library panel
+- **Private board icon:** boards marked as private now display the eye-off icon (Lucide EyeOff) instead of the `⊘` symbol, visible only to the owner
+
+---
+
+## [1.20.7] — 2026-06-07
+
+### Added
+- **Contextual button tooltips:** global CSS rule `[data-tooltip]` that shows a styled tooltip on hover for any button with that attribute. Applied to topbar buttons (Presentation, Report, Versions, Export, Preferences, ?), the canvas selection bar (Cut, Copy, Group, Ungroup, Swap), zoom controls (Zoom in, Fit, Zoom out), and the photo hover bar (Rotate, Lock, Delete)
+- **Keyboard shortcuts panel (F1):** `?` button in the topbar (always visible) and F1 key to open the panel; ESC and backdrop click to close it. The panel lists all shortcuts organized by section (General, Canvas—selection/editing/movement/zoom/rotation, Library, 3D View/Walk, Floor plan, Gallery) with styled `<kbd>` badges and ⚠️ marks for shortcuts not visible in the UI
+
+---
+
 ## [1.20.6] — 2026-06-06
 
 ### Fixed

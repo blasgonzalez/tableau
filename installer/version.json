@@ -1,6 +1,6 @@
 {
-  "version": "1.20.6",
+  "version": "1.20.16",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-06-06",
-  "notes": "Passenger integration mode ya no necesita require.main: los bloques de arranque se activan también cuando PASSENGER_USE_FEEDBACK_FD está definida."
+  "releaseDate": "2026-06-07",
+  "notes": "Figura maniquí: color taupe, juntas de articulación, pies con volumen. Figura disponible para invitados de sala."
 }

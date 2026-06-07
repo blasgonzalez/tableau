@@ -75,6 +75,17 @@ function seedShare(globalDataDir, { token, ownerId, projectId, role = 'view' }) 
   fs.writeFileSync(sharesFile, JSON.stringify(shares));
 }
 
+// Seeds a room entry to dd/pid/rooms.json
+function seedRoom(dd, pid, { id, name = 'Test Room' } = {}) {
+  const roomId    = id || uuidv4().replace(/-/g, '').slice(0, 10);
+  const roomsFile = path.join(dd, pid, 'rooms.json');
+  const rooms     = fs.existsSync(roomsFile) ? JSON.parse(fs.readFileSync(roomsFile)) : [];
+  const room      = { id: roomId, name, walls: [], blocks: [], columns: [] };
+  rooms.push(room);
+  fs.writeFileSync(roomsFile, JSON.stringify(rooms));
+  return room;
+}
+
 // Seeds a photo directly to disk (no sharp processing — for trash/restore tests)
 function seedPhoto(dd, pid) {
   const photoId   = uuidv4().replace(/-/g, '').slice(0, 12);
@@ -91,4 +102,4 @@ function seedPhoto(dd, pid) {
   return photoId;
 }
 
-module.exports = { makeTmpDir, removeTmpDir, seedUser, seedProject, seedBoard, seedShare, seedPhoto, TEST_PASSWORD };
+module.exports = { makeTmpDir, removeTmpDir, seedUser, seedProject, seedBoard, seedRoom, seedShare, seedPhoto, TEST_PASSWORD };

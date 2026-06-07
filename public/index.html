@@ -204,6 +204,14 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .titem.locked .titem-drag{cursor:default}
 .app.presentation .titem-drag{display:none}
 .app.presentation .bitem,.app.presentation .nitem,.app.presentation .zitem,.app.presentation .titem{cursor:default !important}
+.app.room-share-mode .topbar,.app.room-share-mode .sidebar,.app.room-share-mode .lib-splitter,.app.room-share-mode .library,.app.room-share-mode .zoom-ctrl,.app.room-share-mode .align-bar{display:none !important}
+.app.room-share-mode .main-area{margin-top:40px;height:calc(100vh - 40px)}
+.app.room-share-mode .workspace,.app.room-share-mode .room-view,.app.room-share-mode .room-svg-wrap{height:100%}
+.room-share-hd{position:fixed;top:0;left:0;right:0;height:40px;display:flex;align-items:center;gap:8px;padding:0 16px;background:rgba(12,12,12,.9);backdrop-filter:blur(6px);z-index:400;border-bottom:1px solid rgba(255,255,255,.07)}
+.room-share-logo{font-size:11px;font-weight:700;letter-spacing:.5px;color:rgba(255,255,255,.45);flex-shrink:0}
+.room-share-sep{color:rgba(255,255,255,.2);font-size:13px}
+.room-share-name{font-size:13px;font-weight:600;color:rgba(255,255,255,.88);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.room-share-badge{font-size:9px;letter-spacing:1.2px;color:rgba(255,255,255,.3);text-transform:uppercase;margin-left:auto;flex-shrink:0}
 .bitem.pres-swap-sel .bitem-img-wrap{outline:3px solid var(--acc) !important;outline-offset:3px}
 .titem-drag-icon{color:var(--muted);font-size:9px;letter-spacing:2px;pointer-events:none}
 .titem-drag-label{font-size:7px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;pointer-events:none;flex:1}
@@ -564,9 +572,9 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .lib-empty-help:hover{color:var(--acc)}
 
 /* ── HINT ── */
-.hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:var(--muted);font-size:11px;letter-spacing:1.5px;line-height:2.4;pointer-events:none;user-select:none}
+.hint{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:var(--muted);font-size:11px;letter-spacing:1.5px;line-height:2.4;pointer-events:none;user-select:none;z-index:10}
 .hint em{font-family:'Playfair Display',serif;font-style:italic;font-size:22px;color:var(--border2);display:block;margin-bottom:10px;letter-spacing:0}
-.hint-ob{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:var(--muted);font-size:10px;letter-spacing:1px;line-height:2;pointer-events:auto;user-select:none;display:flex;align-items:center;gap:8px}
+.hint-ob{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:var(--muted);font-size:10px;letter-spacing:1px;line-height:2;pointer-events:auto;user-select:none;display:flex;align-items:center;gap:8px;z-index:10}
 .hint-ob-x{background:none;border:none;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:12px;cursor:pointer;padding:0 2px;line-height:1;opacity:.6}
 .hint-ob-x:hover{opacity:1;color:var(--text)}
 
@@ -801,6 +809,27 @@ select.btn option,select.inp option{background:var(--panel);color:var(--text)}
 .clip-banner-msg{font-size:9.5px;color:var(--sub);letter-spacing:.3px;flex:1;line-height:1.3}
 .clip-banner-cancel{background:none;border:1px solid var(--border2);color:var(--muted);font-size:9px;padding:3px 10px;cursor:pointer;font-family:inherit;letter-spacing:.4px;flex-shrink:0;transition:border-color .15s,color .15s}
 .clip-banner-cancel:hover{border-color:var(--danger);color:var(--danger)}
+/* ── TOOLTIPS ── */
+[data-tooltip]{position:relative}
+[data-tooltip]:hover::after{content:attr(data-tooltip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:11px;white-space:nowrap;pointer-events:none;z-index:9999}
+/* ── SHORTCUTS PANEL ── */
+.sc-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1500;display:flex;align-items:center;justify-content:center}
+.sc-modal{background:var(--panel);border:1px solid var(--border2);max-width:580px;width:90%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.7)}
+.sc-hd{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.sc-hd-title{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text)}
+.sc-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;padding:0 4px;font-family:inherit}
+.sc-close:hover{color:var(--text)}
+.sc-scroll{overflow-y:auto;padding:14px 18px;display:flex;flex-direction:column;gap:12px}
+.sc-scroll::-webkit-scrollbar{width:3px}
+.sc-scroll::-webkit-scrollbar-thumb{background:var(--border2)}
+.sc-section{display:flex;flex-direction:column;gap:3px}
+.sc-sec-hd{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;padding-bottom:3px;border-bottom:1px solid var(--border)}
+.sc-row{display:flex;align-items:baseline;gap:8px;font-size:10px;line-height:1.7}
+.sc-keys{display:flex;gap:3px;flex-shrink:0;width:168px;justify-content:flex-end;flex-wrap:wrap}
+.sc-desc{flex:1;color:var(--sub)}
+.sc-warn{color:var(--dim)}
+kbd{background:var(--panel2);border:1px solid var(--border);border-radius:3px;font-size:10px;padding:1px 5px;font-family:'IBM Plex Mono',monospace;color:var(--sub);line-height:1.5;white-space:nowrap}
+.sc-footer{padding:9px 18px;border-top:1px solid var(--border);font-size:9px;color:var(--muted);letter-spacing:.3px;flex-shrink:0;line-height:1.5}
 </style>
 </head>
 <body>
@@ -1101,7 +1130,7 @@ const I18N = {
     confirmOverflow: 'Algunas fotos quedarán fuera de las nuevas dimensiones. ¿Continuar?',
     invalidDims: 'Las dimensiones deben ser mayores que cero',
     pxPreview: (w, h) => `${w} × ${h} px`,
-    gridToggle: 'Guías', gridHiddenZoom: 'Guías activas — zoom demasiado bajo para mostrarlas', gridAuto: 'Auto', fitView: 'Ajustar', fitWidth: 'Ajustar al ancho (Ctrl+0)', snapGrid: 'Imán', addNote: '+ Nota', addZone: '+ Zona', zoneColor: 'Color de zona', zoneScaleContent: 'Escalar contenido al redimensionar', copyZoneToBoard: 'Copiar a nuevo tablero', moveZoneToBoard: 'Mover a nuevo tablero', zoneLabelPh: 'Nombre de zona…', zoneCaptureBtn: 'Capturar contenido', gridWrapZone: 'Envolver en zona escalable',
+    gridToggle: 'Guías', gridHiddenZoom: 'Guías activas — celda demasiado pequeña para mostrarse', gridAuto: 'Auto', fitView: 'Ajustar', fitWidth: 'Ajustar al ancho (Ctrl+0)', snapGrid: 'Imán', addNote: '+ Nota', addZone: '+ Zona', zoneColor: 'Color de zona', zoneScaleContent: 'Escalar contenido al redimensionar', copyZoneToBoard: 'Copiar a nuevo tablero', moveZoneToBoard: 'Mover a nuevo tablero', zoneLabelPh: 'Nombre de zona…', zoneCaptureBtn: 'Capturar contenido', gridWrapZone: 'Envolver en zona escalable',
     salaBtn:'🏛 Sala', salaCreate:'Crear sala', salaDelete:'Eliminar sala', salaDuplicate:'Duplicar sala', salaAdd:'+ Nueva sala', salaDraw:'Dibujar planta', salaEdit:'Editar planta', salaAddSection:'+ Añadir segmento', salaCancel:'Cancelar', salaFinish:'Finalizar', salaCeilLbl:'Altura del techo', salaCeilUnit:'cm', salaWallsHd:'PAREDES', salaNoWalls:'Dibuja la planta para ver las paredes aquí', salaCreateBoard:'+ Tablero', salaWallBoard:'Ver tablero →', salaDrawHint:'Clic → añadir punto · 1er punto → cerrar · Esc/Finalizar → guardar · ⌫ → deshacer · ⇧ → ángulo recto', salaSnapHint:'⊾ enganchado', salaDeleteWall:'Desvincular tablero', salaWallRename:'Renombrar pared', salaAddCol:'+ Columna', salaWallMismatch:'El tablero es más ancho que la pared', salaWallSync:'Sincronizar', salaWallSyncOk:'Tablero sincronizado con la pared', syncOverflowConfirm: n => `${n} foto${n!==1?'s':''} quedar${n!==1?'án':'á'} fuera del nuevo tamaño y volverán a la biblioteca. ¿Continuar?`, syncOverflowBtn: n => `Sincronizar (${n} foto${n!==1?'s':''} a biblioteca)`, salaAssigned:'Tablero asignado a la pared', salaAssignMismatch:(bw,bh,ww,wh)=>`El tablero mide ${bw}×${bh} cm. La pared mide ${ww}×${wh} cm. ¿Asignar de todas formas?`, salaAssignAndSync:'Asignar y sincronizar', salaAssignOnly:'Asignar tal cual',
     reportHeading:'Tableau — Memoria del Proyecto',
     noScaleConfigured:'sin escala configurada',
@@ -1176,6 +1205,25 @@ const I18N = {
     obBoardHint:'Arrastra una foto desde la biblioteca para colocarla en el tablero.',
     obDontShowAgain:'No mostrar de nuevo', obDismissTitle:'Ocultar esta guía',
     obSettingsTitle:'Guías de inicio', obResetBtn:'↺ Reiniciar guías de inicio', obResetDone:'Guías de inicio reiniciadas',
+    ttPresent:'Presentación', ttMemory:'Memoria del proyecto', ttVersions:'Versiones (snapshots)', ttExport:'Exportar tablero', ttPrefs:'Preferencias', ttShortcuts:'Atajos de teclado (F1)',
+    ttGroup:'Agrupar', ttUngroup:'Desagrupar', ttCopy:'Copiar (Ctrl+C)', ttCut:'Cortar (Ctrl+X)', ttDuplicate:'Duplicar (Ctrl+D)', ttDelete:'Eliminar (Supr)', ttSwap:'Intercambiar posición', ttCopyBoard:'Copiar a nuevo tablero',
+    ttZoomIn:'Acercar (Ctrl++)', ttZoomOut:'Alejar (Ctrl+−)', ttZoomFit:'Ajustar vista (Ctrl+0)',
+    ttRotate:'Rotar 90°', ttLock:'Bloquear/desbloquear posición', ttDeleteItem:'Eliminar del tablero (Supr)',
+    shortcutsTitle:'Atajos de teclado',
+    scGeneral:'General', scCanvasSel:'Canvas — selección', scCanvasEdit:'Canvas — edición', scCanvasMove:'Canvas — movimiento', scCanvasZoom:'Canvas — zoom', scCanvasRot:'Canvas — rotación', scLibrary:'Biblioteca', sc3D:'Vista 3D / Walk', scRoom:'Plano de sala', scGallery:'Galería',
+    shortcutsFooter:'Los atajos marcados con ⚠️ no se muestran en la interfaz — ahora ya los sabes.',
+    shareRoom:'Compartir sala', shareRoomTitle:'Compartir sala — vista 3D', shareRoomLink:'Enlace de sala',
+    shareRoomGenerate:'Generar enlace', shareRoomRevoke:'Revocar', shareRoomCopy:'Copiar enlace',
+    shareRoomCopied:'Enlace copiado', shareRoomRegenerate:'Regenerar (revoca el actual)',
+    shareRoomBadge:'Vista 3D compartida',
+    shareRoomInfo:'El link abre la sala directamente en 3D. El visitante solo ve el contenido enlazado a esta sala.',
+    shareRoomInvalidLink:'El enlace de sala no es válido o ha sido revocado.',
+    shareRoomExpiredTitle:'Este enlace ya no está disponible',
+    shareRoomExpiredDesc:'El enlace de sala que has recibido ha sido revocado o ha caducado. Contacta con quien te lo envió para obtener uno nuevo.',
+    shareRoomInviteSent:'Invitación de sala enviada',
+    shareActiveProjectType:'Proyecto — solo lectura', shareActiveRoomType:'Sala — vista 3D',
+    boardPrivateBadge:'Privado',
+    ttShareRoom:'Compartir sala (link público)',
   },
   en: {
     upload:'↑ Upload', uploadPhotos:'Photos', report:'≡ Report', config:'⚙ Config', exportJpeg:'Export',
@@ -1275,7 +1323,7 @@ const I18N = {
     confirmOverflow: 'Some photos will be outside the new dimensions. Continue?',
     invalidDims: 'Dimensions must be greater than zero',
     pxPreview: (w, h) => `${w} × ${h} px`,
-    gridToggle: 'Grid', gridHiddenZoom: 'Grid active — zoom too low to display', gridAuto: 'Auto', fitView: 'Fit', fitWidth: 'Fit to width (Ctrl+0)', snapGrid: 'Snap', addNote: '+ Note', addZone: '+ Zone', zoneColor: 'Zone color', zoneScaleContent: 'Scale content on resize', copyZoneToBoard: 'Copy to new board', moveZoneToBoard: 'Move to new board', zoneLabelPh: 'Zone name…', zoneCaptureBtn: 'Capture content', gridWrapZone: 'Wrap in scalable zone',
+    gridToggle: 'Grid', gridHiddenZoom: 'Grid active — cell too small to display', gridAuto: 'Auto', fitView: 'Fit', fitWidth: 'Fit to width (Ctrl+0)', snapGrid: 'Snap', addNote: '+ Note', addZone: '+ Zone', zoneColor: 'Zone color', zoneScaleContent: 'Scale content on resize', copyZoneToBoard: 'Copy to new board', moveZoneToBoard: 'Move to new board', zoneLabelPh: 'Zone name…', zoneCaptureBtn: 'Capture content', gridWrapZone: 'Wrap in scalable zone',
     salaBtn:'🏛 Room', salaCreate:'Create room', salaDelete:'Delete room', salaDuplicate:'Duplicate room', salaAdd:'+ New room', salaDraw:'Draw floor plan', salaEdit:'Edit floor plan', salaAddSection:'+ Add section', salaCancel:'Cancel', salaFinish:'Finish', salaCeilLbl:'Ceiling height', salaCeilUnit:'cm', salaWallsHd:'WALLS', salaNoWalls:'Draw the floor plan to see walls here', salaCreateBoard:'+ Board', salaWallBoard:'Go to board →', salaDrawHint:'Click → add point · 1st point → close · Esc/Finish → save · ⌫ → undo · ⇧ → right angle', salaSnapHint:'⊾ snapped', salaDeleteWall:'Unlink board', salaWallRename:'Rename wall', salaAddCol:'+ Column', salaWallMismatch:'Board is wider than the wall', salaWallSync:'Sync', salaWallSyncOk:'Board synced to wall', syncOverflowConfirm: n => `${n} photo${n!==1?'s':''} will fall outside the new size and return to the library. Continue?`, syncOverflowBtn: n => `Sync (${n} photo${n!==1?'s':''} to library)`, salaAssigned:'Board assigned to wall', salaAssignMismatch:(bw,bh,ww,wh)=>`Board is ${bw}×${bh} cm. Wall is ${ww}×${wh} cm. Assign anyway?`, salaAssignAndSync:'Assign and sync', salaAssignOnly:'Assign as-is',
     reportHeading:'Tableau — Project Report',
     noScaleConfigured:'no scale configured',
@@ -1350,6 +1398,25 @@ const I18N = {
     obBoardHint:'Drag a photo from the library to place it on the board.',
     obDontShowAgain:"Don't show again", obDismissTitle:'Hide this guide',
     obSettingsTitle:'Getting-started guides', obResetBtn:'↺ Reset getting-started guides', obResetDone:'Getting-started guides reset',
+    ttPresent:'Presentation', ttMemory:'Project report', ttVersions:'Board versions (snapshots)', ttExport:'Export board', ttPrefs:'Preferences', ttShortcuts:'Keyboard shortcuts (F1)',
+    ttGroup:'Group', ttUngroup:'Ungroup', ttCopy:'Copy (Ctrl+C)', ttCut:'Cut (Ctrl+X)', ttDuplicate:'Duplicate (Ctrl+D)', ttDelete:'Delete (Del)', ttSwap:'Swap positions', ttCopyBoard:'Copy to new board',
+    ttZoomIn:'Zoom in (Ctrl++)', ttZoomOut:'Zoom out (Ctrl+−)', ttZoomFit:'Fit view (Ctrl+0)',
+    ttRotate:'Rotate 90°', ttLock:'Lock/unlock position', ttDeleteItem:'Remove from board (Del)',
+    shortcutsTitle:'Keyboard shortcuts',
+    scGeneral:'General', scCanvasSel:'Canvas — selection', scCanvasEdit:'Canvas — editing', scCanvasMove:'Canvas — movement', scCanvasZoom:'Canvas — zoom', scCanvasRot:'Canvas — rotation', scLibrary:'Library', sc3D:'3D view / Walk', scRoom:'Floor plan', scGallery:'Gallery',
+    shortcutsFooter:'Shortcuts marked with ⚠️ are not shown in the UI — now you know them.',
+    shareRoom:'Share room', shareRoomTitle:'Share room — 3D view', shareRoomLink:'Room link',
+    shareRoomGenerate:'Generate link', shareRoomRevoke:'Revoke', shareRoomCopy:'Copy link',
+    shareRoomCopied:'Link copied', shareRoomRegenerate:'Regenerate (revokes current)',
+    shareRoomBadge:'Shared 3D view',
+    shareRoomInfo:'The link opens the room in 3D. Visitors only see content linked to this room.',
+    shareRoomInvalidLink:'The room link is invalid or has been revoked.',
+    shareRoomExpiredTitle:'This link is no longer available',
+    shareRoomExpiredDesc:'The room link you received has been revoked or has expired. Contact the person who shared it with you to get a new one.',
+    shareRoomInviteSent:'Room invitation sent',
+    shareActiveProjectType:'Project — read only', shareActiveRoomType:'Room — 3D view',
+    boardPrivateBadge:'Private',
+    ttShareRoom:'Share room (public link)',
   },
 };
 
@@ -1402,6 +1469,7 @@ const SvgConfig   = ({size=15}) => <svg viewBox="0 0 16 16" width={size} height=
 const SvgVersions = ({size=15}) => <svg viewBox="0 0 16 16" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="8" r="5.6"/><polyline points="8,4.6 8,8 10.4,9.4"/></svg>;
 const SvgReport   = ({size=15}) => <svg viewBox="0 0 16 16" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 2h4l3.5 3.5V14h-8z"/><polyline points="8.5,2 8.5,5.5 12,5.5"/><line x1="6" y1="9" x2="10" y2="9"/><line x1="6" y1="11.2" x2="10" y2="11.2"/></svg>;
 const SvgShareNet = ({size=15}) => <svg viewBox="0 0 16 16" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="3.6" r="1.8"/><circle cx="12" cy="12.4" r="1.8"/><circle cx="4" cy="8" r="1.8"/><line x1="5.6" y1="7.1" x2="10.4" y2="4.5"/><line x1="5.6" y1="8.9" x2="10.4" y2="11.5"/></svg>;
+const SvgEyeOff   = ({size=11}) => <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>;
 const SvgHelp     = ({size=15}) => <svg viewBox="0 0 16 16" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="8" r="6"/><path d="M6.1 6.1c0-1 .8-1.7 1.9-1.7s1.9.7 1.9 1.6c0 1.4-1.9 1.3-1.9 2.8"/><circle cx="8" cy="11.3" r=".75" fill="currentColor" stroke="none"/></svg>;
 const SvgPanel    = ({size=15}) => <svg viewBox="0 0 16 16" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.2"><rect x="2" y="2.5" width="12" height="11" rx="1"/><line x1="6.5" y1="2.5" x2="6.5" y2="13.5"/></svg>;
 
@@ -1613,6 +1681,8 @@ function App() {
   const readOnboarding = () => { try { const s = localStorage.getItem('tb-onboarding'); if (!s) return OB_DEFAULT; const p = JSON.parse(s); return (p && p.v === 1) ? p : OB_DEFAULT; } catch { return OB_DEFAULT; } };
   const [onboarding,    setOnboarding]    = useState(() => readOnboarding());
   const [showHelpOverlay, setShowHelpOverlay] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const showShortcutsRef = useRef(false);
   const [helpDontShow,  setHelpDontShow]  = useState(false);
   const dismissGuide = key => {
     setOnboarding(prev => {
@@ -1631,6 +1701,14 @@ function App() {
   const [lockState,     setLockState]     = useState({});     // {[bid]: 'pending'|'locked'|'conflict'}
   const shareRoleRef = useRef(null);
   useEffect(() => { shareRoleRef.current = shareRole; }, [shareRole]);
+  const [roomShareInviteEmail, setRoomShareInviteEmail] = useState('');
+
+  // Room share mode (invitado a sala — ?room=TOKEN)
+  const [roomShareMode, setRoomShareMode] = useState(false);
+  const roomShareModeRef = useRef(false);
+  const [roomShareInfo, setRoomShareInfo] = useState(null);  // {projectId, roomId, roomName}
+  const [roomShareModal, setRoomShareModal] = useState(null); // null | {rid, token, url} | {rid, loading}
+  const [roomShareError, setRoomShareError] = useState(false); // token inválido o revocado
 
   // Auth state (solo activo cuando el servidor tiene TABLEAU_AUTH=true)
   const [authMode,      setAuthMode]      = useState(false);
@@ -1855,6 +1933,25 @@ function App() {
         setReady(true);
       }).catch(() => setReady(true));
     };
+    // Modo sala compartida: ?room=TOKEN en la URL
+    const urlRoomToken = new URLSearchParams(location.search).get('room');
+    if (urlRoomToken) {
+      _shareToken = urlRoomToken;
+      fetch(`/api/rooms/share/${urlRoomToken}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(async d => {
+          if (!d) { setRoomShareError(true); setReady(true); return; }
+          await fetch(`/api/rooms/share/${urlRoomToken}/activate`, { method: 'POST' }).catch(() => {});
+          roomShareModeRef.current = true;
+          setRoomShareMode(true);
+          setRoomShareInfo(d);
+          await load3DLibs();
+          setPid(d.projectId); // triggers pid useEffect which loads room and switches to 3D
+          setReady(true);
+        })
+        .catch(() => { setRoomShareError(true); setReady(true); });
+      return () => { clearInterval(hbInterval); clearInterval(updateInterval); document.removeEventListener('visibilitychange', onVisible); };
+    }
     // Modo invitado: ?share=TOKEN en la URL
     const urlShareToken = new URLSearchParams(location.search).get('share');
     if (urlShareToken) {
@@ -1892,6 +1989,7 @@ function App() {
   useEffect(() => {
     setHoverInfo(null);
     if (!pid) { setBoards([]); setBid(null); setPhotos([]); setItems([]); setAllBoardItems({}); return; }
+    if (roomShareModeRef.current) return; // boards list not available in room share scope
     Promise.all([
       api.get(`/api/projects/${pid}/boards`),
       api.get(`/api/projects/${pid}/photos`),
@@ -1981,6 +2079,25 @@ function App() {
       setRoom(null); roomRef.current = null;
       setActiveRoomId(null); activeRoomIdRef.current = null;
       setRoomView('board'); return;
+    }
+    if (roomShareModeRef.current) {
+      // Room share mode: load the shared room + room-linked boards + photos so the
+      // 3D renderer has the board metadata it needs (boards state is in its dep array).
+      Promise.all([
+        api.get(`/api/projects/${pid}/rooms`),
+        api.get(`/api/projects/${pid}/boards`).catch(() => []),
+        api.get(`/api/projects/${pid}/photos`).catch(() => []),
+      ]).then(([rs, bs, ps]) => {
+        const arr = rs || [];
+        const r = arr[0] || null;
+        setRooms(arr); roomsRef.current = arr;
+        setRoom(r); roomRef.current = r;
+        if (r) { setActiveRoomId(r.id); activeRoomIdRef.current = r.id; setRoomCeilH(r.ceilingHeight||280); setRoomWallThick(r.wallThickness??15); setRoomName(r.name||''); }
+        setBoards(bs || []);
+        setPhotos(ps || []);
+        setRoomView('3d');
+      });
+      return;
     }
     const goRoom = pendingRoomViewRef.current;
     pendingRoomViewRef.current = false;
@@ -2500,11 +2617,10 @@ function App() {
         }
       });
 
-      // Person scale reference — 175 cm, LatheGeometry torso for organic shape
-      const pMat = new THREE.MeshLambertMaterial({ color: 0xc49060, transparent: true, opacity: 0.90 });
+      // Person scale reference — 175 cm, mannequin silhouette
+      const pMat = new THREE.MeshStandardMaterial({ color: 0xC4AA8A, roughness: 0.75, metalness: 0.0 });
       const personParts = [];
       const personPos = { x: cx, z: cz };
-      const S = 14;
       const pAdd = (geo, ox, oy) => {
         const m = new THREE.Mesh(geo, pMat);
         m.position.set(personPos.x + ox, oy, personPos.z);
@@ -2513,50 +2629,75 @@ function App() {
         personParts.push(m);
         return m;
       };
-      // Head — oval (taller than wide, slightly flat front/back)
-      const hGeo = new THREE.SphereGeometry(11, S, 12); hGeo.scale(1, 1.15, 0.88);
-      pAdd(hGeo, 0, 163);
-      // Torso + neck: single LatheGeometry — eliminates seams between chest/waist/hips
+      // Capsule via LatheGeometry (r128 has no CapsuleGeometry): bottom hemi + top hemi
+      const mkCap = (r, l, cs = 6, rs = 16) => {
+        const pts = [];
+        for (let i = 0; i <= cs; i++) {
+          const a = (i / cs) * (Math.PI / 2);
+          pts.push(new THREE.Vector2(r * Math.sin(a), -(l / 2 + r * Math.cos(a))));
+        }
+        for (let i = 0; i <= cs; i++) {
+          const a = (i / cs) * (Math.PI / 2);
+          pts.push(new THREE.Vector2(r * Math.cos(a), l / 2 + r * Math.sin(a)));
+        }
+        return new THREE.LatheGeometry(pts, rs);
+      };
+      // Head — +35% size, Y×1.2 oval: 24 cm wide × 29 cm tall
+      const hGeo = new THREE.SphereGeometry(15, 20, 16); hGeo.scale(0.80, 0.96, 0.80);
+      pAdd(hGeo, 0, 161);
+      // Torso — 10% shorter (y=82→147), shoulders +28% wider (54 cm ⌀), pronounced waist
       const tPts = [
-        new THREE.Vector2(14, 65),  // crotch opening
-        new THREE.Vector2(18, 75),  // inner hip
-        new THREE.Vector2(20, 84),  // hip
-        new THREE.Vector2(15, 98),  // waist (narrowest)
-        new THREE.Vector2(19, 113), // lower chest
-        new THREE.Vector2(22, 127), // full chest
-        new THREE.Vector2(23, 136), // widest — shoulder area
-        new THREE.Vector2(18, 144), // shoulder taper
-        new THREE.Vector2(7,  149), // neck base
-        new THREE.Vector2(5,  153), // neck top
+        new THREE.Vector2(0,    82),  // crotch (closed)
+        new THREE.Vector2(10,   84),  // crotch opening
+        new THREE.Vector2(17.5, 92),  // hip
+        new THREE.Vector2(13,  104),  // waist (26 cm ⌀ — narrow for contrast)
+        new THREE.Vector2(19,  113),  // lower chest
+        new THREE.Vector2(27,  127),  // chest/shoulder base (54 cm ⌀)
+        new THREE.Vector2(27,  133),  // shoulder line
+        new THREE.Vector2(19,  138),  // shoulder taper
+        new THREE.Vector2(9,   141),  // neck base
+        new THREE.Vector2(5,   145),  // neck top
+        new THREE.Vector2(0,   147),  // apex (closed)
       ];
-      pAdd(new THREE.LatheGeometry(tPts, 24), 0, 0).scale.z = 0.70;
-      // Shoulder joints
-      pAdd(new THREE.SphereGeometry(7.5, S, 8), -24, 143);
-      pAdd(new THREE.SphereGeometry(7.5, S, 8), +24, 143);
-      // Upper arms
-      pAdd(new THREE.CylinderGeometry(6, 5, 30, S), -28, 128);
-      pAdd(new THREE.CylinderGeometry(6, 5, 30, S), +28, 128);
-      // Elbows
-      pAdd(new THREE.SphereGeometry(5.5, S, 8), -29, 113);
-      pAdd(new THREE.SphereGeometry(5.5, S, 8), +29, 113);
-      // Forearms
-      pAdd(new THREE.CylinderGeometry(4.5, 3.5, 26, S), -29, 100);
-      pAdd(new THREE.CylinderGeometry(4.5, 3.5, 26, S), +29, 100);
-      // Hip joints (inside pelvis)
-      pAdd(new THREE.SphereGeometry(9, S, 8), -15, 73);
-      pAdd(new THREE.SphereGeometry(9, S, 8), +15, 73);
-      // Thighs
-      pAdd(new THREE.CylinderGeometry(8.5, 7, 36, S), -15, 55);
-      pAdd(new THREE.CylinderGeometry(8.5, 7, 36, S), +15, 55);
-      // Knees
-      pAdd(new THREE.SphereGeometry(7, S, 8), -15, 37);
-      pAdd(new THREE.SphereGeometry(7, S, 8), +15, 37);
-      // Calves
-      pAdd(new THREE.CylinderGeometry(6.5, 4, 30, S), -15, 22);
-      pAdd(new THREE.CylinderGeometry(6.5, 4, 30, S), +15, 22);
-      // Feet
-      pAdd(new THREE.BoxGeometry(11, 5, 30), -15, 4);
-      pAdd(new THREE.BoxGeometry(11, 5, 30), +15, 4);
+      pAdd(new THREE.LatheGeometry(tPts, 28), 0, 0).scale.z = 0.72;
+      // Upper arms — 37 cm capsule, shoulder y=133 → elbow y=96, x=±29
+      pAdd(mkCap(5.5, 26, 6, 16), -29, 114);
+      pAdd(mkCap(5.5, 26, 6, 16), +29, 114);
+      // Forearms — 31 cm capsule, elbow y=96 → wrist y=65, x=±30 (total arm ~68 cm)
+      pAdd(mkCap(4, 23, 6, 16), -30, 81);
+      pAdd(mkCap(4, 23, 6, 16), +30, 81);
+      // Hands — oval ovoid, ~9 cm
+      const hndL = new THREE.SphereGeometry(4.5, 12, 8); hndL.scale(0.8, 1.1, 0.6);
+      pAdd(hndL, -30, 61);
+      const hndR = new THREE.SphereGeometry(4.5, 12, 8); hndR.scale(0.8, 1.1, 0.6);
+      pAdd(hndR, +30, 61);
+      // Thighs — 34 cm capsule, hip y=82 → knee y=48, x=±11
+      pAdd(mkCap(8, 18, 6, 16), -11, 65);
+      pAdd(mkCap(8, 18, 6, 16), +11, 65);
+      // Calves — 38 cm capsule, knee y=48 → ankle y=10, x=±15
+      pAdd(mkCap(5.5, 27, 6, 16), -15, 29);
+      pAdd(mkCap(5.5, 27, 6, 16), +15, 29);
+      // Joint spheres — discrete, r ≤ thinnest adjacent segment
+      pAdd(new THREE.SphereGeometry(5.5, 12, 8), -29, 133); // shoulder L
+      pAdd(new THREE.SphereGeometry(5.5, 12, 8), +29, 133); // shoulder R
+      pAdd(new THREE.SphereGeometry(4,   12, 8), -29,  96); // elbow L (r = forearm r)
+      pAdd(new THREE.SphereGeometry(4,   12, 8), +29,  96); // elbow R
+      pAdd(new THREE.SphereGeometry(8,   12, 8), -11,  82); // hip L
+      pAdd(new THREE.SphereGeometry(8,   12, 8), +11,  82); // hip R
+      pAdd(new THREE.SphereGeometry(5.5, 12, 8), -13,  48); // knee L (r = calf r)
+      pAdd(new THREE.SphereGeometry(5.5, 12, 8), +13,  48); // knee R
+      // Feet — 30 cm long, 10 cm wide × 8 cm tall, rotated 180° to face forward (−Z)
+      // rotation.x=-0.08: local +Z tilts up; rotation.y=π maps local +Z to world −Z (toward camera)
+      const mkFoot = xOff => {
+        const geo = new THREE.SphereGeometry(1, 16, 10); geo.scale(5, 4, 15);
+        const m = new THREE.Mesh(geo, pMat);
+        m.rotation.x = -0.08;
+        m.rotation.y = Math.PI;
+        m.position.set(personPos.x + xOff, 6, personPos.z - 7);
+        m.visible = false; scene.add(m); personParts.push(m);
+        return m;
+      };
+      mkFoot(-15); mkFoot(+15);
 
       // Sync visibility with React state (scene rebuilds when switching views)
       if (show3DPerson) personParts.forEach(m => { m.visible = true; });
@@ -2987,6 +3128,19 @@ function App() {
 
   useEffect(() => {
     const onKey = e => {
+      if (e.key === 'F1') {
+        const tag = document.activeElement?.tagName;
+        const ce = document.activeElement?.getAttribute?.('contenteditable');
+        if (tag !== 'INPUT' && tag !== 'TEXTAREA' && !ce) {
+          e.preventDefault();
+          showShortcutsRef.current = true; setShowShortcuts(true);
+        }
+        return;
+      }
+      if (e.key === 'Escape' && showShortcutsRef.current) {
+        showShortcutsRef.current = false; setShowShortcuts(false);
+        return;
+      }
       if (e.ctrlKey || e.metaKey) {
         if (e.key === '+' || e.key === '=') { e.preventDefault(); zoomStep(1); }
         if (e.key === '-') { e.preventDefault(); zoomStep(-1); }
@@ -3308,9 +3462,10 @@ function App() {
     }
     return 50;
   })();
-  // The grid is only shown/snapped when its cells are large enough on screen to
-  // be useful; at very low zoom it is dropped entirely (see GRID_MIN_PX).
-  const gridVisible = !shareRole && showGrid && gridCellPx * zoom >= GRID_MIN_PX;
+  // Visibility uses the base cell size in canvas px (zoom-independent) so the
+  // grid never disappears just because the user zoomed out. GRID_MIN_PX still
+  // applies to snap (line below) where the on-screen size IS what matters.
+  const gridVisible = !shareRole && showGrid && gridCellPx >= GRID_MIN_PX;
   // Snap a value to the nearest grid line. `cell` is the real gridCellPx so the
   // magnet always lands exactly on the lines that are drawn (no coarsening).
   // The catch radius is kept ~constant on screen (12 screen px via 12/zoom),
@@ -6723,6 +6878,14 @@ ${rows}
     </div>
   );
 
+  if (roomShareError) return (
+    <div style={{height:'100vh',background:'var(--bg)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:16,padding:'0 32px',textAlign:'center',fontFamily:'IBM Plex Mono'}}>
+      <div style={{fontSize:12,letterSpacing:2,color:'var(--acc)'}}>Tableau</div>
+      <div style={{fontSize:13,color:'var(--text)',letterSpacing:.5,marginTop:8}}>{t('shareRoomExpiredTitle')}</div>
+      <div style={{fontSize:10,color:'var(--muted)',letterSpacing:.3,maxWidth:360,lineHeight:1.8}}>{t('shareRoomExpiredDesc')}</div>
+    </div>
+  );
+
   const activeProject = projects.find(p => p.id === pid);
   const activeBoard   = boards.find(b => b.id === bid);
 
@@ -7140,7 +7303,17 @@ ${rows}
   }
 
   return (
-    <div className={`app${presentation ? ' presentation' : ''}`} onClick={() => { selRef.current = []; setSel([]); renaming && setRenaming(null); setThemeOpen(false); setAvatarOpen(false); setPropsPanelId(null); setTextFmtPanelId(null); setFramePainter(null); setCtx3DMenu(null); }}>
+    <div className={`app${presentation ? ' presentation' : ''}${roomShareMode ? ' room-share-mode' : ''}`} onClick={() => { selRef.current = []; setSel([]); renaming && setRenaming(null); setThemeOpen(false); setAvatarOpen(false); setPropsPanelId(null); setTextFmtPanelId(null); setFramePainter(null); setCtx3DMenu(null); }}>
+
+      {/* ── Minimal header for room share mode ── */}
+      {roomShareMode && roomShareInfo && (
+        <div className="room-share-hd">
+          <span className="room-share-logo">Tableau</span>
+          <span className="room-share-sep">›</span>
+          <span className="room-share-name">{roomShareInfo.roomName || (lang==='es'?'Sala':'Room')}</span>
+          <span className="room-share-badge">{t('shareRoomBadge')}</span>
+        </div>
+      )}
 
       {updateInfo && !updateDismissed && (
         <div className="update-banner">
@@ -7172,6 +7345,11 @@ ${rows}
                 {activeBoard && <>
                   <span className="bc-arrow">›</span>
                   <span className="bc-seg">{activeBoard.name}</span>
+                  {activeBoard.private && !shareRole && authMode && (
+                    <span style={{fontSize:8,padding:'1px 5px',border:'1px solid var(--muted)',color:'var(--muted)',borderRadius:2,letterSpacing:.8,flexShrink:0,display:'flex',alignItems:'center',gap:3}}>
+                      <SvgEyeOff size={7}/>{t('boardPrivateBadge')}
+                    </span>
+                  )}
                 </>}
               </>
             : <span className="bc-none">{projects.length === 0 ? t('noProjHintEmpty') : t('noProjHint')}</span>
@@ -7196,22 +7374,22 @@ ${rows}
                 <SvgGrid/>{showGrid && snapGrid && <span className="tbtn-dot"/>}
               </button>) : null,
             present: (!shareRole && !tmplEditMode && bid && roomView === 'board') ? (
-              <button key="present" className="tbtn" title={t('presentationBtn')} onClick={() => setPresentation(true)}><SvgPresent/></button>) : null,
+              <button key="present" className="tbtn" data-tooltip={t('ttPresent')} onClick={() => setPresentation(true)}><SvgPresent/></button>) : null,
             // Tablero
             config: (!shareRole && (tmplEditMode || bid)) ? (
               <button key="config" className="tbtn" title={t('boardConfig')} onClick={openBoardConfig}><SvgConfig/></button>) : null,
             versions: (!shareRole && !tmplEditMode && bid && roomView === 'board') ? (
-              <button key="versions" className="tbtn" title={t('versionsTitle')} onClick={() => { loadVersions(); setModal('versions'); }}>
+              <button key="versions" className="tbtn" data-tooltip={t('ttVersions')} onClick={() => { loadVersions(); setModal('versions'); }}>
                 <SvgVersions/>{versions.length > 0 && <span className="tbtn-dot"/>}
               </button>) : null,
             // Salida
             export: (!shareRole && !tmplEditMode && bid) ? (
-              <button key="export" className="tbtn" title={t('exportJpeg')}
+              <button key="export" className="tbtn" data-tooltip={t('ttExport')}
                 onClick={e => { if (exportDropOpen) { setExportDropOpen(false); return; } setGridDropOpen(false); const r = e.currentTarget.getBoundingClientRect(); setExportDropPos({ right: window.innerWidth - r.right, top: r.bottom + 4 }); setExportDropOpen(true); }}>
                 <SvgExport size={15}/>
               </button>) : null,
             report: (!shareRole && !tmplEditMode && pid && boards.length > 0) ? (
-              <button key="report" className="tbtn" title={t('reportTitle')} onClick={() => setModal('memoria')}><SvgReport/></button>) : null,
+              <button key="report" className="tbtn" data-tooltip={t('ttMemory')} onClick={() => setModal('memoria')}><SvgReport/></button>) : null,
           };
           const groups = [
             [mk.present, mk.report],  // Presentación + memoria
@@ -7226,6 +7404,9 @@ ${rows}
                 onClick={() => api.get('/api/shares').then(d => setSharesPanel(d)).catch(() => setSharesPanel([]))}>
                 <SvgShareNet/>
               </button>) : null,
+            <button key="shortcuts" className="tbtn" data-tooltip={t('ttShortcuts')}
+              style={{fontSize:13,fontWeight:600}}
+              onClick={() => { showShortcutsRef.current = true; setShowShortcuts(true); }}>?</button>,
           ].filter(Boolean);
           if (util.length) groups.push(util);
           if (!groups.length) return null;
@@ -7241,7 +7422,7 @@ ${rows}
           );
         })()}
         <div className="theme-picker" onClick={e => e.stopPropagation()}>
-          <button className="btn theme-btn" onClick={() => setThemeOpen(o => !o)} title={t('preferences')}>
+          <button className="btn theme-btn" onClick={() => setThemeOpen(o => !o)} data-tooltip={t('ttPrefs')}>
             <span className="theme-dot" style={{background: THEMES[theme]?.acc}}/>
           </button>
           {themeOpen && (
@@ -7326,7 +7507,7 @@ ${rows}
       </div>
 
       {/* ── MAIN ── */}
-      {!pid && !projects.length && trashCount.total === 0 ? (
+      {!pid && !projects.length && trashCount.total === 0 && !roomShareMode ? (
         <div className="start">
           <div className="start-logo">Tableau</div>
           <div className="start-sub">
@@ -7441,10 +7622,12 @@ ${rows}
                                     onKeyDown={e => { if (e.key==='Enter') submitRename(); if (e.key==='Escape') setRenaming(null); }}
                                     onBlur={submitRename} onClick={e => e.stopPropagation()}/>
                                 ) : (
-                                  <span className="nboard-name" title={b.name} onDoubleClick={e => { e.stopPropagation(); startRename('board', b.id, b.name, e); }}>{b.name}</span>
+                                  <>
+                                    {b.private && !shareRole && authMode && <span style={{color:'var(--muted)',flexShrink:0,display:'flex',alignItems:'center',marginRight:2}} title={t('boardPrivate')}><SvgEyeOff size={8}/></span>}
+                                    <span className="nboard-name" title={b.name} onDoubleClick={e => { e.stopPropagation(); startRename('board', b.id, b.name, e); }}>{b.name}</span>
+                                  </>
                                 )}
                                 {!(renaming?.type==='board' && renaming.id===b.id) && (<>
-                                  {b.private && !shareRole && authMode && <span style={{fontSize:8,color:'var(--muted)',flexShrink:0}} title={t('boardPrivate')}>⊘</span>}
                                   <span className="nboard-count">{(allBoardItems[b.id]||[]).filter(i=>!i.type||i.type==='photo').length||''}</span>
                                 </>)}
                                 {!shareRole && <div className="nrow-acts">
@@ -7483,6 +7666,7 @@ ${rows}
                                       {!shareRole && <div className="nrow-acts">
                                         <button className="nact edit" title={t('renameBtn')}       onClick={e=>startRename('room',r.id,r.name,e)}>✎</button>
                                         <button className="nact edit" title={t('salaDuplicate')}   onClick={e=>duplicateRoom(r.id,e)}>⧉</button>
+                                        {authMode && <button className="nact edit" title={t('shareRoom')} onClick={e=>{e.stopPropagation();const rid=r.id;setRoomShareModal({rid,loading:true});api.get(`/api/projects/${pid}/rooms/${rid}/share`).then(d=>setRoomShareModal({rid,token:d.token,url:d.url})).catch(()=>setRoomShareModal({rid,token:null,url:null}));}}><SvgShareNet size={10}/></button>}
                                         <button className="nact del"  title={t('salaDelete')}      onClick={e=>{e.stopPropagation();switchRoom(r.id);setTimeout(deleteRoom,0);}}>×</button>
                                       </div>}
                                     </div>
@@ -7857,6 +8041,18 @@ ${rows}
                       {!shareRole && !roomDrawing && <button className="btn" onClick={()=>importRoomRef.current?.click()} title={lang==='es'?'Importar sala':'Import room'}><SvgImport size={11}/></button>}
                       <input ref={importRoomRef} type="file" accept=".json" style={{display:'none'}} onChange={importRoom}/>
                       {!shareRole && room && !roomDrawing && <button className="btn danger" onClick={deleteRoom}>{t('salaDelete')}</button>}
+                      {!shareRole && room && !roomDrawing && authMode && (
+                        <button className="btn" data-tooltip={t('ttShareRoom')}
+                          onClick={() => {
+                            const rid = activeRoomId || room.id;
+                            setRoomShareModal({ rid, loading: true });
+                            api.get(`/api/projects/${pid}/rooms/${rid}/share`)
+                              .then(d => setRoomShareModal({ rid, token: d.token, url: d.url }))
+                              .catch(() => setRoomShareModal({ rid, token: null, url: null }));
+                          }}>
+                          <SvgShareNet size={11}/>
+                        </button>
+                      )}
                       <span style={{fontSize:9,color:'var(--muted)',marginLeft:4}}>{lang==='es'?'Rueda → zoom · Arrastrar → desplazar':'Wheel → zoom · Drag → pan'}</span>
                     </div>
 
@@ -8189,9 +8385,9 @@ ${rows}
                     </div>
                   )}
                   <div className="room-toolbar room-toolbar-3d">
-                    <button className="btn" onClick={() => setRoomView('room')}>← {lang==='es'?'Planta':'Floor plan'}</button>
+                    {!roomShareMode && <button className="btn" onClick={() => setRoomView('room')}>← {lang==='es'?'Planta':'Floor plan'}</button>}
                     <button className="btn" onClick={() => reset3DViewRef.current?.()}>{lang==='es'?'Centrar':'Reset view'}</button>
-                    <button className="btn" onClick={() => snapshot3DRef.current?.()}>{lang==='es'?'Capturar':'Snapshot'}</button>
+                    {!roomShareMode && <button className="btn" onClick={() => snapshot3DRef.current?.()}>{lang==='es'?'Capturar':'Snapshot'}</button>}
                     <button className={`btn${show3DPerson?' active':''}`} title={lang==='es'?'Mostrar escala humana (175 cm)':'Show human scale (175 cm)'} onClick={() => { if (show3DPerson && personMoveMode) togglePersonMoveRef.current?.(); toggle3DPersonRef.current?.(); setShow3DPerson(v => !v); }}>{lang==='es'?'👤 Persona':'👤 Person'}</button>
                     {show3DPerson && <button className={`btn${personMoveMode?' active':''}`} title={lang==='es'?'Arrastra la figura por el suelo de la sala':'Drag figure across the room floor'} onClick={() => togglePersonMoveRef.current?.()}>{lang==='es'?(personMoveMode?'✓ Listo':'↔ Mover'):(personMoveMode?'✓ Done':'↔ Move')}</button>}
                     <button className={`btn${walkMode3D?' active':''}`} title={lang==='es'?'Pasear por la sala — flechas para moverse y girar, clic para capturar ratón':'Walk through the room — arrows to move and turn, click to capture mouse'} onClick={() => toggle3DWalkRef.current?.()}>{lang==='es'?(walkMode3D?'✕ Salir paseo':'◉ Pasear'):(walkMode3D?'✕ Exit walk':'◉ Walk')}</button>
@@ -8248,6 +8444,11 @@ ${rows}
               </div>
             )}
 
+            {/* Private board ribbon — visible to the owner while editing */}
+            {activeBoard?.private && !shareRole && authMode && bid && roomView === 'board' && (
+              <div style={{height:3,background:'repeating-linear-gradient(90deg,var(--muted) 0,var(--muted) 6px,transparent 6px,transparent 12px)',opacity:.45,flexShrink:0,pointerEvents:'none'}}/>
+            )}
+
             {/* CANVAS */}
             <div ref={wrapRef} className={`canvas-wrap${libExpanded ? ' lib-expanded' : ''}${framePainter ? ' frame-painter' : ''}${spaceDown ? ' panning' : ''}${pasteGhost ? ' paste-ghost-mode' : ''}`}
               style={{...(boardPx ? { background: '#1e1e1e', padding: BOARD_PAD } : {}), ...((roomView==='room'||roomView==='3d')?{display:'none'}:{})}}
@@ -8292,20 +8493,20 @@ ${rows}
                     <button className="abt" title={t('eqWidth')}  onClick={() => alignItems('eqw')}><SvgEqW/></button>
                     {sel.length === 2 && <>
                       <div className="align-bar-sep"/>
-                      <button className="abt" title={t('swapPos')} onClick={swapItems} style={{fontSize:16}}>⇄</button>
+                      <button className="abt" data-tooltip={t('ttSwap')} onClick={swapItems} style={{fontSize:16}}>⇄</button>
                     </>}
                   </>}
                   {/* Portapapeles: cortar, copiar */}
                   <div className="align-bar-sep"/>
-                  <button className="abt" title={lang==='es'?'Cortar (Ctrl+X)':'Cut (Ctrl+X)'} style={{fontSize:13}} onClick={() => copySelToBoardClipboard(true)}>✂</button>
-                  <button className="abt" title={lang==='es'?'Copiar (Ctrl+C)':'Copy (Ctrl+C)'} style={{fontSize:13}} onClick={() => copySelToBoardClipboard(false)}>⎘</button>
+                  <button className="abt" data-tooltip={t('ttCut')} style={{fontSize:13}} onClick={() => copySelToBoardClipboard(true)}>✂</button>
+                  <button className="abt" data-tooltip={t('ttCopy')} style={{fontSize:13}} onClick={() => copySelToBoardClipboard(false)}>⎘</button>
                   {/* Selección: agrupar, desagrupar, limpiar */}
                   <div className="align-bar-sep"/>
                   {sel.length >= 2 && (
-                    <button className="abt" title={t('groupItems')} onClick={groupItems}><SvgGroup/></button>
+                    <button className="abt" data-tooltip={t('ttGroup')} onClick={groupItems}><SvgGroup/></button>
                   )}
                   {sel.some(id => items.find(i => i.id === id)?.groupId) && (
-                    <button className="abt" title={t('ungroupItems')} onClick={ungroupItems}><SvgUngroup/></button>
+                    <button className="abt" data-tooltip={t('ttUngroup')} onClick={ungroupItems}><SvgUngroup/></button>
                   )}
                   <button className="abt" style={{color:'var(--dim)',fontSize:14}} title={t('clearSel')}
                     onClick={() => { selRef.current = []; setSel([]); }}>×</button>
@@ -8344,8 +8545,10 @@ ${rows}
                   // Variable board: grow the canvas (and thus the grid background)
                   // so it always covers the viewport. .canvas uses CSS `zoom`, so a
                   // canvas-px size of wrap/zoom renders exactly the wrap size on screen.
-                  minWidth:  Math.max(3000, Math.ceil(wrapSize.w / zoom)),
-                  minHeight: Math.max(2200, Math.ceil(wrapSize.h / zoom)),
+                  // wrapSize can be 0 (stale, or wrap was display:none during room view),
+                  // so fall back to window dimensions to avoid a cut-off grid.
+                  minWidth:  Math.ceil(Math.max(wrapSize.w || window.innerWidth, 3000) / zoom),
+                  minHeight: Math.ceil(Math.max(wrapSize.h || window.innerHeight, 2200) / zoom),
                 }),
                 ...(shareRole === 'view' ? { pointerEvents: 'none', userSelect: 'none' } : {}),
               }} onClick={e => {
@@ -8584,8 +8787,8 @@ ${rows}
                                 onPointerDown={e => e.stopPropagation()}
                                 onChange={e => { const v = parseInt(e.target.value); if (!isNaN(v) && v >= 8 && v <= 999) setTextProp('fontSize', v); }}/>
                               <button className="tfmt-btn" onClick={() => setTextProp('fontSize', Math.min(999, (item.fontSize||26) + TEXT_FS_STEP(item.fontSize||26)))}>+</button>
-                              <button className={`tfmt-btn${item.fontWeight==='bold'?' on':''}`} style={{fontWeight:'bold',marginLeft:4}} title="Bold" onClick={() => setTextProp('fontWeight', item.fontWeight==='bold'?'':'bold')}>B</button>
-                              <button className={`tfmt-btn${item.fontStyle==='italic'?' on':''}`} style={{fontStyle:'italic'}} title="Italic" onClick={() => setTextProp('fontStyle', item.fontStyle==='italic'?'':'italic')}>I</button>
+                              <button className={`tfmt-btn${item.fontWeight==='bold'?' on':''}`} style={{fontWeight:'bold',marginLeft:4}} data-tooltip="Bold" onClick={() => setTextProp('fontWeight', item.fontWeight==='bold'?'':'bold')}>B</button>
+                              <button className={`tfmt-btn${item.fontStyle==='italic'?' on':''}`} style={{fontStyle:'italic'}} data-tooltip="Italic" onClick={() => setTextProp('fontStyle', item.fontStyle==='italic'?'':'italic')}>I</button>
                             </div>
                             <div className="tfmt-row">
                               <span className="tfmt-lbl">{t('textFmtFont')}</span>
@@ -8777,7 +8980,7 @@ ${rows}
                         <div className="props-panel" style={{top: 'calc(100% + 2px)'}} onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
                           <div className="props-lbl" style={{marginBottom:6}}>{t('noteColor')}</div>
                           <div style={{display:'flex',gap:5,alignItems:'center'}}>
-                            <div title="Default" onClick={() => updateNoteColor(item.id, null)}
+                            <div data-tooltip="Default" onClick={() => updateNoteColor(item.id, null)}
                               style={{width:14,height:14,borderRadius:'50%',cursor:'pointer',background:'var(--acc-dim)',border:`2px solid ${!item.noteColor?'var(--acc)':'var(--border2)'}`}}/>
                             {NOTE_COLORS.map(c => (
                               <div key={c} title={c} onClick={() => updateNoteColor(item.id, c)}
@@ -8868,13 +9071,13 @@ ${rows}
                     >
                       {item.locked && <div className="lock-badge"><SvgLock/></div>}
                       <div className="bitem-bar" onPointerDown={e => e.stopPropagation()} style={_bbarBelow}>
-                        <button className="ibc rot" title={t('rotateBtn')}
+                        <button className="ibc rot" data-tooltip={t('ttRotate')}
                           onPointerDown={e => { e.stopPropagation(); if (!item.locked) onFreeRotatePD(e, item.id); }}
                           onClick={e => { e.stopPropagation(); if (rotBtnDraggedRef.current) { rotBtnDraggedRef.current = false; return; } rotateItem(item.id); }}>↻</button>
                         <button className="ibc" title={t(item.locked ? 'unlockBtn' : 'lockBtn')}
                           style={{color: item.locked ? 'var(--acc)' : undefined}}
                           onClick={e => { e.stopPropagation(); updateItemLocked(item.id, !item.locked); }}>{item.locked ? <SvgUnlock/> : <SvgLock/>}</button>
-                        <button className="ibc del" title={t('deleteBtn')}   onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
+                        <button className="ibc del" data-tooltip={t('ttDeleteItem')} onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
                       </div>
                       {propsPanelId === item.id && (() => {
                         const fu = boardUnits !== 'px' ? boardUnits : 'px';
@@ -9012,8 +9215,8 @@ ${rows}
                         <button className="ibc" onClick={() => updGP({gap: parseFloat((gridPending.gap+gapStep).toFixed(gapDec))})}>+</button>
                         {tooBig && <><div className="gitem-sep"/><span style={{fontSize:9,color:'var(--danger)'}}>↕ {lang==='es'?'excede alto':'exceeds height'}</span></>}
                         <div className="gitem-sep"/>
-                        <button className="ibc" title="ESC" onClick={() => setGridPending(null)}>✕</button>
-                        <button className="ibc" style={{background:'var(--acc)',color:'#fff',paddingLeft:4,paddingRight:4,borderRadius:2}} title="Enter" onClick={placeGridPending}>✓</button>
+                        <button className="ibc" data-tooltip="ESC" onClick={() => setGridPending(null)}>✕</button>
+                        <button className="ibc" style={{background:'var(--acc)',color:'#fff',paddingLeft:4,paddingRight:4,borderRadius:2}} data-tooltip="Enter" onClick={placeGridPending}>✓</button>
                       </div>
                     </div>
                   );
@@ -9354,10 +9557,10 @@ ${rows}
               </div>
             );
           })()}
-          <button className="zc-btn" title="Zoom − (Ctrl+−)" onClick={() => zoomStep(-1)}>−</button>
-          <button className="zc-btn" title={boardPx ? `${t('fitView')} (Ctrl+0)` : t('fitWidth')}
+          <button className="zc-btn" data-tooltip={t('ttZoomOut')} onClick={() => zoomStep(-1)}>−</button>
+          <button className="zc-btn" data-tooltip={t('ttZoomFit')}
             onClick={boardPx ? fitBoard : fitWidth} style={{fontSize:13}}>⇔</button>
-          <button className="zc-btn" title="Zoom + (Ctrl++)" onClick={() => zoomStep(1)}>+</button>
+          <button className="zc-btn" data-tooltip={t('ttZoomIn')} onClick={() => zoomStep(1)}>+</button>
         </div>
       )}
       {resizeDim && <div className="resize-tip" style={{left:resizeDim.x, top:resizeDim.y}}>{resizeDim.label}</div>}
@@ -10804,6 +11007,66 @@ ${rows}
           </div>
         </div>
       )}
+      {roomShareModal && (
+        <div className="overlay" style={{zIndex:1100}} onClick={() => { setRoomShareModal(null); setRoomShareInviteEmail(''); }}>
+          <div className="modal" style={{maxWidth:480}} onClick={e => e.stopPropagation()}>
+            <div className="modal-h">{t('shareRoomTitle')}</div>
+            <div style={{fontSize:11,color:'var(--muted)',marginBottom:4}}>{t('shareRoomInfo')}</div>
+            {roomShareModal.loading ? (
+              <div style={{color:'var(--muted)',fontSize:11}}>{lang==='es'?'Cargando…':'Loading…'}</div>
+            ) : roomShareModal.url ? (
+              <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                <div style={{fontWeight:600,marginBottom:4,fontSize:13}}>{t('shareRoomLink')}</div>
+                <div style={{display:'flex',gap:6}}>
+                  <input readOnly value={roomShareModal.url}
+                    style={{flex:1,fontSize:11,padding:'4px 8px',background:'var(--input)',border:'1px solid var(--border)',borderRadius:4,color:'var(--text)'}}
+                    onFocus={e => e.target.select()}/>
+                  <button className="btn" style={{padding:'4px 10px',fontSize:12,whiteSpace:'nowrap'}}
+                    onClick={() => { navigator.clipboard.writeText(roomShareModal.url); setToast(t('shareRoomCopied')); }}>
+                    {t('shareRoomCopy')}
+                  </button>
+                </div>
+                <div style={{display:'flex',gap:6,marginTop:4}}>
+                  <input className="inp" value={roomShareInviteEmail} placeholder={t('shareInvitePh')}
+                    style={{flex:1,fontSize:11,padding:'4px 8px'}}
+                    onChange={e => setRoomShareInviteEmail(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter' && roomShareInviteEmail.trim()) {
+                      const {rid} = roomShareModal;
+                      api.post(`/api/projects/${pid}/rooms/${rid}/share/invite`, { email: roomShareInviteEmail.trim() })
+                        .then(() => { setToast(t('shareRoomInviteSent')); setRoomShareInviteEmail(''); })
+                        .catch(err => setToast(err?.error || t('shareInviteError')));
+                    }}}/>
+                  <button className="btn acc" style={{padding:'4px 10px',fontSize:12,whiteSpace:'nowrap'}}
+                    disabled={!roomShareInviteEmail.trim()}
+                    onClick={() => {
+                      if (!roomShareInviteEmail.trim()) return;
+                      const {rid} = roomShareModal;
+                      api.post(`/api/projects/${pid}/rooms/${rid}/share/invite`, { email: roomShareInviteEmail.trim() })
+                        .then(() => { setToast(t('shareRoomInviteSent')); setRoomShareInviteEmail(''); })
+                        .catch(err => setToast(err?.error || t('shareInviteError')));
+                    }}>
+                    {t('shareInviteSend')}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button className="btn acc" style={{padding:'4px 12px',fontSize:12}}
+                onClick={() => {
+                  const { rid } = roomShareModal;
+                  setRoomShareModal(m => ({ ...m, loading: true }));
+                  api.post(`/api/projects/${pid}/rooms/${rid}/share`, {})
+                    .then(d => setRoomShareModal({ rid, token: d.token, url: d.url }))
+                    .catch(() => setRoomShareModal(m => ({ ...m, loading: false })));
+                }}>
+                {t('shareRoomGenerate')}
+              </button>
+            )}
+            <div style={{marginTop:16,display:'flex',justifyContent:'flex-end'}}>
+              <button className="btn" onClick={() => { setRoomShareModal(null); setRoomShareInviteEmail(''); }}>{t('close')}</button>
+            </div>
+          </div>
+        </div>
+      )}
       {shareModal && (
         <div className="overlay" style={{zIndex:1100}} onClick={() => { setShareModal(null); setShareInviteEmail(''); }}>
           <div className="modal" style={{maxWidth:480}} onClick={e => e.stopPropagation()}>
@@ -10866,34 +11129,49 @@ ${rows}
 
       {sharesPanel && (
         <div className="overlay" style={{zIndex:1100}} onClick={() => setSharesPanel(null)}>
-          <div className="modal" style={{maxWidth:520,minWidth:340}} onClick={e => e.stopPropagation()}>
+          <div className="modal" style={{maxWidth:540,minWidth:340}} onClick={e => e.stopPropagation()}>
             <div className="modal-h">{t('shareActiveTitle')}</div>
             {sharesPanel.length === 0 ? (
               <div style={{color:'var(--muted)',fontSize:11,padding:'8px 0'}}>{t('shareActiveEmpty')}</div>
             ) : (
-              <div style={{display:'flex',flexDirection:'column',gap:8,maxHeight:400,overflowY:'auto'}}>
+              <div style={{display:'flex',flexDirection:'column',gap:8,maxHeight:420,overflowY:'auto'}}>
                 {sharesPanel.map(inv => (
-                  <div key={inv.token} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 10px',background:'var(--panel2)',borderRadius:4}}>
-                    <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontWeight:600,fontSize:12,marginBottom:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{inv.projectName}</div>
-                      <div style={{fontSize:10,color:'var(--muted)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{inv.url}</div>
-                      <div style={{fontSize:9,color:'var(--dim)',marginTop:2}}>{new Date(inv.created).toLocaleDateString()}</div>
+                  <div key={inv.token} style={{padding:'10px 12px',background:'var(--panel2)',borderRadius:4}}>
+                    <div style={{display:'flex',alignItems:'flex-start',gap:8,justifyContent:'space-between'}}>
+                      <div style={{minWidth:0,flex:1}}>
+                        <div style={{fontWeight:600,fontSize:11,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',marginBottom:4}}>
+                          {inv.projectName}{inv.type==='room' && inv.roomName ? ` / ${inv.roomName}` : ''}
+                        </div>
+                        <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
+                          <span style={{fontSize:9,color:'var(--acc)',letterSpacing:.4}}>
+                            {inv.type==='room' ? t('shareActiveRoomType') : t('shareActiveProjectType')}
+                          </span>
+                          <span style={{fontSize:9,color:'var(--muted)'}}>
+                            {inv.email || '—'}
+                          </span>
+                          <span style={{fontSize:9,color:'var(--dim)'}}>
+                            {new Date(inv.created).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                      <div style={{display:'flex',gap:4,flexShrink:0}}>
+                        <button className="btn" style={{fontSize:11,padding:'3px 8px'}}
+                          onClick={() => { navigator.clipboard.writeText(inv.url); setToast(t('shareCopied')); }}>
+                          {t('shareCopy')}
+                        </button>
+                        <button className="btn danger" style={{fontSize:11,padding:'3px 8px'}}
+                          onClick={() => {
+                            const delUrl = inv.type==='room'
+                              ? `/api/projects/${inv.projectId}/rooms/${inv.roomId}/share`
+                              : `/api/projects/${inv.projectId}/share/view`;
+                            api.del(delUrl)
+                              .then(() => { setSharesPanel(p => p.filter(i => i.token !== inv.token)); setToast(t('shareActiveRevokeOk')); })
+                              .catch(() => {});
+                          }}>
+                          {t('shareActiveRevoke')}
+                        </button>
+                      </div>
                     </div>
-                    <button className="btn" style={{fontSize:11,padding:'3px 8px',flexShrink:0}}
-                      onClick={() => { navigator.clipboard.writeText(inv.url); setToast(t('shareCopied')); }}>
-                      {t('shareCopy')}
-                    </button>
-                    <button className="btn danger" style={{fontSize:11,padding:'3px 8px',flexShrink:0}}
-                      onClick={() => {
-                        api.del(`/api/projects/${inv.projectId}/share/view`)
-                          .then(() => {
-                            setSharesPanel(p => p.filter(i => i.token !== inv.token));
-                            setToast(t('shareActiveRevokeOk'));
-                          })
-                          .catch(() => {});
-                      }}>
-                      {t('shareActiveRevoke')}
-                    </button>
                   </div>
                 ))}
               </div>
@@ -11277,6 +11555,94 @@ ${rows}
                 })()}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showShortcuts && (
+        <div className="sc-overlay" onClick={() => { showShortcutsRef.current = false; setShowShortcuts(false); }}>
+          <div className="sc-modal" onClick={e => e.stopPropagation()}>
+            <div className="sc-hd">
+              <span className="sc-hd-title">{t('shortcutsTitle')}</span>
+              <button className="sc-close" onClick={() => { showShortcutsRef.current = false; setShowShortcuts(false); }}>×</button>
+            </div>
+            <div className="sc-scroll">
+              {/* General */}
+              <div className="sc-section">
+                <div className="sc-sec-hd">{t('scGeneral')}</div>
+                <div className="sc-row"><div className="sc-keys"><kbd>F1</kbd></div><div className="sc-desc">{lang==='es'?'Este panel':'This panel'}</div></div>
+                <div className="sc-row"><div className="sc-keys"><kbd>Esc</kbd></div><div className="sc-desc">{lang==='es'?'Cancelar / cerrar':'Cancel / close'}</div></div>
+                <div className="sc-row"><div className="sc-keys"><kbd>{lang==='es'?'Espacio':'Space'}</kbd></div><div className="sc-desc"><span className="sc-warn">⚠️ </span>{lang==='es'?'Pan del canvas':'Pan canvas'}</div></div>
+              </div>
+              {/* Canvas — selección */}
+              <div className="sc-section">
+                <div className="sc-sec-hd">{t('scCanvasSel')}</div>
+                <div className="sc-row"><div className="sc-keys"><kbd>Ctrl+A</kbd></div><div className="sc-desc">{lang==='es'?'Seleccionar todo':'Select all'}</div></div>
+                <div className="sc-row"><div className="sc-keys"><kbd>Ctrl+{lang==='es'?'clic':'click'}</kbd><kbd>Shift+{lang==='es'?'clic':'click'}</kbd></div><div className="sc-desc"><span className="sc-warn">⚠️ </span>{lang==='es'?'Añadir a la selección':'Add to selection'}</div></div>
+                <div className="sc-row"><div className="sc-keys"><kbd>{lang==='es'?'Arrastrar':'Drag'}</kbd></div><div className="sc-desc"><span className="sc-warn">⚠️ </span>{lang==='es'?'Selección por lasso':'Lasso selection'}</div></div>
+              </div>
+              {/* Canvas — edición */}
+              <div className="sc-section">
+                <div className="sc-sec-hd">{t('scCanvasEdit')}</div>
+                <div className="sc-row"><div className="sc-keys"><kbd>Ctrl+C</kbd></div><div className="sc-desc">{lang==='es'?'Copiar':'Copy'}</div></div>
+                <div className="sc-row"><div className="sc-keys"><kbd>Ctrl+X</kbd></div><div className="sc-desc">{lang==='es'?'Cortar':'Cut'}</div></div>
+                <div className="sc-row"><div className="sc-keys"><kbd>Ctrl+V</kbd></div><div className="sc-desc">{lang==='es'?'Pegar':'Paste'}</div></div>
+                <div className="sc-row"><div className="sc-keys"><kbd>Ctrl+D</kbd></div><div className="sc-desc">{lang==='es'?'Duplicar':'Duplicate'}</div></div>
+                <div className="sc-row"><div className="sc-keys"><kbd>{lang==='es'?'Supr':'Del'}</kbd></div><div className="sc-desc">{lang==='es'?'Eliminar':'Delete'}</div></div>
+                <div className="sc-row"><div className="sc-keys"><kbd>R</kbd></div><div className="sc-desc"><span className="sc-warn">⚠️ </span>{lang==='es'?'Ir al plano de sala':'Go to floor plan'}</div></div>
+                <div className="sc-row"><div className="sc-keys"><kbd>Shift+R</kbd></div><div className="sc-desc"><span className="sc-warn">⚠️ </span>{lang==='es'?'Abrir vista 3D':'Open 3D view'}</div></div>
+              </div>
+              {/* Canvas — movimiento */}
+              <div className="sc-section">
+                <div className="sc-sec-hd">{t('scCanvasMove')}</div>
+                <div className="sc-row"><div className="sc-keys"><kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd></div><div className="sc-desc">{lang==='es'?'Mover 1 px':'Move 1 px'}</div></div>
+                <div className="sc-row"><div className="sc-keys"><kbd>Shift+←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd></div><div className="sc-desc"><span className="sc-warn">⚠️ </span>{lang==='es'?'Mover 10 px':'Move 10 px'}</div></div>
+                <div className="sc-row"><div className="sc-keys"><kbd>Shift+{lang==='es'?'arrastrar':'drag'}</kbd></div><div className="sc-desc"><span className="sc-warn">⚠️ </span>{lang==='es'?'Restringir a eje horizontal/vertical':'Constrain to horizontal/vertical axis'}</div></div>
+              </div>
+              {/* Canvas — zoom */}
+              <div className="sc-section">
+                <div className="sc-sec-hd">{t('scCanvasZoom')}</div>
+                <div className="sc-row"><div className="sc-keys"><kbd>Ctrl+{lang==='es'?'rueda':'wheel'}</kbd></div><div className="sc-desc">{lang==='es'?'Zoom libre':'Free zoom'}</div></div>
+                <div className="sc-row"><div className="sc-keys"><kbd>Ctrl+0</kbd></div><div className="sc-desc">{lang==='es'?'Ajustar vista':'Fit view'}</div></div>
+                <div className="sc-row"><div className="sc-keys"><kbd>Ctrl++</kbd><kbd>Ctrl+−</kbd></div><div className="sc-desc">{lang==='es'?'Acercar / Alejar':'Zoom in / out'}</div></div>
+              </div>
+              {/* Canvas — rotación */}
+              <div className="sc-section">
+                <div className="sc-sec-hd">{t('scCanvasRot')}</div>
+                <div className="sc-row"><div className="sc-keys"><kbd>{lang==='es'?'Arrastrar ↻':'Drag ↻'}</kbd></div><div className="sc-desc"><span className="sc-warn">⚠️ </span>{lang==='es'?'Rotación libre':'Free rotation'}</div></div>
+                <div className="sc-row"><div className="sc-keys"><kbd>Shift+{lang==='es'?'arrastrar ↻':'drag ↻'}</kbd></div><div className="sc-desc"><span className="sc-warn">⚠️ </span>{lang==='es'?'Rotación en pasos de 15°':'Rotation in 15° steps'}</div></div>
+              </div>
+              {/* Biblioteca */}
+              <div className="sc-section">
+                <div className="sc-sec-hd">{t('scLibrary')}</div>
+                <div className="sc-row"><div className="sc-keys"><kbd>Ctrl+{lang==='es'?'clic':'click'}</kbd><kbd>Shift+{lang==='es'?'clic':'click'}</kbd></div><div className="sc-desc"><span className="sc-warn">⚠️ </span>{lang==='es'?'Selección múltiple / por rango':'Multi-select / range select'}</div></div>
+                <div className="sc-row"><div className="sc-keys"><kbd>X</kbd></div><div className="sc-desc"><span className="sc-warn">⚠️ </span>{lang==='es'?'Rechazar foto':'Reject photo'}</div></div>
+                <div className="sc-row"><div className="sc-keys"><kbd>U</kbd></div><div className="sc-desc"><span className="sc-warn">⚠️ </span>{lang==='es'?'Recuperar foto':'Recover photo'}</div></div>
+                <div className="sc-row"><div className="sc-keys"><kbd>0</kbd>–<kbd>5</kbd></div><div className="sc-desc"><span className="sc-warn">⚠️ </span>{lang==='es'?'Valorar foto':'Rate photo'}</div></div>
+              </div>
+              {/* Vista 3D / Walk */}
+              <div className="sc-section">
+                <div className="sc-sec-hd">{t('sc3D')}</div>
+                <div className="sc-row"><div className="sc-keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><kbd>←↑↓→</kbd></div><div className="sc-desc"><span className="sc-warn">⚠️ </span>{lang==='es'?'Desplazarse':'Move around'}</div></div>
+                <div className="sc-row"><div className="sc-keys"><kbd>{lang==='es'?'Clic':'Click'}</kbd></div><div className="sc-desc"><span className="sc-warn">⚠️ </span>{lang==='es'?'Capturar ratón':'Capture mouse'}</div></div>
+                <div className="sc-row"><div className="sc-keys"><kbd>Esc</kbd></div><div className="sc-desc"><span className="sc-warn">⚠️ </span>{lang==='es'?'Liberar ratón':'Release mouse'}</div></div>
+              </div>
+              {/* Plano de sala */}
+              <div className="sc-section">
+                <div className="sc-sec-hd">{t('scRoom')}</div>
+                <div className="sc-row"><div className="sc-keys"><kbd>Shift+{lang==='es'?'arrastrar vértice':'drag vertex'}</kbd></div><div className="sc-desc"><span className="sc-warn">⚠️ </span>{lang==='es'?'Restringir ángulo a 45°':'Constrain angle to 45°'}</div></div>
+                <div className="sc-row"><div className="sc-keys"><kbd>Shift+{lang==='es'?'arrastrar bloque':'drag block'}</kbd></div><div className="sc-desc"><span className="sc-warn">⚠️ </span>{lang==='es'?'Rotar bloque en pasos de 15°':'Rotate block in 15° steps'}</div></div>
+                <div className="sc-row"><div className="sc-keys"><kbd>⌫</kbd></div><div className="sc-desc"><span className="sc-warn">⚠️ </span>{lang==='es'?'Borrar último vértice':'Delete last vertex'}</div></div>
+                <div className="sc-row"><div className="sc-keys"><kbd>Esc</kbd></div><div className="sc-desc">{lang==='es'?'Cancelar / guardar / cerrar':'Cancel / save / close'}</div></div>
+              </div>
+              {/* Galería */}
+              <div className="sc-section">
+                <div className="sc-sec-hd">{t('scGallery')}</div>
+                <div className="sc-row"><div className="sc-keys"><kbd>←</kbd><kbd>→</kbd></div><div className="sc-desc"><span className="sc-warn">⚠️ </span>{lang==='es'?'Navegar':'Navigate'}</div></div>
+                <div className="sc-row"><div className="sc-keys"><kbd>Esc</kbd></div><div className="sc-desc">{lang==='es'?'Cerrar':'Close'}</div></div>
+              </div>
+            </div>
+            <div className="sc-footer">{t('shortcutsFooter')}</div>
           </div>
         </div>
       )}

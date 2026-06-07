@@ -268,6 +268,24 @@ function resolveShareToken(token) {
   return loadShares()[token] || null;
 }
 
+// ── Room share helpers ────────────────────────────────────────────────────────
+// NOTE: columns do not link boards today; include here if that changes.
+function roomBoardIds(room) {
+  return new Set([
+    ...(room.walls  || []).flatMap(w => [w.boardId, w.boardIdBack].filter(Boolean)),
+    ...(room.blocks || []).flatMap(b => Object.values(b.faces || {}).map(f => f?.boardId).filter(Boolean)),
+  ]);
+}
+
+function roomPhotoIds(dd, pid, room) {
+  const ids = new Set();
+  for (const bid of roomBoardIds(room)) {
+    const items = readJSON(boardFile(pid, bid, dd), []);
+    items.forEach(it => { if (it.photoId) ids.add(it.photoId); });
+  }
+  return ids;
+}
+
 // resolveAccess: accepts session auth OR valid share token.
 // Sets req.dd, req.shareRole (null=owner, 'view'|'edit'=guest), req.sharePid, req.shareToken.
 function resolveAccess(req, res, next) {
@@ -284,10 +302,12 @@ function resolveAccess(req, res, next) {
         if (share) {
           if (req.params.pid && req.params.pid !== share.projectId)
             return res.status(403).json({ error: 'Token no válido para este proyecto' });
-          req.dd        = path.join(DATA_DIR, share.ownerId);
-          req.shareRole = share.role;
-          req.sharePid  = share.projectId;
+          req.dd         = path.join(DATA_DIR, share.ownerId);
+          req.shareRole  = share.role;
+          req.sharePid   = share.projectId;
           req.shareToken = tok;
+          req.shareScope = share.type === 'room' ? 'room' : 'project';
+          if (share.type === 'room') req.shareRoomId = share.roomId;
           return next();
         }
       }
@@ -296,10 +316,12 @@ function resolveAccess(req, res, next) {
       if (!tok && req.session.shareInfo && req.params.pid) {
         const share = resolveShareToken(req.session.shareInfo.token);
         if (share && share.ownerId !== user.id && share.projectId === req.params.pid) {
-          req.dd        = path.join(DATA_DIR, share.ownerId);
-          req.shareRole = share.role;
-          req.sharePid  = share.projectId;
+          req.dd         = path.join(DATA_DIR, share.ownerId);
+          req.shareRole  = share.role;
+          req.sharePid   = share.projectId;
           req.shareToken = req.session.shareInfo.token;
+          req.shareScope = share.type === 'room' ? 'room' : 'project';
+          if (share.type === 'room') req.shareRoomId = share.roomId;
           return next();
         }
       }
@@ -315,10 +337,12 @@ function resolveAccess(req, res, next) {
     if (share) {
       if (req.params.pid && req.params.pid !== share.projectId)
         return res.status(403).json({ error: 'Token no válido para este proyecto' });
-      req.dd        = path.join(DATA_DIR, share.ownerId);
-      req.shareRole = share.role;
-      req.sharePid  = share.projectId;
+      req.dd         = path.join(DATA_DIR, share.ownerId);
+      req.shareRole  = share.role;
+      req.sharePid   = share.projectId;
       req.shareToken = req.session.shareInfo.token;
+      req.shareScope = share.type === 'room' ? 'room' : 'project';
+      if (share.type === 'room') req.shareRoomId = share.roomId;
       return next();
     }
     delete req.session.shareInfo; // token revoked
@@ -329,10 +353,12 @@ function resolveAccess(req, res, next) {
     if (share) {
       if (req.params.pid && req.params.pid !== share.projectId)
         return res.status(403).json({ error: 'Token no válido para este proyecto' });
-      req.dd        = path.join(DATA_DIR, share.ownerId);
-      req.shareRole = share.role;
-      req.sharePid  = share.projectId;
+      req.dd         = path.join(DATA_DIR, share.ownerId);
+      req.shareRole  = share.role;
+      req.sharePid   = share.projectId;
       req.shareToken = token;
+      req.shareScope = share.type === 'room' ? 'room' : 'project';
+      if (share.type === 'room') req.shareRoomId = share.roomId;
       return next();
     }
   }
@@ -783,7 +809,7 @@ app.post('/api/admin/users/:uid/reset-password', requireAdmin, async (req, res) 
 // ── Share management endpoints (AUTH_ENABLED only) ───────────────────────────
 app.get('/api/share/:token', (req, res) => {
   const share = resolveShareToken(req.params.token);
-  if (!share) return res.status(404).json({ error: 'Enlace no válido' });
+  if (!share || share.type === 'room') return res.status(404).json({ error: 'Enlace no válido' });
   const dd = path.join(DATA_DIR, share.ownerId);
   const proj = readJSON(projsFile(dd)).find(p => p.id === share.projectId);
   if (!proj) return res.status(404).json({ error: 'Proyecto no encontrado' });
@@ -793,13 +819,24 @@ app.get('/api/share/:token', (req, res) => {
 // Todas las invitaciones activas del usuario autenticado (para panel de gestión)
 app.get('/api/shares', requireAuth, (req, res) => {
   if (!AUTH_ENABLED) return res.json([]);
-  const ownerId  = req.session.userId;
-  const allProjs = readJSON(projsFile(req.dd));
-  const result   = [];
+  const ownerId   = req.session.userId;
+  const allProjs  = readJSON(projsFile(req.dd));
+  const roomsCache = {};
+  const result    = [];
   for (const [token, s] of Object.entries(loadShares())) {
     if (s.ownerId !== ownerId) continue;
     const proj = allProjs.find(p => p.id === s.projectId);
-    result.push({ token, projectId: s.projectId, projectName: proj?.name || s.projectId, role: s.role, created: s.created, url: `${APP_URL}/?share=${token}` });
+    if (s.type === 'room') {
+      if (!roomsCache[s.projectId])
+        roomsCache[s.projectId] = readJSON(roomsFile(s.projectId, req.dd), []);
+      const room = roomsCache[s.projectId].find(r => r.id === s.roomId);
+      result.push({ token, type: 'room', projectId: s.projectId, projectName: proj?.name || s.projectId,
+        roomId: s.roomId, roomName: room?.name || '', email: s.email || null,
+        role: s.role, created: s.created, url: `${APP_URL}/?room=${token}` });
+    } else {
+      result.push({ token, type: 'project', projectId: s.projectId, projectName: proj?.name || s.projectId,
+        email: s.email || null, role: s.role, created: s.created, url: `${APP_URL}/?share=${token}` });
+    }
   }
   result.sort((a, b) => b.created - a.created);
   res.json(result);
@@ -852,7 +889,25 @@ app.delete('/api/projects/:pid/share/:role', requireAuth, (req, res) => {
 // custom headers) are automatically authenticated via the session cookie.
 app.post('/api/share/:token/activate', (req, res) => {
   const share = resolveShareToken(req.params.token);
-  if (!share) return res.status(404).json({ error: 'Token no válido' });
+  if (!share || share.type === 'room') return res.status(404).json({ error: 'Token no válido' });
+  if (req.session) req.session.shareInfo = { token: req.params.token };
+  res.json({ ok: true });
+});
+
+// ── Room share public endpoints ───────────────────────────────────────────────
+app.get('/api/rooms/share/:token', (req, res) => {
+  const share = resolveShareToken(req.params.token);
+  if (!share || share.type !== 'room') return res.status(404).json({ error: 'Enlace de sala no válido' });
+  const dd    = path.join(DATA_DIR, share.ownerId);
+  const rooms = readJSON(roomsFile(share.projectId, dd), []);
+  const room  = rooms.find(r => r.id === share.roomId);
+  if (!room) return res.status(404).json({ error: 'Sala no encontrada' });
+  res.json({ projectId: share.projectId, roomId: share.roomId, roomName: room.name || '' });
+});
+
+app.post('/api/rooms/share/:token/activate', (req, res) => {
+  const share = resolveShareToken(req.params.token);
+  if (!share || share.type !== 'room') return res.status(404).json({ error: 'Token no válido' });
   if (req.session) req.session.shareInfo = { token: req.params.token };
   res.json({ ok: true });
 });
@@ -873,8 +928,9 @@ app.post('/api/projects/:pid/share/invite', requireAuth, async (req, res) => {
     if (!projects.find(p => p.id === pid)) return res.status(404).json({ error: 'Proyecto no encontrado' });
     token = uuidv4().replace(/-/g, '');
     shares[token] = { ownerId: req.session.userId, projectId: pid, role: 'view', created: Date.now() };
-    saveShares(shares);
   }
+  shares[token].email = email;
+  saveShares(shares);
   const url        = `${APP_URL}/?share=${token}`;
   const proj       = readJSON(projsFile(req.dd)).find(p => p.id === pid);
   const projName   = proj?.name || 'Tableau';
@@ -1064,6 +1120,12 @@ app.delete('/api/projects/:pid', requireAuth, (req, res) => {
 
 // ── Boards ───────────────────────────────────────────────────────────────────
 app.get('/api/projects/:pid/boards', resolveAccess, (req, res) => {
+  if (req.shareScope === 'room') {
+    const room = readJSON(roomsFile(req.params.pid, req.dd), []).find(r => r.id === req.shareRoomId);
+    if (!room) return res.json([]);
+    const bids = roomBoardIds(room);
+    return res.json(readJSON(boardsMeta(req.params.pid, req.dd)).filter(b => bids.has(b.id) && !b.private));
+  }
   const boards = readJSON(boardsMeta(req.params.pid, req.dd));
   res.json(req.shareRole ? boards.filter(b => !b.private) : boards);
 });
@@ -1149,7 +1211,10 @@ app.put('/api/projects/:pid/boards/order', requireAuth, (req, res) => {
 app.get('/api/projects/:pid/rooms', resolveAccess, (req, res) => {
   const { pid } = req.params;
   migrateRooms(pid, req.dd);
-  res.json(readJSON(roomsFile(pid, req.dd), []));
+  const rooms = readJSON(roomsFile(pid, req.dd), []);
+  if (req.shareScope === 'room')
+    return res.json(rooms.filter(r => r.id === req.shareRoomId));
+  res.json(rooms);
 });
 
 app.post('/api/projects/:pid/rooms', requireAuth, (req, res) => {
@@ -1221,6 +1286,95 @@ app.post('/api/projects/:pid/rooms/:rid/duplicate', requireAuth, (req, res) => {
   res.json(copy);
 });
 
+// ── Room share management (AUTH_ENABLED only) ─────────────────────────────────
+app.get('/api/projects/:pid/rooms/:rid/share', requireAuth, (req, res) => {
+  if (!AUTH_ENABLED) return res.json({ token: null, url: null });
+  const { pid, rid } = req.params;
+  const ownerId = req.session.userId;
+  for (const [tok, s] of Object.entries(loadShares())) {
+    if (s.type === 'room' && s.ownerId === ownerId && s.projectId === pid && s.roomId === rid)
+      return res.json({ token: tok, url: `${APP_URL}/?room=${tok}` });
+  }
+  res.json({ token: null, url: null });
+});
+
+app.post('/api/projects/:pid/rooms/:rid/share', requireAuth, (req, res) => {
+  if (!AUTH_ENABLED) return res.status(400).json({ error: 'Solo disponible en modo servidor' });
+  const { pid, rid } = req.params;
+  const ownerId = req.session.userId;
+  const rooms = readJSON(roomsFile(pid, req.dd), []);
+  if (!rooms.find(r => r.id === rid)) return res.status(404).json({ error: 'Sala no encontrada' });
+  const shares = loadShares();
+  for (const [tok, s] of Object.entries(shares)) {
+    if (s.type === 'room' && s.ownerId === ownerId && s.projectId === pid && s.roomId === rid)
+      delete shares[tok];
+  }
+  const token = uuidv4().replace(/-/g, '');
+  shares[token] = { type: 'room', ownerId, projectId: pid, roomId: rid, role: 'view', created: Date.now() };
+  saveShares(shares);
+  res.json({ token, url: `${APP_URL}/?room=${token}` });
+});
+
+app.delete('/api/projects/:pid/rooms/:rid/share', requireAuth, (req, res) => {
+  if (!AUTH_ENABLED) return res.status(400).json({ error: 'Solo disponible en modo servidor' });
+  const { pid, rid } = req.params;
+  const ownerId = req.session.userId;
+  const shares = loadShares();
+  for (const [tok, s] of Object.entries(shares)) {
+    if (s.type === 'room' && s.ownerId === ownerId && s.projectId === pid && s.roomId === rid)
+      delete shares[tok];
+  }
+  saveShares(shares);
+  res.json({ ok: true });
+});
+
+app.post('/api/projects/:pid/rooms/:rid/share/invite', requireAuth, async (req, res) => {
+  if (!AUTH_ENABLED) return res.status(400).json({ error: 'Solo disponible en modo servidor' });
+  const { pid, rid } = req.params;
+  const { email } = req.body || {};
+  if (!email) return res.status(400).json({ error: 'Email requerido' });
+  const sender = loadUsers().find(u => u.id === req.session.userId);
+  const shares = loadShares();
+  let token = null;
+  for (const [tok, s] of Object.entries(shares)) {
+    if (s.type === 'room' && s.ownerId === req.session.userId && s.projectId === pid && s.roomId === rid) { token = tok; break; }
+  }
+  if (!token) {
+    const rooms = readJSON(roomsFile(pid, req.dd), []);
+    if (!rooms.find(r => r.id === rid)) return res.status(404).json({ error: 'Sala no encontrada' });
+    token = uuidv4().replace(/-/g, '');
+    shares[token] = { type: 'room', ownerId: req.session.userId, projectId: pid, roomId: rid, role: 'view', created: Date.now() };
+  }
+  shares[token].email = email;
+  saveShares(shares);
+  const url      = `${APP_URL}/?room=${token}`;
+  const proj     = readJSON(projsFile(req.dd)).find(p => p.id === pid);
+  const projName = proj?.name || 'Tableau';
+  const rooms    = readJSON(roomsFile(pid, req.dd), []);
+  const room     = rooms.find(r => r.id === rid);
+  const roomName = room?.name || '';
+  const senderName = sender?.username || 'Un usuario';
+  const replyTo    = sender?.email || null;
+  const mailer = getMailer();
+  if (!mailer) return res.status(500).json({ error: 'El servidor no tiene SMTP configurado.' });
+  const from = process.env.TABLEAU_SMTP_FROM || process.env.TABLEAU_SMTP_USER;
+  try {
+    await mailer.sendMail({
+      from, to: email,
+      ...(replyTo ? { replyTo } : {}),
+      subject: `${senderName} te invita a ver "${roomName}" — Tableau`,
+      html: `<p>${senderName} te ha compartido la sala <strong>${roomName}</strong> del proyecto <strong>${projName}</strong> en Tableau.</p>
+             <p><a href="${url}">${url}</a></p>
+             <hr style="border:none;border-top:1px solid #eee;margin:16px 0"/>
+             <p style="color:#999;font-size:11px">Este es un mensaje automático generado por Tableau. No respondas a este correo${replyTo ? ` — si quieres contactar con ${senderName} escribe directamente a <a href="mailto:${replyTo}">${replyTo}</a>` : ''}.</p>`,
+    });
+  } catch (e) {
+    console.error('[mail] Error enviando invitación de sala:', e.message);
+    return res.status(500).json({ error: 'Error enviando el correo. Comprueba la configuración SMTP.' });
+  }
+  res.json({ ok: true, token, url });
+});
+
 // ── Room geometry (legacy single-room — kept for compatibility) ───────────────
 app.get('/api/projects/:pid/room', requireAuth, (req, res) => {
   const f = roomFile(req.params.pid, req.dd);
@@ -1241,7 +1395,15 @@ app.delete('/api/projects/:pid/room', requireAuth, (req, res) => {
 
 // ── Photos – upload ──────────────────────────────────────────────────────────
 app.get('/api/projects/:pid/photos', resolveAccess, (req, res) => {
-  res.json(readJSON(photosMeta(req.params.pid, req.dd)));
+  const { pid } = req.params;
+  if (req.shareScope === 'room') {
+    const rooms = readJSON(roomsFile(pid, req.dd), []);
+    const room  = rooms.find(r => r.id === req.shareRoomId);
+    if (!room) return res.json([]);
+    const allowed = roomPhotoIds(req.dd, pid, room);
+    return res.json(readJSON(photosMeta(pid, req.dd)).filter(p => allowed.has(p.id)));
+  }
+  res.json(readJSON(photosMeta(pid, req.dd)));
 });
 
 app.post('/api/projects/:pid/photos', requireAuth, upload.single('photo'), async (req, res) => {
@@ -1586,19 +1748,34 @@ app.post('/api/projects/:pid/photos/:photoId/copy-to/:targetPid', requireAuth, (
 
 // ── Serve photos ──────────────────────────────────────────────────────────────
 app.get('/photos/:pid/:id', resolveAccess, (req, res) => {
-  const file = path.join(photoDir(req.params.pid, req.dd), `${req.params.id}.jpg`);
+  const { pid, id } = req.params;
+  if (req.shareScope === 'room') {
+    const room = readJSON(roomsFile(pid, req.dd), []).find(r => r.id === req.shareRoomId);
+    if (!room || !roomPhotoIds(req.dd, pid, room).has(id)) return res.status(403).end();
+  }
+  const file = path.join(photoDir(pid, req.dd), `${id}.jpg`);
   fs.existsSync(file) ? res.sendFile(file) : res.status(404).end();
 });
 
 app.get('/photos/:pid/:id/thumb', resolveAccess, (req, res) => {
-  const file = path.join(photoDir(req.params.pid, req.dd), `${req.params.id}_thumb.jpg`);
+  const { pid, id } = req.params;
+  if (req.shareScope === 'room') {
+    const room = readJSON(roomsFile(pid, req.dd), []).find(r => r.id === req.shareRoomId);
+    if (!room || !roomPhotoIds(req.dd, pid, room).has(id)) return res.status(403).end();
+  }
+  const file = path.join(photoDir(pid, req.dd), `${id}_thumb.jpg`);
   fs.existsSync(file) ? res.sendFile(file) : res.status(404).end();
 });
 
 // ── Board items ───────────────────────────────────────────────────────────────
 app.get('/api/boards/:pid/:bid/items', resolveAccess, (req, res) => {
   const { pid, bid } = req.params;
-  if (req.shareRole) {
+  if (req.shareScope === 'room') {
+    const room = readJSON(roomsFile(pid, req.dd), []).find(r => r.id === req.shareRoomId);
+    if (!room || !roomBoardIds(room).has(bid)) return res.status(403).json({ error: 'Acceso denegado' });
+    const board = readJSON(boardsMeta(pid, req.dd)).find(b => b.id === bid);
+    if (board?.private) return res.status(403).json({ error: 'Acceso denegado' });
+  } else if (req.shareRole) {
     const board = readJSON(boardsMeta(pid, req.dd)).find(b => b.id === bid);
     if (board?.private) return res.status(403).json({ error: 'Acceso denegado' });
   }

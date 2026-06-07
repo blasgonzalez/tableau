@@ -1,6 +1,6 @@
 'use strict';
 // env vars must be set BEFORE requiring server
-const { makeTmpDir, removeTmpDir, seedUser, seedProject, seedBoard, seedShare, TEST_PASSWORD } = require('./helpers');
+const { makeTmpDir, removeTmpDir, seedUser, seedProject, seedBoard, seedRoom, seedShare, TEST_PASSWORD } = require('./helpers');
 const tmpDir = makeTmpDir();
 process.env.TABLEAU_AUTH           = 'true';
 process.env.TABLEAU_DATA_DIR       = tmpDir;
@@ -15,7 +15,7 @@ const request = require('supertest');
 const app     = require('../server');
 
 describe('Share tokens & guest access control', () => {
-  let owner, ownerDd, proj, publicBoard, privateBoard, viewToken, editToken;
+  let owner, ownerDd, proj, publicBoard, privateBoard, viewToken, editToken, room;
 
   before(() => {
     owner        = seedUser(tmpDir, { username: 'shareowner', role: 'user' });
@@ -27,6 +27,7 @@ describe('Share tokens & guest access control', () => {
     editToken    = uuidv4().replace(/-/g, '');
     seedShare(tmpDir, { token: viewToken, ownerId: owner.id, projectId: proj.id, role: 'view' });
     seedShare(tmpDir, { token: editToken, ownerId: owner.id, projectId: proj.id, role: 'edit' });
+    room         = seedRoom(ownerDd, proj.id, { name: 'Test Room' });
   });
 
   after(() => removeTmpDir(tmpDir));
@@ -204,5 +205,30 @@ describe('Share tokens & guest access control', () => {
     const res = await agent.delete(`/api/projects/${proj.id}/share/view`);
     assert.equal(res.status, 200);
     assert.ok(res.body.ok);
+  });
+
+  // ── Token uniqueness (security: tokens must never be predictable or reused) ──
+  test('project share: consecutive POST calls produce different tokens', async () => {
+    const agent = request.agent(app);
+    await agent.post('/api/login').send({ username: 'shareowner', password: TEST_PASSWORD });
+    const r1 = await agent.post(`/api/projects/${proj.id}/share`).send({ role: 'view' });
+    const r2 = await agent.post(`/api/projects/${proj.id}/share`).send({ role: 'view' });
+    assert.equal(r1.status, 200);
+    assert.equal(r2.status, 200);
+    assert.ok(r1.body.token, 'first token must be non-empty');
+    assert.ok(r2.body.token, 'second token must be non-empty');
+    assert.notEqual(r1.body.token, r2.body.token, 'consecutive tokens must differ');
+  });
+
+  test('room share: consecutive POST calls produce different tokens', async () => {
+    const agent = request.agent(app);
+    await agent.post('/api/login').send({ username: 'shareowner', password: TEST_PASSWORD });
+    const r1 = await agent.post(`/api/projects/${proj.id}/rooms/${room.id}/share`);
+    const r2 = await agent.post(`/api/projects/${proj.id}/rooms/${room.id}/share`);
+    assert.equal(r1.status, 200);
+    assert.equal(r2.status, 200);
+    assert.ok(r1.body.token, 'first room token must be non-empty');
+    assert.ok(r2.body.token, 'second room token must be non-empty');
+    assert.notEqual(r1.body.token, r2.body.token, 'consecutive room tokens must differ');
   });
 });
