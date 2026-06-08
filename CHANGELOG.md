@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.20.20] — 2026-06-08
+
+### Corregido
+- **Instalador Windows — arranque en instalación limpia:** el servidor ya no se queda con la pantalla de carga indefinida tras una instalación nueva. `installer/build.bat` ahora ejecuta `node scripts/build.js` antes de empaquetar el instalador, por lo que `_built.html` llega precompilado y el servidor sirve el frontend directamente sin necesidad de compilar en el arranque.
+- **Instalador Windows — directorio `scripts/` faltante:** `scripts/` se incluye ahora en el paquete instalador como respaldo, por si `_built.html` queda obsoleto tras la instalación. Anteriormente, el proceso hijo lanzado por el servidor para recompilar el JSX fallaba con ENOENT porque `scripts/build.js` no estaba en el directorio de instalación.
+- **Pantalla de carga infinita → página de error:** si el proceso de compilación falla, el servidor ahora muestra una página de error permanente con el mensaje "No se encontró el compilador JSX. Reinstala la aplicación." en lugar de un spinner que gira indefinidamente.
+
+---
+
 ## [1.20.19] — 2026-06-08
 
 ### Añadido

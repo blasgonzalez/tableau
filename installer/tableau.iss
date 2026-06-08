@@ -9,7 +9,7 @@
 ; ═══════════════════════════════════════════════════════════════════════════════
 
 #define MyAppName      "Tableau"
-#define MyAppVersion   "1.20.19"
+#define MyAppVersion   "1.20.20"
 #define MyAppPublisher "Blas González"
 #define MyAppURL       "https://github.com/blasgonzalez/tableau"
 
@@ -58,6 +58,7 @@ Source: "package.json";                 DestDir: "{app}";              Flags: ig
 Source: "public\*";                     DestDir: "{app}\public";       Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "node_modules\*";              DestDir: "{app}\node_modules"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "fonts\*.ttf";                  DestDir: "{app}\fonts";        Flags: ignoreversion
+Source: "scripts\*";                    DestDir: "{app}\scripts";      Flags: ignoreversion
 
 ; Icono
 Source: "installer\icons\tableau.ico";  DestDir: "{app}";              Flags: ignoreversion

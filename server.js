@@ -545,6 +545,7 @@ app.get('/vendor/react-dom.js', (_, res) => res.sendFile(REACT_DOM_JS));
 const HTML_SRC   = path.join(__dirname, 'public', 'index.html');
 const HTML_BUILT = path.join(__dirname, 'public', '_built.html');
 let _building    = false; // build en proceso hijo en curso
+let _buildError  = null;  // error del último intento de build
 
 // Fast path  : _built.html existe y es más reciente → res.sendFile() async.
 //              Cero bloqueo del event loop. Passenger responde de inmediato.
@@ -557,15 +558,21 @@ app.get('/', (req, res) => {
     if (fs.statSync(HTML_BUILT).mtimeMs >= fs.statSync(HTML_SRC).mtimeMs)
       return res.sendFile(HTML_BUILT);
   } catch {}
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  if (_buildError) {
+    return res.send(`<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Tableau</title><style>*{box-sizing:border-box}body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#1a1a2e;font-family:system-ui,sans-serif;color:#e0e0e0}.w{text-align:center;padding:2rem}p{margin:.5rem 0;font-size:1.1rem}small{opacity:.6;display:block;margin-top:.5rem}</style></head><body><div class="w"><p>&#9888; Error al iniciar Tableau</p><small>No se encontr\xf3 el compilador JSX.<br>Reinstala la aplicaci\xf3n.</small></div></body></html>`);
+  }
   if (!_building) {
     _building = true;
     const { execFile } = require('child_process');
     execFile(process.execPath, [path.join(__dirname, 'scripts', 'build.js')], err => {
       _building = false;
-      if (err) console.error('[build]', err.message);
+      if (err) {
+        _buildError = err;
+        console.error('[build] Error al compilar el frontend:', err.message);
+      }
     });
   }
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.send(`<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta http-equiv="refresh" content="8"><title>Tableau</title><style>*{box-sizing:border-box}body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#1a1a2e;font-family:system-ui,sans-serif;color:#e0e0e0}.w{text-align:center;padding:2rem}.s{width:40px;height:40px;border:3px solid #333;border-top-color:#7c6af7;border-radius:50%;animation:r 1s linear infinite;margin:0 auto 1.5rem}@keyframes r{to{transform:rotate(360deg)}}p{margin:.5rem 0}small{opacity:.5}</style></head><body><div class="w"><div class="s"></div><p>Iniciando Tableau…</p><small>Esta p\xe1gina se actualizar\xe1 en unos segundos</small></div></body></html>`);
 });
 

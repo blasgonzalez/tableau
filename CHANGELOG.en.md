@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.20.20] — 2026-06-08
+
+### Fixed
+- **Windows installer — first-launch startup:** the server no longer shows an infinite loading screen on a clean install. `installer/build.bat` now runs `node scripts/build.js` before packaging the installer, so `_built.html` arrives pre-compiled and the server serves the frontend directly without compiling on startup.
+- **Windows installer — missing `scripts/` directory:** `scripts/` is now included in the installer package as a fallback in case `_built.html` becomes stale after installation. Previously, the child process spawned by the server to recompile the JSX failed with ENOENT because `scripts/build.js` was not present in the install directory.
+- **Infinite loading screen → error page:** if the build process fails, the server now shows a permanent error page with the message "JSX compiler not found. Reinstall the application." instead of a spinner that loops forever.
+
+---
+
 ## [1.20.19] — 2026-06-08
 
 ### Added

@@ -27,10 +27,14 @@ Runner: Node.js built-in `node:test` (Node 18+), HTTP assertions via `supertest`
 
 ### JSX pre-compilation
 
-`public/index.html` contains JSX that must be compiled before serving. Two paths:
+`public/index.html` contains JSX that must be compiled before serving. The compiled result is cached as `public/_built.html`.
 
-- **Development / local mode:** on first request, `server.js` compiles `index.html` using `@babel/core` + `@babel/preset-react` + `@babel/plugin-transform-block-scoping`, caches the result to `public/_built.html`, and serves the cached file on all subsequent requests. The cache invalidates automatically when `index.html` changes (mtime check). The loading screen (`#splash`) covers the ~10 s compilation on slow machines.
-- **Production (Passenger / managed host):** run `npm run build` once after each deployment. `scripts/build.js` performs the same Babel transform and writes `_built.html`. The server then reads it from disk at startup (instant, no blocking). In standalone mode, `server.listen()` triggers `compileHtml()` explicitly once the port is active; in integration mode (Apache/Nginx with `passenger_nodejs`), `setImmediate` triggers it on the first event-loop tick.
+- **Fast path:** `_built.html` exists and its mtime ≥ `index.html` mtime → `res.sendFile(_built.html)`. Zero blocking.
+- **Slow path:** `_built.html` absent or stale → `GET /` spawns `scripts/build.js` as a child process (`execFile`) and immediately returns a splash page with `<meta http-equiv="refresh" content="8">`. When the child finishes, the next auto-refresh takes the fast path. If the build fails, a permanent error page is shown instead of an infinite spinner.
+
+**Windows installer:** `installer/build.bat` runs `node scripts/build.js` before invoking Inno Setup, so `_built.html` arrives pre-compiled in the installer package. `scripts/` is also bundled as a fallback in case `_built.html` becomes stale after installation. On first launch the fast path always applies.
+
+**Production (Passenger / managed host):** run `npm run build` once after each deployment. `scripts/build.js` performs the Babel transform and writes `_built.html`. The server serves it on startup with no blocking.
 
 React and ReactDOM are served locally from `node_modules` — no CDN dependency. `_built.html` is gitignored.
 

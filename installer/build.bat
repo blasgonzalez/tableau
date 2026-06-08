@@ -87,6 +87,17 @@ if errorlevel 1 (
 )
 echo  [OK] Dependencias instaladas.
 
+:: 5b. Pre-compilar el frontend (JSX a _built.html)
+echo.
+echo  Pre-compilando el frontend...
+node scripts\build.js
+if errorlevel 1 (
+    echo  [ERROR] Error al pre-compilar el frontend.
+    pause
+    exit /b 1
+)
+echo  [OK] _built.html generado.
+
 :: 6. Crear carpeta de salida
 if not exist "dist" mkdir "dist"
 
