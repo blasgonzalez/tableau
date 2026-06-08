@@ -5,12 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tableau</title>
 <link rel="icon" type="image/png" href="/favicon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <style>
+@font-face{font-family:'Playfair Display';font-style:normal;font-weight:400;src:url('/fonts/PlayfairDisplay.ttf') format('truetype')}
+@font-face{font-family:'DM Sans';font-style:normal;font-weight:400;src:url('/fonts/DMSans.ttf') format('truetype')}
+@font-face{font-family:'Bebas Neue';font-style:normal;font-weight:400;src:url('/fonts/BebasNeue.ttf') format('truetype')}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:400;src:url('/fonts/IBMPlexMono.ttf') format('truetype')}
+@font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:400;src:url('/fonts/CormorantGaramond-Regular.ttf') format('truetype')}
+@font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:700;src:url('/fonts/CormorantGaramond-Bold.ttf') format('truetype')}
+@font-face{font-family:'Cormorant Garamond';font-style:italic;font-weight:400;src:url('/fonts/CormorantGaramond-Italic.ttf') format('truetype')}
+@font-face{font-family:'Inter';font-style:normal;font-weight:400;src:url('/fonts/Inter-Regular.ttf') format('truetype')}
+@font-face{font-family:'Inter';font-style:normal;font-weight:700;src:url('/fonts/Inter-Bold.ttf') format('truetype')}
+@font-face{font-family:'Josefin Sans';font-style:normal;font-weight:400;src:url('/fonts/JosefinSans-Regular.ttf') format('truetype')}
+@font-face{font-family:'Josefin Sans';font-style:normal;font-weight:700;src:url('/fonts/JosefinSans-Bold.ttf') format('truetype')}
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg:#0d0c0b;--surf:#171412;--panel:#1e1a14;--panel2:#27211a;--deep:#110f0c;
@@ -198,7 +207,8 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .titem:active{cursor:grabbing}
 .titem.locked{cursor:default}
 .titem:hover .bitem-bar,.titem.sel .bitem-bar{opacity:1}
-.titem.sel{outline:1px dashed rgba(128,128,128,.75)}
+.titem.sel{outline:2px solid var(--acc)}
+.titem.sel.editing{outline:2px solid rgba(196,137,74,.4)}
 .app.presentation .titem{outline:none !important}
 .titem-drag{height:18px;background:rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;padding:0 6px;cursor:grab;flex-shrink:0;gap:6px}
 .titem.locked .titem-drag{cursor:default}
@@ -215,7 +225,8 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .bitem.pres-swap-sel .bitem-img-wrap{outline:3px solid var(--acc) !important;outline-offset:3px}
 .titem-drag-icon{color:var(--muted);font-size:9px;letter-spacing:2px;pointer-events:none}
 .titem-drag-label{font-size:7px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;pointer-events:none;flex:1}
-.titem-txt{flex:1;background:transparent;border:none;resize:none;outline:none;padding:8px 10px;line-height:1.35;overflow:hidden;cursor:text;color:inherit}
+.titem-txt{flex:1;background:transparent;border:none;resize:none;outline:none;padding:8px 10px;line-height:1.35;overflow:hidden;cursor:grab;color:inherit}
+.titem.editing .titem-txt{cursor:text}
 .titem-txt::placeholder{opacity:.25}
 .tfmt-num{width:36px;text-align:center;background:var(--panel);border:1px solid var(--border2);color:var(--text);font-size:9px;padding:2px 4px;-moz-appearance:textfield}
 .tfmt-num::-webkit-outer-spin-button,.tfmt-num::-webkit-inner-spin-button{-webkit-appearance:none}
@@ -227,6 +238,39 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .tfmt-btn.on{background:var(--acc-dim);color:var(--acc);border-color:var(--acc-dim)}
 .tfmt-swatch{width:20px;height:20px;border:1px solid var(--border2);cursor:pointer;position:relative;overflow:hidden;flex-shrink:0}
 .tfmt-swatch input[type=color]{position:absolute;inset:-4px;opacity:0;cursor:pointer;width:calc(100% + 8px);height:calc(100% + 8px)}
+/* ── TOPBAR TEXT CONTEXT ── */
+.tb-text-ctx{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.tb-text-sep{width:1px;height:22px;background:var(--border2);flex-shrink:0;margin:0 4px}
+.tb-fnt-btn{height:26px;padding:0 7px;background:var(--panel);border:1px solid var(--border2);color:var(--text);cursor:pointer;font-size:11px;display:flex;align-items:center;gap:4px;white-space:nowrap;min-width:165px;font-family:inherit}
+.tb-fnt-btn:hover{border-color:var(--acc-dim)}
+.tb-fnt-btn span.arr{opacity:.4;font-size:8px;margin-left:auto;flex-shrink:0}
+.tb-fnt-list{position:absolute;top:calc(100% + 2px);left:0;background:var(--panel2);border:1px solid var(--border2);z-index:600;box-shadow:0 6px 18px rgba(0,0,0,.6);min-width:185px}
+.tb-fnt-opt{padding:6px 10px;font-size:13px;cursor:pointer;color:var(--sub);white-space:nowrap;line-height:1.2}
+.tb-fnt-opt:hover{background:var(--panel);color:var(--text)}
+.tb-fnt-opt.on{color:var(--acc);background:var(--acc-faint)}
+.tb-sz-group{display:flex;align-items:center;position:relative}
+.tb-sz-side{width:22px;height:26px;background:var(--panel);border:1px solid var(--border2);color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;line-height:1}
+.tb-sz-side:hover{color:var(--text);border-color:var(--acc-dim)}
+.tb-sz-side.r{border-left:none}
+.tb-sz-mid{height:26px;min-width:38px;padding:0 4px;background:var(--panel);border-top:1px solid var(--border2);border-bottom:1px solid var(--border2);border-left:none;border-right:none;color:var(--text);font-size:10px;font-family:'IBM Plex Mono',monospace;cursor:pointer;display:flex;align-items:center;justify-content:center;white-space:nowrap}
+.tb-sz-mid:hover{color:var(--acc)}
+.tb-sz-list{position:absolute;top:calc(100% + 2px);left:0;background:var(--panel2);border:1px solid var(--border2);z-index:600;box-shadow:0 6px 18px rgba(0,0,0,.6);min-width:130px;max-height:280px;overflow-y:auto}
+.tb-sz-input{width:100%;background:var(--panel);border:none;border-bottom:1px solid var(--border2);color:var(--text);font-size:11px;padding:6px 9px;font-family:'IBM Plex Mono',monospace;outline:none;-moz-appearance:textfield}
+.tb-sz-input::-webkit-outer-spin-button,.tb-sz-input::-webkit-inner-spin-button{-webkit-appearance:none}
+.tb-sz-preset{padding:5px 10px;font-size:10px;cursor:pointer;color:var(--sub);display:flex;align-items:center;justify-content:space-between;gap:8px;white-space:nowrap}
+.tb-sz-preset:hover{background:var(--panel);color:var(--text)}
+.tb-sz-preset.on{color:var(--acc)}
+.tb-sz-sub{font-size:9px;opacity:.5}
+.tb-tog{width:26px;height:26px;background:var(--panel);border:1px solid var(--border2);color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px}
+.tb-tog:hover{color:var(--text);border-color:var(--acc-dim)}
+.tb-tog.on{color:var(--acc);border-color:var(--acc-dim);background:var(--acc-faint)}
+.tb-align-grp{display:flex;align-items:center}
+.tb-align-btn{width:26px;height:26px;background:var(--panel);border:1px solid var(--border2);border-left:none;color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px}
+.tb-align-btn:first-child{border-left:1px solid var(--border2)}
+.tb-align-btn:hover{color:var(--text);border-color:var(--acc-dim)}
+.tb-align-btn.on{color:var(--acc);border-color:var(--acc-dim);background:var(--acc-faint)}
+.tb-color-sw{width:26px;height:26px;border:1px solid var(--border2);cursor:pointer;position:relative;overflow:hidden;flex-shrink:0}
+.tb-color-sw input[type=color]{position:absolute;inset:-4px;opacity:0;cursor:pointer;width:calc(100% + 8px);height:calc(100% + 8px)}
 .pres-exit{position:fixed;top:14px;right:14px;z-index:2000;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7);font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.6px;padding:5px 10px;cursor:pointer;backdrop-filter:blur(4px);opacity:0;transition:opacity .2s;pointer-events:none}
 .pres-exit:hover{color:#fff;border-color:rgba(255,255,255,.4)}
 .app.presentation:hover .pres-exit{opacity:1;pointer-events:auto}
@@ -336,8 +380,19 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .ibc.del:hover{color:#fff}
 .ibc.fwd,.ibc.rot{background:var(--border2);color:var(--sub)}
 .ibc.fwd:hover,.ibc.rot:hover{color:var(--text)}
-.rh{position:absolute;bottom:0;right:0;width:14px;height:14px;background:var(--acc);cursor:se-resize;opacity:0;transition:opacity .12s;zoom:calc(1 / var(--canvas-zoom,1))}
+.rh{position:absolute;bottom:0;right:0;width:20px;height:20px;background:var(--acc);cursor:se-resize;opacity:0;transition:opacity .12s;zoom:calc(1 / var(--canvas-zoom,1));z-index:260}
 .bitem:hover .rh{opacity:1}
+.trh{position:absolute;width:8px;height:8px;background:var(--acc);border:1px solid rgba(0,0,0,.25);opacity:0;transition:opacity .12s;zoom:calc(1 / var(--canvas-zoom,1));z-index:260;pointer-events:all}
+.titem.sel .trh{opacity:1}
+.titem.sel.editing .trh{opacity:0;pointer-events:none}
+.trh.nw{top:0;left:0;cursor:nw-resize}
+.trh.ne{top:0;right:0;cursor:ne-resize}
+.trh.sw{bottom:0;left:0;cursor:sw-resize}
+.trh.se{bottom:0;right:0;cursor:se-resize}
+.trh.n{top:0;left:50%;transform:translateX(-50%);cursor:ns-resize}
+.trh.s{bottom:0;left:50%;transform:translateX(-50%);cursor:ns-resize}
+.trh.e{right:0;top:50%;transform:translateY(-50%);cursor:ew-resize}
+.trh.w{left:0;top:50%;transform:translateY(-50%);cursor:ew-resize}
 /* ── GRID ITEMS ── */
 .gitem{position:absolute;cursor:grab;user-select:none}
 .gitem:active{cursor:grabbing}
@@ -910,12 +965,19 @@ const NOTE_FONT_CYCLE = [null, 9, 14, 18]; // null = default M (11px)
 const NOTE_FONT_LABEL = v => v === 9 ? 'S' : v === 14 ? 'L' : v === 18 ? 'XL' : 'M';
 const TEXT_FS_STEP = sz => sz < 20 ? 1 : sz < 60 ? 2 : sz < 120 ? 5 : 10;
 const TEXT_ALIGN_CYCLE = ['left', 'center', 'right'];
-const TEXT_ALIGN_ICON  = { left: '⫷', center: '⊟', right: '⫸' };
+const TEXT_ALIGN_ICON  = {
+  left:   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="21" y1="6" x2="3" y2="6"/><line x1="15" y1="12" x2="3" y2="12"/><line x1="17" y1="18" x2="3" y2="18"/></svg>,
+  center: <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="21" y1="6" x2="3" y2="6"/><line x1="17" y1="12" x2="7" y2="12"/><line x1="19" y1="18" x2="5" y2="18"/></svg>,
+  right:  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="12" x2="9" y2="12"/><line x1="21" y1="18" x2="7" y2="18"/></svg>,
+};
 const TEXT_FONTS = [
-  { id: 'serif',   label: 'Serif',   family: "'Playfair Display',serif" },
-  { id: 'sans',    label: 'Sans',    family: "'DM Sans',sans-serif" },
-  { id: 'display', label: 'Display', family: "'Bebas Neue',cursive" },
-  { id: 'mono',    label: 'Mono',    family: "'IBM Plex Mono',monospace" },
+  { id: 'serif',    label: 'Serif',              family: "'Playfair Display',serif" },
+  { id: 'sans',     label: 'DM Sans',            family: "'DM Sans',sans-serif" },
+  { id: 'display',  label: 'Bebas Neue',         family: "'Bebas Neue',cursive" },
+  { id: 'mono',     label: 'IBM Plex Mono',      family: "'IBM Plex Mono',monospace" },
+  { id: 'garamond', label: 'Cormorant Garamond', family: "'Cormorant Garamond',serif" },
+  { id: 'inter',    label: 'Inter',              family: "'Inter',sans-serif" },
+  { id: 'josefin',  label: 'Josefin Sans',       family: "'Josefin Sans',sans-serif" },
 ];
 const bgContrast = hex => {
   if (!hex || !hex.startsWith('#')) return '';
@@ -1171,6 +1233,7 @@ const I18N = {
     batchRated: n => `${n} foto${n!==1?'s':''} puntuada${n!==1?'s':''}`,
     presentationBtn:'Presentación', exitPresentation:'Salir · ESC', addText:'+ Texto',
     textFmtSize:'Tamaño', textFmtFont:'Fuente', textFmtAlign:'Alinear', textFmtColor:'Color',
+    fontSerif:'Serif', fontSans:'DM Sans', fontDisplay:'Bebas Neue', fontMono:'IBM Plex Mono', fontGaramond:'Cormorant Garamond', fontInter:'Inter', fontJosefin:'Josefin Sans',
     rejectBtn:'Rechazar', unrejectBtn:'Recuperar', filterRejected:'Rechazadas', filterRejectedHide:'Ocultar rechazadas',
     rejectToast: n => n === 1 ? 'Foto rechazada' : `${n} fotos rechazadas`,
     unrejectToast: n => n === 1 ? 'Foto recuperada' : `${n} fotos recuperadas`,
@@ -1365,6 +1428,7 @@ const I18N = {
     batchRated: n => `${n} photo${n!==1?'s':''} rated`,
     presentationBtn:'Present', exitPresentation:'Exit · ESC', addText:'+ Text',
     textFmtSize:'Size', textFmtFont:'Font', textFmtAlign:'Align', textFmtColor:'Color',
+    fontSerif:'Serif', fontSans:'DM Sans', fontDisplay:'Bebas Neue', fontMono:'IBM Plex Mono', fontGaramond:'Cormorant Garamond', fontInter:'Inter', fontJosefin:'Josefin Sans',
     rejectBtn:'Reject', unrejectBtn:'Recover', filterRejected:'Rejected', filterRejectedHide:'Hide rejected',
     rejectToast: n => n === 1 ? 'Photo rejected' : `${n} photos rejected`,
     unrejectToast: n => n === 1 ? 'Photo recovered' : `${n} photos recovered`,
@@ -1660,7 +1724,11 @@ function App() {
   const [framePainter,  setFramePainter]  = useState(null); // {matSize,matColor,frameSize,frameColor} when active
   const [spaceDown,     setSpaceDown]     = useState(false);
   const spaceRef = useRef(false);
-  const [textFmtPanelId, setTextFmtPanelId] = useState(null);
+  const [textSizeDrop,   setTextSizeDrop]   = useState(false);
+  const [textFontDrop,   setTextFontDrop]   = useState(false);
+  const [isTextEditing,  setIsTextEditing]  = useState(false);
+  const isTextEditingRef = useRef(false);
+  const setTextEditing = (val) => { isTextEditingRef.current = val; setIsTextEditing(val); };
   const [noteColorPanelId, setNoteColorPanelId] = useState(null);
   const [zoneColorPanelId, setZoneColorPanelId] = useState(null);
   const [copyToMenu,    setCopyToMenu]    = useState(null); // {photoId, x, y}
@@ -1777,8 +1845,10 @@ function App() {
   const toggle3DWalkRef      = useRef(null);
   const copy3DItemRef        = useRef(null);
   const roomViewRef          = useRef('board');
-  const undoStack       = useRef([]);
-  const redoStack       = useRef([]);
+  const undoStack           = useRef([]);
+  const redoStack           = useRef([]);
+  const textareaRef         = useRef(null);
+
   const wasDragged      = useRef(false);
   const preClickSel     = useRef(null);
   const boardZoom       = useRef({});
@@ -1840,6 +1910,13 @@ function App() {
     document.addEventListener('pointerdown', close);
     return () => document.removeEventListener('pointerdown', close);
   }, [roomWallCtx !== null]);
+
+  useEffect(() => {
+    if (!textSizeDrop && !textFontDrop) return;
+    const close = () => { setTextSizeDrop(false); setTextFontDrop(false); };
+    document.addEventListener('pointerdown', close);
+    return () => document.removeEventListener('pointerdown', close);
+  }, [textSizeDrop, textFontDrop]);
 
   // Track the canvas-wrap client size so the variable-board grid can always be
   // made at least as large as the viewport (the grid is the .canvas background,
@@ -2397,7 +2474,7 @@ function App() {
             const ctx2 = cvs.getContext('2d');
             {
               const tFont = TEXT_FONTS.find(f => f.id === (item.fontFamily || 'serif')) || TEXT_FONTS[0];
-              const fs = (item.fontSize || 40) * SCALE;
+              const fs = Math.min((item.fontSize || 40) * SCALE, cvH * 0.85);
               const bold = item.fontWeight === 'bold' ? 'bold ' : '';
               const italic = item.fontStyle === 'italic' ? 'italic ' : '';
               ctx2.clearRect(0, 0, cvW, cvH);
@@ -2479,7 +2556,7 @@ function App() {
           cvs.width = cvW; cvs.height = cvH;
           const ctx2 = cvs.getContext('2d');
           const tFont = TEXT_FONTS.find(f => f.id === (item.fontFamily || 'serif')) || TEXT_FONTS[0];
-          const fs = (item.fontSize || 40) * SCALE;
+          const fs = Math.min((item.fontSize || 40) * SCALE, cvH * 0.85);
           const bold = item.fontWeight === 'bold' ? 'bold ' : '';
           const italic = item.fontStyle === 'italic' ? 'italic ' : '';
           ctx2.clearRect(0, 0, cvW, cvH);
@@ -3130,13 +3207,17 @@ function App() {
       boardHistoryRef.current[prevBid] = { undo: undoStack.current, redo: redoStack.current };
     }
     previousBidRef.current = bid;
-    if (!bid || !pid) { setItems([]); itemsRef.current = []; undoStack.current = []; redoStack.current = []; setSel([]); selRef.current = []; setHoverInfo(null); return; }
+    if (!bid || !pid) { setItems([]); itemsRef.current = []; undoStack.current = []; redoStack.current = []; setSel([]); selRef.current = []; setHoverInfo(null); setTextEditing(false); return; }
     // Restore history for this board, or start fresh
     const saved = boardHistoryRef.current[bid];
     if (saved) { undoStack.current = saved.undo; redoStack.current = saved.redo; }
     else { undoStack.current = []; redoStack.current = []; }
     api.get(`/api/boards/${pid}/${bid}/items`).then(it => {
-      setItems(it); itemsRef.current = it;
+      const board = boards.find(b => b.id === bid);
+      const isFixed = !!(board?.fixed && board?.fixedW && board?.fixedH);
+      const defFs = isFixed ? Math.round(12 * (board?.dpi || 300) / 72) : 24;
+      const normed = it.map(i => (i.type === 'text' && (i.fontSize || 0) < 8) ? {...i, fontSize: defFs} : i);
+      setItems(normed); itemsRef.current = normed;
     });
     selRef.current = []; setSel([]);
     cascadeStepRef.current = 0;
@@ -5875,10 +5956,12 @@ ${rows}
     const lastText = itemsRef.current.filter(i => i.type === 'text').slice(-1)[0];
     const autoColor = boardPxRef.current ? bgContrast('#ffffff') : '';
     const textZone = findZoneAt(x, y, w, h);
+    const dpi = bp?.dpi || 96;
+    const fontSize = bp ? Math.round(24 * dpi / 96) : 64;
     const item = {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
       type: 'text', text: '', x, y, w, h, z: maxZ + 1,
-      fontSize:   lastText?.fontSize   ?? 26,
+      fontSize,
       textAlign:  lastText?.textAlign  ?? 'center',
       fontFamily: lastText?.fontFamily ?? 'serif',
       fontWeight: lastText?.fontWeight ?? '',
@@ -5889,6 +5972,8 @@ ${rows}
     const nit = [...itemsRef.current, item];
     selRef.current = [item.id]; setSel([item.id]);
     saveItemsNow(applyNormalized(nit));
+    setTextEditing(true);
+    requestAnimationFrame(() => { textareaRef.current?.focus(); textareaRef.current?.select(); });
   };
 
 
@@ -6762,6 +6847,41 @@ ${rows}
     window.addEventListener('pointerup', onMU);
   };
 
+  const onTextResizePD = (e, itemId, mode) => {
+    e.stopPropagation(); e.preventDefault();
+    const before = itemsRef.current.map(i => ({ ...i }));
+    const it = itemsRef.current.find(i => i.id === itemId);
+    const ox = it.x, oy = it.y, ow = it.w, oh = it.h || 130;
+    const sx = e.clientX, sy = e.clientY;
+    let cx = ox, cy = oy, cw = ow, ch = oh;
+    const onMM = e => {
+      const z = zoomRef.current;
+      const dx = (e.clientX - sx) / z, dy = (e.clientY - sy) / z;
+      const bp = boardPxRef.current;
+      let nx = ox, ny = oy, nw = ow, nh = oh;
+      if (mode.includes('e')) nw = Math.max(120, ow + dx);
+      if (mode.includes('w')) { nw = Math.max(120, ow - dx); nx = ox + ow - nw; }
+      if (mode.includes('s')) nh = Math.max(60, oh + dy);
+      if (mode.includes('n')) { nh = Math.max(60, oh - dy); ny = oy + oh - nh; }
+      if (bp && mode.includes('e')) nw = Math.min(nw, bp.w - nx);
+      if (bp && mode.includes('s')) nh = Math.min(nh, bp.h - ny);
+      cx = nx; cy = ny; cw = nw; ch = nh;
+      setItems(its => its.map(i => i.id === itemId ? { ...i, x: cx, y: cy, w: cw, h: ch } : i));
+    };
+    const onMU = () => {
+      window.removeEventListener('pointermove', onMM);
+      window.removeEventListener('pointerup',   onMU);
+      const nit = itemsRef.current.map(i => i.id === itemId ? { ...i, x: Math.round(cx), y: Math.round(cy), w: Math.round(cw), h: Math.round(ch) } : i);
+      if (Math.round(cw) !== ow || Math.round(ch) !== oh || Math.round(cx) !== ox || Math.round(cy) !== oy) {
+        undoStack.current = [...undoStack.current.slice(-49), before];
+        redoStack.current = [];
+      }
+      itemsRef.current = nit; setItems(nit); saveItemsNow(nit);
+    };
+    window.addEventListener('pointermove', onMM);
+    window.addEventListener('pointerup',   onMU);
+  };
+
   const onResizeNotePD = (e, itemId) => {
     e.stopPropagation(); e.preventDefault();
     const beforeResizeNote = itemsRef.current.map(i => ({ ...i }));
@@ -6908,7 +7028,6 @@ ${rows}
       itemsRef.current = u; setItems(u); saveItemsNow(u);
       return;
     }
-    setTextFmtPanelId(null);
     const idsToToggle = item.groupId
       ? itemsRef.current.filter(i => i.groupId === item.groupId).map(i => i.id)
       : [item.id];
@@ -6977,8 +7096,15 @@ ${rows}
     </div>
   );
 
-  const activeProject = projects.find(p => p.id === pid);
-  const activeBoard   = boards.find(b => b.id === bid);
+  const activeProject  = projects.find(p => p.id === pid);
+  const activeBoard    = boards.find(b => b.id === bid);
+  const activeTextItem = sel.length === 1 ? (items.find(i => i.id === sel[0] && i.type === 'text') ?? null) : null;
+  const setActiveTextProp = (prop, val) => {
+    if (!activeTextItem) return;
+    const id = activeTextItem.id;
+    const nit = itemsRef.current.map(i => i.id === id ? {...i, [prop]: val} : i);
+    setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
+  };
 
   // ── INFO PANEL render helper ──────────────────────────────────────────────
   const InfoPanel = () => {
@@ -7394,7 +7520,7 @@ ${rows}
   }
 
   return (
-    <div className={`app${presentation ? ' presentation' : ''}${roomShareMode ? ' room-share-mode' : ''}`} onClick={() => { selRef.current = []; setSel([]); renaming && setRenaming(null); setThemeOpen(false); setAvatarOpen(false); setPropsPanelId(null); setTextFmtPanelId(null); setFramePainter(null); setCtx3DMenu(null); setCtx3DWallMenu(null); }}>
+    <div className={`app${presentation ? ' presentation' : ''}${roomShareMode ? ' room-share-mode' : ''}`} onClick={() => { selRef.current = []; setSel([]); setTextEditing(false); renaming && setRenaming(null); setThemeOpen(false); setAvatarOpen(false); setPropsPanelId(null); setFramePainter(null); setCtx3DMenu(null); setCtx3DWallMenu(null); }}>
 
       {/* ── Minimal header for room share mode ── */}
       {roomShareMode && roomShareInfo && (
@@ -7446,72 +7572,177 @@ ${rows}
             : <span className="bc-none">{projects.length === 0 ? t('noProjHintEmpty') : t('noProjHint')}</span>
           }
         </div>
-        <div style={{flex:1}}/>
-        {shareRole && (
-          <div style={{fontSize:11,padding:'3px 10px',borderRadius:12,background:shareRole==='edit'?'var(--acc)':'var(--muted)',color:'#fff',fontWeight:600,letterSpacing:.3}}>
-            {shareRole === 'edit'
-              ? (lockState[bid] === 'conflict' ? `⚠ ${t('shareBoardLocked')}` : `✏ ${t('shareGuestEdit')}`)
-              : `👁 ${t('shareGuestView')}`}
-          </div>
-        )}
-        {/* Action buttons — coherent icon-only set, grouped by function with separators */}
-        {(() => {
-          const mk = {
-            // Ver
-            grid: (!shareRole && bid && roomView === 'board') ? (
-              <button key="grid" className={`tbtn${showGrid?' on':''}`}
-                title={t('gridToggle')}
-                onClick={e => { if (gridDropOpen) { setGridDropOpen(false); return; } const r = e.currentTarget.getBoundingClientRect(); setGridDropPos({ right: window.innerWidth - r.right, top: r.bottom + 4 }); setGridDropOpen(true); }}>
-                <SvgGrid/>{showGrid && snapGrid && <span className="tbtn-dot"/>}
-              </button>) : null,
-            present: (!shareRole && !tmplEditMode && bid && roomView === 'board') ? (
-              <button key="present" className="tbtn" data-tooltip={t('ttPresent')} onClick={() => setPresentation(true)}><SvgPresent/></button>) : null,
-            // Tablero
-            config: (!shareRole && (tmplEditMode || bid)) ? (
-              <button key="config" className="tbtn" title={t('boardConfig')} onClick={openBoardConfig}><SvgConfig/></button>) : null,
-            versions: (!shareRole && !tmplEditMode && bid && roomView === 'board') ? (
-              <button key="versions" className="tbtn" data-tooltip={t('ttVersions')} onClick={() => { loadVersions(); setModal('versions'); }}>
-                <SvgVersions/>{versions.length > 0 && <span className="tbtn-dot"/>}
-              </button>) : null,
-            // Salida
-            export: (!shareRole && !tmplEditMode && bid) ? (
-              <button key="export" className="tbtn" data-tooltip={t('ttExport')}
-                onClick={e => { if (exportDropOpen) { setExportDropOpen(false); return; } setGridDropOpen(false); const r = e.currentTarget.getBoundingClientRect(); setExportDropPos({ right: window.innerWidth - r.right, top: r.bottom + 4 }); setExportDropOpen(true); }}>
-                <SvgExport size={15}/>
-              </button>) : null,
-            report: (!shareRole && !tmplEditMode && pid && boards.length > 0) ? (
-              <button key="report" className="tbtn" data-tooltip={t('ttMemory')} onClick={() => setModal('memoria')}><SvgReport/></button>) : null,
-          };
-          const groups = [
-            [mk.present, mk.report],  // Presentación + memoria
-            [mk.versions, mk.export], // Utilidades: historial + descargar
-            [mk.grid, mk.config],     // Configuración: guías + configuración
-          ].map(g => g.filter(Boolean)).filter(g => g.length);
-          // Utility / account group (panel toggle + shares)
-          const util = [
-            !sbOpen ? <button key="panel" className="tbtn" title={t('showPanel')} onClick={() => setSbOpen(true)}><SvgPanel/></button> : null,
-            (!shareRole && authMode) ? (
-              <button key="invites" className="tbtn" title={t('shareActiveTitle')}
-                onClick={() => api.get('/api/shares').then(d => setSharesPanel(d)).catch(() => setSharesPanel([]))}>
-                <SvgShareNet/>
-              </button>) : null,
-            <button key="shortcuts" className="tbtn" data-tooltip={t('ttShortcuts')}
-              style={{fontSize:13,fontWeight:600}}
-              onClick={() => { showShortcutsRef.current = true; setShowShortcuts(true); }}>?</button>,
-          ].filter(Boolean);
-          if (util.length) groups.push(util);
-          if (!groups.length) return null;
-          return (
-            <div className="tb-actions">
-              {groups.map((g, i) => (
-                <React.Fragment key={'tg'+i}>
-                  {i > 0 && <div className="tb-sep"/>}
-                  <div className="tb-group">{g}</div>
-                </React.Fragment>
-              ))}
+        {activeTextItem && isTextEditing && bid ? (
+          <>
+            <div className="vsep"/>
+            <div className="tb-text-ctx" onPointerDown={e => e.stopPropagation()} onMouseDown={e => { if (e.target.tagName !== 'INPUT') e.preventDefault(); }}>
+              {/* ── Font selector ── */}
+              {(() => {
+                const curFont = TEXT_FONTS.find(f => f.id === (activeTextItem.fontFamily || 'serif')) || TEXT_FONTS[0];
+                return (
+                  <div style={{position:'relative'}}>
+                    <button className="tb-fnt-btn"
+                      onClick={() => { setTextFontDrop(o => !o); setTextSizeDrop(false); }}>
+                      <span style={{fontFamily: curFont.family, flex:1, overflow:'hidden', textOverflow:'ellipsis'}}>{curFont.label}</span>
+                      <span className="arr">▾</span>
+                    </button>
+                    {textFontDrop && (
+                      <div className="tb-fnt-list" onPointerDown={e => e.stopPropagation()}>
+                        {TEXT_FONTS.map(f => (
+                          <div key={f.id} className={`tb-fnt-opt${(activeTextItem.fontFamily||'serif')===f.id?' on':''}`}
+                            style={{fontFamily: f.family}}
+                            onClick={() => { setActiveTextProp('fontFamily', f.id); setTextFontDrop(false); }}>
+                            {f.label}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+              <div className="tb-text-sep"/>
+              {/* ── Size control ── */}
+              {(() => {
+                const fs = activeTextItem.fontSize || 26;
+                const isBoardFixed = activeBoard?.fixed && activeBoard?.fixedW && activeBoard?.fixedH;
+                const bDpi = activeBoard?.dpi || 300;
+                const ptPresets = [6,8,9,10,11,12,14,16,18,24,30,36,48,60,72,96,120,144,192,240,288];
+                const pxPresets = [16,24,32,48,64,96,128,192,256,384,512,768,1024,1536,2048];
+                const sizePresets = isBoardFixed
+                  ? ptPresets.map(pt => ({ px: Math.round(pt * bDpi / 72), pt }))
+                  : pxPresets.map(px => ({ px, pt: null }));
+                return (
+                  <div className="tb-sz-group">
+                    <button className="tb-sz-side" onClick={() => setActiveTextProp('fontSize', Math.max(8, fs - TEXT_FS_STEP(fs)))}>−</button>
+                    <button className="tb-sz-mid" onClick={() => { setTextSizeDrop(o => !o); setTextFontDrop(false); }}>{fs}</button>
+                    <button className="tb-sz-side r" onClick={() => setActiveTextProp('fontSize', Math.min(9999, fs + TEXT_FS_STEP(fs)))}>+</button>
+                    {textSizeDrop && (
+                      <div className="tb-sz-list" onPointerDown={e => e.stopPropagation()}>
+                        <input type="number" className="tb-sz-input"
+                          defaultValue={fs} autoFocus min="8" max="9999"
+                          onKeyDown={e => { if (e.key==='Enter') { const v=parseInt(e.target.value); if (!isNaN(v)&&v>=8&&v<=9999) { setActiveTextProp('fontSize',v); setTextSizeDrop(false); requestAnimationFrame(() => document.querySelector('.titem.sel .titem-txt')?.focus()); } } if (e.key==='Escape') { setTextSizeDrop(false); requestAnimationFrame(() => document.querySelector('.titem.sel .titem-txt')?.focus()); } }}
+                          onBlur={e => { const v=parseInt(e.target.value); if (!isNaN(v)&&v>=8&&v<=9999) setActiveTextProp('fontSize',v); setTextSizeDrop(false); }}/>
+                        {sizePresets.map(p => (
+                          <div key={p.px} className={`tb-sz-preset${p.px===fs?' on':''}`}
+                            onMouseDown={e => { e.preventDefault(); setActiveTextProp('fontSize', p.px); setTextSizeDrop(false); }}>
+                            <span>{p.pt ? `${p.pt}pt` : `${p.px}px`}</span>
+                            {p.pt && <span className="tb-sz-sub">({p.px}px)</span>}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+              <div className="tb-text-sep"/>
+              {/* ── Bold / Italic ── */}
+              <button className={`tb-tog${activeTextItem.fontWeight==='bold'?' on':''}`}
+                style={{fontWeight:'bold'}}
+                onClick={() => setActiveTextProp('fontWeight', activeTextItem.fontWeight==='bold'?'':'bold')}>B</button>
+              <button className={`tb-tog${activeTextItem.fontStyle==='italic'?' on':''}`}
+                style={{fontStyle:'italic',marginLeft:2}}
+                onClick={() => setActiveTextProp('fontStyle', activeTextItem.fontStyle==='italic'?'':'italic')}>I</button>
+              <div className="tb-text-sep"/>
+              {/* ── Alignment ── */}
+              <div className="tb-align-grp">
+                {TEXT_ALIGN_CYCLE.map(a => (
+                  <button key={a} className={`tb-align-btn${(activeTextItem.textAlign||'center')===a?' on':''}`}
+                    onClick={() => setActiveTextProp('textAlign', a)}>
+                    {TEXT_ALIGN_ICON[a]}
+                  </button>
+                ))}
+              </div>
+              <div className="tb-text-sep"/>
+              {/* ── Color ── */}
+              {(() => {
+                const autoColor = boardPx ? bgContrast('#ffffff') : '';
+                let textColor = activeTextItem.textColor || autoColor || 'var(--text)';
+                if (boardPx && activeTextItem.textColor?.startsWith('#') && bgContrast(activeTextItem.textColor) === '#1a1a1a') textColor = '#1a1a1a';
+                return (
+                  <>
+                    <div className="tb-color-sw" style={{background: textColor}}>
+                      <input type="color" value={activeTextItem.textColor || autoColor || '#ffffff'}
+                        onChange={e => setActiveTextProp('textColor', e.target.value)}/>
+                    </div>
+                    {activeTextItem.textColor && (
+                      <button className="tbtn" style={{fontSize:10,width:22,height:26}} title="Auto"
+                        onClick={() => setActiveTextProp('textColor', '')}>✕</button>
+                    )}
+                  </>
+                );
+              })()}
             </div>
-          );
-        })()}
+            <div style={{flex:1}}/>
+          </>
+        ) : (
+          <>
+            <div style={{flex:1}}/>
+            {shareRole && (
+              <div style={{fontSize:11,padding:'3px 10px',borderRadius:12,background:shareRole==='edit'?'var(--acc)':'var(--muted)',color:'#fff',fontWeight:600,letterSpacing:.3}}>
+                {shareRole === 'edit'
+                  ? (lockState[bid] === 'conflict' ? `⚠ ${t('shareBoardLocked')}` : `✏ ${t('shareGuestEdit')}`)
+                  : `👁 ${t('shareGuestView')}`}
+              </div>
+            )}
+            {/* Action buttons — coherent icon-only set, grouped by function with separators */}
+            {(() => {
+              const mk = {
+                // Ver
+                grid: (!shareRole && bid && roomView === 'board') ? (
+                  <button key="grid" className={`tbtn${showGrid?' on':''}`}
+                    title={t('gridToggle')}
+                    onClick={e => { if (gridDropOpen) { setGridDropOpen(false); return; } const r = e.currentTarget.getBoundingClientRect(); setGridDropPos({ right: window.innerWidth - r.right, top: r.bottom + 4 }); setGridDropOpen(true); }}>
+                    <SvgGrid/>{showGrid && snapGrid && <span className="tbtn-dot"/>}
+                  </button>) : null,
+                present: (!shareRole && !tmplEditMode && bid && roomView === 'board') ? (
+                  <button key="present" className="tbtn" data-tooltip={t('ttPresent')} onClick={() => setPresentation(true)}><SvgPresent/></button>) : null,
+                // Tablero
+                config: (!shareRole && (tmplEditMode || bid)) ? (
+                  <button key="config" className="tbtn" title={t('boardConfig')} onClick={openBoardConfig}><SvgConfig/></button>) : null,
+                versions: (!shareRole && !tmplEditMode && bid && roomView === 'board') ? (
+                  <button key="versions" className="tbtn" data-tooltip={t('ttVersions')} onClick={() => { loadVersions(); setModal('versions'); }}>
+                    <SvgVersions/>{versions.length > 0 && <span className="tbtn-dot"/>}
+                  </button>) : null,
+                // Salida
+                export: (!shareRole && !tmplEditMode && bid) ? (
+                  <button key="export" className="tbtn" data-tooltip={t('ttExport')}
+                    onClick={e => { if (exportDropOpen) { setExportDropOpen(false); return; } setGridDropOpen(false); const r = e.currentTarget.getBoundingClientRect(); setExportDropPos({ right: window.innerWidth - r.right, top: r.bottom + 4 }); setExportDropOpen(true); }}>
+                    <SvgExport size={15}/>
+                  </button>) : null,
+                report: (!shareRole && !tmplEditMode && pid && boards.length > 0) ? (
+                  <button key="report" className="tbtn" data-tooltip={t('ttMemory')} onClick={() => setModal('memoria')}><SvgReport/></button>) : null,
+              };
+              const groups = [
+                [mk.present, mk.report],
+                [mk.versions, mk.export],
+                [mk.grid, mk.config],
+              ].map(g => g.filter(Boolean)).filter(g => g.length);
+              const util = [
+                !sbOpen ? <button key="panel" className="tbtn" title={t('showPanel')} onClick={() => setSbOpen(true)}><SvgPanel/></button> : null,
+                (!shareRole && authMode) ? (
+                  <button key="invites" className="tbtn" title={t('shareActiveTitle')}
+                    onClick={() => api.get('/api/shares').then(d => setSharesPanel(d)).catch(() => setSharesPanel([]))}>
+                    <SvgShareNet/>
+                  </button>) : null,
+                <button key="shortcuts" className="tbtn" data-tooltip={t('ttShortcuts')}
+                  style={{fontSize:13,fontWeight:600}}
+                  onClick={() => { showShortcutsRef.current = true; setShowShortcuts(true); }}>?</button>,
+              ].filter(Boolean);
+              if (util.length) groups.push(util);
+              if (!groups.length) return null;
+              return (
+                <div className="tb-actions">
+                  {groups.map((g, i) => (
+                    <React.Fragment key={'tg'+i}>
+                      {i > 0 && <div className="tb-sep"/>}
+                      <div className="tb-group">{g}</div>
+                    </React.Fragment>
+                  ))}
+                </div>
+              );
+            })()}
+          </>
+        )}
         <div className="theme-picker" onClick={e => e.stopPropagation()}>
           <button className="btn theme-btn" onClick={() => setThemeOpen(o => !o)} data-tooltip={t('ttPrefs')}>
             <span className="theme-dot" style={{background: THEMES[theme]?.acc}}/>
@@ -8600,7 +8831,7 @@ ${rows}
               }}
             >
               {dragOver && !gridDropTarget && <div className={`canvas-drop-hint${!pid ? ' no-proj' : ''}`}>{!pid ? t('dropHintNoProj') : zoneDropTarget ? t('dropHintZone') : t('dropHint')}</div>}
-              {sel.length >= 1 && !pasteGhost && (
+              {sel.length >= 1 && !pasteGhost && !isTextEditing && (
                 <div className="align-bar" onClick={e => e.stopPropagation()}>
                   <span className="abt-label">{sel.length}</span>
                   {sel.length >= 2 && <>
@@ -8884,14 +9115,12 @@ ${rows}
                   }
                   if (item.type === 'text') {
                     const tFont = TEXT_FONTS.find(f => f.id === (item.fontFamily || 'serif')) || TEXT_FONTS[0];
-                    const tFmtOpen = textFmtPanelId === item.id;
                     const autoColor = boardPx ? bgContrast('#ffffff') : '';
                     let textColor = item.textColor || autoColor || 'var(--text)';
                     // Smart override: on a white fixed board, light text would be invisible
                     if (boardPx && item.textColor?.startsWith('#') && bgContrast(item.textColor) === '#1a1a1a') textColor = '#1a1a1a';
-                    const setTextProp = (prop, val) => { const nit = itemsRef.current.map(i => i.id === item.id ? {...i, [prop]: val} : i); setItems(nit); itemsRef.current = nit; saveItemsNow(nit); };
                     return (
-                      <div key={item.id} className={`titem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}${item.locked?' locked':''}${item.groupId?' grouped':''}`}
+                      <div key={item.id} className={`titem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}${item.locked?' locked':''}${item.groupId?' grouped':''}${isTextEditing && sel.includes(item.id)?' editing':''}`}
                         style={{ left: item.x, top: item.y, width: item.w, height: item.h || 130, zIndex: item.z||1, color: textColor, ...(inSelectedZone ? {pointerEvents:'none'} : {}), ...(item.freeRot ? {transform:`rotate(${item.freeRot}deg)`,transformOrigin:'center center'} : {}) }}
                         onPointerDown={e => onItemPD(e, item.id)}
                         onClick={e => handleItemClick(e, item)}
@@ -8902,58 +9131,29 @@ ${rows}
                         {item.locked && <div className="lock-badge"><SvgLock/></div>}
                         <div className="bitem-bar" onPointerDown={e => e.stopPropagation()} style={_bbarBelow}>
                           <button className="ibc rot" title={t('rotateBtn')} onPointerDown={e => { e.stopPropagation(); if (!item.locked) onFreeRotatePD(e, item.id); }} onClick={e => { e.stopPropagation(); if (rotBtnDraggedRef.current) { rotBtnDraggedRef.current = false; return; } rotateItem(item.id); }}>↻</button>
-                          <button className={`ibc${tFmtOpen?' active':''}`} title={lang==='es'?'Formato':'Format'} onClick={e => { e.stopPropagation(); setTextFmtPanelId(tFmtOpen ? null : item.id); }}>T▾</button>
                           <button className="ibc" title={t(item.locked ? 'unlockBtn' : 'lockBtn')} style={{color: item.locked ? 'var(--acc)' : undefined}} onClick={e => { e.stopPropagation(); updateItemLocked(item.id, !item.locked); }}>{item.locked ? <SvgUnlock/> : <SvgLock/>}</button>
                           <button className="ibc del" title={t('deleteBtn')} onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
                         </div>
-                        {tFmtOpen && (
-                          <div className="tfmt-panel" onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
-                            <div className="tfmt-row">
-                              <span className="tfmt-lbl">{t('textFmtSize')}</span>
-                              <button className="tfmt-btn" onClick={() => setTextProp('fontSize', Math.max(8, (item.fontSize||26) - TEXT_FS_STEP(item.fontSize||26)))}>−</button>
-                              <input type="number" className="tfmt-num" min="8" max="999" value={item.fontSize||26}
-                                onPointerDown={e => e.stopPropagation()}
-                                onChange={e => { const v = parseInt(e.target.value); if (!isNaN(v) && v >= 8 && v <= 999) setTextProp('fontSize', v); }}/>
-                              <button className="tfmt-btn" onClick={() => setTextProp('fontSize', Math.min(999, (item.fontSize||26) + TEXT_FS_STEP(item.fontSize||26)))}>+</button>
-                              <button className={`tfmt-btn${item.fontWeight==='bold'?' on':''}`} style={{fontWeight:'bold',marginLeft:4}} data-tooltip="Bold" onClick={() => setTextProp('fontWeight', item.fontWeight==='bold'?'':'bold')}>B</button>
-                              <button className={`tfmt-btn${item.fontStyle==='italic'?' on':''}`} style={{fontStyle:'italic'}} data-tooltip="Italic" onClick={() => setTextProp('fontStyle', item.fontStyle==='italic'?'':'italic')}>I</button>
-                            </div>
-                            <div className="tfmt-row">
-                              <span className="tfmt-lbl">{t('textFmtFont')}</span>
-                              {TEXT_FONTS.map(f => (
-                                <button key={f.id} className={`tfmt-btn${(item.fontFamily||'serif')===f.id?' on':''}`}
-                                  style={{fontFamily: f.family}}
-                                  onClick={() => setTextProp('fontFamily', f.id)}>{f.label}</button>
-                              ))}
-                            </div>
-                            <div className="tfmt-row">
-                              <span className="tfmt-lbl">{t('textFmtAlign')}</span>
-                              {TEXT_ALIGN_CYCLE.map(a => (
-                                <button key={a} className={`tfmt-btn${(item.textAlign||'center')===a?' on':''}`}
-                                  onClick={() => setTextProp('textAlign', a)}>{TEXT_ALIGN_ICON[a]}</button>
-                              ))}
-                            </div>
-                            <div className="tfmt-row">
-                              <span className="tfmt-lbl">{t('textFmtColor')}</span>
-                              <div className="tfmt-swatch" style={{background: textColor}}>
-                                <input type="color" value={item.textColor || autoColor || '#ffffff'} onPointerDown={e => e.stopPropagation()} onChange={e => setTextProp('textColor', e.target.value)}/>
-                              </div>
-                              {item.textColor && <button className="tfmt-btn" title={lang==='es'?'Auto':'Auto'} onClick={() => setTextProp('textColor', '')}>✕</button>}
-                            </div>
-                          </div>
-                        )}
                         <div className="titem-drag">
                           <span className="titem-drag-icon">⠿⠿</span>
                           <span className="titem-drag-label">{lang==='es'?'TEXTO':'TEXT'}</span>
                         </div>
                         <textarea className="titem-txt"
+                          ref={el => { if (selRef.current.includes(item.id)) textareaRef.current = el; }}
                           value={item.text||''} placeholder={lang==='es'?'Texto…':'Text…'}
-                          style={{ fontSize: item.fontSize || 26, textAlign: item.textAlign || 'center', fontFamily: tFont.family, fontWeight: item.fontWeight||'normal', fontStyle: item.fontStyle||'normal' }}
+                          style={{ fontSize: item.fontSize || 64, textAlign: item.textAlign || 'center', fontFamily: tFont.family, fontWeight: item.fontWeight||'normal', fontStyle: item.fontStyle||'normal' }}
                           onChange={e => updateNoteText(item.id, e.target.value)}
-                          onFocus={pushUndo} onBlur={saveLabel}
-                          onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}
+                          tabIndex={-1}
+                          onFocus={e => e.stopPropagation()}
+                          onBlur={e => { saveLabel(); if (!e.relatedTarget?.closest?.('.tb-text-ctx')) setTextEditing(false); }}
+                          onKeyDown={e => { if (e.key === 'Escape') { e.currentTarget.blur(); setTextEditing(false); } }}
+                          onDoubleClick={e => { e.stopPropagation(); pushUndo(); const ta = e.currentTarget; setTextEditing(true); requestAnimationFrame(() => ta.focus()); }}
+                          onPointerDown={e => { if (isTextEditingRef.current) e.stopPropagation(); else e.preventDefault(); }}
+                          onClick={e => { if (isTextEditingRef.current) e.stopPropagation(); }}
                         />
-                        <div className="rh" onPointerDown={e => onResizeNotePD(e, item.id)}/>
+                        {['nw','ne','sw','se','n','s','e','w'].map(d => (
+                          <div key={d} className={`trh ${d}`} onPointerDown={e => onTextResizePD(e, item.id, d)}/>
+                        ))}
                       </div>
                     );
                   }

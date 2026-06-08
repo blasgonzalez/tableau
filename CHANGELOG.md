@@ -1,5 +1,58 @@
 # Changelog
 
+## [1.20.26] — 2026-06-08
+
+### Corregido / Mejorado
+- **Handles de redimensionado en modo edición:** los 8 handles del elemento de texto se ocultan automáticamente mientras el elemento está en modo edición (el usuario está escribiendo, no redimensionando). Vuelven a aparecer al salir del modo edición.
+- **Barra de controles — posición adaptativa:** la barra de controles del elemento de texto ahora aparece debajo del elemento cuando el borde superior está dentro de los primeros 52 px del canvas (cerca del topbar), igual que ya hacían fotos y notas.
+
+## [1.20.25] — 2026-06-08
+
+### Corregido / Mejorado
+- **3D: texto con fontSize grande:** el texto ya no desaparece en la vista 3D al usar tamaños grandes (≥ 512 px). El renderer 3D escala el font proporcionalmente al canvas de textura; el aspecto visual es correcto independientemente del valor absoluto.
+- **Handles de redimensionado (texto):** 8 handles visibles al seleccionar un elemento de texto (4 esquinas + 4 lados), contra-escalados con el zoom del canvas. Permiten redimensionar en cualquier dirección (antes solo SE).
+- **Borde de selección visible:** al seleccionar un elemento de texto el borde pasa a 2 px sólido con el color de acento; en modo edición baja a 40 % de opacidad para distinguir los dos estados.
+- **Cursor correcto:** en modo selección el cursor del texto es `grab`; solo en modo edición (doble clic) cambia a `text`.
+- **Barra de controles:** vuelve a la posición estándar (flotando encima del elemento) igual que fotos y notas. Handle `.rh` de notas ampliado a 20 × 20 px con z-index superior a la barra para evitar oclusión.
+- **Inicio de edición al crear:** al añadir un elemento de texto, el texto existente se selecciona automáticamente (listo para sobreescribir).
+
+## [1.20.24] — 2026-06-08
+
+### Corregido / Mejorado
+- **Tamaño de texto por defecto:** el elemento de texto nuevo arranca siempre con 64 px en tableros variables y el equivalente proporcional al DPI en tableros fijos. Ya no hereda `fontSize` de elementos anteriores, eliminando el problema de texto microscópico.
+- **Presets de tamaño ampliados:** tableros variables hasta 2048 px; tableros fijos hasta 288 pt. Límite del campo manual subido a 9999 (necesario para texto a escala de sala). Formato de preset fijo: "12pt (50px)".
+- **Entrada directa al crear texto:** al añadir un elemento de texto el modo edición se activa automáticamente (igual que al hacer doble clic), sin necesidad de un paso extra.
+- **Iconos de alineación de texto:** reemplazados por los iconos estándar de Lucide (AlignLeft / AlignCenter / AlignRight) con líneas que representan texto.
+- **Barra de controles del texto:** movida a la esquina superior derecha del elemento (antes estaba en la inferior, tapando el handle de redimensionado). Contra-escala con el zoom del canvas igual que el resto de controles.
+
+## [1.20.23] — 2026-06-08
+
+### Corregido
+- **Modo edición de texto — activación por doble clic:** el modo edición (toolbar de formato, cursor activo) solo se activa con **doble clic**, igual que Figma, Illustrator y Keynote. Un clic simple selecciona el elemento y muestra la toolbar genérica (copiar, alinear, agrupar) sin entrar en edición.
+- **Modo edición de texto — salida limpia:** ESC o clic fuera del elemento sale del modo edición dejando el elemento seleccionado; la toolbar genérica vuelve a mostrarse.
+- **fontSize corrupto saneado al cargar:** al abrir un tablero, cualquier elemento de texto con `fontSize < 8` (datos corruptos) se corrige automáticamente al valor por defecto (24 px en tableros variables, equivalente a 12 pt en tableros fijos).
+- **addText — herencia de fontSize inválido:** el nuevo elemento ya no hereda `fontSize` de un elemento previo con valor corrupto (< 8); en ese caso usa el valor por defecto.
+
+---
+
+## [1.20.22] — 2026-06-08
+
+### Corregido
+- **Topbar de texto — condición de activación:** la barra de formato solo aparece cuando el elemento de texto está en **modo edición** (clic en el textarea, cursor de texto activo). Al seleccionarlo con un solo clic muestra la toolbar genérica de ítem (copiar, alinear, agrupar, etc.) igual que cualquier foto.
+- **Topbar de texto — exclusión mutua con toolbar genérica:** texto en edición → toolbar de formato; texto seleccionado sin editar → toolbar genérica. Ambas son mutuamente excluyentes; ya no se solapan.
+- **Tamaño por defecto de nuevos elementos de texto:** 24 px en tableros variables; equivalente a 12 pt (`Math.round(12 × DPI / 72)` px) en tableros fijos.
+
+---
+
+## [1.20.21] — 2026-06-08
+
+### Añadido
+- **Topbar contextual para texto:** al seleccionar un elemento de texto, la barra superior muestra los controles de formato (fuente, tamaño, negrita, cursiva, alineación, color) en lugar de los botones habituales — igual que el panel de opciones de herramienta en Photoshop. El panel flotante anterior ha sido eliminado.
+- **Dropdown de fuente:** selector con cada opción renderizada en su propia tipografía. Ancho suficiente para mostrar "Cormorant Garamond".
+- **Dropdown de tamaño:** campo de entrada numérica manual (Enter o perder el foco confirman el valor) más lista de presets clicables. En tableros fijos muestra "12pt (50px)"; en tableros variables muestra px directamente.
+- **Fuentes nuevas — Cormorant Garamond** (Regular, Negrita, Cursiva), **Inter** (Regular, Negrita) y **Josefin Sans** (Regular, Negrita): disponibles en canvas 2D, exportación JPEG y vista 3D.
+- **Fuentes servidas localmente:** todos los archivos `.ttf` se sirven ahora desde `/fonts/` (public/fonts/) mediante `@font-face`; se eliminó la dependencia del CDN de Google Fonts.
+
 ## [1.20.20] — 2026-06-08
 
 ### Corregido

@@ -1,6 +1,6 @@
 {
-  "version": "1.20.20",
+  "version": "1.20.26",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-06-08",
-  "notes": "Instalador Windows: corrección del arranque en instalación limpia. El frontend se precompila durante el build del instalador y scripts/ se incluye como respaldo."
+  "notes": "Texto: handles ocultos en modo edición; barra de controles con posición adaptativa (sube/baja según proximidad al borde del canvas)."
 }

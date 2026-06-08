@@ -1,5 +1,58 @@
 # Changelog
 
+## [1.20.26] — 2026-06-08
+
+### Fixed / Improved
+- **Resize handles hidden in edit mode:** the 8 resize handles on text elements are automatically hidden while the element is in edit mode (the user is typing, not resizing). They reappear when edit mode is exited.
+- **Control bar — adaptive position:** the text element control bar now appears below the element when its top edge is within the first 52 px of the canvas (near the topbar), consistent with photos and notes.
+
+## [1.20.25] — 2026-06-08
+
+### Fixed / Improved
+- **3D: large fontSize text:** text no longer disappears in the 3D view when using large font sizes (≥ 512 px). The 3D renderer now scales the font proportionally to the texture canvas; the visual result is correct regardless of the absolute value.
+- **Text resize handles:** 8 visible handles when a text element is selected (4 corners + 4 edges), counter-scaled with canvas zoom. Resizing is now possible in all 8 directions (previously SE only).
+- **Visible selection border:** selecting a text element shows a 2 px solid accent-color border; in edit mode the opacity drops to 40 % to visually distinguish the two states.
+- **Correct cursor:** in selection mode the cursor over the text area is `grab`; only in edit mode (double-click) does it change to `text`.
+- **Control bar position:** restored to standard position (floating above the element), consistent with photos and notes. Note element `.rh` handle enlarged to 20 × 20 px with higher z-index to prevent overlap.
+- **Edit on creation:** when a text element is added, any existing text is automatically selected (ready to overwrite).
+
+## [1.20.24] — 2026-06-08
+
+### Fixed / Improved
+- **Default text size:** new text elements always start at 64 px on variable boards and the DPI-proportional equivalent on fixed boards. `fontSize` is no longer inherited from previous elements, eliminating the microscopic-text problem.
+- **Expanded size presets:** variable boards up to 2048 px; fixed boards up to 288 pt. Manual input cap raised to 9999 (needed for room-scale text). Fixed preset format: "12pt (50px)".
+- **Direct edit on creation:** adding a text element immediately activates edit mode (same as double-clicking), with no extra step required.
+- **Text alignment icons:** replaced with standard Lucide icons (AlignLeft / AlignCenter / AlignRight) using lines that represent text.
+- **Text element control bar:** moved to the top-right corner of the element (was at the bottom, covering the resize handle). Counter-scales with canvas zoom like all other controls.
+
+## [1.20.23] — 2026-06-08
+
+### Fixed
+- **Text edit mode — double-click to activate:** edit mode (format toolbar, active cursor) is now triggered only by **double-click**, matching Figma, Illustrator, and Keynote. A single click selects the element and shows the generic toolbar (copy, align, group) without entering edit mode.
+- **Text edit mode — clean exit:** ESC or clicking outside exits edit mode while keeping the element selected; the generic toolbar returns.
+- **Corrupted fontSize sanitised on load:** when opening a board, any text element with `fontSize < 8` (corrupt data) is automatically corrected to the default value (24 px on variable boards, 12 pt equivalent on fixed boards).
+- **addText — invalid fontSize inheritance:** a new text element no longer inherits `fontSize` from a previous element with a corrupt value (< 8); the default is used instead.
+
+---
+
+## [1.20.22] — 2026-06-08
+
+### Fixed
+- **Text topbar — activation condition:** the format toolbar now only appears when the text element is in **edit mode** (clicked into the textarea, text cursor active). A single click selects the item and shows the generic item toolbar (copy, align, group, etc.) just like any photo.
+- **Text topbar — mutual exclusion with generic toolbar:** text in edit mode → format toolbar; text selected but not editing → generic toolbar. Both are mutually exclusive; they no longer overlap.
+- **Default size for new text elements:** 24 px on variable boards; equivalent to 12 pt (`Math.round(12 × DPI / 72)` px) on fixed boards.
+
+---
+
+## [1.20.21] — 2026-06-08
+
+### Added
+- **Contextual topbar for text:** when a text element is selected, the top bar replaces the usual action buttons with format controls (font, size, bold, italic, alignment, color) — just like Photoshop's options bar. The previous floating panel has been removed.
+- **Font dropdown:** each option is rendered in its own typeface. Wide enough to display "Cormorant Garamond" without truncation.
+- **Size dropdown:** manual numeric input (confirmed on Enter or blur) plus a clickable preset list. Fixed boards show presets as "12pt (50px)"; variable boards show px values directly.
+- **New fonts — Cormorant Garamond** (Regular, Bold, Italic), **Inter** (Regular, Bold) and **Josefin Sans** (Regular, Bold): available in the 2D canvas, JPEG export, and 3D view.
+- **Self-hosted fonts:** all `.ttf` files are now served locally from `/fonts/` (public/fonts/) via `@font-face`; the Google Fonts CDN dependency has been removed.
+
 ## [1.20.20] — 2026-06-08
 
 ### Fixed

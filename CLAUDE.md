@@ -38,6 +38,16 @@ Runner: Node.js built-in `node:test` (Node 18+), HTTP assertions via `supertest`
 
 React and ReactDOM are served locally from `node_modules` — no CDN dependency. `_built.html` is gitignored.
 
+### Adding new fonts
+
+All fonts are served locally via `@font-face` in `index.html` pointing to `/fonts/<file>.ttf` (Express static-serves `public/` as root, so files live in `public/fonts/`). To add a new font:
+
+1. Place the `.ttf` file(s) in `public/fonts/`.
+2. Add `@font-face` declarations in the `<style>` block at the top of `index.html`.
+3. Add a `{ id, label, family }` entry to the `TEXT_FONTS` array in `index.html`.
+4. Add an entry to `installer/tableau.iss` **only if the file is not already covered** by the `Source: "public\*"; Flags: recursesubdirs` line — it already captures all of `public/fonts/`.
+5. The root `fonts/` directory (separate from `public/fonts/`) is used for server-side Sharp/libvips rendering during JPEG/SVG export — add fonts there too if export support is needed.
+
 ## Architecture
 
 **Tableau is a web app for visual photography project management** — Express serves both the REST API and the single-page frontend. There is no database; all data is stored as JSON files and JPEGs on disk.
