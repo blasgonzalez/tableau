@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.20.19] — 2026-06-08
+
+### Added
+- **3D view — context menu on walls and block faces:** right-clicking on a wall or block face that has no photo item shows a menu to navigate to the linked board or create a new one for that face. When the clipboard is active, a "Paste here" option appears (face with board) or "Create & paste" (face without board) to create the board and paste in one step. The menu shows the board name as an informative header.
+
+### Fixed
+- **3D view — context menu in walk mode:** the context menu no longer appears while walk mode is active (`walkActive`), where the cursor is captured and the menu makes no sense.
+- **3D view — context menu for guests (reinforcement):** the `roomShareMode` guard in the `onCtxMenu` handler now also covers walk mode with a single combined condition.
+
+---
+
+## [1.20.18] — 2026-06-07
+
+### Fixed
+- **3D view — room share mode (guest):** the Copy/Cut context menu no longer appears on right-click over a wall photo when accessing via `?room=TOKEN`. The `onCtxMenu` handler checks `roomShareModeRef` and returns early without showing the menu. The left-click handler for navigating to a board while the clipboard is active (`onPasteClick`) is also disabled in guest mode.
+
+---
+
+## [1.20.17] — 2026-06-07
+
+### Fixed
+- **3D view — photo rotation on block top faces:** photos placed on the board linked to a block's top face now render with their rotation (`item.rot` + `item.freeRot`) correctly applied in `rotation.z` of the child plane, matching the behaviour of vertical faces. Photos at 90° or 270° use the swapped aspect ratio so that plane dimensions are native before rotating (same as N/S/E/W faces).
+
+---
+
 ## [1.20.16] — 2026-06-07
 
 ### Improved

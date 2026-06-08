@@ -1190,6 +1190,7 @@ const I18N = {
     shareInviteEmail:'Enviar por email', shareInvitePh:'correo@ejemplo.com', shareInviteSend:'Enviar', shareInviteSent:'Invitación enviada', shareInviteError:'Error al enviar el correo', shareNoSmtp:'El servidor no tiene SMTP configurado',
     shareActiveTitle:'Invitaciones activas', shareActiveEmpty:'No tienes invitaciones activas', shareActiveProject:'Proyecto', shareActiveCreated:'Enviada', shareActiveRevoke:'Revocar', shareActiveRevokeOk:'Invitación revocada',
     menu3DCopy:'Copiar', menu3DCut:'Cortar', menu3DCopyZone:'Copiar zona', menu3DCutZone:'Cortar zona',
+    wall3DEdit:'✏️ Editar tablero', wall3DPaste:'📋 Pegar aquí', wall3DCreate:'+ Crear tablero', wall3DCreatePaste:'📋 Crear y pegar', wall3DNoBoard:'Cara sin tablero',
     acctChangePass:'Cambiar clave', acctAdmin:'⚙ Admin', acctSignOut:'Cerrar sesión',
     settingsTitle:'Ajustes', settingsOpen:'Ajustes…', settingsGeneral:'General', settingsProject:'Proyecto',
     projNotes:'Notas', projNotesPh:'Descripción, referencias, ideas…',
@@ -1383,6 +1384,7 @@ const I18N = {
     shareInviteEmail:'Send by email', shareInvitePh:'email@example.com', shareInviteSend:'Send', shareInviteSent:'Invitation sent', shareInviteError:'Error sending email', shareNoSmtp:'SMTP not configured on server',
     shareActiveTitle:'Active invitations', shareActiveEmpty:'No active invitations', shareActiveProject:'Project', shareActiveCreated:'Sent', shareActiveRevoke:'Revoke', shareActiveRevokeOk:'Invitation revoked',
     menu3DCopy:'Copy', menu3DCut:'Cut', menu3DCopyZone:'Copy zone', menu3DCutZone:'Cut zone',
+    wall3DEdit:'✏️ Edit board', wall3DPaste:'📋 Paste here', wall3DCreate:'+ Create board', wall3DCreatePaste:'📋 Create & paste', wall3DNoBoard:'No board on this face',
     acctChangePass:'Change password', acctAdmin:'⚙ Admin', acctSignOut:'Sign out',
     settingsTitle:'Settings', settingsOpen:'Settings…', settingsGeneral:'General', settingsProject:'Project',
     projNotes:'Notes', projNotesPh:'Description, references, ideas…',
@@ -1585,6 +1587,7 @@ function App() {
   const pendingRoomViewRef = useRef(false);
   const [canvasCtx,     setCanvasCtx]     = useState(null); // {x, y, cx, cy} canvas right-click
   const [ctx3DMenu,     setCtx3DMenu]     = useState(null); // {x, y, boardId, itemId, photoId} 3D right-click
+  const [ctx3DWallMenu, setCtx3DWallMenu] = useState(null); // {x, y, wallType, wallId, face, boardId, boardName}
   const [showLibPreview, setShowLibPreview] = useState(() => localStorage.getItem('tb-lib-preview') !== 'false');
   const [libMuted,       setLibMuted]       = useState(false);
   const [uploadDropOpen, setUploadDropOpen] = useState(false);
@@ -2245,6 +2248,9 @@ function App() {
       const loader  = new THREE.TextureLoader();
       const walkTargets = [];
       const itemMeshes  = []; // all photo/text pMeshes — used for right-click raycasting
+      const wallMeshes  = []; // invisible face planes — used for right-click wall menu
+      const invisibleMat = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide });
+      invisibleMat.visible = false;
 
       const vertexPosts = new Map();
       room.walls.forEach(wall => {
@@ -2287,6 +2293,23 @@ function App() {
         else if (!wall.boardId && wall.boardIdBack) wMesh.userData.boardId = wall.boardIdBack;
         scene.add(wMesh);
         walkTargets.push(wMesh);
+
+        // Invisible face planes for right-click wall menu (one per side A/B)
+        {
+          const normAX = -dirZ, normAZ = dirX;
+          const wcx = (x1+x2)/2, wcz = (z1+z2)/2;
+          ['A','B'].forEach(face => {
+            const sign = face === 'A' ? 1 : -1;
+            const bid = face === 'A' ? (wall.boardId || null) : (wall.boardIdBack || null);
+            const board = bid ? boards.find(b => b.id === bid) : null;
+            const wp = new THREE.Mesh(new THREE.PlaneGeometry(len, wh), invisibleMat);
+            wp.position.set(wcx + normAX * sign * (wt/2 + 1), wh/2, wcz + normAZ * sign * (wt/2 + 1));
+            wp.rotation.y = face === 'A' ? rotY : rotY + Math.PI;
+            wp.userData = { wallType: 'wall', wallId: wall.id, face, boardId: bid, boardName: board?.name || null };
+            scene.add(wp);
+            wallMeshes.push(wp);
+          });
+        }
 
         const wallSides = [];
         if (wall.boardId)     wallSides.push({boardId: wall.boardId,     sideSign:  1});
@@ -2584,9 +2607,11 @@ function App() {
                 // Local position within group (block-local coords, centered on block center)
                 const lx = (item.x + item.w/2) / bPx.w * bw - bw/2;
                 const lz = (item.y + itemH/2) / bPx.h * bd - bd/2;
+                const itemRotRad = -((item.rot || 0) + (item.freeRot || 0)) * Math.PI / 180;
                 const mkFlat = (m, yOff) => {
                   m.position.set(lx, yOff, lz);
                   m.rotation.x = -Math.PI / 2;
+                  m.rotation.z = itemRotRad;
                   topGroup.add(m);
                 };
                 if (!isText && !isNote) {
@@ -2597,11 +2622,11 @@ function App() {
                     .forEach(([px, col, back]) => {
                       const fw = (item.w + 2*px) / bPx.w * bw;
                       const fh = (itemH + 2*px) / bPx.h * bd;
-                      mkFlat(new THREE.Mesh(new THREE.PlaneGeometry(fw, fh), new THREE.MeshLambertMaterial({color:col,side:THREE.DoubleSide})), -back);
+                      mkFlat(new THREE.Mesh(new THREE.PlaneGeometry(isSwapped ? fh : fw, isSwapped ? fw : fh), new THREE.MeshLambertMaterial({color:col,side:THREE.DoubleSide})), -back);
                     });
                 }
                 const pMesh = new THREE.Mesh(
-                  new THREE.PlaneGeometry(iw, ih),
+                  new THREE.PlaneGeometry(isSwapped ? ih : iw, isSwapped ? iw : ih),
                   new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, transparent: true })
                 );
                 pMesh.userData.itemId  = item.id;
@@ -2614,6 +2639,31 @@ function App() {
               });
             }
           }
+        }
+
+        // Invisible face planes for right-click wall menu (block faces)
+        ['n','s','e','w'].forEach(face => {
+          const { x1, z1, dirX, dirZ, normX, normZ, fW } = vFaceDefs[face];
+          const faceLink = block.faces?.[face];
+          const bid = faceLink?.boardId || null;
+          const fboard = bid ? boards.find(b => b.id === bid) : null;
+          const wp = new THREE.Mesh(new THREE.PlaneGeometry(fW, bh), invisibleMat);
+          wp.position.set(x1 + dirX*fW/2 + normX, bh/2, z1 + dirZ*fW/2 + normZ);
+          wp.rotation.y = Math.atan2(-dirZ, dirX);
+          wp.userData = { wallType: 'block', wallId: block.id, face, boardId: bid, boardName: fboard?.name || null };
+          scene.add(wp);
+          wallMeshes.push(wp);
+        });
+        {
+          const bid = block.faces?.t?.boardId || null;
+          const fboard = bid ? boards.find(b => b.id === bid) : null;
+          const wp = new THREE.Mesh(new THREE.PlaneGeometry(bw, bd), invisibleMat);
+          wp.position.set(bcx, bh + 1, bcz);
+          wp.rotation.x = -Math.PI / 2;
+          wp.rotation.y = -rotRad;
+          wp.userData = { wallType: 'block', wallId: block.id, face: 't', boardId: bid, boardName: fboard?.name || null };
+          scene.add(wp);
+          wallMeshes.push(wp);
         }
       });
 
@@ -2890,6 +2940,7 @@ function App() {
       const ctxRay = new THREE.Raycaster();
       const onCtxMenu = e => {
         e.preventDefault();
+        if (roomShareModeRef.current || walkActive) return;
         const rect = canvas.getBoundingClientRect();
         const mx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
         const my = -((e.clientY - rect.top) / rect.height) * 2 + 1;
@@ -2903,10 +2954,22 @@ function App() {
             const resolvedId    = ud.zoneId  || ud.itemId;
             const resolvedPhoto = isZone ? undefined : ud.photoId;
             setCtx3DMenu({ x: e.clientX, y: e.clientY, boardId: ud.boardId, itemId: resolvedId, photoId: resolvedPhoto, isZone });
+            setCtx3DWallMenu(null);
             return;
           }
         }
+        // No item hit — check wall/block face planes
+        const wallHits = ctxRay.intersectObjects(wallMeshes);
+        if (wallHits.length > 0) {
+          const ud = wallHits[0].object.userData;
+          const menuX = Math.min(e.clientX, window.innerWidth  - 200);
+          const menuY = Math.min(e.clientY, window.innerHeight - 180);
+          setCtx3DWallMenu({ x: menuX, y: menuY, wallType: ud.wallType, wallId: ud.wallId, face: ud.face, boardId: ud.boardId, boardName: ud.boardName });
+          setCtx3DMenu(null);
+          return;
+        }
         setCtx3DMenu(null);
+        setCtx3DWallMenu(null);
       };
       canvas.addEventListener('contextmenu', onCtxMenu);
       controls._ctxCleanup = () => { canvas.removeEventListener('contextmenu', onCtxMenu); };
@@ -2962,6 +3025,7 @@ function App() {
       const pasteRay = new THREE.Raycaster();
       const onPasteClick = e => {
         if (walkActive) return; // walk mode has its own click handler
+        if (roomShareModeRef.current) return;
         if (!clipboardRef.current.length) return;
         const rect = canvas.getBoundingClientRect();
         const mx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
@@ -6366,6 +6430,33 @@ ${rows}
   };
   const createRoomBoard = wallId => createRoomBoardSide(wallId, 'A');
 
+  // Create and link a board to a block face, then navigate to it. Returns the new board id.
+  const createBlockFaceBoard = async (blockId, face, andPaste = false) => {
+    const block = getBlocks(roomRef.current).find(b => b.id === blockId);
+    if (!block) return null;
+    const faceW = face === 't' ? block.w : (face === 'n' || face === 's') ? block.w : block.d;
+    const faceH = face === 't' ? block.d : block.h;
+    const faceLabel = { n: lang==='es'?'Norte':'North', s: lang==='es'?'Sur':'South', e: lang==='es'?'Este':'East', w: lang==='es'?'Oeste':'West', t: lang==='es'?'Superior':'Top' }[face];
+    const faceName = `${block.label || (lang==='es'?'Bloque':'Block')} ${faceLabel}`;
+    const dpi = Math.max(1, Math.round(4000 / faceW * 2.54 * 10) / 10);
+    const defaultW = Math.round(60 / 2.54 * dpi);
+    const brd = await api.post(`/api/projects/${pidRef.current}/boards`, { name: faceName });
+    await api.patch(`/api/projects/${pidRef.current}/boards/${brd.id}`, {
+      fixed: true, fixedW: Math.round(faceW), fixedH: Math.round(faceH), dpi, units: 'cm', defaultW
+    });
+    const fullB = { ...brd, fixed: true, fixedW: Math.round(faceW), fixedH: Math.round(faceH), dpi, units: 'cm', defaultW };
+    setBoards(bs => [...bs, fullB]);
+    const blocks = getBlocks(roomRef.current).map(bl =>
+      bl.id === blockId ? { ...bl, faces: { ...bl.faces, [face]: { boardId: brd.id } } } : bl
+    );
+    saveRoomBlocks(blocks);
+    setBid(brd.id); bidRef.current = brd.id;
+    setRoomView('board');
+    showToast(lang==='es' ? `Tablero "${faceName}" creado` : `Board "${faceName}" created`);
+    if (andPaste) requestAnimationFrame(() => triggerPasteGhost());
+    return brd.id;
+  };
+
   const unlinkBoardFromWall = (wallId, side) => {
     const r = roomRef.current; if (!r) return;
     const boardField = side === 'A' ? 'boardId' : 'boardIdBack';
@@ -7303,7 +7394,7 @@ ${rows}
   }
 
   return (
-    <div className={`app${presentation ? ' presentation' : ''}${roomShareMode ? ' room-share-mode' : ''}`} onClick={() => { selRef.current = []; setSel([]); renaming && setRenaming(null); setThemeOpen(false); setAvatarOpen(false); setPropsPanelId(null); setTextFmtPanelId(null); setFramePainter(null); setCtx3DMenu(null); }}>
+    <div className={`app${presentation ? ' presentation' : ''}${roomShareMode ? ' room-share-mode' : ''}`} onClick={() => { selRef.current = []; setSel([]); renaming && setRenaming(null); setThemeOpen(false); setAvatarOpen(false); setPropsPanelId(null); setTextFmtPanelId(null); setFramePainter(null); setCtx3DMenu(null); setCtx3DWallMenu(null); }}>
 
       {/* ── Minimal header for room share mode ── */}
       {roomShareMode && roomShareInfo && (
@@ -8382,6 +8473,43 @@ ${rows}
                       onClick={e => e.stopPropagation()}>
                       <button className="ctx-item" onClick={() => { const d=ctx3DMenu; setCtx3DMenu(null); copy3DItemRef.current?.({boardId:d.boardId,itemId:d.itemId,photoId:d.photoId,isCut:false}); }}>{t(ctx3DMenu.isZone ? 'menu3DCopyZone' : 'menu3DCopy')}</button>
                       <button className="ctx-item" onClick={() => { const d=ctx3DMenu; setCtx3DMenu(null); copy3DItemRef.current?.({boardId:d.boardId,itemId:d.itemId,photoId:d.photoId,isCut:true}); }}>{t(ctx3DMenu.isZone ? 'menu3DCutZone' : 'menu3DCut')}</button>
+                    </div>
+                  )}
+                  {ctx3DWallMenu && (
+                    <div style={{position:'fixed',left:ctx3DWallMenu.x,top:ctx3DWallMenu.y,zIndex:300,background:'var(--modal,var(--bg))',border:'1px solid var(--border)',borderRadius:4,padding:'4px 0',minWidth:160,boxShadow:'0 4px 20px rgba(0,0,0,.35)'}}
+                      onClick={e=>e.stopPropagation()}>
+                      {ctx3DWallMenu.boardId ? (<>
+                        <div style={{padding:'4px 10px',fontSize:10,color:'var(--muted)',borderBottom:'1px solid var(--border2)',maxWidth:180,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+                          {ctx3DWallMenu.boardName || t('noBoard')}
+                        </div>
+                        <button className="ctx-item" onClick={() => {
+                          const {boardId}=ctx3DWallMenu; setCtx3DWallMenu(null);
+                          setBid(boardId); bidRef.current=boardId; setRoomView('board');
+                        }}>{t('wall3DEdit')}</button>
+                        {clipboardRef.current?.length > 0 && (
+                          <button className="ctx-item" onClick={() => {
+                            const {boardId}=ctx3DWallMenu; setCtx3DWallMenu(null);
+                            setBid(boardId); bidRef.current=boardId; setRoomView('board');
+                            requestAnimationFrame(()=>triggerPasteGhost());
+                          }}>{t('wall3DPaste')}</button>
+                        )}
+                      </>) : (<>
+                        <div style={{padding:'4px 10px',fontSize:10,color:'var(--muted)',borderBottom:'1px solid var(--border2)'}}>
+                          {t('wall3DNoBoard')}
+                        </div>
+                        <button className="ctx-item" onClick={async () => {
+                          const {wallType,wallId,face}=ctx3DWallMenu; setCtx3DWallMenu(null);
+                          if (wallType==='wall') { await createRoomBoardSide(wallId,face); }
+                          else { await createBlockFaceBoard(wallId,face,false); }
+                        }}>{t('wall3DCreate')}</button>
+                        {clipboardRef.current?.length > 0 && (
+                          <button className="ctx-item" onClick={async () => {
+                            const {wallType,wallId,face}=ctx3DWallMenu; setCtx3DWallMenu(null);
+                            if (wallType==='wall') { await createRoomBoardSide(wallId,face); requestAnimationFrame(()=>triggerPasteGhost()); }
+                            else { await createBlockFaceBoard(wallId,face,true); }
+                          }}>{t('wall3DCreatePaste')}</button>
+                        )}
+                      </>)}
                     </div>
                   )}
                   <div className="room-toolbar room-toolbar-3d">

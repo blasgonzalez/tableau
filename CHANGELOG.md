@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.20.19] — 2026-06-08
+
+### Añadido
+- **Vista 3D — menú contextual en paredes y caras de bloque:** clic derecho sobre una pared o cara de bloque sin ítem muestra un menú que permite navegar al tablero vinculado o crear uno nuevo en esa cara. Si el portapapeles está activo, aparece la opción "Pegar aquí" (cara con tablero) o "Crear y pegar" (cara sin tablero) para crear el tablero y pegar en un solo paso. El menú incluye el nombre del tablero como cabecera informativa.
+
+### Corregido
+- **Vista 3D — menú contextual en walk mode:** el menú contextual ya no aparece mientras el modo paseo (walk) está activo (`walkActive`), donde el cursor está capturado y el menú no tiene sentido.
+- **Vista 3D — menú contextual para invitados (refuerzo):** el guard `roomShareMode` del handler `onCtxMenu` ahora también cubre el caso de walk mode con una sola condición combinada.
+
+---
+
+## [1.20.18] — 2026-06-07
+
+### Corregido
+- **Vista 3D — modo sala compartida (invitado):** el menú contextual Copiar/Cortar ya no aparece al hacer clic derecho sobre una foto en la pared cuando se accede mediante `?room=TOKEN`. El handler `onCtxMenu` comprueba `roomShareModeRef` y retorna sin mostrar el menú. El handler de clic izquierdo para navegar a un tablero con portapapeles activo (`onPasteClick`) también se desactiva en modo invitado.
+
+---
+
+## [1.20.17] — 2026-06-07
+
+### Corregido
+- **Vista 3D — rotación de fotos en cara superior de bloques:** las fotos colocadas en el tablero de la cara superior de un bloque ya renderizan con su rotación (`item.rot` + `item.freeRot`) aplicada correctamente en `rotation.z` del plano hijo, igual que en las caras verticales. Las fotos con 90° o 270° usan el aspect ratio intercambiado para que las dimensiones del plano sean las nativas antes de rotar (mismo comportamiento que las caras N/S/E/O).
+
+---
+
 ## [1.20.16] — 2026-06-07
 
 ### Mejorado
