@@ -1,6 +1,6 @@
 {
-  "version": "1.20.27",
+  "version": "1.20.28",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-06-09",
-  "notes": "Admin: modal de confirmación de eliminación de usuario ahora visible encima del panel de administración."
+  "notes": "Vista 3D: botón de iluminación volumétrica (☀) — simula luz natural de techo con luz de relleno. Preferencia guardada en localStorage."
 }

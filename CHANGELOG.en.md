@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.20.28] — 2026-06-09
+
+### Added
+- **3D view — volumetric lighting:** new "☀ Lighting" button in the 3D toolbar. When active, replaces flat lighting with a warm main light (intensity 0.8, tint #fff8f0, overhead position) and a cool fill light (intensity 0.3, tint #f0f4ff, opposite position) that prevents shadowed faces from going fully black. Ambient light drops to 0.4 for the effect to register. Disabled by default to avoid disrupting the familiar look. Preference is saved in `localStorage` and applies in both orbital and walk modes.
+
 ## [1.20.27] — 2026-06-09
 
 ### Fixed

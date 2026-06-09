@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.20.28] — 2026-06-09
+
+### Añadido
+- **Vista 3D — iluminación volumétrica:** nuevo botón "☀ Iluminación" en la barra de herramientas 3D. Cuando está activo, sustituye la luz plana por una luz principal cálida (intensidad 0.8, tono #fff8f0, posición cenital) y una luz de relleno fría (intensidad 0.3, tono #f0f4ff, posición opuesta) que evita que las caras en sombra queden completamente negras. La luz ambiental baja a 0.4 para que el efecto sea visible. Desactivado por defecto para no romper el flujo conocido. La preferencia se guarda en `localStorage` y se aplica tanto en modo orbital como en walk mode.
+
 ## [1.20.27] — 2026-06-09
 
 ### Corregido
