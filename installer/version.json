@@ -1,6 +1,6 @@
 {
-  "version": "1.20.28",
+  "version": "1.20.29",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-06-09",
-  "notes": "Vista 3D: botón de iluminación volumétrica (☀) — simula luz natural de techo con luz de relleno. Preferencia guardada en localStorage."
+  "notes": "Vista 3D: iluminación volumétrica permanente (sin toggle, sin localStorage)."
 }

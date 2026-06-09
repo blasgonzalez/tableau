@@ -1288,7 +1288,6 @@ const I18N = {
     shareActiveProjectType:'Proyecto — solo lectura', shareActiveRoomType:'Sala — vista 3D',
     boardPrivateBadge:'Privado',
     ttShareRoom:'Compartir sala (link público)',
-    lighting3D:'☀ Iluminación', tt3DLighting:'Iluminación volumétrica — simula luz natural de techo',
   },
   en: {
     upload:'↑ Upload', uploadPhotos:'Photos', report:'≡ Report', config:'⚙ Config', exportJpeg:'Export',
@@ -1484,7 +1483,6 @@ const I18N = {
     shareActiveProjectType:'Project — read only', shareActiveRoomType:'Room — 3D view',
     boardPrivateBadge:'Private',
     ttShareRoom:'Share room (public link)',
-    lighting3D:'☀ Lighting', tt3DLighting:'Volumetric lighting — simulates natural ceiling light',
   },
 };
 
@@ -1846,9 +1844,6 @@ function App() {
   const togglePersonMoveRef  = useRef(null);
   const toggle3DWalkRef      = useRef(null);
   const copy3DItemRef        = useRef(null);
-  const set3DLightingRef     = useRef(null);
-  const [light3DVolume, setLight3DVolume] = useState(() => localStorage.getItem('tableau-3d-lighting') === 'true');
-  const light3DVolumeRef = useRef(localStorage.getItem('tableau-3d-lighting') === 'true');
   const roomViewRef          = useRef('board');
   const undoStack           = useRef([]);
   const redoStack           = useRef([]);
@@ -2308,23 +2303,11 @@ function App() {
       const d2 = new THREE.DirectionalLight(0xffffff, 0.25);
       d2.position.set(cx - span * 0.5, ch * 0.5, cz + span); scene.add(d2);
 
-      const applyLighting = (volumetric) => {
-        if (volumetric) {
-          ambLight.intensity = 0.4;  ambLight.color.set(0xffffff);
-          d1.intensity = 0.8;        d1.color.set(0xfff8f0);
-          d1.position.set(cx + span, ch * 2, cz + span * 0.7);
-          d2.intensity = 0.3;        d2.color.set(0xf0f4ff);
-          d2.position.set(cx - span * 0.4, ch * 0.6, cz - span * 0.7);
-        } else {
-          ambLight.intensity = 0.55; ambLight.color.set(0xffffff);
-          d1.intensity = 0.7;        d1.color.set(0xffffff);
-          d1.position.set(cx + span, ch * 2, cz - span * 0.5);
-          d2.intensity = 0.25;       d2.color.set(0xffffff);
-          d2.position.set(cx - span * 0.5, ch * 0.5, cz + span);
-        }
-      };
-      applyLighting(light3DVolumeRef.current);
-      set3DLightingRef.current = applyLighting;
+      ambLight.intensity = 0.4;  ambLight.color.set(0xffffff);
+      d1.intensity = 0.8;        d1.color.set(0xfff8f0);
+      d1.position.set(cx + span, ch * 2, cz + span * 0.7);
+      d2.intensity = 0.3;        d2.color.set(0xf0f4ff);
+      d2.position.set(cx - span * 0.4, ch * 0.6, cz - span * 0.7);
 
 
       // Floor grid
@@ -8774,7 +8757,6 @@ ${rows}
                     <button className={`btn${show3DPerson?' active':''}`} title={lang==='es'?'Mostrar escala humana (175 cm)':'Show human scale (175 cm)'} onClick={() => { if (show3DPerson && personMoveMode) togglePersonMoveRef.current?.(); toggle3DPersonRef.current?.(); setShow3DPerson(v => !v); }}>{lang==='es'?'👤 Persona':'👤 Person'}</button>
                     {show3DPerson && <button className={`btn${personMoveMode?' active':''}`} title={lang==='es'?'Arrastra la figura por el suelo de la sala':'Drag figure across the room floor'} onClick={() => togglePersonMoveRef.current?.()}>{lang==='es'?(personMoveMode?'✓ Listo':'↔ Mover'):(personMoveMode?'✓ Done':'↔ Move')}</button>}
                     <button className={`btn${walkMode3D?' active':''}`} title={lang==='es'?'Pasear por la sala — flechas para moverse y girar, clic para capturar ratón':'Walk through the room — arrows to move and turn, click to capture mouse'} onClick={() => toggle3DWalkRef.current?.()}>{lang==='es'?(walkMode3D?'✕ Salir paseo':'◉ Pasear'):(walkMode3D?'✕ Exit walk':'◉ Walk')}</button>
-                    <button className={`btn${light3DVolume?' active':''}`} title={t('tt3DLighting')} onClick={() => { const nv = !light3DVolumeRef.current; light3DVolumeRef.current = nv; setLight3DVolume(nv); localStorage.setItem('tableau-3d-lighting', String(nv)); set3DLightingRef.current?.(nv); }}>{t('lighting3D')}</button>
                   </div>
                 </div>
                 <div className="room-panel">
