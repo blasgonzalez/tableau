@@ -374,6 +374,58 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .bitem:hover .bitem-bar{opacity:1}
 .canvas.zone-sel .bitem:not(.sel):hover .bitem-bar{opacity:0;pointer-events:none}
 
+/* ── COMMENT BADGES ── */
+.comment-badge{position:absolute;top:0;right:0;zoom:calc(1 / var(--canvas-zoom,1));background:var(--panel2);border:1px solid var(--border2);color:var(--sub);font-size:8px;line-height:1;padding:2px 5px;display:flex;align-items:center;gap:2px;z-index:260;pointer-events:all;cursor:pointer;white-space:nowrap}
+.comment-badge.has-pending{border-color:var(--acc-dim);color:var(--acc)}
+.comment-badge:hover{color:var(--text);border-color:var(--acc)}
+
+/* ── COMMENT PANEL ── */
+.comment-panel{position:fixed;top:46px;right:0;bottom:0;width:320px;background:var(--surf);border-left:1px solid var(--border);display:flex;flex-direction:column;z-index:400;overflow:hidden;box-shadow:-4px 0 18px rgba(0,0,0,.4)}
+.comment-panel-hd{height:42px;display:flex;align-items:center;gap:8px;padding:0 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.comment-panel-title{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--sub);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.comment-panel-close{width:22px;height:22px;border:1px solid var(--border2);background:transparent;color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.comment-panel-close:hover{color:var(--text);border-color:var(--acc-dim)}
+.comment-panel-filters{padding:6px 10px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;gap:6px;align-items:center}
+.comment-list{flex:1;overflow-y:auto;overflow-x:hidden}
+.comment-list::-webkit-scrollbar{width:3px}
+.comment-list::-webkit-scrollbar-thumb{background:var(--border2)}
+.comment-item{padding:8px 10px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:4px}
+.comment-item:last-child{border-bottom:none}
+.comment-item-hd{display:flex;align-items:center;gap:5px}
+.comment-item-author{font-size:8px;color:var(--acc-dim);letter-spacing:.4px;font-weight:600;text-transform:uppercase;flex-shrink:0}
+.comment-item-date{font-size:8px;color:var(--muted);letter-spacing:.2px;flex:1}
+.comment-item-text{font-size:11px;color:var(--text);line-height:1.45;white-space:pre-wrap;word-break:break-word}
+.comment-item-actions{display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin-top:2px}
+.comment-status-badge{font-size:7px;letter-spacing:1px;text-transform:uppercase;padding:1px 5px;border-radius:2px;font-weight:600;flex-shrink:0}
+.comment-status-badge.pending{background:rgba(196,137,74,.15);color:var(--acc);border:1px solid var(--acc-dim)}
+.comment-status-badge.published{background:rgba(80,160,80,.12);color:#6acc6a;border:1px solid rgba(80,160,80,.3)}
+.comment-status-badge.rejected{background:rgba(196,80,80,.12);color:#e06060;border:1px solid rgba(196,80,80,.3)}
+.comment-composer{padding:10px;border-top:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;gap:6px}
+.comment-composer textarea,.comment-composer-ta{width:100%;background:var(--deep);border:1px solid var(--border2);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px;padding:6px 8px;resize:none;outline:none;line-height:1.4;min-height:64px;box-sizing:border-box}
+.comment-composer textarea:focus,.comment-composer-ta:focus{border-color:var(--acc-dim)}
+.comment-composer-name{width:100%;background:var(--deep);border:1px solid var(--border2);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px;padding:5px 8px;outline:none;box-sizing:border-box}
+.comment-composer-name:focus{border-color:var(--acc-dim)}
+.comment-composer-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.comment-composer-chk{display:flex;align-items:center;gap:3px;font-size:9px;color:var(--dim);cursor:pointer;user-select:none;letter-spacing:.3px}
+.comment-empty{padding:24px 12px;text-align:center;font-size:9px;color:var(--muted);letter-spacing:.5px}
+.comment-edit-ta{width:100%;background:var(--deep);border:1px solid var(--acc-dim);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px;padding:5px 7px;resize:none;outline:none;line-height:1.4;box-sizing:border-box}
+
+/* ── MODERATION MODAL ── */
+.mod-overlay{position:fixed;inset:0;background:var(--bg);z-index:9500;display:flex;flex-direction:column;overflow:hidden}
+.mod-hd{height:48px;display:flex;align-items:center;gap:10px;padding:0 20px;border-bottom:1px solid var(--border);flex-shrink:0}
+.mod-title{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text);flex:1}
+.mod-list{flex:1;overflow-y:auto;padding:12px 20px;display:flex;flex-direction:column;gap:8px}
+.mod-row{background:var(--panel);border:1px solid var(--border2);padding:10px 12px;display:flex;gap:10px;align-items:flex-start}
+.mod-row-meta{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.mod-row-proj{font-size:8px;letter-spacing:.6px;color:var(--acc-dim);text-transform:uppercase}
+.mod-row-entity{font-size:8px;color:var(--dim);letter-spacing:.3px}
+.mod-row-author{font-size:8px;color:var(--sub);letter-spacing:.3px;margin-top:2px}
+.mod-row-text{font-size:11px;color:var(--text);line-height:1.4;white-space:pre-wrap;word-break:break-word;margin-top:3px}
+.mod-row-actions{display:flex;flex-direction:column;gap:4px;flex-shrink:0}
+.mod-approve-wrap{display:flex;flex-direction:column;gap:3px}
+.mod-vis-sel{background:var(--deep);border:1px solid var(--border2);color:var(--text);font-size:9px;padding:3px 6px;font-family:'IBM Plex Mono',monospace;outline:none;cursor:pointer;appearance:none}
+.mod-empty{padding:32px;text-align:center;font-size:10px;color:var(--muted);letter-spacing:.8px}
+
 .ibc{width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;border:none;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-weight:500;background:var(--surf);color:var(--sub)}
 .ibc:hover{color:var(--text)}
 .ibc.del{background:var(--danger);color:#fff}
@@ -1288,6 +1340,30 @@ const I18N = {
     shareActiveProjectType:'Proyecto — solo lectura', shareActiveRoomType:'Sala — vista 3D',
     boardPrivateBadge:'Privado',
     ttShareRoom:'Compartir sala (link público)',
+    commentsBtn:'Comentarios', commentsTitle:'Comentarios', commentsPanelClose:'Cerrar',
+    commentsPending:'pendiente', commentsPendingPlural:'pendientes',
+    commentsEmpty:'Sin comentarios aún', commentsOnlyPending:'Solo pendientes',
+    commentSend:'Enviar', commentPublish:'Publicar', commentEdit:'Editar', commentSave:'Guardar',
+    commentCancel:'Cancelar', commentDelete:'Eliminar',
+    commentVisPublic:'Público', commentVisPrivate:'Privado',
+    commentIncludeMemory:'Incluir en memoria', commentExcludeMemory:'Excluir de memoria',
+    commentVisToggle: v => v === 'public' ? 'Hacer privado' : 'Hacer público',
+    commentNamePh:'Tu nombre…', commentTextPh:'Escribe un comentario…',
+    commentStatusPending:'PENDIENTE', commentStatusPublished:'APROBADO', commentStatusRejected:'RECHAZADO',
+    commentAuthorOwner: u => u || 'owner',
+    commentAuthorVisitor: n => n || 'visitante',
+    allowCommentsLabel:'Permitir comentarios de visitantes',
+    modTitle:'Moderación de comentarios', modPendingCount: n => `${n} pendiente${n!==1?'s':''}`,
+    modProject:'Proyecto', modEntity:'Entidad', modAuthor:'Autor', modDate:'Fecha',
+    modApprove:'Aprobar', modReject:'Rechazar', modEmpty:'No hay comentarios pendientes',
+    modApprovePublic:'Público', modApprovePrivate:'Privado',
+    modConfirmReject:'¿Rechazar este comentario?',
+    ttComments: n => n > 0 ? `Comentarios (${n})` : 'Comentarios',
+    ttModeration: n => n > 0 ? `Moderación — ${n} pendiente${n!==1?'s':''}` : 'Moderación',
+    commentsBoardLabel: n => `Tablero · ${n} comentario${n!==1?'s':''}`,
+    commentsRoomLabel: n => `Sala · ${n} comentario${n!==1?'s':''}`,
+    commentsProjectLabel: n => `Proyecto · ${n} comentario${n!==1?'s':''}`,
+    commentsObsTitle:'Observaciones',
   },
   en: {
     upload:'↑ Upload', uploadPhotos:'Photos', report:'≡ Report', config:'⚙ Config', exportJpeg:'Export',
@@ -1471,6 +1547,31 @@ const I18N = {
     shortcutsTitle:'Keyboard shortcuts',
     scGeneral:'General', scCanvasSel:'Canvas — selection', scCanvasEdit:'Canvas — editing', scCanvasMove:'Canvas — movement', scCanvasZoom:'Canvas — zoom', scCanvasRot:'Canvas — rotation', scLibrary:'Library', sc3D:'3D view / Walk', scRoom:'Floor plan', scGallery:'Gallery',
     shortcutsFooter:'Shortcuts marked with ⚠️ are not shown in the UI — now you know them.',
+    ttShareRoom:'Share room (public link)',
+    commentsBtn:'Comments', commentsTitle:'Comments', commentsPanelClose:'Close',
+    commentsPending:'pending', commentsPendingPlural:'pending',
+    commentsEmpty:'No comments yet', commentsOnlyPending:'Pending only',
+    commentSend:'Send', commentPublish:'Publish', commentEdit:'Edit', commentSave:'Save',
+    commentCancel:'Cancel', commentDelete:'Delete',
+    commentVisPublic:'Public', commentVisPrivate:'Private',
+    commentIncludeMemory:'Include in report', commentExcludeMemory:'Exclude from report',
+    commentVisToggle: v => v === 'public' ? 'Make private' : 'Make public',
+    commentNamePh:'Your name…', commentTextPh:'Write a comment…',
+    commentStatusPending:'PENDING', commentStatusPublished:'APPROVED', commentStatusRejected:'REJECTED',
+    commentAuthorOwner: u => u || 'owner',
+    commentAuthorVisitor: n => n || 'visitor',
+    allowCommentsLabel:'Allow visitor comments',
+    modTitle:'Comment moderation', modPendingCount: n => `${n} pending`,
+    modProject:'Project', modEntity:'Entity', modAuthor:'Author', modDate:'Date',
+    modApprove:'Approve', modReject:'Reject', modEmpty:'No pending comments',
+    modApprovePublic:'Public', modApprovePrivate:'Private',
+    modConfirmReject:'Reject this comment?',
+    ttComments: n => n > 0 ? `Comments (${n})` : 'Comments',
+    ttModeration: n => n > 0 ? `Moderation — ${n} pending` : 'Moderation',
+    commentsBoardLabel: n => `Board · ${n} comment${n!==1?'s':''}`,
+    commentsRoomLabel: n => `Room · ${n} comment${n!==1?'s':''}`,
+    commentsProjectLabel: n => `Project · ${n} comment${n!==1?'s':''}`,
+    commentsObsTitle:'Observations',
     shareRoom:'Share room', shareRoomTitle:'Share room — 3D view', shareRoomLink:'Room link',
     shareRoomGenerate:'Generate link', shareRoomRevoke:'Revoke', shareRoomCopy:'Copy link',
     shareRoomCopied:'Link copied', shareRoomRegenerate:'Regenerate (revokes current)',
@@ -1482,7 +1583,6 @@ const I18N = {
     shareRoomInviteSent:'Room invitation sent',
     shareActiveProjectType:'Project — read only', shareActiveRoomType:'Room — 3D view',
     boardPrivateBadge:'Private',
-    ttShareRoom:'Share room (public link)',
   },
 };
 
@@ -1794,6 +1894,27 @@ function App() {
   const [adminEdit,     setAdminEdit]     = useState(null);  // {uid, type:'quota'|'expiry', value}
   const [adminMsg,      setAdminMsg]      = useState('');
 
+  // ── Comment system state ──
+  const [commentSummary,    setCommentSummary]    = useState({}); // {"entityType:entityId": {total, pending}}
+  const commentSummaryRef   = useRef({});
+  const [commentPanel,      setCommentPanel]      = useState(null); // {entityType, entityId, boardId, label} | null
+  const commentPanelRef     = useRef(null);
+  const [commentList,       setCommentList]       = useState([]); // array of comments for open panel
+  const commentListRef      = useRef([]);
+  const [commentLoading,    setCommentLoading]    = useState(false);
+  const [commentDraft,      setCommentDraft]      = useState({ text: '', name: '', visibility: 'public', includeInMemory: false });
+  const [commentEditId,     setCommentEditId]     = useState(null); // cid being edited
+  const [commentEditText,   setCommentEditText]   = useState('');
+  const [commentOnlyPending, setCommentOnlyPending] = useState(false);
+  const [pendingCount,      setPendingCount]      = useState(0);
+  const pendingCountRef     = useRef(0);
+  const [modOpen,           setModOpen]           = useState(false);
+  const [modPending,        setModPending]        = useState([]); // [{...comment, projectId, projectName}]
+  const [modLoading,        setModLoading]        = useState(false);
+  const [modVisChoice,      setModVisChoice]      = useState({}); // {cid: 'public'|'private'}
+  const [shareAllowComments, setShareAllowComments] = useState(false); // for project share modal
+  const [roomShareAllowComments, setRoomShareAllowComments] = useState(false); // for room share modal
+
   useLayoutEffect(() => {
     const th = THEMES[theme];
     if (!th) return;
@@ -1978,6 +2099,136 @@ function App() {
     if (bid) setAllBoardItems(prev => ({ ...prev, [bid]: items }));
   }, [items, bid]);
 
+  // ── Comment system helpers ────────────────────────────────────────────────
+  const loadCommentSummary = (forPid) => {
+    const p = forPid || pidRef.current;
+    if (!p) return;
+    api.get(`/api/projects/${p}/comments/summary`).then(d => {
+      commentSummaryRef.current = d;
+      setCommentSummary(d);
+    }).catch(() => {});
+    if (authMode && !shareRoleRef.current) {
+      api.get('/api/comments/pending?count=1').then(d => {
+        pendingCountRef.current = d.count || 0;
+        setPendingCount(d.count || 0);
+      }).catch(() => {});
+    }
+  };
+
+  const openCommentPanel = (entityType, entityId, boardId, label) => {
+    const panel = { entityType, entityId, boardId: boardId || null, label: label || entityType };
+    commentPanelRef.current = panel;
+    setCommentPanel(panel);
+    setCommentOnlyPending(false);
+    setCommentDraft({ text: '', name: localStorage.getItem('tableau-visitor-name') || '', visibility: 'public', includeInMemory: false });
+    setCommentEditId(null);
+    setCommentLoading(true);
+    setCommentList([]);
+    commentListRef.current = [];
+    const pid2 = pidRef.current;
+    if (!pid2) { setCommentLoading(false); return; }
+    api.get(`/api/projects/${pid2}/comments?entityType=${entityType}&entityId=${entityId}`).then(list => {
+      commentListRef.current = list;
+      setCommentList(list);
+      setCommentLoading(false);
+    }).catch(() => setCommentLoading(false));
+  };
+
+  const refreshCommentPanel = () => {
+    const panel = commentPanelRef.current;
+    if (!panel) return;
+    const pid2 = pidRef.current;
+    if (!pid2) return;
+    api.get(`/api/projects/${pid2}/comments?entityType=${panel.entityType}&entityId=${panel.entityId}`).then(list => {
+      commentListRef.current = list;
+      setCommentList(list);
+    }).catch(() => {});
+    loadCommentSummary(pid2);
+  };
+
+  const submitComment = () => {
+    const panel = commentPanelRef.current;
+    const pid2 = pidRef.current;
+    if (!panel || !pid2 || !commentDraft.text.trim()) return;
+    const isGuest = !!shareRoleRef.current || roomShareModeRef.current;
+    if (isGuest && !commentDraft.name.trim()) return;
+    if (isGuest) localStorage.setItem('tableau-visitor-name', commentDraft.name.trim());
+    const body = {
+      entityType: panel.entityType,
+      entityId:   panel.entityId,
+      boardId:    panel.boardId || undefined,
+      text:       commentDraft.text.trim(),
+      ...(isGuest ? { authorName: commentDraft.name.trim() } : { visibility: commentDraft.visibility, includeInMemory: commentDraft.includeInMemory }),
+    };
+    api.post(`/api/projects/${pid2}/comments`, body).then(() => {
+      setCommentDraft(d => ({ ...d, text: '' }));
+      refreshCommentPanel();
+    }).catch(() => {});
+  };
+
+  const saveCommentEdit = (cid) => {
+    const pid2 = pidRef.current;
+    if (!pid2 || !commentEditText.trim()) return;
+    api.patch(`/api/projects/${pid2}/comments/${cid}`, { text: commentEditText.trim() }).then(() => {
+      setCommentEditId(null);
+      refreshCommentPanel();
+    }).catch(() => {});
+  };
+
+  const deleteComment = (cid) => {
+    const pid2 = pidRef.current;
+    if (!pid2) return;
+    api.del(`/api/projects/${pid2}/comments/${cid}`).then(() => refreshCommentPanel()).catch(() => {});
+  };
+
+  const toggleCommentVisibility = (c) => {
+    const pid2 = pidRef.current;
+    if (!pid2) return;
+    api.patch(`/api/projects/${pid2}/comments/${c.id}`, { visibility: c.visibility === 'public' ? 'private' : 'public' })
+      .then(() => refreshCommentPanel()).catch(() => {});
+  };
+
+  const toggleCommentMemory = (c) => {
+    const pid2 = pidRef.current;
+    if (!pid2) return;
+    api.patch(`/api/projects/${pid2}/comments/${c.id}`, { includeInMemory: !c.includeInMemory })
+      .then(() => refreshCommentPanel()).catch(() => {});
+  };
+
+  const loadModPending = () => {
+    setModLoading(true);
+    api.get('/api/comments/pending').then(list => {
+      setModPending(list);
+      setModLoading(false);
+    }).catch(() => setModLoading(false));
+  };
+
+  const approveComment = (c, visibility) => {
+    api.post(`/api/projects/${c.projectId}/comments/${c.id}/approve`, { visibility }).then(() => {
+      loadModPending();
+      loadCommentSummary();
+      refreshCommentPanel();
+    }).catch(() => {});
+  };
+
+  const rejectComment = (c) => {
+    api.post(`/api/projects/${c.projectId}/comments/${c.id}/reject`, {}).then(() => {
+      loadModPending();
+      loadCommentSummary();
+      refreshCommentPanel();
+    }).catch(() => {});
+  };
+
+  // Reload comment summary when project changes
+  useEffect(() => {
+    setCommentSummary({});
+    commentSummaryRef.current = {};
+    if (commentPanelRef.current) { commentPanelRef.current = null; setCommentPanel(null); }
+    if (pid) loadCommentSummary(pid);
+  }, [pid]);
+  useEffect(() => { setCommentPanel(null); commentPanelRef.current = null; }, [bid]);
+  useEffect(() => { setCommentPanel(null); commentPanelRef.current = null; }, [roomView]);
+
   // ── init ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     // 204 = modo local (servidor necesita latidos para auto-apagarse).
@@ -2025,6 +2276,7 @@ function App() {
           roomShareModeRef.current = true;
           setRoomShareMode(true);
           setRoomShareInfo(d);
+          setRoomShareAllowComments(d.allowComments || false);
           await load3DLibs();
           setPid(d.projectId); // triggers pid useEffect which loads room and switches to 3D
           setReady(true);
@@ -2045,6 +2297,7 @@ function App() {
           await fetch(`/api/share/${urlShareToken}/activate`, { method: 'POST' }).catch(() => {});
           setShareRole(d.role);
           shareRoleRef.current = d.role;
+          setShareAllowComments(d.allowComments || false);
           setProjects([d.project]);
           setPid(d.project.id);
           setReady(true);
@@ -3729,9 +3982,23 @@ function App() {
   };
 
   // ── print memoria ─────────────────────────────────────────────────────────
-  const printMemoria = () => {
+  const printMemoria = async () => {
     const proj = projects.find(p => p.id === pid);
     const includeHeader = memIncludeHeader;
+    // Fetch comments flagged inMemory (owner only, best-effort)
+    let memComments = {};
+    if (!shareRole) {
+      try {
+        const cl = await api.get(`/api/projects/${pid}/comments?inMemory=1`);
+        if (Array.isArray(cl)) {
+          cl.forEach(c => {
+            const key = `${c.entityType}:${c.entityId}`;
+            if (!memComments[key]) memComments[key] = [];
+            memComments[key].push(c);
+          });
+        }
+      } catch(e) {}
+    }
     const locale = lang === 'en' ? 'en-GB' : 'es-ES';
     const date = new Date().toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });
     const hdr = t('colHdr');
@@ -3867,8 +4134,33 @@ function App() {
         });
         rows += `</div>`;
       }
+      // Board and photo comments flagged for memory
+      const esc2 = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
+      const bCmts = memComments[`board:${board.id}`];
+      if (bCmts && bCmts.length) {
+        rows += `<div class="obs-section"><div class="obs-hd">${t('commentsObsTitle')}</div>`;
+        bCmts.forEach(c => { rows += `<div class="obs-item">${c.guestName?`<span class="obs-author">${esc2(c.guestName)}</span> `:''}<span class="obs-text">${esc2(c.text).replace(/\n/g,'<br>')}</span></div>`; });
+        rows += `</div>`;
+      }
+      boardIt.forEach(item => {
+        if (!item.photoId) return;
+        const pCmts = memComments[`photo:${item.photoId}`];
+        if (!pCmts || !pCmts.length) return;
+        const photo2 = photosRef.current.find(p => p.id === item.photoId);
+        rows += `<div class="obs-section"><div class="obs-hd">${esc2(photo2?.name || item.photoId)}</div>`;
+        pCmts.forEach(c => { rows += `<div class="obs-item">${c.guestName?`<span class="obs-author">${esc2(c.guestName)}</span> `:''}<span class="obs-text">${esc2(c.text).replace(/\n/g,'<br>')}</span></div>`; });
+        rows += `</div>`;
+      });
       rows += `</section>`;
     });
+    // Project-level comments flagged for memory
+    const escP = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
+    const projCmts = memComments[`project:${pid}`];
+    if (projCmts && projCmts.length) {
+      rows += `<section><h2>${t('commentsObsTitle')}</h2>`;
+      projCmts.forEach(c => { rows += `<div class="obs-item">${c.guestName?`<span class="obs-author">${escP(c.guestName)}</span> `:''}<span class="obs-text">${escP(c.text).replace(/\n/g,'<br>')}</span></div>`; });
+      rows += `</section>`;
+    }
     const html = `<!DOCTYPE html><html lang="${lang}"><head><meta charset="UTF-8"><title>${proj?.name || ''} — ${t('reportTitle')} — ${date}</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
@@ -3902,6 +4194,11 @@ function App() {
   .note-link-row{margin-top:5px}
   .note-link{font-size:10px;color:#1a6fbf;text-decoration:underline;word-break:break-all}
   .note-link-domain{color:#888;font-size:9px;margin-left:4px}
+  .obs-section{margin-top:10px}
+  .obs-hd{font-size:8px;text-transform:uppercase;letter-spacing:1px;color:#888;border-top:1px solid #eee;padding-top:6px;margin-bottom:4px}
+  .obs-item{padding:4px 0 4px 8px;border-left:2px solid #e0e0e0;margin-bottom:4px;font-size:10px}
+  .obs-author{font-weight:700;color:#555;margin-right:4px}
+  .obs-text{color:#444;line-height:1.5}
   @media print{@page{margin:12mm 14mm} body{padding:0;margin:0;max-width:none} section+section{page-break-before:always} .preview-wrap{page-break-inside:avoid}}
 </style></head><body>
 ${includeHeader ? `<section style="margin-bottom:0">
@@ -7536,6 +7833,9 @@ ${rows}
           <span className="room-share-sep">›</span>
           <span className="room-share-name">{roomShareInfo.roomName || (lang==='es'?'Sala':'Room')}</span>
           <span className="room-share-badge">{t('shareRoomBadge')}</span>
+          {roomShareAllowComments && (
+            <button className="tbtn" title={t('commentsBtn')} style={{marginLeft:8,fontSize:14}} onClick={() => openCommentPanel('room', roomShareInfo.roomId, null, roomShareInfo.roomName || (lang==='es'?'Sala':'Room'))}>💬</button>
+          )}
         </div>
       )}
 
@@ -7718,11 +8018,27 @@ ${rows}
                   </button>) : null,
                 report: (!shareRole && !tmplEditMode && pid && boards.length > 0) ? (
                   <button key="report" className="tbtn" data-tooltip={t('ttMemory')} onClick={() => setModal('memoria')}><SvgReport/></button>) : null,
+                comments: (!tmplEditMode && pid) ? (() => {
+                  if (roomView === 'board' && bid) {
+                    const boardTotal = Object.entries(commentSummary).filter(([k]) => { const it = (items||[]).find(i => k===`photo:${i.photoId}`||k===`zone:${i.id}`||k===`text:${i.id}`||k===`grid:${i.id}`); return !!it; }).reduce((s,[,v])=>s+(v.total||0),0) + (commentSummary[`board:${bid}`]?.total||0);
+                    const hasPend = !shareRole && Object.entries(commentSummary).filter(([k]) => { const it = (items||[]).find(i => k===`photo:${i.photoId}`||k===`zone:${i.id}`||k===`text:${i.id}`||k===`grid:${i.id}`); return !!it; }).some(([,v])=>v.pending>0);
+                    return <button key="comments" className={`tbtn${commentPanel?'.on':''}`} title={t('ttComments', boardTotal)} onClick={() => openCommentPanel('board', bid, bid, activeBoard?.name)}>💬{boardTotal>0&&<span className="tbtn-dot" style={hasPend?{background:'var(--acc)'}:undefined}/>}</button>;
+                  }
+                  if ((roomView === 'room' || roomView === '3d') && room) {
+                    const _rid = activeRoomId || room.id;
+                    const _cs = commentSummary[`room:${_rid}`];
+                    const _n = _cs?.total||0;
+                    const _pend = !shareRole && (_cs?.pending||0)>0;
+                    return <button key="comments" className={`tbtn${commentPanel?'.on':''}`} title={t('ttComments', _n)} onClick={() => openCommentPanel('room', _rid, null, room?.name||(lang==='es'?'Sala':'Room'))}>💬{_n>0&&<span className="tbtn-dot" style={_pend?{background:'var(--acc)'}:undefined}/>}</button>;
+                  }
+                  return null;
+                })() : null,
               };
               const groups = [
                 [mk.present, mk.report],
                 [mk.versions, mk.export],
                 [mk.grid, mk.config],
+                [mk.comments],
               ].map(g => g.filter(Boolean)).filter(g => g.length);
               const util = [
                 !sbOpen ? <button key="panel" className="tbtn" title={t('showPanel')} onClick={() => setSbOpen(true)}><SvgPanel/></button> : null,
@@ -7730,6 +8046,11 @@ ${rows}
                   <button key="invites" className="tbtn" title={t('shareActiveTitle')}
                     onClick={() => api.get('/api/shares').then(d => setSharesPanel(d)).catch(() => setSharesPanel([]))}>
                     <SvgShareNet/>
+                  </button>) : null,
+                (!shareRole && authMode && pendingCount > 0) ? (
+                  <button key="moderation" className="tbtn" title={t('ttModeration', pendingCount)}
+                    style={{position:'relative'}} onClick={() => { loadModPending(); setModOpen(true); }}>
+                    💬<span style={{position:'absolute',top:2,right:2,background:'var(--acc)',color:'var(--bg)',borderRadius:'50%',width:12,height:12,fontSize:7,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:600,lineHeight:1}}>{pendingCount}</span>
                   </button>) : null,
                 <button key="shortcuts" className="tbtn" data-tooltip={t('ttShortcuts')}
                   style={{fontSize:13,fontWeight:600}}
@@ -7898,6 +8219,7 @@ ${rows}
                             ) : (
                               <span className="nproj-name" title={p.name}>{p.name}</span>
                             )}
+                            {isActive && (() => { const _cs = commentSummary[`project:${p.id}`]; const _n = _cs?.total||0; const _pend = !shareRole && (_cs?.pending||0)>0; if (_n===0 && shareRole) return null; return <button className="tbtn" style={{fontSize:10,padding:'1px 4px',flexShrink:0,marginLeft:2}} title={t('ttComments',_n)} onClick={e=>{ e.stopPropagation(); openCommentPanel('project', p.id, null, p.name); }}>💬{_n>0&&<span className="tbtn-dot" style={_pend?{background:'var(--acc)'}:undefined}/>}</button>; })()}
                             {!shareRole && <div className="nrow-acts">
                               <button className="nact edit" title={t('exportProjectBtn')} onClick={e => exportProject(p.id, e)}><SvgExport size={11}/></button>
                               <button className="nact edit" title={t('renameBtn')} onClick={e => startRename('project', p.id, p.name, e)}>✎</button>
@@ -7995,7 +8317,7 @@ ${rows}
                                       {!shareRole && <div className="nrow-acts">
                                         <button className="nact edit" title={t('renameBtn')}       onClick={e=>startRename('room',r.id,r.name,e)}>✎</button>
                                         <button className="nact edit" title={t('salaDuplicate')}   onClick={e=>duplicateRoom(r.id,e)}>⧉</button>
-                                        {authMode && <button className="nact edit" title={t('shareRoom')} onClick={e=>{e.stopPropagation();const rid=r.id;setRoomShareModal({rid,loading:true});api.get(`/api/projects/${pid}/rooms/${rid}/share`).then(d=>setRoomShareModal({rid,token:d.token,url:d.url})).catch(()=>setRoomShareModal({rid,token:null,url:null}));}}><SvgShareNet size={10}/></button>}
+                                        {authMode && <button className="nact edit" title={t('shareRoom')} onClick={e=>{e.stopPropagation();const rid=r.id;setRoomShareModal({rid,loading:true});api.get(`/api/projects/${pid}/rooms/${rid}/share`).then(d=>setRoomShareModal({rid,token:d.token,url:d.url,allowComments:d.allowComments||false})).catch(()=>setRoomShareModal({rid,token:null,url:null}));}}><SvgShareNet size={10}/></button>}
                                         <button className="nact del"  title={t('salaDelete')}      onClick={e=>{e.stopPropagation();switchRoom(r.id);setTimeout(deleteRoom,0);}}>×</button>
                                       </div>}
                                     </div>
@@ -8376,7 +8698,7 @@ ${rows}
                             const rid = activeRoomId || room.id;
                             setRoomShareModal({ rid, loading: true });
                             api.get(`/api/projects/${pid}/rooms/${rid}/share`)
-                              .then(d => setRoomShareModal({ rid, token: d.token, url: d.url }))
+                              .then(d => setRoomShareModal({ rid, token: d.token, url: d.url, allowComments: d.allowComments||false }))
                               .catch(() => setRoomShareModal({ rid, token: null, url: null }));
                           }}>
                           <SvgShareNet size={11}/>
@@ -8513,6 +8835,7 @@ ${rows}
                           {roomName || (lang==='es'?'Sin nombre…':'Unnamed…')}
                         </span>
                       )}
+                      {!roomNameEdit && (() => { const roomId = activeRoomId || room?.id; if (!roomId) return null; const _cs = commentSummary[`room:${roomId}`]; const _n = _cs?.total||0; const _pend = !shareRole && (_cs?.pending||0)>0; if (_n===0 && shareRole) return null; return <button className="tbtn" style={{fontSize:10,padding:'1px 4px',flexShrink:0}} title={t('ttComments',_n)} onClick={()=>openCommentPanel('room', roomId, null, roomName||(lang==='es'?'Sala':'Room'))}>💬{_n>0&&<span className="tbtn-dot" style={_pend?{background:'var(--acc)'}:undefined}/>}</button>; })()}
                     </div>
                     <div className="room-panel-hd" style={{fontSize:8,paddingTop:6,paddingBottom:6,display:'flex',alignItems:'center',gap:6}}>
                       <span style={{flex:1}}>{t('salaWallsHd')}</span>
@@ -9079,6 +9402,7 @@ ${rows}
                           >×</button>
                         </div>
                         <div className="zitem-body" style={{background: zClr.fill, border:`2px dashed ${zClr.border}`}}/>
+                        {(() => { const _ck = `zone:${item.id}`; const _cs = commentSummary[_ck]; if (!_cs || _cs.total === 0) return null; const _hp = !shareRole && _cs.pending > 0; return <div className={`comment-badge${_hp?' has-pending':''}`} onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); openCommentPanel('zone', item.id, bid, item.label||'zone'); }}>💬 {_cs.total}</div>; })()}
 
                         {sel.includes(item.id) && (
                           <div style={{
@@ -9136,6 +9460,7 @@ ${rows}
                         onMouseLeave={clearHoverInfo}
                       >
                         {item.locked && <div className="lock-badge"><SvgLock/></div>}
+                        {(() => { const _ck = `text:${item.id}`; const _cs = commentSummary[_ck]; if (!_cs || _cs.total === 0) return null; const _hp = !shareRole && _cs.pending > 0; return <div className={`comment-badge${_hp?' has-pending':''}`} onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); openCommentPanel('text', item.id, bid, item.text?.split('\n')[0]||'text'); }}>💬 {_cs.total}</div>; })()}
                         <div className="bitem-bar" onPointerDown={e => e.stopPropagation()} style={_bbarBelow}>
                           <button className="ibc rot" title={t('rotateBtn')} onPointerDown={e => { e.stopPropagation(); if (!item.locked) onFreeRotatePD(e, item.id); }} onClick={e => { e.stopPropagation(); if (rotBtnDraggedRef.current) { rotBtnDraggedRef.current = false; return; } rotateItem(item.id); }}>↻</button>
                           <button className="ibc" title={t(item.locked ? 'unlockBtn' : 'lockBtn')} style={{color: item.locked ? 'var(--acc)' : undefined}} onClick={e => { e.stopPropagation(); updateItemLocked(item.id, !item.locked); }}>{item.locked ? <SvgUnlock/> : <SvgLock/>}</button>
@@ -9249,6 +9574,7 @@ ${rows}
                         })}
                         {gridDropTarget === item.id && <div className="gitem-drop-hint">+ {t('gridItemAddHint')}</div>}
                         <div className="gitem-outline"/>
+                        {(() => { const _ck = `grid:${item.id}`; const _cs = commentSummary[_ck]; if (!_cs || _cs.total === 0) return null; const _hp = !shareRole && _cs.pending > 0; return <div className={`comment-badge${_hp?' has-pending':''}`} onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); openCommentPanel('grid', item.id, bid, item.label||'grid'); }}>💬 {_cs.total}</div>; })()}
                         <div className="gitem-bar" style={item.y * zoom < 32 ? {bottom:'auto',top:'100%',marginTop:2} : {marginBottom:2}} onPointerDown={e => e.stopPropagation()}>
                           <button className="ibc fwd" title={t('bringFwdBtn')} onClick={e => { e.stopPropagation(); bringFwd(item.id); }}>↑</button>
                           <div className="gitem-sep"/>
@@ -9405,6 +9731,7 @@ ${rows}
                       onMouseLeave={clearHoverInfo}
                     >
                       {item.locked && <div className="lock-badge"><SvgLock/></div>}
+                      {(() => { const _ck = `photo:${item.photoId}`; const _cs = commentSummary[_ck]; if (!_cs || _cs.total === 0) return null; const _hp = !shareRole && _cs.pending > 0; return <div className={`comment-badge${_hp?' has-pending':''}`} onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); openCommentPanel('photo', item.photoId, bid, item.label || photo?.name); }}>💬 {_cs.total}</div>; })()}
                       <div className="bitem-bar" onPointerDown={e => e.stopPropagation()} style={_bbarBelow}>
                         <button className="ibc rot" data-tooltip={t('ttRotate')}
                           onPointerDown={e => { e.stopPropagation(); if (!item.locked) onFreeRotatePD(e, item.id); }}
@@ -10281,6 +10608,9 @@ ${rows}
                 itemsRef.current = u; setItems(u); saveItemsNow(u); setCtxMenu(null); setLibSelection([]); libSelAnchorRef.current = null;
               }}>+ {t('gridItemAddSel')}</button>
               <button className="ctx-item" onClick={() => { ungroupGrid(ctxMenu.itemId); setCtxMenu(null); }}>⊞ {t('gridItemUngroup')}</button>
+              {!roomShareMode && <><div className="ctx-sep"/>
+                <button className="ctx-item" onClick={() => { openCommentPanel('grid', ctxMenu.itemId, bid); setCtxMenu(null); }}>💬 {t('commentsBtn')}</button>
+              </>}
               <div className="ctx-sep"/>
               <button className="ctx-item ctx-danger" onClick={() => { deleteItem(ctxMenu.itemId); setCtxMenu(null); }}>× {t('deleteBtn')}</button>
             </div>
@@ -10304,6 +10634,10 @@ ${rows}
                 const nit = itemsRef.current.map(i => i.id === ctxItem.id ? {...i, scaleContent: !ctxItem.scaleContent} : i);
                 setItems(nit); itemsRef.current = nit; saveItemsNow(nit); setCtxMenu(null);
               }}>{ctxItem.scaleContent ? '☑' : '☐'} {t('zoneScaleContent')}</button>
+              {!roomShareMode && <>
+                <div className="ctx-sep"/>
+                <button className="ctx-item" onClick={() => { openCommentPanel('zone', ctxItem.id, bid, ctxItem.label); setCtxMenu(null); }}>💬 {t('commentsBtn')}</button>
+              </>}
               <div className="ctx-sep"/>
               <button className="ctx-item ctx-danger" onClick={() => {
                 setCtxMenu(null);
@@ -10346,6 +10680,14 @@ ${rows}
                 style={{color: ctxItem.inMemory ? 'var(--acc)' : undefined}}>
                 {ctxItem.inMemory ? '★' : '☆'} {t(ctxItem.inMemory ? 'noteExcludeMemBtn' : 'noteInMemoryBtn')}
               </button>
+            </>}
+            {!isNote && !roomShareMode && <><div className="ctx-sep"/>
+              <button className="ctx-item" onClick={() => {
+                const et = ctxItem.type === 'text' ? 'text' : 'photo';
+                const ei = ctxItem.type === 'text' ? ctxItem.id : ctxItem.photoId;
+                const lbl = ctxItem.type === 'text' ? (ctxItem.text?.split('\n')[0]||'text') : (photos.find(p=>p.id===ctxItem.photoId)?.name||ctxItem.photoId);
+                openCommentPanel(et, ei, bid, lbl); setCtxMenu(null);
+              }}>💬 {t('commentsBtn')}</button>
             </>}
             <div className="ctx-sep"/>
             <button className="ctx-item" onClick={() => { dupItem(ctxMenu.itemId); setCtxMenu(null); }}>⧉ {t('duplicateItem')}</button>
@@ -11390,11 +11732,25 @@ ${rows}
                   const { rid } = roomShareModal;
                   setRoomShareModal(m => ({ ...m, loading: true }));
                   api.post(`/api/projects/${pid}/rooms/${rid}/share`, {})
-                    .then(d => setRoomShareModal({ rid, token: d.token, url: d.url }))
+                    .then(d => setRoomShareModal({ rid, token: d.token, url: d.url, allowComments: false }))
                     .catch(() => setRoomShareModal(m => ({ ...m, loading: false })));
                 }}>
                 {t('shareRoomGenerate')}
               </button>
+            )}
+            {roomShareModal.url && (
+              <div style={{marginTop:10,display:'flex',alignItems:'center',gap:6}}>
+                <label style={{display:'flex',alignItems:'center',gap:5,fontSize:10,color:'var(--sub)',cursor:'pointer',userSelect:'none'}}>
+                  <input type="checkbox" checked={!!roomShareModal.allowComments}
+                    onChange={e => {
+                      const val = e.target.checked;
+                      const {rid} = roomShareModal;
+                      setRoomShareModal(m => ({ ...m, allowComments: val }));
+                      api.patch(`/api/projects/${pid}/rooms/${rid}/share`, { allowComments: val }).catch(() => {});
+                    }}/>
+                  {t('allowCommentsLabel')}
+                </label>
+              </div>
             )}
             <div style={{marginTop:16,display:'flex',justifyContent:'flex-end'}}>
               <button className="btn" onClick={() => { setRoomShareModal(null); setRoomShareInviteEmail(''); }}>{t('close')}</button>
@@ -11447,7 +11803,7 @@ ${rows}
                   ) : (
                     <button className="btn acc" style={{padding:'4px 12px',fontSize:12}}
                       onClick={() => api.post(`/api/projects/${shareModal.pid}/share`, { role: 'view' })
-                        .then(d => setShareModal(m => ({ ...m, view: { token: d.token, url: d.url, created: Date.now() } })))
+                        .then(d => setShareModal(m => ({ ...m, view: { token: d.token, url: d.url, created: Date.now(), allowComments: false } })))
                         .catch(() => {})}>
                       {t('shareGenerate')}
                     </button>
@@ -11455,6 +11811,19 @@ ${rows}
                 </div>
               );
             })()}
+            {shareModal.view && (
+              <div style={{marginTop:10,display:'flex',alignItems:'center',gap:6}}>
+                <label style={{display:'flex',alignItems:'center',gap:5,fontSize:10,color:'var(--sub)',cursor:'pointer',userSelect:'none'}}>
+                  <input type="checkbox" checked={!!shareModal.view.allowComments}
+                    onChange={e => {
+                      const val = e.target.checked;
+                      setShareModal(m => ({ ...m, view: { ...m.view, allowComments: val } }));
+                      api.patch(`/api/projects/${shareModal.pid}/share/view`, { allowComments: val }).catch(() => {});
+                    }}/>
+                  {t('allowCommentsLabel')}
+                </label>
+              </div>
+            )}
             <div style={{marginTop:16,display:'flex',justifyContent:'flex-end'}}>
               <button className="btn" onClick={() => { setShareModal(null); setShareInviteEmail(''); }}>{t('close')}</button>
             </div>
@@ -11514,6 +11883,164 @@ ${rows}
             <div style={{marginTop:16,display:'flex',justifyContent:'flex-end'}}>
               <button className="btn" onClick={() => setSharesPanel(null)}>{t('close')}</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Comment panel ── */}
+      {commentPanel && (
+        <div className="comment-panel" onClick={e => e.stopPropagation()}>
+          <div className="comment-panel-hd">
+            <span className="comment-panel-title">💬 {commentPanel.label || commentPanel.entityType}</span>
+            <button className="comment-panel-close" onClick={() => { setCommentPanel(null); commentPanelRef.current = null; }}>×</button>
+          </div>
+          {!shareRole && !roomShareMode && Object.values(commentList).some(c => c.status === 'pending') && (
+            <div className="comment-panel-filters">
+              <label className="comment-composer-chk">
+                <input type="checkbox" checked={commentOnlyPending} onChange={e => setCommentOnlyPending(e.target.checked)}/>
+                {t('commentsOnlyPending')}
+              </label>
+            </div>
+          )}
+          <div className="comment-list">
+            {commentLoading && <div className="comment-empty">{lang==='es'?'Cargando…':'Loading…'}</div>}
+            {!commentLoading && commentList.length === 0 && <div className="comment-empty">{t('commentsEmpty')}</div>}
+            {!commentLoading && commentList.filter(c => {
+              if (commentOnlyPending && !shareRole) return c.status === 'pending';
+              if (shareRole || roomShareMode) return c.status === 'published' && c.visibility === 'public';
+              return true;
+            }).map(c => {
+              const isOwnerComment = c.authorType === 'owner';
+              const canEdit = !shareRole && !roomShareMode;
+              const isEditing = commentEditId === c.id;
+              const dateStr = new Date(c.createdAt).toLocaleDateString(lang === 'en' ? 'en-GB' : 'es-ES', {day:'2-digit',month:'short',year:'numeric'});
+              return (
+                <div key={c.id} className="comment-item">
+                  <div className="comment-item-hd">
+                    <span className="comment-item-author">
+                      {isOwnerComment ? t('commentAuthorOwner', c.authorName||authUser?.username) : t('commentAuthorVisitor', c.authorName)}
+                    </span>
+                    <span className="comment-item-date">{dateStr}{c.editedAt?' ✎':''}</span>
+                    {canEdit && c.status !== 'published' && (
+                      <span className={`comment-status-badge ${c.status}`}>
+                        {c.status === 'pending' ? t('commentStatusPending') : t('commentStatusRejected')}
+                      </span>
+                    )}
+                  </div>
+                  {isEditing ? (
+                    <div style={{display:'flex',flexDirection:'column',gap:4}}>
+                      <textarea className="comment-edit-ta" rows={3}
+                        value={commentEditText}
+                        onChange={e => setCommentEditText(e.target.value)}/>
+                      <div style={{display:'flex',gap:4}}>
+                        <button className="btn acc" style={{fontSize:9,padding:'3px 8px'}} onClick={() => saveCommentEdit(c.id)}>{t('commentSave')}</button>
+                        <button className="btn" style={{fontSize:9,padding:'3px 8px'}} onClick={() => setCommentEditId(null)}>{t('commentCancel')}</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="comment-item-text">{c.text}</div>
+                  )}
+                  {canEdit && !isEditing && (
+                    <div className="comment-item-actions">
+                      {isOwnerComment && (
+                        <button className="btn" style={{fontSize:8,padding:'2px 6px'}} onClick={() => { setCommentEditId(c.id); setCommentEditText(c.text); }}>{t('commentEdit')}</button>
+                      )}
+                      {isOwnerComment && (
+                        <button className="btn" style={{fontSize:8,padding:'2px 6px'}} onClick={() => toggleCommentVisibility(c)}>
+                          {c.visibility === 'public' ? t('commentVisPublic') : t('commentVisPrivate')}
+                        </button>
+                      )}
+                      {isOwnerComment && (
+                        <label className="comment-composer-chk" onClick={e => e.stopPropagation()}>
+                          <input type="checkbox" checked={!!c.includeInMemory} onChange={() => toggleCommentMemory(c)}/>
+                          {lang==='es'?'Mem':'Mem'}
+                        </label>
+                      )}
+                      {!shareRole && !roomShareMode && !isOwnerComment && authMode && c.status === 'published' && (
+                        <span className={`comment-status-badge published`}>{t('commentStatusPublished')}</span>
+                      )}
+                      <button className="btn danger" style={{fontSize:8,padding:'2px 6px',marginLeft:'auto'}} onClick={() => deleteComment(c.id)}>×</button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          {/* Composer */}
+          {(() => {
+            const isGuest = !!(shareRole || roomShareMode);
+            const guestAllowed = isGuest && (shareAllowComments || roomShareMode);
+            if (isGuest && !guestAllowed) return null;
+            return (
+              <div className="comment-composer">
+                {isGuest && (
+                  <input type="text" className="comment-composer-name" placeholder={t('commentNamePh')}
+                    value={commentDraft.name}
+                    onChange={e => setCommentDraft(d => ({...d, name: e.target.value}))}/>
+                )}
+                <textarea className="comment-composer-ta" rows={3} placeholder={t('commentTextPh')}
+                  value={commentDraft.text}
+                  onChange={e => setCommentDraft(d => ({...d, text: e.target.value}))}
+                  onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey||e.metaKey)) submitComment(); }}/>
+                {!isGuest && (
+                  <div className="comment-composer-row">
+                    <label className="comment-composer-chk">
+                      <input type="checkbox" checked={commentDraft.visibility === 'public'}
+                        onChange={e => setCommentDraft(d => ({...d, visibility: e.target.checked ? 'public' : 'private'}))}/>
+                      {t('commentVisPublic')}
+                    </label>
+                    <label className="comment-composer-chk">
+                      <input type="checkbox" checked={!!commentDraft.includeInMemory}
+                        onChange={e => setCommentDraft(d => ({...d, includeInMemory: e.target.checked}))}/>
+                      {t('commentIncludeMemory')}
+                    </label>
+                  </div>
+                )}
+                <button className="btn acc" style={{alignSelf:'flex-end',fontSize:9,padding:'4px 12px'}}
+                  disabled={!commentDraft.text.trim() || (isGuest && !commentDraft.name.trim())}
+                  onClick={submitComment}>
+                  {isGuest ? t('commentSend') : t('commentPublish')}
+                </button>
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+      {modOpen && authMode && !shareRole && (
+        <div className="mod-overlay">
+          <div className="mod-hd">
+            <span className="mod-title">{t('modTitle')}</span>
+            <span style={{fontSize:10,color:'var(--sub)'}}>{modLoading ? '…' : t('modPendingCount', modPending.length)}</span>
+            <button className="tbtn" style={{marginLeft:8}} onClick={() => setModOpen(false)}>✕</button>
+          </div>
+          <div className="mod-list">
+            {modLoading && <div style={{color:'var(--sub)',fontSize:11,padding:'32px 0',textAlign:'center'}}>…</div>}
+            {!modLoading && modPending.length === 0 && <div className="mod-empty">{t('modEmpty')}</div>}
+            {!modLoading && modPending.map(c => {
+              const vis = modVisChoice[c.id] || 'public';
+              const dateStr = new Date(c.createdAt).toLocaleString(lang==='es'?'es-ES':'en-GB',{dateStyle:'short',timeStyle:'short'});
+              return (
+                <div key={c.id} className="mod-row">
+                  <div className="mod-row-meta">
+                    <span className="mod-row-proj">{c.projectName || c.projectId}</span>
+                    <span className="mod-row-entity">{c.entityType} · {(c.entityId||'').slice(0,8)}</span>
+                    <span className="mod-row-author">{c.guestName || 'owner'} · {dateStr}</span>
+                    <div className="mod-row-text">{c.text}</div>
+                  </div>
+                  <div className="mod-row-actions">
+                    <div className="mod-approve-wrap">
+                      <select className="mod-vis-sel" value={vis} onChange={e => setModVisChoice(prev => ({...prev,[c.id]:e.target.value}))}>
+                        <option value="public">{t('modApprovePublic')}</option>
+                        <option value="private">{t('modApprovePrivate')}</option>
+                      </select>
+                      <button className="tbtn acc" style={{fontSize:9,padding:'3px 8px'}} onClick={() => approveComment(c, vis)}>{t('modApprove')}</button>
+                    </div>
+                    <button className="tbtn" style={{fontSize:9,padding:'3px 8px'}} onClick={() => { if(window.confirm(t('modConfirmReject'))) rejectComment(c); }}>{t('modReject')}</button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

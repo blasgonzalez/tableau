@@ -1,5 +1,45 @@
 # Changelog
 
+## [1.21.1] — 2026-06-09
+
+### Ajustado
+- **Botón de comentarios contextual en topbar:** un único botón `💬` que muestra los comentarios de la entidad activa en cada momento — tablero (`entityType:'board'`) cuando el usuario está en vista de tablero, sala (`entityType:'room'`) cuando está en vista de plano o 3D. El conteo refleja los totales de `commentSummary` para la entidad correspondiente.
+- **Eliminado botón de comentarios redundante del toolbar de sala:** el botón `💬` que aparecía en el toolbar flotante del plano de sala ha sido retirado; queda solo el botón contextual de la topbar.
+
+## [1.21.0] — 2026-06-09
+
+### Ajustado
+- **Cierre automático del panel de comentarios** al cambiar de tablero (`bid`) o de vista (`roomView`), evitando que el panel quede abierto sobre una entidad que ya no está visible.
+- **Badge de comentarios en la sala:** botón `💬` con indicador de conteo en la cabecera del panel de sala (junto al nombre), mismo estilo que el botón de tablero. Muestra punto naranja si hay pendientes (propietario). Oculto durante la edición del nombre.
+- **Botón de comentarios de proyecto siempre visible:** movido fuera de `nrow-acts` (que era opaco hasta el hover) a una posición fija junto al nombre del proyecto, visible para propietarios siempre y para invitados cuando hay comentarios publicados. Se elimina el duplicado interno en `nrow-acts`.
+- **Tooltips de topbar verificados:** `data-tooltip` presente en todos los botones relevantes de la barra superior (`ttMemory`, `ttExport`, `ttPresent`, `ttVersions`, `ttShortcuts`, `ttPrefs`).
+
+## [1.20.31] — 2026-06-09
+
+### Añadido
+- **Sistema de comentarios — cliente (Tanda 2):** interfaz completa de comentarios y anotaciones en el lado del cliente.
+  - **Badges en canvas:** burbuja `💬 N` sobre fotos, zonas, textos y grids; se contra-escala con el zoom del canvas; borde naranja cuando hay pendientes (solo propietario).
+  - **Menú contextual:** entrada "Comentarios" en el menú contextual de foto, texto, zona y grid (oculto en modo sala compartida).
+  - **Botones de toolbar:** botón de comentarios en la barra del tablero, en el toolbar de sala y en la fila de proyecto del sidebar. Botón de moderación en la topbar cuando hay comentarios pendientes (solo modo servidor, propietario).
+  - **Panel lateral de comentarios:** panel deslizante a la derecha (`.comment-panel`) con lista de comentarios, controles de edición/visibilidad/memoria y compositor; el propietario ve todos los comentarios con controles completos, el visitante solo ve los `published+public`.
+  - **Checkbox `allowComments`:** en el modal de compartir proyecto y en el modal de compartir sala, con llamada `PATCH` para activar/desactivar comentarios en tokens existentes. Se propaga al cliente (invitado) desde las respuestas de init del servidor.
+  - **Modal de moderación:** overlay de pantalla completa (solo propietario en modo servidor) con la lista de comentarios pendientes, selector de visibilidad por comentario y acciones de aprobar/rechazar.
+  - **Integración en memoria:** `printMemoria` es ahora async; recupera `GET /api/projects/:pid/comments?inMemory=1` e inyecta bloques de observaciones agrupados por tablero, foto y proyecto en el informe HTML.
+  - **Botón de comentarios en sala compartida:** botón `💬` en la cabecera de sala compartida cuando `allowComments === true`.
+
+## [1.20.30] — 2026-06-09
+
+### Añadido
+- **Sistema de comentarios — servidor (Tanda 1):** infraestructura completa del lado del servidor para el nuevo sistema de anotaciones.
+  - Almacenamiento en `{dd}/{pid}/comments.json` (por-proyecto), sin base de datos.
+  - Rutas CRUD: `GET/POST /api/projects/:pid/comments`, `GET /api/projects/:pid/comments/summary` (conteos sin cuerpos), `PATCH/DELETE /api/projects/:pid/comments/:cid`.
+  - Rutas de moderación (solo modo servidor, `requireAuth`): `GET /api/comments/pending` (con `?count=1`), `POST …/approve` y `POST …/reject`.
+  - Flag `allowComments` (boolean, defecto `false`) en los tokens de `shares.json` para proyectos y salas; `resolveAccess` lo expone como `req.shareAllowComments`. Visitantes sin el flag reciben 403 al intentar comentar.
+  - `PATCH /api/projects/:pid/share/:role` y `PATCH /api/projects/:pid/rooms/:rid/share` para activar/desactivar comentarios en un token existente.
+  - `GET /api/share/:token` y `GET /api/rooms/share/:token` devuelven `allowComments`.
+  - Cascadas de borrado: foto → comentarios de esa foto (hard-delete inmediato); tablero → comentarios del tablero y de sus ítems (`boardId===bid`); sala → sala + tableros vinculados. Ítems borrados implícitamente (via `PUT items`): barrido perezoso en `runStartupPurge` (`purgeOrphanComments`).
+  - Suite de tests `tests/comments.test.js` (26 tests): owner CRUD, filtrado por rol, resumen, moderación, cascadas, flag `allowComments`.
+
 ## [1.20.29] — 2026-06-09
 
 ### Corregido

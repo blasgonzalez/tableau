@@ -68,11 +68,28 @@ function seedUser(globalDataDir, { id, username, email, role = 'user', quota = 1
 }
 
 // Writes a share token entry to globalDataDir/shares.json
-function seedShare(globalDataDir, { token, ownerId, projectId, role = 'view' }) {
+function seedShare(globalDataDir, { token, ownerId, projectId, role = 'view', allowComments = false, type, roomId }) {
   const sharesFile = path.join(globalDataDir, 'shares.json');
   const shares     = fs.existsSync(sharesFile) ? JSON.parse(fs.readFileSync(sharesFile)) : {};
-  shares[token]    = { ownerId, projectId, role, created: Date.now() };
+  shares[token]    = { ownerId, projectId, role, allowComments, created: Date.now(),
+    ...(type   ? { type }   : {}),
+    ...(roomId ? { roomId } : {}),
+  };
   fs.writeFileSync(sharesFile, JSON.stringify(shares));
+}
+
+// Seeds a comment record to dd/pid/comments.json
+function seedComment(dd, pid, { id, entityType = 'board', entityId, boardId = null, authorType = 'owner',
+  authorId = 'local', authorName = 'owner', text = 'Test comment', status = 'published',
+  visibility = 'private', includeInMemory = false, shareToken = null } = {}) {
+  const commentId   = id || uuidv4().replace(/-/g, '').slice(0, 12);
+  const commentsFile = path.join(dd, pid, 'comments.json');
+  const comments    = fs.existsSync(commentsFile) ? JSON.parse(fs.readFileSync(commentsFile)) : [];
+  const comment     = { id: commentId, entityType, entityId, boardId, authorType, authorId, authorName,
+    text, createdAt: Date.now(), editedAt: null, status, visibility, includeInMemory, shareToken };
+  comments.push(comment);
+  fs.writeFileSync(commentsFile, JSON.stringify(comments));
+  return comment;
 }
 
 // Seeds a room entry to dd/pid/rooms.json
@@ -102,4 +119,4 @@ function seedPhoto(dd, pid) {
   return photoId;
 }
 
-module.exports = { makeTmpDir, removeTmpDir, seedUser, seedProject, seedBoard, seedRoom, seedShare, seedPhoto, TEST_PASSWORD };
+module.exports = { makeTmpDir, removeTmpDir, seedUser, seedProject, seedBoard, seedRoom, seedShare, seedPhoto, seedComment, TEST_PASSWORD };

@@ -108,6 +108,7 @@ const roomsFile      = (pid, dd = DATA_DIR)     => path.join(projDir(pid, dd), '
 const photoTrashDir  = (pid, dd = DATA_DIR)     => path.join(dd, pid, 'trash', 'photos');
 const photoTrashMeta = (pid, dd = DATA_DIR)     => path.join(dd, pid, 'trash', 'photos.json');
 const projTrashDir   = (dd = DATA_DIR)          => path.join(dd, '.trash');
+const commentsFile   = (pid, dd = DATA_DIR)     => path.join(dd, pid, 'comments.json');
 
 // Migrate single room.json → rooms.json on first access
 function migrateRooms(pid, dd = DATA_DIR) {
@@ -131,6 +132,9 @@ function readJSON(file, def = []) {
 function writeJSON(file, data) {
   fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf8');
 }
+
+function loadComments(dd, pid) { return readJSON(commentsFile(pid, dd), []); }
+function saveComments(dd, pid, arr) { writeJSON(commentsFile(pid, dd), arr); }
 
 function initProject(pid, dd = DATA_DIR) {
   ensureDir(projDir(pid, dd));
@@ -170,11 +174,39 @@ function purgeOldTrash(dd) {
   }
 }
 
+// Remove comments whose zone/text/grid item no longer exists in its board file
+function purgeOrphanComments(dd) {
+  if (!fs.existsSync(dd)) return;
+  const ITEM_TYPES = new Set(['zone', 'text', 'grid']);
+  for (const entry of fs.readdirSync(dd, { withFileTypes: true })) {
+    if (!entry.isDirectory() || entry.name.startsWith('.')) continue;
+    const pid = entry.name;
+    const cmf = commentsFile(pid, dd);
+    if (!fs.existsSync(cmf)) continue;
+    const comments = readJSON(cmf, []);
+    let changed = false;
+    const filtered = comments.filter(c => {
+      if (!ITEM_TYPES.has(c.entityType) || !c.boardId) return true;
+      const bf = boardFile(pid, c.boardId, dd);
+      if (!fs.existsSync(bf)) { changed = true; return false; }
+      const exists = readJSON(bf, []).some(i => i.id === c.entityId);
+      if (!exists) changed = true;
+      return exists;
+    });
+    if (changed) writeJSON(cmf, filtered);
+  }
+}
+
 function runStartupPurge() {
   if (AUTH_ENABLED) {
-    for (const user of loadUsers()) purgeOldTrash(path.join(DATA_DIR, user.id));
+    for (const user of loadUsers()) {
+      const dd = path.join(DATA_DIR, user.id);
+      purgeOldTrash(dd);
+      purgeOrphanComments(dd);
+    }
   } else {
     purgeOldTrash(DATA_DIR);
+    purgeOrphanComments(DATA_DIR);
   }
 }
 
@@ -302,11 +334,12 @@ function resolveAccess(req, res, next) {
         if (share) {
           if (req.params.pid && req.params.pid !== share.projectId)
             return res.status(403).json({ error: 'Token no válido para este proyecto' });
-          req.dd         = path.join(DATA_DIR, share.ownerId);
-          req.shareRole  = share.role;
-          req.sharePid   = share.projectId;
-          req.shareToken = tok;
-          req.shareScope = share.type === 'room' ? 'room' : 'project';
+          req.dd               = path.join(DATA_DIR, share.ownerId);
+          req.shareRole        = share.role;
+          req.sharePid         = share.projectId;
+          req.shareToken       = tok;
+          req.shareScope       = share.type === 'room' ? 'room' : 'project';
+          req.shareAllowComments = share.allowComments || false;
           if (share.type === 'room') req.shareRoomId = share.roomId;
           return next();
         }
@@ -316,11 +349,12 @@ function resolveAccess(req, res, next) {
       if (!tok && req.session.shareInfo && req.params.pid) {
         const share = resolveShareToken(req.session.shareInfo.token);
         if (share && share.ownerId !== user.id && share.projectId === req.params.pid) {
-          req.dd         = path.join(DATA_DIR, share.ownerId);
-          req.shareRole  = share.role;
-          req.sharePid   = share.projectId;
-          req.shareToken = req.session.shareInfo.token;
-          req.shareScope = share.type === 'room' ? 'room' : 'project';
+          req.dd               = path.join(DATA_DIR, share.ownerId);
+          req.shareRole        = share.role;
+          req.sharePid         = share.projectId;
+          req.shareToken       = req.session.shareInfo.token;
+          req.shareScope       = share.type === 'room' ? 'room' : 'project';
+          req.shareAllowComments = share.allowComments || false;
           if (share.type === 'room') req.shareRoomId = share.roomId;
           return next();
         }
@@ -337,11 +371,12 @@ function resolveAccess(req, res, next) {
     if (share) {
       if (req.params.pid && req.params.pid !== share.projectId)
         return res.status(403).json({ error: 'Token no válido para este proyecto' });
-      req.dd         = path.join(DATA_DIR, share.ownerId);
-      req.shareRole  = share.role;
-      req.sharePid   = share.projectId;
-      req.shareToken = req.session.shareInfo.token;
-      req.shareScope = share.type === 'room' ? 'room' : 'project';
+      req.dd               = path.join(DATA_DIR, share.ownerId);
+      req.shareRole        = share.role;
+      req.sharePid         = share.projectId;
+      req.shareToken       = req.session.shareInfo.token;
+      req.shareScope       = share.type === 'room' ? 'room' : 'project';
+      req.shareAllowComments = share.allowComments || false;
       if (share.type === 'room') req.shareRoomId = share.roomId;
       return next();
     }
@@ -353,11 +388,12 @@ function resolveAccess(req, res, next) {
     if (share) {
       if (req.params.pid && req.params.pid !== share.projectId)
         return res.status(403).json({ error: 'Token no válido para este proyecto' });
-      req.dd         = path.join(DATA_DIR, share.ownerId);
-      req.shareRole  = share.role;
-      req.sharePid   = share.projectId;
-      req.shareToken = token;
-      req.shareScope = share.type === 'room' ? 'room' : 'project';
+      req.dd               = path.join(DATA_DIR, share.ownerId);
+      req.shareRole        = share.role;
+      req.sharePid         = share.projectId;
+      req.shareToken       = token;
+      req.shareScope       = share.type === 'room' ? 'room' : 'project';
+      req.shareAllowComments = share.allowComments || false;
       if (share.type === 'room') req.shareRoomId = share.roomId;
       return next();
     }
@@ -820,7 +856,7 @@ app.get('/api/share/:token', (req, res) => {
   const dd = path.join(DATA_DIR, share.ownerId);
   const proj = readJSON(projsFile(dd)).find(p => p.id === share.projectId);
   if (!proj) return res.status(404).json({ error: 'Proyecto no encontrado' });
-  res.json({ role: share.role, project: { id: proj.id, name: proj.name } });
+  res.json({ role: share.role, project: { id: proj.id, name: proj.name }, allowComments: share.allowComments || false });
 });
 
 // Todas las invitaciones activas del usuario autenticado (para panel de gestión)
@@ -839,10 +875,10 @@ app.get('/api/shares', requireAuth, (req, res) => {
       const room = roomsCache[s.projectId].find(r => r.id === s.roomId);
       result.push({ token, type: 'room', projectId: s.projectId, projectName: proj?.name || s.projectId,
         roomId: s.roomId, roomName: room?.name || '', email: s.email || null,
-        role: s.role, created: s.created, url: `${APP_URL}/?room=${token}` });
+        role: s.role, allowComments: s.allowComments || false, created: s.created, url: `${APP_URL}/?room=${token}` });
     } else {
       result.push({ token, type: 'project', projectId: s.projectId, projectName: proj?.name || s.projectId,
-        email: s.email || null, role: s.role, created: s.created, url: `${APP_URL}/?share=${token}` });
+        email: s.email || null, role: s.role, allowComments: s.allowComments || false, created: s.created, url: `${APP_URL}/?share=${token}` });
     }
   }
   result.sort((a, b) => b.created - a.created);
@@ -855,8 +891,8 @@ app.get('/api/projects/:pid/share', requireAuth, (req, res) => {
   const ownerId = req.session.userId;
   const result  = { view: null, edit: null };
   for (const [tok, s] of Object.entries(loadShares())) {
-    if (s.ownerId === ownerId && s.projectId === pid) {
-      result[s.role] = { token: tok, url: `${APP_URL}/?share=${tok}`, created: s.created };
+    if (s.ownerId === ownerId && s.projectId === pid && !s.type) {
+      result[s.role] = { token: tok, url: `${APP_URL}/?share=${tok}`, allowComments: s.allowComments || false, created: s.created };
     }
   }
   res.json(result);
@@ -865,19 +901,36 @@ app.get('/api/projects/:pid/share', requireAuth, (req, res) => {
 app.post('/api/projects/:pid/share', requireAuth, (req, res) => {
   if (!AUTH_ENABLED) return res.status(400).json({ error: 'Solo disponible en modo servidor' });
   const { pid } = req.params;
-  const { role } = req.body;
+  const { role, allowComments } = req.body;
   if (role !== 'view' && role !== 'edit') return res.status(400).json({ error: 'role debe ser view o edit' });
   const projects = readJSON(projsFile(req.dd));
   if (!projects.find(p => p.id === pid)) return res.status(404).json({ error: 'Proyecto no encontrado' });
   const ownerId = req.session.userId;
   const shares  = loadShares();
   for (const [tok, s] of Object.entries(shares)) {
-    if (s.ownerId === ownerId && s.projectId === pid && s.role === role) delete shares[tok];
+    if (s.ownerId === ownerId && s.projectId === pid && s.role === role && !s.type) delete shares[tok];
   }
   const token = uuidv4().replace(/-/g, '');
-  shares[token] = { ownerId, projectId: pid, role, created: Date.now() };
+  shares[token] = { ownerId, projectId: pid, role, allowComments: !!allowComments, created: Date.now() };
   saveShares(shares);
-  res.json({ token, url: `${APP_URL}/?share=${token}`, role });
+  res.json({ token, url: `${APP_URL}/?share=${token}`, role, allowComments: !!allowComments });
+});
+
+app.patch('/api/projects/:pid/share/:role', requireAuth, (req, res) => {
+  if (!AUTH_ENABLED) return res.status(400).json({ error: 'Solo disponible en modo servidor' });
+  const { pid, role } = req.params;
+  const ownerId = req.session.userId;
+  const shares = loadShares();
+  let found = false;
+  for (const s of Object.values(shares)) {
+    if (s.ownerId === ownerId && s.projectId === pid && s.role === role && !s.type) {
+      if (req.body.allowComments !== undefined) s.allowComments = !!req.body.allowComments;
+      found = true;
+    }
+  }
+  if (!found) return res.status(404).json({ error: 'Token no encontrado' });
+  saveShares(shares);
+  res.json({ ok: true });
 });
 
 app.delete('/api/projects/:pid/share/:role', requireAuth, (req, res) => {
@@ -909,7 +962,7 @@ app.get('/api/rooms/share/:token', (req, res) => {
   const rooms = readJSON(roomsFile(share.projectId, dd), []);
   const room  = rooms.find(r => r.id === share.roomId);
   if (!room) return res.status(404).json({ error: 'Sala no encontrada' });
-  res.json({ projectId: share.projectId, roomId: share.roomId, roomName: room.name || '' });
+  res.json({ projectId: share.projectId, roomId: share.roomId, roomName: room.name || '', allowComments: share.allowComments || false });
 });
 
 app.post('/api/rooms/share/:token/activate', (req, res) => {
@@ -1185,6 +1238,13 @@ app.delete('/api/projects/:pid/boards/:bid', requireAuth, (req, res) => {
   if (fs.existsSync(bf)) fs.unlinkSync(bf);
   const vdir = boardVersionsDir(pid, bid, req.dd);
   if (fs.existsSync(vdir)) fs.rmSync(vdir, { recursive: true, force: true });
+  // Delete comments for this board and all its items
+  const cmf = commentsFile(pid, req.dd);
+  if (fs.existsSync(cmf)) {
+    const before = readJSON(cmf, []);
+    const after  = before.filter(c => !(c.entityType === 'board' && c.entityId === bid) && !(c.boardId === bid));
+    if (after.length !== before.length) writeJSON(cmf, after);
+  }
   res.json({ ok: true });
 });
 
@@ -1266,6 +1326,18 @@ app.delete('/api/projects/:pid/rooms/:rid', requireAuth, (req, res) => {
       }
     }
     writeJSON(f, rooms.filter(r => r.id !== rid));
+    // Delete room comment and all comments for boards/items linked to this room
+    const cmf = commentsFile(pid, dd);
+    if (fs.existsSync(cmf)) {
+      const before = readJSON(cmf, []);
+      const after  = before.filter(c => {
+        if (c.entityType === 'room' && c.entityId === rid) return false;
+        if (boardIds.has(c.entityId) && c.entityType === 'board') return false;
+        if (c.boardId && boardIds.has(c.boardId)) return false;
+        return true;
+      });
+      if (after.length !== before.length) writeJSON(cmf, after);
+    }
   }
   res.json({ ok: true });
 });
@@ -1317,9 +1389,10 @@ app.post('/api/projects/:pid/rooms/:rid/share', requireAuth, (req, res) => {
       delete shares[tok];
   }
   const token = uuidv4().replace(/-/g, '');
-  shares[token] = { type: 'room', ownerId, projectId: pid, roomId: rid, role: 'view', created: Date.now() };
+  const allowComments = !!(req.body && req.body.allowComments);
+  shares[token] = { type: 'room', ownerId, projectId: pid, roomId: rid, role: 'view', allowComments, created: Date.now() };
   saveShares(shares);
-  res.json({ token, url: `${APP_URL}/?room=${token}` });
+  res.json({ token, url: `${APP_URL}/?room=${token}`, allowComments });
 });
 
 app.delete('/api/projects/:pid/rooms/:rid/share', requireAuth, (req, res) => {
@@ -1331,6 +1404,23 @@ app.delete('/api/projects/:pid/rooms/:rid/share', requireAuth, (req, res) => {
     if (s.type === 'room' && s.ownerId === ownerId && s.projectId === pid && s.roomId === rid)
       delete shares[tok];
   }
+  saveShares(shares);
+  res.json({ ok: true });
+});
+
+app.patch('/api/projects/:pid/rooms/:rid/share', requireAuth, (req, res) => {
+  if (!AUTH_ENABLED) return res.status(400).json({ error: 'Solo disponible en modo servidor' });
+  const { pid, rid } = req.params;
+  const ownerId = req.session.userId;
+  const shares = loadShares();
+  let found = false;
+  for (const s of Object.values(shares)) {
+    if (s.type === 'room' && s.ownerId === ownerId && s.projectId === pid && s.roomId === rid) {
+      if (req.body.allowComments !== undefined) s.allowComments = !!req.body.allowComments;
+      found = true;
+    }
+  }
+  if (!found) return res.status(404).json({ error: 'Token no encontrado' });
   saveShares(shares);
   res.json({ ok: true });
 });
@@ -1480,6 +1570,13 @@ app.delete('/api/projects/:pid/photos/:id', requireAuth, (req, res) => {
     const items = readJSON(bf, []);
     const filtered = items.filter(i => i.photoId !== id);
     if (filtered.length !== items.length) writeJSON(bf, filtered);
+  }
+  // Hard-delete comments for this photo immediately
+  const cmf = commentsFile(pid, dd);
+  if (fs.existsSync(cmf)) {
+    const before = readJSON(cmf, []);
+    const after  = before.filter(c => !(c.entityType === 'photo' && c.entityId === id));
+    if (after.length !== before.length) writeJSON(cmf, after);
   }
   res.json({ ok: true });
 });
@@ -2247,6 +2344,149 @@ app.post('/api/projects/import/:tempId/confirm', requireAuth, (req, res) => {
     console.error('[import/confirm] Error durante la importación:', e);
     res.status(500).json({ error: `Error durante la importación: ${e.message}` });
   }
+});
+
+// ── Comments ─────────────────────────────────────────────────────────────────
+// /summary must come before /:cid to avoid Express treating 'summary' as a cid.
+app.get('/api/projects/:pid/comments/summary', resolveAccess, (req, res) => {
+  const { pid } = req.params;
+  const isOwner = !req.shareRole;
+  let comments = loadComments(req.dd, pid);
+  if (!isOwner) comments = comments.filter(c => c.status === 'published' && c.visibility === 'public');
+  const summary = {};
+  for (const c of comments) {
+    const key = `${c.entityType}:${c.entityId}`;
+    if (!summary[key]) summary[key] = { total: 0, pending: 0 };
+    summary[key].total++;
+    if (isOwner && c.status === 'pending') summary[key].pending++;
+  }
+  res.json(summary);
+});
+
+app.get('/api/projects/:pid/comments', resolveAccess, (req, res) => {
+  const { pid } = req.params;
+  const { entityType, entityId, inMemory } = req.query;
+  const isOwner = !req.shareRole;
+  let comments = loadComments(req.dd, pid);
+  if (!isOwner) comments = comments.filter(c => c.status === 'published' && c.visibility === 'public');
+  if (entityType) comments = comments.filter(c => c.entityType === entityType);
+  if (entityId)   comments = comments.filter(c => c.entityId === entityId);
+  if (inMemory === '1' || inMemory === 'true')
+    comments = comments.filter(c => c.includeInMemory === true && c.status === 'published');
+  res.json(comments);
+});
+
+app.post('/api/projects/:pid/comments', resolveAccess, (req, res) => {
+  const { pid } = req.params;
+  const { entityType, entityId, boardId, text, authorName: clientName } = req.body || {};
+  const VALID_TYPES = ['project','board','room','photo','zone','text','grid'];
+  if (!VALID_TYPES.includes(entityType)) return res.status(400).json({ error: 'entityType inválido' });
+  if (!entityId) return res.status(400).json({ error: 'entityId requerido' });
+  if (!text?.trim()) return res.status(400).json({ error: 'Texto requerido' });
+  const isOwner = !req.shareRole;
+  if (!isOwner) {
+    if (!req.shareAllowComments) return res.status(403).json({ error: 'Los comentarios no están habilitados en este enlace' });
+    if (req.shareScope === 'room') {
+      const rooms = readJSON(roomsFile(pid, req.dd), []);
+      const room  = rooms.find(r => r.id === req.shareRoomId);
+      if (!room) return res.status(403).json({ error: 'Acceso denegado' });
+      const roomBids = roomBoardIds(room);
+      const roomPids = roomPhotoIds(req.dd, pid, room);
+      const allowed = (
+        (entityType === 'room'  && entityId === req.shareRoomId) ||
+        (entityType === 'board' && roomBids.has(entityId)) ||
+        (entityType === 'photo' && roomPids.has(entityId)) ||
+        (['zone','text','grid'].includes(entityType) && boardId && roomBids.has(boardId))
+      );
+      if (!allowed) return res.status(403).json({ error: 'Acceso denegado para esta entidad' });
+    }
+  }
+  const comments = loadComments(req.dd, pid);
+  const comment = {
+    id: newId(12),
+    entityType, entityId,
+    boardId: boardId || null,
+    authorType: isOwner ? 'owner' : 'visitor',
+    authorId:   isOwner ? (req.session?.userId || 'local') : req.shareToken,
+    authorName: isOwner ? (req.session?.username || 'owner') : (clientName?.trim() || 'Visitante'),
+    text: text.trim(),
+    createdAt: Date.now(), editedAt: null,
+    status:     isOwner ? 'published' : 'pending',
+    visibility: 'private',
+    includeInMemory: false,
+    shareToken: isOwner ? null : req.shareToken,
+  };
+  comments.push(comment);
+  saveComments(req.dd, pid, comments);
+  res.json(comment);
+});
+
+app.patch('/api/projects/:pid/comments/:cid', resolveAccess, (req, res) => {
+  const { pid, cid } = req.params;
+  if (req.shareRole) return res.status(403).json({ error: 'Solo el propietario puede editar comentarios' });
+  const comments = loadComments(req.dd, pid);
+  const idx = comments.findIndex(c => c.id === cid);
+  if (idx === -1) return res.status(404).json({ error: 'Comentario no encontrado' });
+  const patch = {};
+  if (req.body.text !== undefined) {
+    const t = req.body.text.trim();
+    if (!t) return res.status(400).json({ error: 'Texto no puede estar vacío' });
+    patch.text = t;
+    patch.editedAt = Date.now();
+  }
+  if (req.body.visibility !== undefined)      patch.visibility      = req.body.visibility;
+  if (req.body.includeInMemory !== undefined) patch.includeInMemory = !!req.body.includeInMemory;
+  comments[idx] = { ...comments[idx], ...patch };
+  saveComments(req.dd, pid, comments);
+  res.json(comments[idx]);
+});
+
+app.delete('/api/projects/:pid/comments/:cid', resolveAccess, (req, res) => {
+  const { pid, cid } = req.params;
+  if (req.shareRole) return res.status(403).json({ error: 'Solo el propietario puede eliminar comentarios' });
+  saveComments(req.dd, pid, loadComments(req.dd, pid).filter(c => c.id !== cid));
+  res.json({ ok: true });
+});
+
+// ── Comment moderation (requireAuth, server mode only) ───────────────────────
+app.get('/api/comments/pending', requireAuth, (req, res) => {
+  if (!AUTH_ENABLED) return res.json(req.query.count === '1' ? { count: 0 } : []);
+  const dd = req.dd;
+  const projects = readJSON(projsFile(dd));
+  const result = [];
+  for (const proj of projects) {
+    for (const c of loadComments(dd, proj.id)) {
+      if (c.status === 'pending') result.push({ ...c, projectId: proj.id, projectName: proj.name });
+    }
+  }
+  result.sort((a, b) => a.createdAt - b.createdAt);
+  if (req.query.count === '1') return res.json({ count: result.length });
+  res.json(result);
+});
+
+app.post('/api/projects/:pid/comments/:cid/approve', requireAuth, (req, res) => {
+  if (!AUTH_ENABLED) return res.status(403).json({ error: 'Solo disponible en modo servidor' });
+  const { pid, cid } = req.params;
+  const { visibility } = req.body || {};
+  if (visibility !== 'public' && visibility !== 'private')
+    return res.status(400).json({ error: 'visibility debe ser public o private' });
+  const comments = loadComments(req.dd, pid);
+  const idx = comments.findIndex(c => c.id === cid);
+  if (idx === -1) return res.status(404).json({ error: 'Comentario no encontrado' });
+  comments[idx] = { ...comments[idx], status: 'published', visibility };
+  saveComments(req.dd, pid, comments);
+  res.json(comments[idx]);
+});
+
+app.post('/api/projects/:pid/comments/:cid/reject', requireAuth, (req, res) => {
+  if (!AUTH_ENABLED) return res.status(403).json({ error: 'Solo disponible en modo servidor' });
+  const { pid, cid } = req.params;
+  const comments = loadComments(req.dd, pid);
+  const idx = comments.findIndex(c => c.id === cid);
+  if (idx === -1) return res.status(404).json({ error: 'Comentario no encontrado' });
+  comments[idx] = { ...comments[idx], status: 'rejected' };
+  saveComments(req.dd, pid, comments);
+  res.json(comments[idx]);
 });
 
 // ── Start ─────────────────────────────────────────────────────────────────────

@@ -1,5 +1,45 @@
 # Changelog
 
+## [1.21.1] — 2026-06-09
+
+### Changed
+- **Contextual comment button in topbar:** a single `💬` button that reflects the active entity at all times — board (`entityType:'board'`) when in board view, room (`entityType:'room'`) when in floor-plan or 3D view. The count tracks `commentSummary` for the corresponding entity.
+- **Removed redundant comment button from room toolbar:** the `💬` button that appeared in the floating floor-plan toolbar has been removed; only the topbar contextual button remains.
+
+## [1.21.0] — 2026-06-09
+
+### Changed
+- **Auto-close comment panel** when the active board (`bid`) or view mode (`roomView`) changes, preventing the panel from remaining open over an entity that is no longer visible.
+- **Room comment badge:** `💬` button with count indicator in the room panel header (next to the room name), matching the board button style. Shows an orange dot when there are pending comments (owner only). Hidden while the room name is being edited.
+- **Project comment button always visible:** moved out of `nrow-acts` (which was opacity-0 until hover) to a fixed position next to the project name, always visible for owners and visible to guests when there are published comments. Duplicate inside `nrow-acts` removed.
+- **Topbar tooltips verified:** `data-tooltip` present on all relevant top-bar buttons (`ttMemory`, `ttExport`, `ttPresent`, `ttVersions`, `ttShortcuts`, `ttPrefs`).
+
+## [1.20.31] — 2026-06-09
+
+### Added
+- **Comment system — client side (Round 2):** full comment and annotation UI on the client side.
+  - **Canvas badges:** `💬 N` bubble on photos, zones, texts and grids; counter-scaled with canvas zoom; orange border when there are pending comments (owner only).
+  - **Context menu:** "Comments" entry in the context menu for photo, text, zone and grid items (hidden in room-share mode).
+  - **Toolbar buttons:** comment button in the board toolbar, room toolbar and project sidebar row. Moderation button in the topbar when there are pending comments (server mode, owner only).
+  - **Lateral comment panel:** sliding panel on the right (`.comment-panel`) with comment list, edit/visibility/memory controls and a composer; the owner sees all comments with full controls, guests only see `published+public` ones.
+  - **`allowComments` checkbox:** in the project share modal and the room share modal, with a `PATCH` call to toggle comments on existing tokens. Propagated to the guest client from server init responses.
+  - **Moderation modal:** full-screen overlay (owner in server mode only) with a list of pending comments, per-comment visibility selector and approve/reject actions.
+  - **Memory integration:** `printMemoria` is now async; fetches `GET /api/projects/:pid/comments?inMemory=1` and injects observation blocks grouped by board, photo and project into the HTML report.
+  - **Comment button in room share header:** `💬` button in the room-share header bar when `allowComments === true`.
+
+## [1.20.30] — 2026-06-09
+
+### Added
+- **Comment system — server side (Round 1):** complete server infrastructure for the new annotation system.
+  - Storage in `{dd}/{pid}/comments.json` (per-project), no database.
+  - CRUD routes: `GET/POST /api/projects/:pid/comments`, `GET /api/projects/:pid/comments/summary` (counts without bodies), `PATCH/DELETE /api/projects/:pid/comments/:cid`.
+  - Moderation routes (server mode only, `requireAuth`): `GET /api/comments/pending` (with `?count=1`), `POST …/approve` and `POST …/reject`.
+  - `allowComments` flag (boolean, default `false`) on share tokens in `shares.json` for both project and room shares; `resolveAccess` exposes it as `req.shareAllowComments`. Visitors without the flag receive 403 when trying to comment.
+  - `PATCH /api/projects/:pid/share/:role` and `PATCH /api/projects/:pid/rooms/:rid/share` to toggle comments on an existing token.
+  - `GET /api/share/:token` and `GET /api/rooms/share/:token` now return `allowComments`.
+  - Delete cascades: photo → its comments (hard-delete); board → board comments and all item comments (`boardId===bid`); room → room + linked boards. Items deleted implicitly (via `PUT items`): lazy sweep in `runStartupPurge` (`purgeOrphanComments`).
+  - Test suite `tests/comments.test.js` (26 tests): owner CRUD, role filtering, summary, moderation, cascades, `allowComments` flag.
+
 ## [1.20.29] — 2026-06-09
 
 ### Fixed
