@@ -1,6 +1,6 @@
 {
-  "version": "1.20.26",
+  "version": "1.20.27",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-06-08",
-  "notes": "Texto: handles ocultos en modo edición; barra de controles con posición adaptativa (sube/baja según proximidad al borde del canvas)."
+  "releaseDate": "2026-06-09",
+  "notes": "Admin: modal de confirmación de eliminación de usuario ahora visible encima del panel de administración."
 }

@@ -11512,7 +11512,7 @@ ${rows}
       )}
 
       {confirmModal && (
-        <div className="overlay" style={{zIndex:1100}} onClick={() => setConfirmModal(null)}>
+        <div className="overlay" style={{zIndex:10001}} onClick={() => setConfirmModal(null)}>
           <div className="confirm-dialog" onClick={e => e.stopPropagation()}>
             <div className="confirm-msg">{confirmModal.message}</div>
             {confirmModal.extra && <div style={{marginTop:8}}>{confirmModal.extra}</div>}

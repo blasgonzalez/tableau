@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.20.27] — 2026-06-09
+
+### Fixed
+- **Admin: user delete confirmation modal hidden:** the confirmation modal when attempting to delete a user appeared behind the admin panel (insufficient z-index). Now appears correctly on top.
+
 ## [1.20.26] — 2026-06-08
 
 ### Fixed / Improved

@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.20.27] — 2026-06-09
+
+### Corregido
+- **Admin: confirmación de eliminación de usuario oculta:** el modal de confirmación al intentar eliminar un usuario aparecía detrás del panel de administración (z-index insuficiente). Ahora aparece correctamente encima.
+
 ## [1.20.26] — 2026-06-08
 
 ### Corregido / Mejorado
