@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.21.10] — 2026-06-10
+
+### Fixed
+- **Microscopic control buttons at low zoom:** the `min(..., 1.17)` cap introduced in 1.21.9 broke counter-scaling for canvas zoom < 0.855 — buttons measured 14 px at zoom 0.5 and 8 px at zoom 0.3. The correct counter-scale is `zoom: calc(1 / var(--canvas-zoom,1))` without a cap: buttons are always 24×24 px on screen at any zoom level.
+- **Invisible tooltips in the top bar:** `bottom: calc(100% + 6px)` positioned the tooltip above the element. For topbar buttons (at the top of the screen) the tooltip was placed outside the viewport. Changed to `top: calc(100% + 6px)` — the tooltip always appears below the button, where there is always room.
+
 ## [1.21.9] — 2026-06-10
 
 ### Added

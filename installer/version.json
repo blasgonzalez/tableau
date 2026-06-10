@@ -1,6 +1,6 @@
 {
-  "version": "1.21.9",
+  "version": "1.21.10",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-06-10",
-  "notes": "Panel de propiedades numéricas (X/Y/W/H/Rot) al seleccionar un elemento. Handle de redimensionado unificado. Corrección del salto al arrastrar fotos."
+  "notes": "Botones de control siempre visibles a cualquier zoom. Tooltips visibles en la barra superior."
 }

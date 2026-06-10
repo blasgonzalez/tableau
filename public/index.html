@@ -382,7 +382,7 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .canvas.board-white .bitem.sel.anchor .bitem-img-wrap{box-shadow:0 0 0 2px rgba(0,0,0,0.4),0 0 0 4px var(--acc)}
 .bitem.replacing .bitem-img-wrap{outline:2px solid #e06060 !important;outline-offset:3px;animation:replacing-pulse 1s ease-in-out infinite}
 .bitem.swap-target .bitem-img-wrap{outline:3px solid var(--acc) !important;outline-offset:3px}
-.bitem-bar{position:absolute;bottom:100%;right:0;display:flex;gap:3px;opacity:0;transition:opacity .12s;zoom:min(calc(1 / var(--canvas-zoom,1)),1.17);z-index:250}
+.bitem-bar{position:absolute;bottom:100%;right:0;display:flex;gap:3px;opacity:0;transition:opacity .12s;zoom:calc(1 / var(--canvas-zoom,1));z-index:250}
 .props-panel{position:absolute;top:0;left:0;background:var(--panel2);border:1px solid var(--border2);border-radius:3px;padding:8px 10px;z-index:500;min-width:180px;box-shadow:0 4px 14px rgba(0,0,0,.45);display:flex;flex-direction:column;gap:6px;zoom:calc(1 / var(--canvas-zoom,1))}
 .props-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .props-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
@@ -938,7 +938,7 @@ select.btn option,select.inp option{background:var(--panel);color:var(--text)}
 .clip-banner-cancel:hover{border-color:var(--danger);color:var(--danger)}
 /* ── TOOLTIPS ── */
 [data-tooltip]{position:relative}
-[data-tooltip]:hover::after{content:attr(data-tooltip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:11px;white-space:nowrap;pointer-events:none;z-index:9999}
+[data-tooltip]:hover::after{content:attr(data-tooltip);position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:11px;white-space:nowrap;pointer-events:none;z-index:9999}
 /* ── SHORTCUTS PANEL ── */
 .sc-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1500;display:flex;align-items:center;justify-content:center}
 .sc-modal{background:var(--panel);border:1px solid var(--border2);max-width:580px;width:90%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.7)}

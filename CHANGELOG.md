@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.21.10] — 2026-06-10
+
+### Corregido
+- **Botones de control microbios a zoom bajo:** el cap `min(..., 1.17)` introducido en 1.21.9 rompía la contraescala para zoom de canvas < 0.855 — los botones medían 14 px a zoom 0.5 y 8 px a zoom 0.3. La contraescala correcta es `zoom: calc(1 / var(--canvas-zoom,1))` sin cap: los botones son siempre 24×24 px en pantalla a cualquier nivel de zoom.
+- **Tooltips invisibles en la barra superior:** `bottom: calc(100% + 6px)` posicionaba el tooltip por encima del elemento. Para los botones de la topbar (en la parte superior de la pantalla) el tooltip quedaba fuera del viewport. Cambiado a `top: calc(100% + 6px)` — el tooltip aparece siempre debajo del botón, donde siempre hay espacio.
+
 ## [1.21.9] — 2026-06-10
 
 ### Añadido
