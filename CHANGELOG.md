@@ -1,5 +1,43 @@
 # Changelog
 
+## [1.21.8] — 2026-06-10
+
+### Corregido
+- **Fotos ocultas en esquinas de la vista 3D:** en una esquina interior, los items colocados cerca del borde de la pared quedaban ocultos detrás del cuerpo de la pared adyacente. El cálculo de la posición `ix` a lo largo del eje de la pared empezaba siempre en el vértice (cruce de ejes de pared), sin descontar el semiancho de las paredes que convergen en ese vértice. La cara interior visible de una pared solo abarca desde el punto de esquina interior (`vértice − wt/2`) hasta el punto de esquina interior opuesto. Ahora `ix` se desplaza `wt/2` desde v1 (si hay otra pared en ese vértice) y se limita a `min(fixedW, longitud_interior)` hacia v2, de modo que los items siempre se proyectan dentro de la franja visible de la cara de la pared.
+
+## [1.21.7] — 2026-06-09
+
+### Corregido
+- **Texturas de grids en vista 3D compartida:** en un enlace de sala compartida (`?room=TOKEN`), las fotos dentro de elementos tipo grid no se cargaban — aparecían como cuadrícula vacía. El helper `roomPhotoIds` del servidor solo extraía `it.photoId` (fotos sueltas), ignorando `it.photoIds` (el array de fotos de los grids). Ahora itera también `it.photoIds` para incluir todas las fotos referenciadas por grids en los tableros de la sala.
+
+## [1.21.6] — 2026-06-09
+
+### Añadido
+- **Selector de ámbito en el filtro "Sin colocar":** cuando el filtro está activo aparece un desplegable con dos opciones. "En el proyecto" conserva el comportamiento anterior (fotos no colocadas en ningún tablero del proyecto). "En esta sala" — visible solo cuando hay una sala activa con tableros vinculados — muestra las fotos no colocadas en ningún tablero enlazado a paredes o caras de bloque de esa sala (`getRoomBoardIds`). Al desactivar el filtro el ámbito vuelve a "En el proyecto".
+- **Panel de info de foto — contexto de sala:** cada tablero en el que aparece la foto muestra ahora su ubicación en sala cuando procede. Si el tablero está vinculado a una pared: "Pared X — Sala Y (cara A/B)". Si está vinculado a una cara de bloque: "Bloque X — cara Norte/Sur/…". Si es un tablero independiente: solo el nombre del tablero. El cruce rooms ↔ boardId se calcula al pintar el panel (lazy, no en el render del canvas).
+
+## [1.21.5] — 2026-06-09
+
+### Corregido
+- **Word wrap en textos de vista 3D:** `fillText()` no hace salto de línea automático, por lo que textos más anchos que el elemento se recortaban en una sola línea. El renderer 3D ahora aplica word wrap manual basado en `measureText()`: divide cada párrafo (`\n`) en palabras y acumula hasta que la línea supera `item.w - padding`, momento en que abre una nueva línea. La altura del canvas (`cvH`) se recalcula después del wrap para acomodar todas las líneas resultantes. La fuente se re-asigna al contexto tras el resize del canvas (que resetea el estado del contexto). Corrige ambos renderizadores (paredes y caras de bloques).
+
+## [1.21.4] — 2026-06-09
+
+### Ajustado
+- **Límite mínimo de redimensionado reducido a 10 px:** el tamaño mínimo al arrastrar el handle de resize era excesivo en todos los tipos de elemento. Valores anteriores: fotos/placeholders 80 px ancho, grids 60 px, zonas 40×30 px (scale) / 80×60 px (no-scale), textos 120×60 px, notas 120×60 px. Todos reducidos a 10×10 px. Por debajo de 10 px el elemento sería invisible e inaccesible. El handle `.rh` ya contra-escala con el zoom de canvas (`zoom: calc(1 / var(--canvas-zoom,1))`), por lo que se mantiene operable a cualquier tamaño.
+
+## [1.21.3] — 2026-06-09
+
+### Corregido
+- **Checkbox "Público" guardaba como privado:** el servidor ignoraba el campo `visibility` del body del POST y siempre inicializaba los comentarios de propietario como `'private'`. Ahora lee `req.body.visibility` y aplica `'public'` o `'private'` según lo enviado por el cliente.
+- **Indicador de comentarios para visitante:** el punto de notificación (`.tbtn-dot`) del botón `💬` de la topbar no se coloreaba en modo invitado aunque hubiera comentarios públicos disponibles. Ahora muestra el punto en color acento (`var(--acc)`) cuando hay comentarios para leer (invitado) o pendientes de moderar (propietario). El botón de comentarios en la cabecera de sala compartida también muestra el badge cuando hay comentarios.
+- **Texto multilínea en vista 3D:** cuando un texto contenía saltos de línea (`\n`), la altura fija del canvas (`itemH × SCALE`) hacía que el `startY` calculado fuera negativo y solo la línea central quedara visible. El canvas ahora crece dinámicamente a `max(baseCvH, ceil(totalH + padding))` para acomodar todas las líneas. Corrige ambos renderizadores (paredes y caras de bloques).
+
+## [1.21.2] — 2026-06-09
+
+### Ajustado
+- **Tooltips de topbar unificados:** todos los botones de la topbar usan ahora `data-tooltip` (CSS) en lugar de `title` (nativo). Afecta a: grid, configuración de tablero, comentarios (tablero y sala), mostrar panel, gestión de invitaciones, moderación global y el badge del indicador de estado. Comportamiento visual consistente en toda la barra superior.
+
 ## [1.21.1] — 2026-06-09
 
 ### Ajustado

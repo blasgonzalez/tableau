@@ -1,5 +1,43 @@
 # Changelog
 
+## [1.21.8] — 2026-06-10
+
+### Fixed
+- **Photos hidden at interior wall corners in 3D view:** items placed near the edge of a wall were hidden behind the body of the adjacent wall at the corner. The `ix` position along the wall axis always started at the vertex (centerline intersection), without subtracting the half-thickness of the walls that meet there. The visible interior face of a wall only spans from the inner corner point (`vertex − wt/2`) to the opposite inner corner point. `ix` now starts `wt/2` from v1 (when another wall meets at that vertex) and is capped to `min(fixedW, inner_length)` toward v2, so items are always projected within the visible strip of the wall face.
+
+## [1.21.7] — 2026-06-09
+
+### Fixed
+- **Grid textures missing in shared 3D room view:** in a room share link (`?room=TOKEN`), photos inside grid items were not loaded — the grid appeared as an empty shell. The server's `roomPhotoIds` helper only extracted `it.photoId` (single photo items), ignoring `it.photoIds` (the photo array of grid items). It now also iterates `it.photoIds` so all photos referenced by grids on room boards are included in the allowed set.
+
+## [1.21.6] — 2026-06-09
+
+### Added
+- **Scope selector for the "Unplaced" filter:** when the filter is active a dropdown appears with two options. "In project" preserves the existing behaviour (photos not placed on any board in the project). "In this room" — only shown when there is an active room with linked boards — shows photos not placed on any board linked to that room's walls or block faces (`getRoomBoardIds`). Deactivating the filter resets the scope to "In project".
+- **Photo info panel — room context:** each board where the photo appears now shows its room location when applicable. If the board is linked to a wall: "Wall X — Room Y (side A/B)". If linked to a block face: "Block X — North/South/… face". If it is a standalone board: just the board name. The rooms ↔ boardId cross-reference is computed when the panel renders (lazy, not during canvas render).
+
+## [1.21.5] — 2026-06-09
+
+### Fixed
+- **Word wrap in 3D view text items:** `fillText()` does not wrap automatically, so text wider than its element was clipped to a single line. The 3D renderer now applies manual word wrap using `measureText()`: each paragraph (split by `\n`) is broken into words and accumulated until the line exceeds `item.w - padding`, at which point a new line is opened. Canvas height (`cvH`) is recomputed after wrapping to fit all resulting lines. The font is re-applied to the context after the canvas resize (which resets all context state). Fixes both renderers (wall items and block faces).
+
+## [1.21.4] — 2026-06-09
+
+### Changed
+- **Minimum resize limit reduced to 10 px:** the minimum drag size was too large for all element types. Previous values: photos/placeholders 80 px wide, grids 60 px, zones 40×30 px (scale mode) / 80×60 px (non-scale), texts 120×60 px, notes 120×60 px. All reduced to 10×10 px — below 10 px an element would be invisible and unreachable. The `.rh` handle already counter-scales with canvas zoom (`zoom: calc(1 / var(--canvas-zoom,1))`), so it remains usable at any element size.
+
+## [1.21.3] — 2026-06-09
+
+### Fixed
+- **"Public" checkbox saved as private:** the server ignored the `visibility` field in the POST body and always initialised owner comments as `'private'`. It now reads `req.body.visibility` and stores `'public'` or `'private'` as sent by the client.
+- **Comment indicator missing for guests:** the notification dot (`.tbtn-dot`) on the topbar `💬` button was not coloured in guest mode even when public comments were available to read. It now shows the accent dot (`var(--acc)`) when there are comments to read (guest) or comments pending moderation (owner). The comment button in the room-share header also shows the badge when comments exist.
+- **Multi-line text in 3D view:** when a text item contained newlines (`\n`), the fixed canvas height (`itemH × SCALE`) caused the computed `startY` to go negative, leaving only the middle line visible. The canvas now grows dynamically to `max(baseCvH, ceil(totalH + padding))` to fit all lines. Fixes both renderers (wall items and block faces).
+
+## [1.21.2] — 2026-06-09
+
+### Changed
+- **Topbar tooltips unified:** all topbar buttons now use `data-tooltip` (CSS-driven) instead of `title` (native browser). Affected buttons: grid, board config, comments (board and room), show panel, invitation management, global moderation badge. Consistent visual behaviour across the entire top bar.
+
 ## [1.21.1] — 2026-06-09
 
 ### Changed

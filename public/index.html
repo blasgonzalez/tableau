@@ -170,6 +170,14 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .ibd-tag{font-size:7px;letter-spacing:.4px;padding:1px 5px;border:1px solid var(--border2);color:var(--sub)}
 .ibd-tag.cur{border-color:var(--acc-dim);color:var(--acc);background:var(--acc-faint)}
 .ibd-none{font-size:8px;color:var(--muted);margin-top:2px}
+.ibd-ctx-entry{display:flex;flex-direction:column;gap:1px;padding:2px 5px;border:1px solid var(--border2)}
+.ibd-ctx-entry.cur{border-color:var(--acc-dim);background:var(--acc-faint)}
+.ibd-ctx-label{font-size:7px;letter-spacing:.3px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+.ibd-ctx-board{font-size:6.5px;letter-spacing:.3px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+.ibd-ctx-entry.cur .ibd-ctx-label{color:var(--acc)}
+.lib-scope-sel{font-size:9px;background:var(--surf);border:1px solid var(--acc-dim);color:var(--acc);padding:2px 5px;cursor:pointer;font-family:'IBM Plex Mono',monospace;letter-spacing:.3px;outline:none}
+.lib-scope-sel:focus{border-color:var(--acc)}
+.lib-scope-sel option{background:var(--panel)}
 .info-rating{display:flex;align-items:center;gap:1px;font-size:9px;color:var(--border2);margin-top:2px;letter-spacing:1px}
 .info-rating .on{color:var(--acc)}
 .info-rating .none{font-size:8px;color:var(--muted);letter-spacing:.2px}
@@ -1161,6 +1169,10 @@ const I18N = {
     versionsTitle:'Versiones del tablero', saveVersion:'Guardar versión', versionSaved:'Versión guardada', versionRestored:'Versión restaurada', versionDeleted:'Versión eliminada', restoreVersion:'Restaurar', confirmRestore:'¿Restaurar esta versión? El estado actual se perderá.', confirmDeleteVersion:'¿Eliminar esta versión?', noVersions:'Sin versiones guardadas', versionItems:(n) => `${n} elemento${n!==1?'s':''}`,
     fillPlaceholderHint:'Haz clic en una foto de la biblioteca para asignarla al marco',
     original:'Original:', inTableau:'En tableau:', notInAnyBoard:'No está en ningún tablero',
+    filterScopeProject:'En el proyecto', filterScopeRoom:'En esta sala',
+    infoBoardCtxWall:(wn,rn,s)=>`Pared ${wn} — ${rn} (cara ${s})`,
+    infoBoardCtxBlock:(bl,fn)=>`Bloque ${bl} — cara ${fn}`,
+    infoBoardCtxFaceLabel:{n:'Norte',s:'Sur',e:'Este',w:'Oeste',t:'Superior'},
     noBoard:'Sin tablero', createBoardHint:'Crea un tablero en el panel izquierdo',
     emptyBoard:'Tablero vacío',
     dragHint1:'Arrastra fotos desde la biblioteca (abajo)',
@@ -1380,6 +1392,10 @@ const I18N = {
     versionsTitle:'Board versions', saveVersion:'Save version', versionSaved:'Version saved', versionRestored:'Version restored', versionDeleted:'Version deleted', restoreVersion:'Restore', confirmRestore:'Restore this version? Current state will be lost.', confirmDeleteVersion:'Delete this version?', noVersions:'No saved versions', versionItems:(n) => `${n} item${n!==1?'s':''}`,
     fillPlaceholderHint:'Click a photo in the library to assign it to this frame',
     original:'Original:', inTableau:'In tableau:', notInAnyBoard:'Not in any board',
+    filterScopeProject:'In project', filterScopeRoom:'In this room',
+    infoBoardCtxWall:(wn,rn,s)=>`Wall ${wn} — ${rn} (side ${s})`,
+    infoBoardCtxBlock:(bl,fn)=>`Block ${bl} — ${fn} face`,
+    infoBoardCtxFaceLabel:{n:'North',s:'South',e:'East',w:'West',t:'Top'},
     noBoard:'No board', createBoardHint:'Create a board in the left panel',
     emptyBoard:'Empty board',
     dragHint1:'Drag photos from the library (below)',
@@ -1719,6 +1735,7 @@ function App() {
   const libHeightRef    = useRef(parseInt(localStorage.getItem('tb-libh') || '160'));
   const [photoSort,     setPhotoSort]     = useState(() => localStorage.getItem('photoSort') || 'imported');
   const [photoFilter,   setPhotoFilter]   = useState(() => localStorage.getItem('photoFilter') || 'all');
+  const [unplacedScope, setUnplacedScope] = useState('project'); // 'project' | 'room'
   const [libSearch,     setLibSearch]     = useState('');
   const [thumbSize,     setThumbSize]     = useState(() => parseInt(localStorage.getItem('thumbSize') || '84'));
   const [labelEditId,   setLabelEditId]   = useState(null);
@@ -2648,6 +2665,12 @@ function App() {
           });
         }
 
+        const v1p = vertexPosts.get(wall.v1);
+        const v2p = vertexPosts.get(wall.v2);
+        const startOffset = (v1p && v1p.n >= 2) ? v1p.wt / 2 : 0;
+        const endOffset   = (v2p && v2p.n >= 2) ? v2p.wt / 2 : 0;
+        const wallFaceLen = Math.max(0, len - startOffset - endOffset);
+
         const wallSides = [];
         if (wall.boardId)     wallSides.push({boardId: wall.boardId,     sideSign:  1});
         if (wall.boardIdBack) wallSides.push({boardId: wall.boardIdBack, sideSign: -1});
@@ -2692,7 +2715,7 @@ function App() {
           const sizeScale = (minH > 0 && ih > 0 && ih < minH) ? minH / ih : 1;
           const finalIw = iw * sizeScale;
           const finalIh = Math.max(ih, minH);
-          const ix = (item.x + item.w/2) / bPx.w * fW;
+          const ix = startOffset + (item.x + item.w/2) / bPx.w * Math.min(fW, wallFaceLen);
           const iy = wh * (1 - (item.y + itemH/2) / bPx.h);
           const itemRotRad = -((item.rot || 0) + (item.freeRot || 0)) * Math.PI / 180;
           const pos = { x: x1 + dirX*ix + normX*(wt/2+2), y: iy, z: z1 + dirZ*ix + normZ*(wt/2+2) };
@@ -2728,30 +2751,41 @@ function App() {
           if (isText) {
             const SCALE = 2;
             const cvW = Math.max(1, Math.round(item.w * SCALE));
-            const cvH = Math.max(1, Math.round(itemH * SCALE));
+            const tFont = TEXT_FONTS.find(f => f.id === (item.fontFamily || 'serif')) || TEXT_FONTS[0];
+            const baseCvH = Math.max(1, Math.round(itemH * SCALE));
+            const fs = Math.min((item.fontSize || 40) * SCALE, baseCvH * 0.85);
+            const bold = item.fontWeight === 'bold' ? 'bold ' : '';
+            const italic = item.fontStyle === 'italic' ? 'italic ' : '';
             const cvs = document.createElement('canvas');
-            cvs.width = cvW; cvs.height = cvH;
+            cvs.width = cvW; cvs.height = 1;
             const ctx2 = cvs.getContext('2d');
-            {
-              const tFont = TEXT_FONTS.find(f => f.id === (item.fontFamily || 'serif')) || TEXT_FONTS[0];
-              const fs = Math.min((item.fontSize || 40) * SCALE, cvH * 0.85);
-              const bold = item.fontWeight === 'bold' ? 'bold ' : '';
-              const italic = item.fontStyle === 'italic' ? 'italic ' : '';
-              ctx2.clearRect(0, 0, cvW, cvH);
-              ctx2.font = `${italic}${bold}${fs}px ${tFont.family}`;
-              const wallFallback = bgContrast(hexWall);
-              let textCol = item.textColor || wallFallback;
-              if (textCol.startsWith('#') && bgContrast(textCol) === bgContrast(hexWall)) textCol = wallFallback;
-              ctx2.fillStyle = textCol;
-              ctx2.textAlign = item.textAlign || 'left';
-              ctx2.textBaseline = 'alphabetic';
-              const tx = item.textAlign === 'right' ? cvW - 4*SCALE : item.textAlign === 'center' ? cvW/2 : 4*SCALE;
-              const lines = (item.text || '').split('\n');
-              const lineH = fs * 1.35;
-              const totalH = lines.length * lineH;
-              const startY = (cvH - totalH) / 2 + fs * 0.85;
-              lines.forEach((ln, i) => ctx2.fillText(ln, tx, startY + i * lineH));
+            ctx2.font = `${italic}${bold}${fs}px ${tFont.family}`;
+            const maxW = cvW - 8 * SCALE;
+            const lines = [];
+            for (const para of (item.text || '').split('\n')) {
+              const words = para.split(' ');
+              let cur = '';
+              for (const word of words) {
+                const test = cur ? cur + ' ' + word : word;
+                if (cur && ctx2.measureText(test).width > maxW) { lines.push(cur); cur = word; }
+                else cur = test;
+              }
+              lines.push(cur);
             }
+            const lineH = fs * 1.25;
+            const totalH = lines.length * lineH;
+            const cvH = Math.max(baseCvH, Math.ceil(totalH + fs * 0.4));
+            cvs.height = cvH;
+            ctx2.font = `${italic}${bold}${fs}px ${tFont.family}`;
+            const wallFallback = bgContrast(hexWall);
+            let textCol = item.textColor || wallFallback;
+            if (textCol.startsWith('#') && bgContrast(textCol) === bgContrast(hexWall)) textCol = wallFallback;
+            ctx2.fillStyle = textCol;
+            ctx2.textAlign = item.textAlign || 'left';
+            ctx2.textBaseline = 'alphabetic';
+            const tx = item.textAlign === 'right' ? cvW - 4*SCALE : item.textAlign === 'center' ? cvW/2 : 4*SCALE;
+            const startY = (cvH - totalH) / 2 + fs * 0.82;
+            lines.forEach((ln, i) => ctx2.fillText(ln, tx, startY + i * lineH));
             const tex = new THREE.CanvasTexture(cvs);
             pMesh.material = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, transparent: true, alphaTest: 0.01 });
           } else if (item.photoId) {
@@ -2811,15 +2845,31 @@ function App() {
         if (isText) {
           const SCALE = 2;
           const cvW = Math.max(1, Math.round(item.w * SCALE));
-          const cvH = Math.max(1, Math.round(itemH * SCALE));
-          const cvs = document.createElement('canvas');
-          cvs.width = cvW; cvs.height = cvH;
-          const ctx2 = cvs.getContext('2d');
           const tFont = TEXT_FONTS.find(f => f.id === (item.fontFamily || 'serif')) || TEXT_FONTS[0];
-          const fs = Math.min((item.fontSize || 40) * SCALE, cvH * 0.85);
+          const baseCvH = Math.max(1, Math.round(itemH * SCALE));
+          const fs = Math.min((item.fontSize || 40) * SCALE, baseCvH * 0.85);
           const bold = item.fontWeight === 'bold' ? 'bold ' : '';
           const italic = item.fontStyle === 'italic' ? 'italic ' : '';
-          ctx2.clearRect(0, 0, cvW, cvH);
+          const cvs = document.createElement('canvas');
+          cvs.width = cvW; cvs.height = 1;
+          const ctx2 = cvs.getContext('2d');
+          ctx2.font = `${italic}${bold}${fs}px ${tFont.family}`;
+          const maxW = cvW - 8 * SCALE;
+          const lines = [];
+          for (const para of (item.text || '').split('\n')) {
+            const words = para.split(' ');
+            let cur = '';
+            for (const word of words) {
+              const test = cur ? cur + ' ' + word : word;
+              if (cur && ctx2.measureText(test).width > maxW) { lines.push(cur); cur = word; }
+              else cur = test;
+            }
+            lines.push(cur);
+          }
+          const lineH = fs * 1.25;
+          const totalH = lines.length * lineH;
+          const cvH = Math.max(baseCvH, Math.ceil(totalH + fs * 0.4));
+          cvs.height = cvH;
           ctx2.font = `${italic}${bold}${fs}px ${tFont.family}`;
           const fallback = bgContrast(bgHex);
           let textCol = item.textColor || fallback;
@@ -2828,10 +2878,7 @@ function App() {
           ctx2.textAlign = item.textAlign || 'left';
           ctx2.textBaseline = 'alphabetic';
           const tx = item.textAlign === 'right' ? cvW - 4*SCALE : item.textAlign === 'center' ? cvW/2 : 4*SCALE;
-          const lines = (item.text || '').split('\n');
-          const lineH = fs * 1.35;
-          const totalH = lines.length * lineH;
-          const startY = (cvH - totalH) / 2 + fs * 0.85;
+          const startY = (cvH - totalH) / 2 + fs * 0.82;
           lines.forEach((ln, i) => ctx2.fillText(ln, tx, startY + i * lineH));
           const tex = new THREE.CanvasTexture(cvs);
           pMesh.material = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, transparent: true, alphaTest: 0.01 });
@@ -4230,6 +4277,42 @@ ${rows}
     boardsRef.current
       .filter(b => (allBoardItemsRef.current[b.id] || []).some(i => i.photoId === photoId))
       .map(b => ({ id: b.id, name: b.name }));
+
+  const getRoomBoardIds = (r) => {
+    const ids = new Set();
+    (r.walls || []).forEach(w => {
+      if (w.boardId) ids.add(w.boardId);
+      if (w.boardIdBack) ids.add(w.boardIdBack);
+    });
+    (r.blocks || []).forEach(bl => {
+      if (!bl.faces) return;
+      Object.values(bl.faces).forEach(f => { if (f?.boardId) ids.add(f.boardId); });
+    });
+    return ids;
+  };
+
+  const photoBoardsWithContext = (photoId) =>
+    boardsRef.current
+      .filter(b => (allBoardItemsRef.current[b.id] || []).some(i => i.photoId === photoId))
+      .map(b => {
+        let ctx = null;
+        for (const r of rooms) {
+          for (const w of (r.walls || [])) {
+            if (w.boardId === b.id) { ctx = {type:'wall', wallName:w.name||'', roomName:r.name||'', side:'A'}; break; }
+            if (w.boardIdBack === b.id) { ctx = {type:'wall', wallName:w.name||'', roomName:r.name||'', side:'B'}; break; }
+          }
+          if (ctx) break;
+          for (const bl of (r.blocks || [])) {
+            if (!bl.faces) continue;
+            for (const [dir, f] of Object.entries(bl.faces)) {
+              if (f?.boardId === b.id) { ctx = {type:'block', blockLabel:bl.label||'?', face:dir, roomName:r.name||''}; break; }
+            }
+            if (ctx) break;
+          }
+          if (ctx) break;
+        }
+        return { id: b.id, name: b.name, ctx };
+      });
 
   // ── canvas coordinate normalizer (always anchors content to origin) ────────
   const normalizeItems = (its) => {
@@ -5822,7 +5905,7 @@ ${rows}
     const onMM = e => {
       const bp = boardPxRef.current;
       const maxW = bp ? bp.w - it.x : Infinity;
-      rawCw = Math.max(80, Math.min(rawCw + e.movementX / zoomRef.current, maxW));
+      rawCw = Math.max(10, Math.min(rawCw + e.movementX / zoomRef.current, maxW));
       cw = rawCw;
 
       // Snap guides during resize (only when snap is on)
@@ -6101,7 +6184,7 @@ ${rows}
     const onMM = e => {
       const bp = boardPxRef.current;
       const maxW = bp ? bp.w - it.x : Infinity;
-      rawW = Math.max(60, Math.min(rawW + e.movementX / zoomRef.current, maxW));
+      rawW = Math.max(10, Math.min(rawW + e.movementX / zoomRef.current, maxW));
       const u = itemsRef.current.map(i => i.id === itemId ? {...i, w: Math.round(rawW)} : i);
       itemsRef.current = u; setItems(u);
     };
@@ -7061,8 +7144,8 @@ ${rows}
           ...orig,
           x: Math.round(nx + (orig.x - ox) * scaleX),
           y: Math.round(ny + (orig.y - oy) * scaleY),
-          w: Math.max(20, Math.round(orig.w * scaleX)),
-          ...(orig.h ? {h: Math.max(20, Math.round(orig.h * scaleY))} : {}),
+          w: Math.max(10, Math.round(orig.w * scaleX)),
+          ...(orig.h ? {h: Math.max(10, Math.round(orig.h * scaleY))} : {}),
         };
       }));
     };
@@ -7072,10 +7155,10 @@ ${rows}
       const bp = boardPxRef.current;
       let nx = ox, ny = oy, nw = ow, nh = oh;
       if (scaleMode) {
-        if (mode.includes('e')) nw = Math.max(40, ow + dx);
-        if (mode.includes('w')) { nw = Math.max(40, ow - dx); nx = ox + ow - nw; }
-        if (mode.includes('s')) nh = Math.max(30, oh + dy);
-        if (mode.includes('n')) { nh = Math.max(30, oh - dy); ny = oy + oh - nh; }
+        if (mode.includes('e')) nw = Math.max(10, ow + dx);
+        if (mode.includes('w')) { nw = Math.max(10, ow - dx); nx = ox + ow - nw; }
+        if (mode.includes('s')) nh = Math.max(10, oh + dy);
+        if (mode.includes('n')) { nh = Math.max(10, oh - dy); ny = oy + oh - nh; }
         if (e.shiftKey) {
           // Proportional (Photoshop-like): lock aspect ratio.
           // Take the larger of the two factors so the zone always encloses
@@ -7083,7 +7166,7 @@ ${rows}
           const hasH = mode.includes('e') || mode.includes('w');
           const hasV = mode.includes('n') || mode.includes('s');
           const fW = nw / ow, fH = nh / oh;
-          const f = Math.max(hasH && hasV ? Math.max(fW, fH) : hasH ? fW : fH, 40 / ow, 30 / oh);
+          const f = Math.max(hasH && hasV ? Math.max(fW, fH) : hasH ? fW : fH, 10 / ow, 10 / oh);
           nw = ow * f; nh = oh * f;
           if (mode.includes('w')) nx = ox + ow - nw;
           if (mode.includes('n')) ny = oy + oh - nh;
@@ -7091,8 +7174,8 @@ ${rows}
       } else {
         const PAD = 16;
         const members = itemsRef.current.filter(i => i.zoneId === itemId && i.type !== 'zone');
-        const cRight  = members.length ? Math.max(...members.map(i => i.x + i.w)) - ox + PAD : 80;
-        const cBottom = members.length ? Math.max(...members.map(i => i.y + getItemH(i))) - oy + PAD : 60;
+        const cRight  = members.length ? Math.max(...members.map(i => i.x + i.w)) - ox + PAD : 10;
+        const cBottom = members.length ? Math.max(...members.map(i => i.y + getItemH(i))) - oy + PAD : 10;
         const cLeft   = members.length ? Math.min(...members.map(i => i.x)) - ox - PAD : 0;
         const cTop    = members.length ? Math.min(...members.map(i => i.y)) - oy - PAD : 0;
         if (mode.includes('e')) nw = Math.max(cRight, ow + dx);
@@ -7124,8 +7207,8 @@ ${rows}
             ...orig,
             x: Math.round(rx + (orig.x - ox) * scaleX),
             y: Math.round(ry + (orig.y - oy) * scaleY),
-            w: Math.max(20, Math.round(orig.w * scaleX)),
-            ...(orig.h ? {h: Math.max(20, Math.round(orig.h * scaleY))} : {}),
+            w: Math.max(10, Math.round(orig.w * scaleX)),
+            ...(orig.h ? {h: Math.max(10, Math.round(orig.h * scaleY))} : {}),
           };
         });
       } else {
@@ -7163,10 +7246,10 @@ ${rows}
       const dx = (e.clientX - sx) / z, dy = (e.clientY - sy) / z;
       const bp = boardPxRef.current;
       let nx = ox, ny = oy, nw = ow, nh = oh;
-      if (mode.includes('e')) nw = Math.max(120, ow + dx);
-      if (mode.includes('w')) { nw = Math.max(120, ow - dx); nx = ox + ow - nw; }
-      if (mode.includes('s')) nh = Math.max(60, oh + dy);
-      if (mode.includes('n')) { nh = Math.max(60, oh - dy); ny = oy + oh - nh; }
+      if (mode.includes('e')) nw = Math.max(10, ow + dx);
+      if (mode.includes('w')) { nw = Math.max(10, ow - dx); nx = ox + ow - nw; }
+      if (mode.includes('s')) nh = Math.max(10, oh + dy);
+      if (mode.includes('n')) { nh = Math.max(10, oh - dy); ny = oy + oh - nh; }
       if (bp && mode.includes('e')) nw = Math.min(nw, bp.w - nx);
       if (bp && mode.includes('s')) nh = Math.min(nh, bp.h - ny);
       cx = nx; cy = ny; cw = nw; ch = nh;
@@ -7197,8 +7280,8 @@ ${rows}
     const runits = activeMeta?.units || 'px';
     const onMM = e => {
       const bp = boardPxRef.current; const z = zoomRef.current;
-      cw = Math.max(120, Math.min(ow + (e.clientX - sx) / z, bp ? bp.w - it.x : Infinity));
-      ch = Math.max(60,  Math.min(oh + (e.clientY - sy) / z, bp ? bp.h - it.y : Infinity));
+      cw = Math.max(10, Math.min(ow + (e.clientX - sx) / z, bp ? bp.w - it.x : Infinity));
+      ch = Math.max(10, Math.min(oh + (e.clientY - sy) / z, bp ? bp.h - it.y : Infinity));
       setItems(its => its.map(i => i.id === itemId ? { ...i, w: cw, h: ch } : i));
     };
     const onMU = () => {
@@ -7469,7 +7552,7 @@ ${rows}
       </>);
     }
     const { photo, status, thumbSrc, itemW, itemH } = hoverInfo;
-    const boardNames = photo?.id ? photoBoardNames(photo.id) : [];
+    const boardsWithCtx = photo?.id ? photoBoardsWithContext(photo.id) : [];
     const currentBoardRoom = rooms.find(r =>
       r.walls?.some(w => w.boardId === bid || w.boardIdBack === bid) ||
       r.blocks?.some(bl => bl.faces && Object.values(bl.faces).some(f => f?.boardId === bid))
@@ -7562,11 +7645,22 @@ ${rows}
             </div>
           )}
           <div className="info-boards">
-            {boardNames.length === 0
+            {boardsWithCtx.length === 0
               ? <div className="ibd-none">{t('notInAnyBoard')}</div>
-              : boardNames.map(n => (
-                  <span key={n} className={`ibd-tag${n === activeBoard?.name ? ' cur' : ''}`}>{n}</span>
-                ))
+              : boardsWithCtx.map(b => {
+                  const faceLabel = b.ctx?.face ? (t('infoBoardCtxFaceLabel')||{})[b.ctx.face] || b.ctx.face : '';
+                  const ctxLine = b.ctx?.type === 'wall'
+                    ? t('infoBoardCtxWall', b.ctx.wallName, b.ctx.roomName, b.ctx.side)
+                    : b.ctx?.type === 'block'
+                    ? t('infoBoardCtxBlock', b.ctx.blockLabel, faceLabel)
+                    : null;
+                  return ctxLine
+                    ? <div key={b.id} className={`ibd-ctx-entry${b.id === bid ? ' cur' : ''}`}>
+                        <span className="ibd-ctx-label">{ctxLine}</span>
+                        <span className="ibd-ctx-board">{b.name}</span>
+                      </div>
+                    : <span key={b.id} className={`ibd-tag${b.id === bid ? ' cur' : ''}`}>{b.name}</span>;
+                })
             }
           </div>
         </div>
@@ -7833,9 +7927,11 @@ ${rows}
           <span className="room-share-sep">›</span>
           <span className="room-share-name">{roomShareInfo.roomName || (lang==='es'?'Sala':'Room')}</span>
           <span className="room-share-badge">{t('shareRoomBadge')}</span>
-          {roomShareAllowComments && (
-            <button className="tbtn" title={t('commentsBtn')} style={{marginLeft:8,fontSize:14}} onClick={() => openCommentPanel('room', roomShareInfo.roomId, null, roomShareInfo.roomName || (lang==='es'?'Sala':'Room'))}>💬</button>
-          )}
+          {roomShareAllowComments && (() => {
+            const _cs = commentSummary[`room:${roomShareInfo.roomId}`];
+            const _n = _cs?.total || 0;
+            return <button className="tbtn" data-tooltip={t('ttComments', _n)} style={{marginLeft:8,fontSize:14,position:'relative'}} onClick={() => openCommentPanel('room', roomShareInfo.roomId, null, roomShareInfo.roomName || (lang==='es'?'Sala':'Room'))}>💬{_n>0&&<span className="tbtn-dot" style={{background:'var(--acc)'}}/>}</button>;
+          })()}
         </div>
       )}
 
@@ -7997,7 +8093,7 @@ ${rows}
                 // Ver
                 grid: (!shareRole && bid && roomView === 'board') ? (
                   <button key="grid" className={`tbtn${showGrid?' on':''}`}
-                    title={t('gridToggle')}
+                    data-tooltip={t('gridToggle')}
                     onClick={e => { if (gridDropOpen) { setGridDropOpen(false); return; } const r = e.currentTarget.getBoundingClientRect(); setGridDropPos({ right: window.innerWidth - r.right, top: r.bottom + 4 }); setGridDropOpen(true); }}>
                     <SvgGrid/>{showGrid && snapGrid && <span className="tbtn-dot"/>}
                   </button>) : null,
@@ -8005,7 +8101,7 @@ ${rows}
                   <button key="present" className="tbtn" data-tooltip={t('ttPresent')} onClick={() => setPresentation(true)}><SvgPresent/></button>) : null,
                 // Tablero
                 config: (!shareRole && (tmplEditMode || bid)) ? (
-                  <button key="config" className="tbtn" title={t('boardConfig')} onClick={openBoardConfig}><SvgConfig/></button>) : null,
+                  <button key="config" className="tbtn" data-tooltip={t('boardConfig')} onClick={openBoardConfig}><SvgConfig/></button>) : null,
                 versions: (!shareRole && !tmplEditMode && bid && roomView === 'board') ? (
                   <button key="versions" className="tbtn" data-tooltip={t('ttVersions')} onClick={() => { loadVersions(); setModal('versions'); }}>
                     <SvgVersions/>{versions.length > 0 && <span className="tbtn-dot"/>}
@@ -8021,15 +8117,16 @@ ${rows}
                 comments: (!tmplEditMode && pid) ? (() => {
                   if (roomView === 'board' && bid) {
                     const boardTotal = Object.entries(commentSummary).filter(([k]) => { const it = (items||[]).find(i => k===`photo:${i.photoId}`||k===`zone:${i.id}`||k===`text:${i.id}`||k===`grid:${i.id}`); return !!it; }).reduce((s,[,v])=>s+(v.total||0),0) + (commentSummary[`board:${bid}`]?.total||0);
-                    const hasPend = !shareRole && Object.entries(commentSummary).filter(([k]) => { const it = (items||[]).find(i => k===`photo:${i.photoId}`||k===`zone:${i.id}`||k===`text:${i.id}`||k===`grid:${i.id}`); return !!it; }).some(([,v])=>v.pending>0);
-                    return <button key="comments" className={`tbtn${commentPanel?'.on':''}`} title={t('ttComments', boardTotal)} onClick={() => openCommentPanel('board', bid, bid, activeBoard?.name)}>💬{boardTotal>0&&<span className="tbtn-dot" style={hasPend?{background:'var(--acc)'}:undefined}/>}</button>;
+                    const hasPendOwner = !shareRole && Object.entries(commentSummary).filter(([k]) => { const it = (items||[]).find(i => k===`photo:${i.photoId}`||k===`zone:${i.id}`||k===`text:${i.id}`||k===`grid:${i.id}`); return !!it; }).some(([,v])=>v.pending>0);
+                    const dotAccent = shareRole ? boardTotal > 0 : hasPendOwner;
+                    return <button key="comments" className={`tbtn${commentPanel?'.on':''}`} data-tooltip={t('ttComments', boardTotal)} onClick={() => openCommentPanel('board', bid, bid, activeBoard?.name)}>💬{boardTotal>0&&<span className="tbtn-dot" style={dotAccent?{background:'var(--acc)'}:undefined}/>}</button>;
                   }
                   if ((roomView === 'room' || roomView === '3d') && room) {
                     const _rid = activeRoomId || room.id;
                     const _cs = commentSummary[`room:${_rid}`];
                     const _n = _cs?.total||0;
-                    const _pend = !shareRole && (_cs?.pending||0)>0;
-                    return <button key="comments" className={`tbtn${commentPanel?'.on':''}`} title={t('ttComments', _n)} onClick={() => openCommentPanel('room', _rid, null, room?.name||(lang==='es'?'Sala':'Room'))}>💬{_n>0&&<span className="tbtn-dot" style={_pend?{background:'var(--acc)'}:undefined}/>}</button>;
+                    const _hasDot = shareRole ? _n > 0 : (_cs?.pending||0) > 0;
+                    return <button key="comments" className={`tbtn${commentPanel?'.on':''}`} data-tooltip={t('ttComments', _n)} onClick={() => openCommentPanel('room', _rid, null, room?.name||(lang==='es'?'Sala':'Room'))}>💬{_n>0&&<span className="tbtn-dot" style={_hasDot?{background:'var(--acc)'}:undefined}/>}</button>;
                   }
                   return null;
                 })() : null,
@@ -8041,14 +8138,14 @@ ${rows}
                 [mk.comments],
               ].map(g => g.filter(Boolean)).filter(g => g.length);
               const util = [
-                !sbOpen ? <button key="panel" className="tbtn" title={t('showPanel')} onClick={() => setSbOpen(true)}><SvgPanel/></button> : null,
+                !sbOpen ? <button key="panel" className="tbtn" data-tooltip={t('showPanel')} onClick={() => setSbOpen(true)}><SvgPanel/></button> : null,
                 (!shareRole && authMode) ? (
-                  <button key="invites" className="tbtn" title={t('shareActiveTitle')}
+                  <button key="invites" className="tbtn" data-tooltip={t('shareActiveTitle')}
                     onClick={() => api.get('/api/shares').then(d => setSharesPanel(d)).catch(() => setSharesPanel([]))}>
                     <SvgShareNet/>
                   </button>) : null,
                 (!shareRole && authMode && pendingCount > 0) ? (
-                  <button key="moderation" className="tbtn" title={t('ttModeration', pendingCount)}
+                  <button key="moderation" className="tbtn" data-tooltip={t('ttModeration', pendingCount)}
                     style={{position:'relative'}} onClick={() => { loadModPending(); setModOpen(true); }}>
                     💬<span style={{position:'absolute',top:2,right:2,background:'var(--acc)',color:'var(--bg)',borderRadius:'50%',width:12,height:12,fontSize:7,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:600,lineHeight:1}}>{pendingCount}</span>
                   </button>) : null,
@@ -9916,8 +10013,13 @@ ${rows}
                 : photos;
               const allTags = [...new Set(photos.flatMap(p => p.tags || []))].sort();
               const rejectedCount = photos.filter(p => p.rejected).length;
+              const hasRoomScope = room && getRoomBoardIds(room).size > 0;
+              const effectiveScope = (unplacedScope === 'room' && hasRoomScope) ? 'room' : 'project';
+              const roomScopeBoardIds = effectiveScope === 'room' ? getRoomBoardIds(room) : null;
               const displayedPhotos = (photoFilter === 'pending'
-                ? sortedPhotos.filter(p => photoBoardNames(p.id).length === 0)
+                ? sortedPhotos.filter(p => roomScopeBoardIds
+                    ? !boardsRef.current.some(b => roomScopeBoardIds.has(b.id) && (allBoardItemsRef.current[b.id]||[]).some(i => i.photoId === p.id))
+                    : photoBoardNames(p.id).length === 0)
                 : sortedPhotos)
                 .filter(p => rejectedFilter === true ? p.rejected : rejectedFilter === false ? !p.rejected : true)
                 .filter(p => tagFilter.length === 0 || tagFilter.some(t => (p.tags || []).includes(t)))
@@ -9932,7 +10034,7 @@ ${rows}
                 });
               displayedPhotosRef.current = displayedPhotos;
               const toggleLib = () => { const v = !libOpen; setLibOpen(v); localStorage.setItem('libOpen', v); };
-              const toggleFilter = (e) => { e.stopPropagation(); const v = photoFilter === 'pending' ? 'all' : 'pending'; setPhotoFilter(v); localStorage.setItem('photoFilter', v); };
+              const toggleFilter = (e) => { e.stopPropagation(); const v = photoFilter === 'pending' ? 'all' : 'pending'; setPhotoFilter(v); localStorage.setItem('photoFilter', v); if (v === 'all') setUnplacedScope('project'); };
               const toggleStarFilter = (n, e) => { e.stopPropagation(); setRatingFilter(f => f === n ? 0 : n); };
               return (
               <div className={`library${libDragOver ? (pid ? ' lib-drop-active' : ' lib-drop-noproj') : ''}`} style={{height: libH}} onClick={e => e.stopPropagation()}>
@@ -9948,6 +10050,14 @@ ${rows}
                       value={libSearch} onClick={e => e.stopPropagation()}
                       onChange={e => setLibSearch(e.target.value)}/>
                     <button className={`lib-filter${photoFilter === 'pending' ? ' active' : ''}`} onClick={toggleFilter} title={t('filterPending')}>⊘ {t('filterPending')}</button>
+                    {photoFilter === 'pending' && (
+                      <select className="lib-scope-sel" value={effectiveScope}
+                        onClick={e => e.stopPropagation()}
+                        onChange={e => { e.stopPropagation(); setUnplacedScope(e.target.value); }}>
+                        <option value="project">{t('filterScopeProject')}</option>
+                        {hasRoomScope && <option value="room">{t('filterScopeRoom')}</option>}
+                      </select>
+                    )}
                     <button className={`lib-filter${orientFilter ? ' active' : ''}`}
                       title={t('orientFilterHint', orientFilter)}
                       onClick={e => { e.stopPropagation(); setOrientFilter(f => f === null ? 'L' : f === 'L' ? 'P' : f === 'P' ? 'S' : null); }}>

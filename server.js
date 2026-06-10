@@ -313,7 +313,10 @@ function roomPhotoIds(dd, pid, room) {
   const ids = new Set();
   for (const bid of roomBoardIds(room)) {
     const items = readJSON(boardFile(pid, bid, dd), []);
-    items.forEach(it => { if (it.photoId) ids.add(it.photoId); });
+    items.forEach(it => {
+      if (it.photoId) ids.add(it.photoId);
+      if (it.photoIds) it.photoIds.forEach(id => { if (id) ids.add(id); });
+    });
   }
   return ids;
 }
@@ -2412,7 +2415,7 @@ app.post('/api/projects/:pid/comments', resolveAccess, (req, res) => {
     text: text.trim(),
     createdAt: Date.now(), editedAt: null,
     status:     isOwner ? 'published' : 'pending',
-    visibility: 'private',
+    visibility: isOwner && req.body.visibility === 'public' ? 'public' : 'private',
     includeInMemory: false,
     shareToken: isOwner ? null : req.shareToken,
   };
