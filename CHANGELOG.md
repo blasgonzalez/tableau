@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.21.11] — 2026-06-10
+
+### Mejorado
+- **Sistema de tooltips unificado:** todos los botones de la aplicación usan ahora el mismo estilo de tooltip CSS (`[data-tooltip]:hover::after`) en lugar de la mezcla de `data-tooltip` (estilo personalizado) y `title=""` (tooltip nativo del navegador con fondo oscuro diferente). Afecta a: botones de la barra de alineación, controles `.ibc` del canvas (rotación, bloqueo, eliminación, avanzar), botones de la barra lateral (proyectos, tableros, salas, secciones, biblioteca), controles de filtro de la biblioteca, botones de vista 3D/sala, panel de administración y otros. Eliminados los atributos `title=""` de elementos no interactivos (nombres truncados de proyectos/tableros, badges de zona, etc.) para evitar tooltips nativos en elementos decorativos.
+
 ## [1.21.10] — 2026-06-10
 
 ### Corregido

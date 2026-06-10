@@ -7636,7 +7636,7 @@ ${rows}
           onError={e => e.target.style.opacity = '.2'}
         />
         <div className="info-meta">
-          <div className="info-name" title={photo?.name}>{photo?.name || '—'}</div>
+          <div className="info-name">{photo?.name || '—'}</div>
           {(photo?.origW || photo?.w) > 0 && (() => {
             const ow = photo.origW || photo.w, oh = photo.origH || photo.h;
             const dpi = photo.origDpi;
@@ -7664,7 +7664,7 @@ ${rows}
               {hueColor && <span className="info-color-swatch" style={{background:hueColor}}/>}
               {hueLabel && <span className="info-color-label">{hueLabel}</span>}
               {brightPct != null && <>
-                <div className="info-bright-bar" title={`${brightPct}%`}>
+                <div className="info-bright-bar">
                   <div className="info-bright-bar-fill" style={{left:`${brightPct}%`}}/>
                 </div>
                 <span className="info-color-label">{brightPct}%</span>
@@ -8114,7 +8114,7 @@ ${rows}
                         onChange={e => setActiveTextProp('textColor', e.target.value)}/>
                     </div>
                     {activeTextItem.textColor && (
-                      <button className="tbtn" style={{fontSize:10,width:22,height:26}} title="Auto"
+                      <button className="tbtn" style={{fontSize:10,width:22,height:26}} data-tooltip="Auto"
                         onClick={() => setActiveTextProp('textColor', '')}>✕</button>
                     )}
                   </>
@@ -8252,7 +8252,7 @@ ${rows}
         </div>
         {authUser && (
           <div className="avatar-picker" onClick={e => e.stopPropagation()}>
-            <button className="avatar-btn" onClick={() => setAvatarOpen(o => !o)} title={authUser.username}>
+            <button className="avatar-btn" onClick={() => setAvatarOpen(o => !o)} data-tooltip={authUser.username}>
               {authUser.username[0].toUpperCase()}
             </button>
             {avatarOpen && (
@@ -8318,7 +8318,7 @@ ${rows}
           {/* ── SIDEBAR ── */}
           {!sbOpen ? (
             <div className="sidebar" style={{width:36,flexShrink:0}} onClick={e => e.stopPropagation()}>
-              <div className="sb-toggle-strip" onClick={() => setSbOpen(true)} title={t('openPanel')}>
+              <div className="sb-toggle-strip" onClick={() => setSbOpen(true)} data-tooltip={t('openPanel')}>
                 <button className="sb-toggle-btn">▶</button>
                 <div className="sb-collapsed-label">{t('panelLabel')}</div>
               </div>
@@ -8332,13 +8332,13 @@ ${rows}
                   <div className="sb-sec-hd" style={{cursor:'pointer'}} onClick={() => { setSbNavOpen(v => { if (!v) setSbTemplOpen(false); return !v; }); }}>
                     <span className="sb-sec-caret">{sbNavOpen ? '▾' : '▸'}</span>
                     <span className="sb-sec-title">{t('projBoards')}</span>
-                    {!shareRole && sbNavOpen && <button className="sb-sec-btn" title={t('newProject')}
+                    {!shareRole && sbNavOpen && <button className="sb-sec-btn" data-tooltip={t('newProject')}
                       onClick={e => { e.stopPropagation(); setNameVal(''); setModal('project'); }}>+</button>}
-                    {!shareRole && sbNavOpen && <button className="sb-sec-btn" title={t('importProjectBtn')}
+                    {!shareRole && sbNavOpen && <button className="sb-sec-btn" data-tooltip={t('importProjectBtn')}
                       onClick={e => { e.stopPropagation(); importInputRef.current?.click(); }}><SvgImport size={12}/></button>}
                     <input ref={importInputRef} type="file" accept=".zip" style={{display:'none'}}
                       onChange={e => { handleImportFile(e.target.files[0]); e.target.value = ''; }} />
-                    <button className="sb-sec-btn" title={t('collapsePanel')}
+                    <button className="sb-sec-btn" data-tooltip={t('collapsePanel')}
                       onClick={e => { e.stopPropagation(); setSbOpen(false); }}>◀</button>
                   </div>
                   {sbNavOpen && <div className="sb-scroll">
@@ -8360,14 +8360,14 @@ ${rows}
                                 onBlur={submitRename} onClick={e => e.stopPropagation()}
                               />
                             ) : (
-                              <span className="nproj-name" title={p.name}>{p.name}</span>
+                              <span className="nproj-name">{p.name}</span>
                             )}
-                            {isActive && (() => { const _cs = commentSummary[`project:${p.id}`]; const _n = _cs?.total||0; const _pend = !shareRole && (_cs?.pending||0)>0; if (_n===0 && shareRole) return null; return <button className="tbtn" style={{fontSize:10,padding:'1px 4px',flexShrink:0,marginLeft:2}} title={t('ttComments',_n)} onClick={e=>{ e.stopPropagation(); openCommentPanel('project', p.id, null, p.name); }}>💬{_n>0&&<span className="tbtn-dot" style={_pend?{background:'var(--acc)'}:undefined}/>}</button>; })()}
+                            {isActive && (() => { const _cs = commentSummary[`project:${p.id}`]; const _n = _cs?.total||0; const _pend = !shareRole && (_cs?.pending||0)>0; if (_n===0 && shareRole) return null; return <button className="tbtn" style={{fontSize:10,padding:'1px 4px',flexShrink:0,marginLeft:2}} data-tooltip={t('ttComments',_n)} onClick={e=>{ e.stopPropagation(); openCommentPanel('project', p.id, null, p.name); }}>💬{_n>0&&<span className="tbtn-dot" style={_pend?{background:'var(--acc)'}:undefined}/>}</button>; })()}
                             {!shareRole && <div className="nrow-acts">
-                              <button className="nact edit" title={t('exportProjectBtn')} onClick={e => exportProject(p.id, e)}><SvgExport size={11}/></button>
-                              <button className="nact edit" title={t('renameBtn')} onClick={e => startRename('project', p.id, p.name, e)}>✎</button>
-                              {authMode && <button className="nact edit" title={t('shareProject')} onClick={e => { e.stopPropagation(); api.get(`/api/projects/${p.id}/share`).then(d => setShareModal({ pid: p.id, ...d })).catch(() => {}); }}><SvgShareNet size={11}/></button>}
-                              <button className="nact del"  title={t('deleteBtn')}  onClick={e => deleteProject(p.id, e)}>×</button>
+                              <button className="nact edit" data-tooltip={t('exportProjectBtn')} onClick={e => exportProject(p.id, e)}><SvgExport size={11}/></button>
+                              <button className="nact edit" data-tooltip={t('renameBtn')} onClick={e => startRename('project', p.id, p.name, e)}>✎</button>
+                              {authMode && <button className="nact edit" data-tooltip={t('shareProject')} onClick={e => { e.stopPropagation(); api.get(`/api/projects/${p.id}/share`).then(d => setShareModal({ pid: p.id, ...d })).catch(() => {}); }}><SvgShareNet size={11}/></button>}
+                              <button className="nact del"  data-tooltip={t('deleteBtn')}  onClick={e => deleteProject(p.id, e)}>×</button>
                             </div>}
                           </div>
                           {isActive && (() => {
@@ -8408,7 +8408,7 @@ ${rows}
                                 onDrop={e => { e.preventDefault(); setBoardDragOver(null); if (boardDragId && roomView !== 'room') reorderBoards(boardDragId, b.id); setBoardDragId(null); }}
                                 onDragEnd={() => { setBoardDragId(null); setBoardDragOver(null); }}
                               >
-                                <span className="nboard-drag" title={roomView==='room' && room ? (lang==='es'?'Arrastrar a pared':'Drag to wall') : undefined}>⠿</span>
+                                <span className="nboard-drag">⠿</span>
                                 <span className="nboard-dash">└</span>
                                 {renaming?.type==='board' && renaming.id===b.id ? (
                                   <input className="n-rename" autoFocus value={renaming.value}
@@ -8417,17 +8417,17 @@ ${rows}
                                     onBlur={submitRename} onClick={e => e.stopPropagation()}/>
                                 ) : (
                                   <>
-                                    {b.private && !shareRole && authMode && <span style={{color:'var(--muted)',flexShrink:0,display:'flex',alignItems:'center',marginRight:2}} title={t('boardPrivate')}><SvgEyeOff size={8}/></span>}
-                                    <span className="nboard-name" title={b.name} onDoubleClick={e => { e.stopPropagation(); startRename('board', b.id, b.name, e); }}>{b.name}</span>
+                                    {b.private && !shareRole && authMode && <span style={{color:'var(--muted)',flexShrink:0,display:'flex',alignItems:'center',marginRight:2}}><SvgEyeOff size={8}/></span>}
+                                    <span className="nboard-name" onDoubleClick={e => { e.stopPropagation(); startRename('board', b.id, b.name, e); }}>{b.name}</span>
                                   </>
                                 )}
                                 {!(renaming?.type==='board' && renaming.id===b.id) && (<>
                                   <span className="nboard-count">{(allBoardItems[b.id]||[]).filter(i=>!i.type||i.type==='photo').length||''}</span>
                                 </>)}
                                 {!shareRole && <div className="nrow-acts">
-                                  <button className="nact edit" title={t('renameBtn')}      onClick={e => startRename('board', b.id, b.name, e)}>✎</button>
-                                  <button className="nact edit" title={t('duplicateBoard')} onClick={e => duplicateBoard(b.id, e)}>⧉</button>
-                                  <button className="nact del"  title={t('deleteBtn')}      onClick={e => deleteBoard(b.id, e)}>×</button>
+                                  <button className="nact edit" data-tooltip={t('renameBtn')}      onClick={e => startRename('board', b.id, b.name, e)}>✎</button>
+                                  <button className="nact edit" data-tooltip={t('duplicateBoard')} onClick={e => duplicateBoard(b.id, e)}>⧉</button>
+                                  <button className="nact del"  data-tooltip={t('deleteBtn')}      onClick={e => deleteBoard(b.id, e)}>×</button>
                                 </div>}
                               </div>
                             );
@@ -8458,10 +8458,10 @@ ${rows}
                                         </span>
                                       )}
                                       {!shareRole && <div className="nrow-acts">
-                                        <button className="nact edit" title={t('renameBtn')}       onClick={e=>startRename('room',r.id,r.name,e)}>✎</button>
-                                        <button className="nact edit" title={t('salaDuplicate')}   onClick={e=>duplicateRoom(r.id,e)}>⧉</button>
-                                        {authMode && <button className="nact edit" title={t('shareRoom')} onClick={e=>{e.stopPropagation();const rid=r.id;setRoomShareModal({rid,loading:true});api.get(`/api/projects/${pid}/rooms/${rid}/share`).then(d=>setRoomShareModal({rid,token:d.token,url:d.url,allowComments:d.allowComments||false})).catch(()=>setRoomShareModal({rid,token:null,url:null}));}}><SvgShareNet size={10}/></button>}
-                                        <button className="nact del"  title={t('salaDelete')}      onClick={e=>{e.stopPropagation();switchRoom(r.id);setTimeout(deleteRoom,0);}}>×</button>
+                                        <button className="nact edit" data-tooltip={t('renameBtn')}       onClick={e=>startRename('room',r.id,r.name,e)}>✎</button>
+                                        <button className="nact edit" data-tooltip={t('salaDuplicate')}   onClick={e=>duplicateRoom(r.id,e)}>⧉</button>
+                                        {authMode && <button className="nact edit" data-tooltip={t('shareRoom')} onClick={e=>{e.stopPropagation();const rid=r.id;setRoomShareModal({rid,loading:true});api.get(`/api/projects/${pid}/rooms/${rid}/share`).then(d=>setRoomShareModal({rid,token:d.token,url:d.url,allowComments:d.allowComments||false})).catch(()=>setRoomShareModal({rid,token:null,url:null}));}}><SvgShareNet size={10}/></button>}
+                                        <button className="nact del"  data-tooltip={t('salaDelete')}      onClick={e=>{e.stopPropagation();switchRoom(r.id);setTimeout(deleteRoom,0);}}>×</button>
                                       </div>}
                                     </div>
                                     {!collapsedRooms.has(r.id) && (roomBoards[r.id]||[]).map(b => renderBoard(b, true))}
@@ -8487,7 +8487,7 @@ ${rows}
                   <div className="sb-sec-hd" style={{cursor:'pointer'}} onClick={() => setSbTemplOpen(v => !v)}>
                     <span className="sb-sec-caret">{sbTemplOpen ? '▾' : '▸'}</span>
                     <span className="sb-sec-title">{t('templatesSection')}</span>
-                    {bid && sbTemplOpen && <button className="sb-sec-btn" title={t('saveAsTemplate')}
+                    {bid && sbTemplOpen && <button className="sb-sec-btn" data-tooltip={t('saveAsTemplate')}
                       onClick={e => { e.stopPropagation(); setSbTmplInput(v => v === null ? (activeBoardMeta?.name || '') : null); }}>+</button>}
                   </div>
                   {sbTemplOpen && (
@@ -8518,16 +8518,16 @@ ${rows}
                                 onBlur={() => renameTmpl(tmpl.id, renamingTmpl.value)}
                                 onClick={e => e.stopPropagation()}/>
                             ) : (
-                              <span className="tmpl-row-name" title={tmpl.name}
+                              <span className="tmpl-row-name"
                                 style={isEditing ? {color:'var(--acc)'} : {}}
                                 onDoubleClick={e => { e.stopPropagation(); setRenamingTmpl({id: tmpl.id, value: tmpl.name}); }}>
                                 {tmpl.name}
                               </span>
                             )}
                             <div className="nrow-acts">
-                              <button className="nact edit" title={lang==='es'?'Renombrar':'Rename'}
+                              <button className="nact edit" data-tooltip={lang==='es'?'Renombrar':'Rename'}
                                 onClick={e => { e.stopPropagation(); setRenamingTmpl({id: tmpl.id, value: tmpl.name}); }}>✎</button>
-                              <button className="nact del" title={t('deleteBtn')}
+                              <button className="nact del" data-tooltip={t('deleteBtn')}
                                 onClick={e => { e.stopPropagation(); deleteTemplate(tmpl.id, tmpl.name); }}>×</button>
                             </div>
                           </div>
@@ -8618,7 +8618,7 @@ ${rows}
                             <input ref={numPropsWRef} className="info-np-inp" type="number" defaultValue={toDisp(si.w)}
                               onKeyDown={e=>handleKD('w',e)} onBlur={e=>applyProp('w',e.target.value)} onPointerDown={e=>e.stopPropagation()}/>
                             <span className="info-np-unit">{u}</span>
-                            {!isPhoto && <button className={`info-np-lock${numPropsAspectLocked?' on':''}`} title={t(numPropsAspectLocked?'npLockOn':'npAspectLock')} onPointerDown={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();setNumPropsAspectLocked(v=>!v);}}>⛓</button>}
+                            {!isPhoto && <button className={`info-np-lock${numPropsAspectLocked?' on':''}`} data-tooltip={t(numPropsAspectLocked?'npLockOn':'npAspectLock')} onPointerDown={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();setNumPropsAspectLocked(v=>!v);}}>⛓</button>}
                             <span className="info-np-lbl" style={{marginLeft:isPhoto?4:0}}>H</span>
                             <input ref={numPropsHRef} className="info-np-inp" type="number" defaultValue={toDisp(iH)}
                               onKeyDown={e=>handleKD('h',e)} onBlur={e=>applyProp('h',e.target.value)} onPointerDown={e=>e.stopPropagation()}/>
@@ -8914,8 +8914,8 @@ ${rows}
                         </button>
                       )}
                       {room && !roomDrawing && <button className="btn" onClick={openRoom3D}>{lang==='es'?'Vista 3D':'3D View'}</button>}
-                      {!shareRole && room && !roomDrawing && <button className="btn" onClick={exportRoom} title={lang==='es'?'Exportar sala':'Export room'}><SvgExport size={11}/></button>}
-                      {!shareRole && !roomDrawing && <button className="btn" onClick={()=>importRoomRef.current?.click()} title={lang==='es'?'Importar sala':'Import room'}><SvgImport size={11}/></button>}
+                      {!shareRole && room && !roomDrawing && <button className="btn" onClick={exportRoom} data-tooltip={lang==='es'?'Exportar sala':'Export room'}><SvgExport size={11}/></button>}
+                      {!shareRole && !roomDrawing && <button className="btn" onClick={()=>importRoomRef.current?.click()} data-tooltip={lang==='es'?'Importar sala':'Import room'}><SvgImport size={11}/></button>}
                       <input ref={importRoomRef} type="file" accept=".json" style={{display:'none'}} onChange={importRoom}/>
                       {!shareRole && room && !roomDrawing && <button className="btn danger" onClick={deleteRoom}>{t('salaDelete')}</button>}
                       {!shareRole && room && !roomDrawing && authMode && (
@@ -8957,7 +8957,7 @@ ${rows}
                           <label>↻: <input type="number" value={Math.round((block.rot||0)*10)/10} min="0" max="359" step="1"
                             style={{width:44}}
                             onChange={e => { const v=parseFloat(e.target.value); if(!isNaN(v)) updateBlock({rot:((v%360)+360)%360}); }}/></label>
-                          <input type="color" value={block.color||'#b8b0a4'} title={lang==='es'?'Color del bloque':'Block color'}
+                          <input type="color" value={block.color||'#b8b0a4'}
                             onPointerDown={e=>e.stopPropagation()}
                             onChange={e=>updateBlock({color:e.target.value})}/>
                           <div style={{width:1,height:18,background:'var(--border2)'}}/>
@@ -8975,7 +8975,7 @@ ${rows}
                                 onMouseLeave={()=>setRoomHovBlock(null)}>
                                 <button className={`block-face-btn${board?' linked':''}`}
                                   style={{borderLeft:`3px solid ${faceColor}`}}
-                                  title={board ? (lang==='es'?'Ver tablero →':'Go to board →') : t('blockFaceLink')}
+                                  data-tooltip={board ? (lang==='es'?'Ver tablero →':'Go to board →') : t('blockFaceLink')}
                                   onClick={async () => {
                                     if (board) {
                                       setBid(board.id); bidRef.current = board.id; setRoomView('board');
@@ -8997,7 +8997,7 @@ ${rows}
                                     }
                                   }}
                                 >{faceLabels[face]}{board?' ▶':' +'}</button>
-                                {mm && <span className="room-wall-warn" title={t('blockFaceMismatch')} style={{fontSize:9,alignSelf:'center'}}>⚠</span>}
+                                {mm && <span className="room-wall-warn" style={{fontSize:9,alignSelf:'center'}}>⚠</span>}
                                 {mm && board && (
                                   <button className="btn" style={{fontSize:8,padding:'1px 3px',flexShrink:0,color:'#e87528',borderColor:'#e87528',alignSelf:'stretch'}}
                                     onClick={() => performBoardSync(board, Math.round(faceW * 10) / 10, Math.round(faceH * 10) / 10, 'blockFaceSyncOk')}>
@@ -9006,7 +9006,6 @@ ${rows}
                                 )}
                                 <input type="color" value={faceColor}
                                   style={{width:12,padding:0,border:'1px solid var(--border2)',cursor:'pointer',flexShrink:0,background:'none'}}
-                                  title={lang==='es'?`Color ${faceLabels[face]}`:`${faceLabels[face]} color`}
                                   onPointerDown={e=>e.stopPropagation()}
                                   onChange={e=>updateBlock({faceColors:{...(block.faceColors||{}),[face]:e.target.value}})}/>
                               </div>
@@ -9056,17 +9055,17 @@ ${rows}
                           onClick={e=>e.stopPropagation()}/>
                       ) : (
                         <span style={{flex:1,cursor:'text',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}
-                          title={lang==='es'?'Clic para nombrar la sala':'Click to name the room'}
+                          data-tooltip={lang==='es'?'Clic para nombrar la sala':'Click to name the room'}
                           onClick={()=>setRoomNameEdit(true)}>
                           {roomName || (lang==='es'?'Sin nombre…':'Unnamed…')}
                         </span>
                       )}
-                      {!roomNameEdit && (() => { const roomId = activeRoomId || room?.id; if (!roomId) return null; const _cs = commentSummary[`room:${roomId}`]; const _n = _cs?.total||0; const _pend = !shareRole && (_cs?.pending||0)>0; if (_n===0 && shareRole) return null; return <button className="tbtn" style={{fontSize:10,padding:'1px 4px',flexShrink:0}} title={t('ttComments',_n)} onClick={()=>openCommentPanel('room', roomId, null, roomName||(lang==='es'?'Sala':'Room'))}>💬{_n>0&&<span className="tbtn-dot" style={_pend?{background:'var(--acc)'}:undefined}/>}</button>; })()}
+                      {!roomNameEdit && (() => { const roomId = activeRoomId || room?.id; if (!roomId) return null; const _cs = commentSummary[`room:${roomId}`]; const _n = _cs?.total||0; const _pend = !shareRole && (_cs?.pending||0)>0; if (_n===0 && shareRole) return null; return <button className="tbtn" style={{fontSize:10,padding:'1px 4px',flexShrink:0}} data-tooltip={t('ttComments',_n)} onClick={()=>openCommentPanel('room', roomId, null, roomName||(lang==='es'?'Sala':'Room'))}>💬{_n>0&&<span className="tbtn-dot" style={_pend?{background:'var(--acc)'}:undefined}/>}</button>; })()}
                     </div>
                     <div className="room-panel-hd" style={{fontSize:8,paddingTop:6,paddingBottom:6,display:'flex',alignItems:'center',gap:6}}>
                       <span style={{flex:1}}>{t('salaWallsHd')}</span>
                       <button className={`btn${roomFilterBoards?' acc':''}`} style={{fontSize:7,padding:'1px 5px',letterSpacing:.3,textTransform:'none'}}
-                        title={lang==='es'?'Solo paredes con tablero':'Walls with board only'}
+                        data-tooltip={lang==='es'?'Solo paredes con tablero':'Walls with board only'}
                         onClick={()=>setRoomFilterBoards(v=>!v)}>▶</button>
                     </div>
                     <div className="room-cfg">
@@ -9105,10 +9104,10 @@ ${rows}
                         const colB = wall.colorBack|| '#d0c8bc';
                         const sideBtn = (side, board, mismatch, color) => (
                           <div style={{display:'flex',alignItems:'center',gap:1,flexShrink:0}}>
-                            {mismatch && <span className="room-wall-warn" title={t('salaWallMismatch')} style={{fontSize:9}}>⚠</span>}
+                            {mismatch && <span className="room-wall-warn" style={{fontSize:9}}>⚠</span>}
                             {board && (
                               <button className="btn room-wall-unlink" style={{fontSize:9,padding:'0 3px',flexShrink:0,color:'var(--dim)',lineHeight:1}}
-                                title={t('salaDeleteWall')}
+                                data-tooltip={t('salaDeleteWall')}
                                 onClick={()=>unlinkBoardFromWall(wall.id,side)}>×</button>
                             )}
                             <button className={`btn${board?' acc':''}`} style={{fontSize:8,padding:'1px 4px',flexShrink:0,borderLeft:`3px solid ${color}`}}
@@ -9139,7 +9138,7 @@ ${rows}
                                 }}
                                 onClick={e=>e.stopPropagation()}/>
                             ) : (
-                              <span className="room-wall-name" title={t('salaWallRename')}
+                              <span className="room-wall-name" data-tooltip={t('salaWallRename')}
                                 onDoubleClick={()=>{setRoomRenameWid(wall.id);setRoomRenameVal(wall.name);}}>
                                 {wall.name}
                               </span>
@@ -9172,7 +9171,7 @@ ${rows}
                                 <span className="room-wall-name">{faceName}</span>
                                 <span className="room-wall-len">{cmLabel(faceW)}</span>
                                 <div style={{display:'flex',alignItems:'center',gap:1,flexShrink:0}}>
-                                  {mm && <span className="room-wall-warn" title={t('salaWallMismatch')} style={{fontSize:9}}>⚠</span>}
+                                  {mm && <span className="room-wall-warn" style={{fontSize:9}}>⚠</span>}
                                   {mm && board && (
                                     <button className="btn" style={{fontSize:8,padding:'1px 4px',flexShrink:0,color:'#e87528',borderColor:'#e87528'}}
                                       onClick={() => performBoardSync(board, Math.round(faceW * 10) / 10, Math.round(faceH * 10) / 10, 'salaWallSyncOk')}>
@@ -9303,9 +9302,9 @@ ${rows}
                     {!roomShareMode && <button className="btn" onClick={() => setRoomView('room')}>← {lang==='es'?'Planta':'Floor plan'}</button>}
                     <button className="btn" onClick={() => reset3DViewRef.current?.()}>{lang==='es'?'Centrar':'Reset view'}</button>
                     {!roomShareMode && <button className="btn" onClick={() => snapshot3DRef.current?.()}>{lang==='es'?'Capturar':'Snapshot'}</button>}
-                    <button className={`btn${show3DPerson?' active':''}`} title={lang==='es'?'Mostrar escala humana (175 cm)':'Show human scale (175 cm)'} onClick={() => { if (show3DPerson && personMoveMode) togglePersonMoveRef.current?.(); toggle3DPersonRef.current?.(); setShow3DPerson(v => !v); }}>{lang==='es'?'👤 Persona':'👤 Person'}</button>
-                    {show3DPerson && <button className={`btn${personMoveMode?' active':''}`} title={lang==='es'?'Arrastra la figura por el suelo de la sala':'Drag figure across the room floor'} onClick={() => togglePersonMoveRef.current?.()}>{lang==='es'?(personMoveMode?'✓ Listo':'↔ Mover'):(personMoveMode?'✓ Done':'↔ Move')}</button>}
-                    <button className={`btn${walkMode3D?' active':''}`} title={lang==='es'?'Pasear por la sala — flechas para moverse y girar, clic para capturar ratón':'Walk through the room — arrows to move and turn, click to capture mouse'} onClick={() => toggle3DWalkRef.current?.()}>{lang==='es'?(walkMode3D?'✕ Salir paseo':'◉ Pasear'):(walkMode3D?'✕ Exit walk':'◉ Walk')}</button>
+                    <button className={`btn${show3DPerson?' active':''}`} data-tooltip={lang==='es'?'Mostrar escala humana (175 cm)':'Show human scale (175 cm)'} onClick={() => { if (show3DPerson && personMoveMode) togglePersonMoveRef.current?.(); toggle3DPersonRef.current?.(); setShow3DPerson(v => !v); }}>{lang==='es'?'👤 Persona':'👤 Person'}</button>
+                    {show3DPerson && <button className={`btn${personMoveMode?' active':''}`} data-tooltip={lang==='es'?'Arrastra la figura por el suelo de la sala':'Drag figure across the room floor'} onClick={() => togglePersonMoveRef.current?.()}>{lang==='es'?(personMoveMode?'✓ Listo':'↔ Mover'):(personMoveMode?'✓ Done':'↔ Move')}</button>}
+                    <button className={`btn${walkMode3D?' active':''}`} data-tooltip={lang==='es'?'Pasear por la sala — flechas para moverse y girar, clic para capturar ratón':'Walk through the room — arrows to move and turn, click to capture mouse'} onClick={() => toggle3DWalkRef.current?.()}>{lang==='es'?(walkMode3D?'✕ Salir paseo':'◉ Pasear'):(walkMode3D?'✕ Exit walk':'◉ Walk')}</button>
                   </div>
                 </div>
                 <div className="room-panel">
@@ -9392,20 +9391,20 @@ ${rows}
                   <span className="abt-label">{sel.length}</span>
                   {sel.length >= 2 && <>
                     <div className="align-bar-sep"/>
-                    <button className="abt" title={t('alLeft')}   onClick={() => alignItems('left')}><SvgAlignL/></button>
-                    <button className="abt" title={t('alCH')}     onClick={() => alignItems('ch')}><SvgAlignCH/></button>
-                    <button className="abt" title={t('alRight')}  onClick={() => alignItems('right')}><SvgAlignR/></button>
+                    <button className="abt" data-tooltip={t('alLeft')}   onClick={() => alignItems('left')}><SvgAlignL/></button>
+                    <button className="abt" data-tooltip={t('alCH')}     onClick={() => alignItems('ch')}><SvgAlignCH/></button>
+                    <button className="abt" data-tooltip={t('alRight')}  onClick={() => alignItems('right')}><SvgAlignR/></button>
                     <div className="align-bar-sep"/>
-                    <button className="abt" title={t('alTop')}    onClick={() => alignItems('top')}><SvgAlignT/></button>
-                    <button className="abt" title={t('alCV')}     onClick={() => alignItems('cv')}><SvgAlignCV/></button>
-                    <button className="abt" title={t('alBottom')} onClick={() => alignItems('bottom')}><SvgAlignB/></button>
+                    <button className="abt" data-tooltip={t('alTop')}    onClick={() => alignItems('top')}><SvgAlignT/></button>
+                    <button className="abt" data-tooltip={t('alCV')}     onClick={() => alignItems('cv')}><SvgAlignCV/></button>
+                    <button className="abt" data-tooltip={t('alBottom')} onClick={() => alignItems('bottom')}><SvgAlignB/></button>
                     {sel.length >= 3 && <>
                       <div className="align-bar-sep"/>
-                      <button className="abt" title={t('distH')}  onClick={() => alignItems('dh')}><SvgDistH/></button>
-                      <button className="abt" title={t('distV')}  onClick={() => alignItems('dv')}><SvgDistV/></button>
+                      <button className="abt" data-tooltip={t('distH')}  onClick={() => alignItems('dh')}><SvgDistH/></button>
+                      <button className="abt" data-tooltip={t('distV')}  onClick={() => alignItems('dv')}><SvgDistV/></button>
                     </>}
                     <div className="align-bar-sep"/>
-                    <button className="abt" title={t('eqWidth')}  onClick={() => alignItems('eqw')}><SvgEqW/></button>
+                    <button className="abt" data-tooltip={t('eqWidth')}  onClick={() => alignItems('eqw')}><SvgEqW/></button>
                     {sel.length === 2 && <>
                       <div className="align-bar-sep"/>
                       <button className="abt" data-tooltip={t('ttSwap')} onClick={swapItems} style={{fontSize:16}}>⇄</button>
@@ -9423,15 +9422,15 @@ ${rows}
                   {sel.some(id => items.find(i => i.id === id)?.groupId) && (
                     <button className="abt" data-tooltip={t('ttUngroup')} onClick={ungroupItems}><SvgUngroup/></button>
                   )}
-                  <button className="abt" style={{color:'var(--dim)',fontSize:14}} title={t('clearSel')}
+                  <button className="abt" style={{color:'var(--dim)',fontSize:14}} data-tooltip={t('clearSel')}
                     onClick={() => { selRef.current = []; setSel([]); }}>×</button>
                   {/* Crear zona con selección — solo si hay al menos un item que no sea zona */}
                   {sel.length > 0 && sel.every(id => { const it = items.find(i => i.id === id); return it && it.type !== 'zone'; }) && (
-                    <button className="abt" title={t('wrapSelInZone')} onClick={wrapSelectionInZone}><SvgWrapZone/></button>
+                    <button className="abt" data-tooltip={t('wrapSelInZone')} onClick={wrapSelectionInZone}><SvgWrapZone/></button>
                   )}
                   {/* Descargar (siempre el último) */}
                   <div className="align-bar-sep"/>
-                  <button className="abt" title={t('exportSelJpeg')} onClick={exportSelection}><SvgExport/></button>
+                  <button className="abt" data-tooltip={t('exportSelJpeg')} onClick={exportSelection}><SvgExport/></button>
                 </div>
               )}
               {(() => {
@@ -9551,7 +9550,7 @@ ${rows}
                   photos.length > 0 && !onboarding.board.dismissed ? (
                     <div className="hint-ob">
                       <span>{t('obBoardHint')}</span>
-                      <button className="hint-ob-x" title={t('obDismissTitle')} onClick={() => dismissGuide('board')}>×</button>
+                      <button className="hint-ob-x" data-tooltip={t('obDismissTitle')} onClick={() => dismissGuide('board')}>×</button>
                     </div>
                   ) : (
                     <div className="hint">
@@ -9604,12 +9603,12 @@ ${rows}
                             onClick={e => e.stopPropagation()}
                           />
                           {item.scaleContent && <span className="zone-hdr-sc">↔</span>}
-                          <button className="ibc" title={item.locked ? t('unlockBtn') : t('lockBtn')}
+                          <button className="ibc" data-tooltip={item.locked ? t('unlockBtn') : t('lockBtn')}
                             style={{color: item.locked ? 'var(--acc)' : undefined}}
                             onClick={e => { e.stopPropagation(); updateItemLocked(item.id, !item.locked); }}
                             onPointerDown={e => e.stopPropagation()}
                           >{item.locked ? <SvgUnlock/> : <SvgLock/>}</button>
-                          <button className="ibc del" title={t('deleteBtn')}
+                          <button className="ibc del" data-tooltip={t('deleteBtn')}
                             onClick={e => {
                               e.stopPropagation();
                               const members = itemsRef.current.filter(i => i.zoneId === item.id);
@@ -9688,9 +9687,9 @@ ${rows}
                         {item.locked && <div className="lock-badge"><SvgLock/></div>}
                         {(() => { const _ck = `text:${item.id}`; const _cs = commentSummary[_ck]; if (!_cs || _cs.total === 0) return null; const _hp = !shareRole && _cs.pending > 0; return <div className={`comment-badge${_hp?' has-pending':''}`} onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); openCommentPanel('text', item.id, bid, item.text?.split('\n')[0]||'text'); }}>💬 {_cs.total}</div>; })()}
                         <div className="bitem-bar" onPointerDown={e => e.stopPropagation()} style={_bbarBelow}>
-                          <button className="ibc rot" title={t('rotateBtn')} onPointerDown={e => { e.stopPropagation(); if (!item.locked) onFreeRotatePD(e, item.id); }} onClick={e => { e.stopPropagation(); if (rotBtnDraggedRef.current) { rotBtnDraggedRef.current = false; return; } rotateItem(item.id); }}>↻</button>
-                          <button className="ibc" title={t(item.locked ? 'unlockBtn' : 'lockBtn')} style={{color: item.locked ? 'var(--acc)' : undefined}} onClick={e => { e.stopPropagation(); updateItemLocked(item.id, !item.locked); }}>{item.locked ? <SvgUnlock/> : <SvgLock/>}</button>
-                          <button className="ibc del" title={t('deleteBtn')} onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
+                          <button className="ibc rot" data-tooltip={t('rotateBtn')} onPointerDown={e => { e.stopPropagation(); if (!item.locked) onFreeRotatePD(e, item.id); }} onClick={e => { e.stopPropagation(); if (rotBtnDraggedRef.current) { rotBtnDraggedRef.current = false; return; } rotateItem(item.id); }}>↻</button>
+                          <button className="ibc" data-tooltip={t(item.locked ? 'unlockBtn' : 'lockBtn')} style={{color: item.locked ? 'var(--acc)' : undefined}} onClick={e => { e.stopPropagation(); updateItemLocked(item.id, !item.locked); }}>{item.locked ? <SvgUnlock/> : <SvgLock/>}</button>
+                          <button className="ibc del" data-tooltip={t('deleteBtn')} onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
                         </div>
                         <div className="titem-drag">
                           <span className="titem-drag-icon">⠿⠿</span>
@@ -9802,7 +9801,7 @@ ${rows}
                         <div className="gitem-outline"/>
                         {(() => { const _ck = `grid:${item.id}`; const _cs = commentSummary[_ck]; if (!_cs || _cs.total === 0) return null; const _hp = !shareRole && _cs.pending > 0; return <div className={`comment-badge${_hp?' has-pending':''}`} onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); openCommentPanel('grid', item.id, bid, item.label||'grid'); }}>💬 {_cs.total}</div>; })()}
                         <div className="gitem-bar" style={item.y * zoom < 32 ? {bottom:'auto',top:'100%',marginTop:2} : {marginBottom:2}} onPointerDown={e => e.stopPropagation()}>
-                          <button className="ibc fwd" title={t('bringFwdBtn')} onClick={e => { e.stopPropagation(); bringFwd(item.id); }}>↑</button>
+                          <button className="ibc fwd" data-tooltip={t('bringFwdBtn')} onClick={e => { e.stopPropagation(); bringFwd(item.id); }}>↑</button>
                           <div className="gitem-sep"/>
                           <span className="gitem-bar-lbl">{t('gridItemCols')}</span>
                           <button className="ibc" onClick={e => { e.stopPropagation(); updGrid({cols: Math.max(1, gCols - 1)}); }}>−</button>
@@ -9814,7 +9813,7 @@ ${rows}
                           <span className="gitem-bar-lbl" style={{minWidth:28}}>{parseFloat((item.gap ?? 5).toFixed(2))}</span>
                           <button className="ibc" onClick={e => { e.stopPropagation(); const dec = gapStep < 1 ? 2 : 1; updGrid({gap: parseFloat(((item.gap ?? 5) + gapStep).toFixed(dec))}); }}>+</button>
                           <div className="gitem-sep"/>
-                          <button className="ibc del" title={t('deleteBtn')} onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
+                          <button className="ibc del" data-tooltip={t('deleteBtn')} onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
                         </div>
                         <div className="gitem-rh" onPointerDown={e => { e.stopPropagation(); onGridResizePD(e, item.id); }}/>
                       </div>
@@ -9833,11 +9832,11 @@ ${rows}
                         <span className="ph-icon">+</span>
                       </div>
                       <div className="bitem-bar" onPointerDown={e => e.stopPropagation()} style={_bbarBelow}>
-                        <button className="ibc del" title={t('deleteBtn')} onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
+                        <button className="ibc del" data-tooltip={t('deleteBtn')} onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
                       </div>
                       <div className="rh" onPointerDown={e => onResizePD(e, item.id)}/>
                       {item.groupId && <div className="group-badge">⊓</div>}
-                      {item.zoneId && (() => { const oz = itemsRef.current.find(i => i.id === item.zoneId); const zc = oz ? (ZONE_COLOR_VALS[oz.color] || ZONE_COLOR_VALS.blue) : ZONE_COLOR_VALS.blue; return <div className="zone-badge" style={{background: zc.border}} title={oz?.label || (lang==='es'?'Zona':'Zone')}/>; })()}
+                      {item.zoneId && (() => { const oz = itemsRef.current.find(i => i.id === item.zoneId); const zc = oz ? (ZONE_COLOR_VALS[oz.color] || ZONE_COLOR_VALS.blue) : ZONE_COLOR_VALS.blue; return <div className="zone-badge" style={{background: zc.border}}/>; })()}
                     </div>
                   );
 
@@ -9855,13 +9854,13 @@ ${rows}
                       onMouseLeave={clearHoverInfo}
                     >
                       <div className="bitem-bar" onPointerDown={e => e.stopPropagation()} style={_bbarBelow}>
-                        <button className="ibc" title={t('noteColor')}
+                        <button className="ibc" data-tooltip={t('noteColor')}
                           onClick={e => { e.stopPropagation(); setNoteColorPanelId(id => id === item.id ? null : item.id); }}
                           style={{background: item.noteColor ? NOTE_COLOR_VALS[item.noteColor]?.[0] : undefined, color: item.noteColor ? 'rgba(255,255,255,.85)' : undefined}}>■</button>
-                        <button className="ibc" title={t(item.locked ? 'unlockBtn' : 'lockBtn')}
+                        <button className="ibc" data-tooltip={t(item.locked ? 'unlockBtn' : 'lockBtn')}
                           style={{color: item.locked ? 'var(--acc)' : undefined}}
                           onClick={e => { e.stopPropagation(); updateItemLocked(item.id, !item.locked); }}>{item.locked ? <SvgUnlock/> : <SvgLock/>}</button>
-                        <button className="ibc del" title={t('deleteBtn')} onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
+                        <button className="ibc del" data-tooltip={t('deleteBtn')} onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
                       </div>
                       {noteColorPanelId === item.id && (
                         <div className="props-panel" style={{top: 'calc(100% + 2px)'}} onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
@@ -9870,7 +9869,7 @@ ${rows}
                             <div data-tooltip="Default" onClick={() => updateNoteColor(item.id, null)}
                               style={{width:14,height:14,borderRadius:'50%',cursor:'pointer',background:'var(--acc-dim)',border:`2px solid ${!item.noteColor?'var(--acc)':'var(--border2)'}`}}/>
                             {NOTE_COLORS.map(c => (
-                              <div key={c} title={c} onClick={() => updateNoteColor(item.id, c)}
+                              <div key={c} onClick={() => updateNoteColor(item.id, c)}
                                 style={{width:14,height:14,borderRadius:'50%',cursor:'pointer',background:NOTE_COLOR_VALS[c][0],border:`2px solid ${item.noteColor===c?'var(--acc)':'transparent'}`}}/>
                             ))}
                           </div>
@@ -9928,7 +9927,7 @@ ${rows}
                       </div>
                       <div className="nitem-rc" onPointerDown={e => onResizeNotePD(e, item.id)}/>
                       {item.groupId && <div className="group-badge">⊓</div>}
-                      {item.zoneId && (() => { const oz = itemsRef.current.find(i => i.id === item.zoneId); const zc = oz ? (ZONE_COLOR_VALS[oz.color] || ZONE_COLOR_VALS.blue) : ZONE_COLOR_VALS.blue; return <div className="zone-badge" style={{background: zc.border}} title={oz?.label || (lang==='es'?'Zona':'Zone')}/>; })()}
+                      {item.zoneId && (() => { const oz = itemsRef.current.find(i => i.id === item.zoneId); const zc = oz ? (ZONE_COLOR_VALS[oz.color] || ZONE_COLOR_VALS.blue) : ZONE_COLOR_VALS.blue; return <div className="zone-badge" style={{background: zc.border}}/>; })()}
                     </div>
                   );
                   } // end note
@@ -9962,7 +9961,7 @@ ${rows}
                         <button className="ibc rot" data-tooltip={t('ttRotate')}
                           onPointerDown={e => { e.stopPropagation(); if (!item.locked) onFreeRotatePD(e, item.id); }}
                           onClick={e => { e.stopPropagation(); if (rotBtnDraggedRef.current) { rotBtnDraggedRef.current = false; return; } rotateItem(item.id); }}>↻</button>
-                        <button className="ibc" title={t(item.locked ? 'unlockBtn' : 'lockBtn')}
+                        <button className="ibc" data-tooltip={t(item.locked ? 'unlockBtn' : 'lockBtn')}
                           style={{color: item.locked ? 'var(--acc)' : undefined}}
                           onClick={e => { e.stopPropagation(); updateItemLocked(item.id, !item.locked); }}>{item.locked ? <SvgUnlock/> : <SvgLock/>}</button>
                         <button className="ibc del" data-tooltip={t('ttDeleteItem')} onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
@@ -10027,8 +10026,8 @@ ${rows}
                         );
                       })()}
                       {item.groupId && <div className="group-badge">⊓</div>}
-                      {item.zoneId && (() => { const oz = itemsRef.current.find(i => i.id === item.zoneId); const zc = oz ? (ZONE_COLOR_VALS[oz.color] || ZONE_COLOR_VALS.blue) : ZONE_COLOR_VALS.blue; return <div className="zone-badge" style={{background: zc.border}} title={oz?.label || (lang==='es'?'Zona':'Zone')}/>; })()}
-                      {item.label && <div className="lbl-badge" title={item.label.split('\n')[0]}>✎</div>}
+                      {item.zoneId && (() => { const oz = itemsRef.current.find(i => i.id === item.zoneId); const zc = oz ? (ZONE_COLOR_VALS[oz.color] || ZONE_COLOR_VALS.blue) : ZONE_COLOR_VALS.blue; return <div className="zone-badge" style={{background: zc.border}}/>; })()}
+                      {item.label && <div className="lbl-badge">✎</div>}
                       {!item.locked && <div className="rh" onPointerDown={e => onResizePD(e, item.id)}/>}
                     </div>
                   );
@@ -10168,17 +10167,17 @@ ${rows}
               return (
               <div className={`library${libDragOver ? (pid ? ' lib-drop-active' : ' lib-drop-noproj') : ''}`} style={{height: libH}} onClick={e => e.stopPropagation()}>
                 <div className="lib-header" onClick={toggleLib}>
-                  <button className="lib-toggle-btn" onClick={e => { e.stopPropagation(); toggleLib(); }} title={libOpen ? t('collapsePanel') : t('openPanel')}>{libOpen ? '▼' : '▲'}</button>
-                  <button className="lib-snap-btn" onClick={snapLib} title={libHeightRef.current > window.innerHeight * 0.40 ? t('libSnapCollapse') : t('libSnapExpand')}>{libHeightRef.current > window.innerHeight * 0.40 ? '⊟' : '⊞'}</button>
+                  <button className="lib-toggle-btn" onClick={e => { e.stopPropagation(); toggleLib(); }} data-tooltip={libOpen ? t('collapsePanel') : t('openPanel')}>{libOpen ? '▼' : '▲'}</button>
+                  <button className="lib-snap-btn" onClick={snapLib} data-tooltip={libHeightRef.current > window.innerHeight * 0.40 ? t('libSnapCollapse') : t('libSnapExpand')}>{libHeightRef.current > window.innerHeight * 0.40 ? '⊟' : '⊞'}</button>
                   <span className="lib-title">{t('libTitle')}</span>
                   <span className="lib-count">{displayedPhotos.length < photos.length ? `[${displayedPhotos.length}/${photos.length}]` : `[${photos.length}]`}</span>
-                  {libOpen && displayedPhotos.length > 0 && libSel.length === 0 && <button className="lib-sel-all-hdr" title={t('libSelectAll')} onClick={e => { e.stopPropagation(); const all = displayedPhotos.map(p => p.id); setLibSelection(all); libSelAnchorRef.current = all[0] ?? null; }}>☑</button>}
+                  {libOpen && displayedPhotos.length > 0 && libSel.length === 0 && <button className="lib-sel-all-hdr" data-tooltip={t('libSelectAll')} onClick={e => { e.stopPropagation(); const all = displayedPhotos.map(p => p.id); setLibSelection(all); libSelAnchorRef.current = all[0] ?? null; }}>☑</button>}
                   <span className="lib-spacer"/>
                   {pid && <>
                     <input className="lib-search" type="text" placeholder={t('libSearchPh')}
                       value={libSearch} onClick={e => e.stopPropagation()}
                       onChange={e => setLibSearch(e.target.value)}/>
-                    <button className={`lib-filter${photoFilter === 'pending' ? ' active' : ''}`} onClick={toggleFilter} title={t('filterPending')}>⊘ {t('filterPending')}</button>
+                    <button className={`lib-filter${photoFilter === 'pending' ? ' active' : ''}`} onClick={toggleFilter} data-tooltip={t('filterPending')}>⊘ {t('filterPending')}</button>
                     {photoFilter === 'pending' && (
                       <select className="lib-scope-sel" value={effectiveScope}
                         onClick={e => e.stopPropagation()}
@@ -10188,25 +10187,25 @@ ${rows}
                       </select>
                     )}
                     <button className={`lib-filter${orientFilter ? ' active' : ''}`}
-                      title={t('orientFilterHint', orientFilter)}
+                      data-tooltip={t('orientFilterHint', orientFilter)}
                       onClick={e => { e.stopPropagation(); setOrientFilter(f => f === null ? 'L' : f === 'L' ? 'P' : f === 'P' ? 'S' : null); }}>
                       {orientFilter === 'L' ? '▬' : orientFilter === 'P' ? '▮' : orientFilter === 'S' ? '■' : '▬▮'}
                     </button>
                     {(rejectedCount > 0 || rejectedFilter !== false) && (
                       <button className={`lib-filter${rejectedFilter !== false ? ' active danger' : ''}`}
                         onClick={e => { e.stopPropagation(); setRejectedFilter(f => f === false ? true : f === true ? null : false); }}
-                        title={rejectedFilter === true ? t('filterRejectedHide') : t('filterRejected')}>
+                        data-tooltip={rejectedFilter === true ? t('filterRejectedHide') : t('filterRejected')}>
                         ✕ {t('filterRejected')}{rejectedCount > 0 && <span style={{marginLeft:3,opacity:.7}}>[{rejectedCount}]</span>}
                       </button>
                     )}
-                    <div className="lib-star-filter" title={t('ratingFilterHint')}>
+                    <div className="lib-star-filter">
                       {[1,2,3,4,5].map(n => (
                         <button key={n} className={ratingFilter >= n ? 'lit' : ''} onClick={e => toggleStarFilter(n, e)}>★</button>
                       ))}
                     </div>
                     <button className={`tag-filter-btn${tagFilter.length > 0 ? ' active' : ''}`}
                       onClick={e => { e.stopPropagation(); setTagFilterPop(v => !v); }}
-                      title={t('tagFilterBtn')}>
+                      data-tooltip={t('tagFilterBtn')}>
                       # {t('tagFilterBtn')}{tagFilter.length > 0 && <span className="tag-filter-badge">{tagFilter.length}</span>}
                     </button>
                     <select className="lib-sort" value={photoSort}
@@ -10235,9 +10234,9 @@ ${rows}
                       onClick={e => e.stopPropagation()}
                       onChange={e => { uploadFiles(e.target.files, null, uploadSectRef.current); e.target.value = ''; uploadSectRef.current = null; }}
                     />
-                    {sections.length > 0 && <button className={`lib-filter${libFlatView?' active':''}`} onClick={e => { e.stopPropagation(); const v = !libFlatView; setLibFlatView(v); localStorage.setItem('libFlatView', v); }} title={libFlatView ? t('libSectionViewBtn') : t('libFlatViewBtn')}>≡</button>}
-                    {!libFlatView && <button className="sect-add-btn" onClick={e => { e.stopPropagation(); addSection(); }} title={t('addSection')}>{t('addSection')}</button>}
-                    <button className={`lib-mute-btn${libMuted?' active':''}`} onClick={e => { e.stopPropagation(); setLibMuted(v => !v); }} title={libMuted ? t('libMuteOff') : t('libMuteOn')}>{libMuted ? t('libMuteOff') : t('libMuteOn')}</button>
+                    {sections.length > 0 && <button className={`lib-filter${libFlatView?' active':''}`} onClick={e => { e.stopPropagation(); const v = !libFlatView; setLibFlatView(v); localStorage.setItem('libFlatView', v); }} data-tooltip={libFlatView ? t('libSectionViewBtn') : t('libFlatViewBtn')}>≡</button>}
+                    {!libFlatView && <button className="sect-add-btn" onClick={e => { e.stopPropagation(); addSection(); }} data-tooltip={t('addSection')}>{t('addSection')}</button>}
+                    <button className={`lib-mute-btn${libMuted?' active':''}`} onClick={e => { e.stopPropagation(); setLibMuted(v => !v); }} data-tooltip={libMuted ? t('libMuteOff') : t('libMuteOn')}>{libMuted ? t('libMuteOff') : t('libMuteOn')}</button>
                     {!shareRole && <button className="btn acc" style={{fontSize:9}} onClick={e => {
                         e.stopPropagation();
                         if (uploadDropOpen) { setUploadDropOpen(false); return; }
@@ -10347,7 +10346,6 @@ ${rows}
                                   }, 250);
                                 }
                               }}
-                              title={`${p.name}${inBoard?' · '+t('alreadyInTableau'):''}`}
                               onDoubleClick={e => { e.stopPropagation(); clearTimeout(thumbClickTimer.current); const idx = displayedPhotos.indexOf(p); setFullscreenPhoto({ photo: p, index: idx >= 0 ? idx : 0 }); }}
                             >
                               <img src={`/photos/${pid}/${p.id}/thumb`} alt={p.name}/>
@@ -10357,9 +10355,9 @@ ${rows}
                               {p.brightness != null && <span className="thumb-color" style={{background:`rgb(${Math.round(p.brightness*255)},${Math.round(p.brightness*255)},${Math.round(p.brightness*255)})`}}/>}
                               <div className="thumb-stars">{[1,2,3,4,5].map(n => n <= (p.rating||0) ? <span key={n}>★</span> : <span key={n} className="thumb-star-empty">★</span>)}</div>
                               <span className="thumb-reject-hint">{p.rejected ? '[u]' : '[x]'}</span>
-                              <button className="thumb-tag" title={t('tagPopHd')} onClick={e => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setTagPopover(v => v?.photoId === p.id ? null : {photoId:p.id, x:r.left, y:r.top}); setTagInput(''); }}>#</button>
+                              <button className="thumb-tag" data-tooltip={t('tagPopHd')} onClick={e => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setTagPopover(v => v?.photoId === p.id ? null : {photoId:p.id, x:r.left, y:r.top}); setTagInput(''); }}>#</button>
                               <button className="thumb-x" onClick={e => { e.stopPropagation(); deletePhoto(p.id); }}>×</button>
-                              <button className="thumb-cp" title={t('copyToProject')}
+                              <button className="thumb-cp" data-tooltip={t('copyToProject')}
                                 onClick={e => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setCopyToMenu({ photoId: p.id, x: r.left, y: r.top }); }}>→</button>
                             </div>
                           );
@@ -10395,12 +10393,12 @@ ${rows}
                                     : <span className="sect-name">{s.name}</span>
                                   }
                                   <span className="sect-count">[{cnt}]</span>
-                                  {!collapsed && cnt > 0 && <button className="lib-sel-all-hdr" title={t('libSelectAll')} onClick={e => { e.stopPropagation(); const ids = (bySection[s.id]||[]).map(p => p.id); setLibSelection(ids); libSelAnchorRef.current = ids[0] ?? null; }}>☑</button>}
+                                  {!collapsed && cnt > 0 && <button className="lib-sel-all-hdr" data-tooltip={t('libSelectAll')} onClick={e => { e.stopPropagation(); const ids = (bySection[s.id]||[]).map(p => p.id); setLibSelection(ids); libSelAnchorRef.current = ids[0] ?? null; }}>☑</button>}
                                   {renamingSect !== s.id && <span style={{flex:1}}/>}
                                   <div className="sect-actions" onClick={e => e.stopPropagation()}>
-                                    <button className="sect-btn" title={t('uploadToSection')} onClick={e => { e.stopPropagation(); uploadSectRef.current = s.id; uploadSectInput.current?.click(); }}>↑</button>
-                                    <button className="sect-btn" title={t('sectRename')} onClick={() => setRenamingSect(s.id)}>✎</button>
-                                    <button className="sect-btn danger" title={t('sectDelete')} onClick={() => showConfirm(t('confirmDeleteSection', cnt), () => deleteSection(s.id))}>×</button>
+                                    <button className="sect-btn" data-tooltip={t('uploadToSection')} onClick={e => { e.stopPropagation(); uploadSectRef.current = s.id; uploadSectInput.current?.click(); }}>↑</button>
+                                    <button className="sect-btn" data-tooltip={t('sectRename')} onClick={() => setRenamingSect(s.id)}>✎</button>
+                                    <button className="sect-btn danger" data-tooltip={t('sectDelete')} onClick={() => showConfirm(t('confirmDeleteSection', cnt), () => deleteSection(s.id))}>×</button>
                                   </div>
                                 </div>
                                 {!collapsed && <div className="lib-photo-row">{(bySection[s.id] || []).map(renderThumb)}</div>}
@@ -10421,14 +10419,14 @@ ${rows}
                     {libSel.length > 0 && (
                       <div className="lib-sel-bar" onClick={e => e.stopPropagation()}>
                         <span className="lib-sel-count">{libSel.length} {t('selected')}</span>
-                        <button className="lib-sel-btn" title={t('libSelClearTip')} onClick={() => { setLibSelection([]); libSelAnchorRef.current = null; setBatchTagPop(null); setSectBatchPop(null); }}>✕</button>
-                        {libSel.length < displayedPhotosRef.current.length && <button className="lib-sel-btn" title={t('libSelectAll')} onClick={() => { const all = displayedPhotosRef.current.map(p => p.id); setLibSelection(all); libSelAnchorRef.current = all[0] ?? null; }}>☑ {t('libSelectAll')}</button>}
-                        <button className="lib-sel-btn" title={t('batchTagBtn')} onClick={e => { const r = e.currentTarget.getBoundingClientRect(); setBatchTagPop(v => v ? null : {x: r.left, y: r.top}); setBatchTagInput(''); setSectBatchPop(null); }}>{t('batchTagBtn')}</button>
-                        {sections.length > 0 && <button className="lib-sel-btn" title={t('moveToSection')} onClick={e => { const r = e.currentTarget.getBoundingClientRect(); setSectBatchPop(v => v ? null : {x: r.left, y: r.top}); setBatchTagPop(null); }}>{t('batchMoveSection')}</button>}
-                        {bid && <button className="lib-sel-btn" title={t('libSelAddTip')} onClick={addSelectedToCanvas}>{t('libSelAdd')}</button>}
+                        <button className="lib-sel-btn" data-tooltip={t('libSelClearTip')} onClick={() => { setLibSelection([]); libSelAnchorRef.current = null; setBatchTagPop(null); setSectBatchPop(null); }}>✕</button>
+                        {libSel.length < displayedPhotosRef.current.length && <button className="lib-sel-btn" data-tooltip={t('libSelectAll')} onClick={() => { const all = displayedPhotosRef.current.map(p => p.id); setLibSelection(all); libSelAnchorRef.current = all[0] ?? null; }}>☑ {t('libSelectAll')}</button>}
+                        <button className="lib-sel-btn" data-tooltip={t('batchTagBtn')} onClick={e => { const r = e.currentTarget.getBoundingClientRect(); setBatchTagPop(v => v ? null : {x: r.left, y: r.top}); setBatchTagInput(''); setSectBatchPop(null); }}>{t('batchTagBtn')}</button>
+                        {sections.length > 0 && <button className="lib-sel-btn" data-tooltip={t('moveToSection')} onClick={e => { const r = e.currentTarget.getBoundingClientRect(); setSectBatchPop(v => v ? null : {x: r.left, y: r.top}); setBatchTagPop(null); }}>{t('batchMoveSection')}</button>}
+                        {bid && <button className="lib-sel-btn" data-tooltip={t('libSelAddTip')} onClick={addSelectedToCanvas}>{t('libSelAdd')}</button>}
                         {bid && <button className="lib-sel-btn" onClick={() => createGridItem(libSel)}>⊟ {t('gridItemBtn')}</button>}
-                        {bid && <button className="lib-sel-btn" onClick={() => placeAsPairs(2)} title={lang==='es'?'Añadir como parejas en zonas':'Add as pairs in zones'}>⊟ {t('pairsLayoutBtn')}</button>}
-                        <button className="lib-sel-btn danger" title={t('libSelDeleteTip')} onClick={deleteSelectedPhotos}>× {t('deleteBtn')}</button>
+                        {bid && <button className="lib-sel-btn" onClick={() => placeAsPairs(2)} data-tooltip={lang==='es'?'Añadir como parejas en zonas':'Add as pairs in zones'}>⊟{t('pairsLayoutBtn')}</button>}
+                        <button className="lib-sel-btn danger" data-tooltip={t('libSelDeleteTip')} onClick={deleteSelectedPhotos}>× {t('deleteBtn')}</button>
                       </div>
                     )}
                   </div>
@@ -10453,8 +10451,8 @@ ${rows}
             const go3D = async () => { setBoardBeforeRoom(bid); setRoom(linkedRoom); roomRef.current = linkedRoom; setActiveRoomId(linkedRoom.id); activeRoomIdRef.current = linkedRoom.id; await load3DLibs(); setRoomView('3d'); };
             return (
               <div className="zc-room">
-                <div className="zc-room-plan" title={t('goToRoom', roomName)} onClick={goFloor}>🏛 {roomName}</div>
-                <div className="zc-room-3d" title={lang==='es'?`Vista 3D (Shift+R)`:`3D view (Shift+R)`} onClick={go3D}>3D</div>
+                <div className="zc-room-plan" data-tooltip={t('goToRoom', roomName)} onClick={goFloor}>🏛 {roomName}</div>
+                <div className="zc-room-3d" data-tooltip={lang==='es'?`Vista 3D (Shift+R)`:`3D view (Shift+R)`} onClick={go3D}>3D</div>
               </div>
             );
           })()}
@@ -10603,7 +10601,7 @@ ${rows}
 
       {libPreview && !pinnedPreview && (
         <div className="lib-preview" style={{left:libPreview.x, top:libPreview.y, cursor:'pointer', pointerEvents:'auto'}}
-          title={t('pinnedPreviewHint')}
+          data-tooltip={t('pinnedPreviewHint')}
           onClick={() => { setPinnedPreview(libPreview); setLibPreview(null); clearTimeout(previewTimer.current); }}>
           <img src={`/photos/${pid}/${libPreview.photo.id}`} alt={libPreview.photo.name}/>
           <div className="lib-preview-name">{libPreview.photo.name}</div>
@@ -11534,7 +11532,7 @@ ${rows}
                         <div className="ver-ts">{fmtTs(v.ts)}</div>
                         <div className="ver-count">{t('versionItems', v.itemCount)}</div>
                       </div>
-                      <button className="btn" style={{fontSize:9,padding:'3px 7px',color:isPreviewOpen?'var(--acc)':undefined}} onClick={() => previewVersion(v.ts)} title={lang==='es'?'Vista previa':'Preview'}>◉</button>
+                      <button className="btn" style={{fontSize:9,padding:'3px 7px',color:isPreviewOpen?'var(--acc)':undefined}} onClick={() => previewVersion(v.ts)} data-tooltip={lang==='es'?'Vista previa':'Preview'}>◉</button>
                       <button className="btn" style={{fontSize:9,padding:'3px 8px'}} onClick={() => restoreVersion(v.ts)}>{t('restoreVersion')}</button>
                       <button className="btn" style={{fontSize:9,padding:'3px 7px',color:'var(--danger,#e05)'}} onClick={() => deleteVersion(v.ts)}>×</button>
                       {previewEl && <div style={{width:'100%',paddingTop:4}}>{previewEl}</div>}
@@ -11581,7 +11579,7 @@ ${rows}
                           onError={ev => { ev.target.style.opacity = '.2'; }}
                           alt={p.name}/>
                         <div className="trash-item-info">
-                          <div className="trash-item-name" title={p.name}>{p.name}</div>
+                          <div className="trash-item-name">{p.name}</div>
                           <div className="trash-item-proj">📁 {p.projectName}</div>
                           <div className="trash-item-meta">
                             {fmtSize(p.size)} · {new Date(p.deletedAt).toLocaleDateString()} · {t('trashPurge', daysLeft)}
@@ -12429,10 +12427,10 @@ ${rows}
                     {adminUsers.map(u => (
                       <tr key={u.id} style={{borderBottom:'1px solid var(--border)'}}>
                         <td style={{padding:'6px 8px',color:'var(--text)',whiteSpace:'nowrap'}}>{u.username}{u.mustChangePassword&&<span style={{color:'var(--acc)',marginLeft:4,fontSize:9}}>●</span>}</td>
-                        <td style={{padding:'6px 8px',color:'var(--muted)',maxWidth:140,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}} title={u.email||''}>{u.email||'—'}</td>
+                        <td style={{padding:'6px 8px',color:'var(--muted)',maxWidth:140,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{u.email||'—'}</td>
                         <td style={{padding:'6px 8px',textAlign:'right',color:'var(--text)',cursor: adminEdit?.uid===u.id && adminEdit.type==='quota' ? 'default' : 'pointer',whiteSpace:'nowrap'}}
                             onClick={() => { if (!adminEdit || adminEdit.uid!==u.id) doEditQuota(u.id, u.quota); }}
-                            title={lang==='es'?'Click para editar':'Click to edit'}>
+                            data-tooltip={lang==='es'?'Click para editar':'Click to edit'}>
                           <InlineEdit type="quota" u={u}/>
                           {!(adminEdit?.uid===u.id && adminEdit.type==='quota') && fmtMb(u.quota)}
                         </td>
@@ -12440,16 +12438,16 @@ ${rows}
                         <td style={{padding:'6px 8px',textAlign:'center',color:'var(--muted)'}}>{u.role}</td>
                         <td style={{padding:'6px 8px',textAlign:'center',cursor: adminEdit?.uid===u.id && adminEdit.type==='expiry' ? 'default' : 'pointer',whiteSpace:'nowrap'}}
                             onClick={() => { if (!adminEdit || adminEdit.uid!==u.id) doEditExpiry(u.id, u.expiresAt); }}
-                            title={lang==='es'?'Click para cambiar':'Click to change'}>
+                            data-tooltip={lang==='es'?'Click para cambiar':'Click to change'}>
                           <InlineEdit type="expiry" u={u}/>
                           {!(adminEdit?.uid===u.id && adminEdit.type==='expiry') && fmtExpiry(u.expiresAt)}
                         </td>
                         <td style={{padding:'6px 8px',textAlign:'center',color:'var(--muted)',fontSize:10,whiteSpace:'nowrap'}}>{fmtDate(u.lastLogin)}</td>
-                        <td style={{padding:'6px 8px',textAlign:'center',color:'var(--muted)',fontSize:10,whiteSpace:'nowrap'}} title={`${u.projects} proy · ${u.photos} fotos · ${u.rooms} salas`}>{u.projects}p · {u.photos}f · {u.rooms}s</td>
+                        <td style={{padding:'6px 8px',textAlign:'center',color:'var(--muted)',fontSize:10,whiteSpace:'nowrap'}}>{u.projects}p · {u.photos}f · {u.rooms}s</td>
                         <td style={{padding:'6px 8px',textAlign:'center'}}>
                           <div style={{display:'flex',gap:4,justifyContent:'center'}}>
-                            <button onClick={() => doResetPw(u.id, u.username)} style={btnSm} title={lang==='es'?'Resetear contraseña':'Reset password'}>🔑</button>
-                            {u.id !== authUser?.id && <button onClick={() => doDeleteUser(u.id, u.username)} style={{...btnSm,border:'1px solid #e06c7544',color:'#e06c75'}} title={lang==='es'?'Eliminar usuario':'Delete user'}>×</button>}
+                            <button onClick={() => doResetPw(u.id, u.username)} style={btnSm} data-tooltip={lang==='es'?'Resetear contraseña':'Reset password'}>🔑</button>
+                            {u.id !== authUser?.id && <button onClick={() => doDeleteUser(u.id, u.username)} style={{...btnSm,border:'1px solid #e06c7544',color:'#e06c75'}} data-tooltip={lang==='es'?'Eliminar usuario':'Delete user'}>×</button>}
                           </div>
                         </td>
                       </tr>

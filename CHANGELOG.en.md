@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.21.11] — 2026-06-10
+
+### Improved
+- **Unified tooltip system:** all buttons in the application now use the same CSS tooltip style (`[data-tooltip]:hover::after`) instead of the previous mix of `data-tooltip` (custom styled) and `title=""` (native browser tooltip with a different dark background). Affects: align-bar buttons, canvas `.ibc` controls (rotate, lock, delete, forward), sidebar buttons (projects, boards, rooms, sections, library), library filter controls, 3D/room view buttons, admin panel, and others. Removed `title=""` attributes from non-interactive elements (truncated project/board names, zone badges, etc.) to prevent native tooltips on decorative elements.
+
 ## [1.21.10] — 2026-06-10
 
 ### Fixed
