@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.21.9] — 2026-06-10
+
+### Añadido
+- **Panel de propiedades numéricas:** cuando hay exactamente un elemento seleccionado en un tablero, el panel de info (barra lateral inferior izquierda) muestra campos editables para X, Y, W, H y Rot. Las unidades son px en tableros variables; cm/mm/in en tableros con DPI fijo. Un botón de candado (⛓) alterna el escalado proporcional W/H para elementos no-foto (las fotos siempre mantienen su relación de aspecto). Los campos se aplican al pulsar Enter o al perder el foco, con deshacer. Se actualizan en tiempo real mientras se arrastra, redimensiona o rota el elemento.
+
+### Mejorado
+- **Handle de redimensionado unificado:** el handle de esquina `.rh` de fotos, textos, notas y otros elementos ahora tiene un área visual de 8×8 px (igual que los handles de texto) con área de clic de 20×20 px implementada mediante pseudo-elemento `::after`. El indicador visual coincide con el estándar del resto de handles.
+- **Tamaño máximo de controles en zoom bajo:** la contraescalada CSS de `.bitem-bar` ya no crece indefinidamente a zoom muy bajo — se limita a un máximo visual de ≈28 px (factor 1.17). Además, los elementos de texto más pequeños de 40 px en pantalla ocultan los controles seleccionados por defecto y solo los muestran al pasar el cursor.
+
+### Corregido
+- **Salto al iniciar el arrastre de una foto:** al hacer clic para arrastrar un elemento, había un pequeño salto de posición inicial. El cálculo ahora usa `clientToCanvas` tanto en el `pointerdown` como en el `pointermove` para obtener el delta en coordenadas del canvas, eliminando la discrepancia que causaba el salto.
+
 ## [1.21.8] — 2026-06-10
 
 ### Corregido

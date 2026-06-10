@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.21.9] — 2026-06-10
+
+### Added
+- **Numeric properties panel:** when exactly one element is selected on a board, the info panel (bottom-left sidebar) shows editable fields for X, Y, W, H and Rot. Units are px for variable boards; cm/mm/in for fixed boards with DPI. A lock button (⛓) toggles proportional W/H scaling for non-photo items (photos always maintain their aspect ratio). Fields apply on Enter or blur with undo support, and update in real time during drag, resize and rotate operations.
+
+### Improved
+- **Unified resize handle:** the corner `.rh` handle for photos, texts, notes and other items now has an 8×8 px visual area (matching text handles) with a 20×20 px click area implemented via a `::after` pseudo-element. The visual indicator is consistent with the rest of the canvas handles.
+- **Maximum control size at low zoom:** the CSS counter-scale of `.bitem-bar` no longer grows unboundedly at very low zoom — it is capped at a visual maximum of ≈28 px (factor 1.17). Additionally, text items smaller than 40 px on screen hide their selection controls by default and only show them on hover.
+
+### Fixed
+- **Positional jump when starting to drag an item:** clicking to drag an item caused a small initial position jump. The calculation now uses `clientToCanvas` on both `pointerdown` and `pointermove` to compute the delta in canvas coordinates, eliminating the discrepancy that caused the jump.
+
 ## [1.21.8] — 2026-06-10
 
 ### Fixed

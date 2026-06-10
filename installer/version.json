@@ -1,6 +1,6 @@
 {
-  "version": "1.21.8",
+  "version": "1.21.9",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-06-10",
-  "notes": "Fotos en esquinas de vista 3D: ix ahora parte del punto de esquina interior, no del vértice."
+  "notes": "Panel de propiedades numéricas (X/Y/W/H/Rot) al seleccionar un elemento. Handle de redimensionado unificado. Corrección del salto al arrastrar fotos."
 }
