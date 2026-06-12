@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.21.14] — 2026-06-12
+
+### Corregido
+- **Resize de zona con "Escalar contenido" — desbordamiento en resize libre:** al redimensionar sin Shift, los items sin altura almacenada (fotos) no escalaban su altura visual con `scaleY`, por lo que la zona podía quedar más pequeña que su contenido. Añadido guard de tamaño mínimo en `onMM`, `onMU` y el modal de propiedades: la zona nunca puede ser más pequeña que el bounding box de su contenido escalado.
+
 ## [1.21.13] — 2026-06-12
 
 ### Corregido

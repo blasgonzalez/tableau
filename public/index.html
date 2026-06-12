@@ -7229,6 +7229,23 @@ ${rows}
           if (mode.includes('w')) nx = ox + ow - nw;
           if (mode.includes('n')) ny = oy + oh - nh;
         }
+        // Guard: zone cannot be smaller than its scaled content (photos have no stored h — their
+        // visual height = w*aspect and only tracks scaleX, so a vertical-only drag can overflow).
+        if (origMembers.length) {
+          const PAD = 8;
+          const sX = nw / ow, sY = nh / oh;
+          for (const orig of origMembers) {
+            const relX = orig.x - ox, relY = orig.y - oy;
+            const iW = Math.max(10, Math.round(orig.w * sX));
+            const iH = orig.h
+              ? Math.max(10, Math.round(orig.h * sY))
+              : getItemH({...orig, w: iW});
+            const minNW = relX * sX + iW + PAD;
+            const minNH = relY * sY + iH + PAD;
+            if (nw < minNW) { nw = minNW; if (mode.includes('w')) nx = ox + ow - nw; }
+            if (nh < minNH) { nh = minNH; if (mode.includes('n')) ny = oy + oh - nh; }
+          }
+        }
       } else {
         const PAD = 16;
         const members = itemsRef.current.filter(i => i.zoneId === itemId && i.type !== 'zone');
@@ -7249,13 +7266,28 @@ ${rows}
     const onMU = () => {
       window.removeEventListener('pointermove', onMM);
       window.removeEventListener('pointerup', onMU);
-      const rx = Math.round(cx), ry = Math.round(cy), rw = Math.round(cw), rh = Math.round(ch);
+      let rx = Math.round(cx), ry = Math.round(cy), rw = Math.round(cw), rh = Math.round(ch);
       if (rx !== ox || ry !== oy || rw !== ow || rh !== oh) {
         undoStack.current = [...undoStack.current.slice(-49), before];
         redoStack.current = [];
       }
       let nit;
       if (scaleMode) {
+        if (origMembers.length) {
+          const PAD = 8;
+          const sX = rw / ow, sY = rh / oh;
+          for (const orig of origMembers) {
+            const relX = orig.x - ox, relY = orig.y - oy;
+            const iW = Math.max(10, Math.round(orig.w * sX));
+            const iH = orig.h
+              ? Math.max(10, Math.round(orig.h * sY))
+              : getItemH({...orig, w: iW});
+            const minNW = relX * sX + iW + PAD;
+            const minNH = relY * sY + iH + PAD;
+            if (rw < minNW) { rw = Math.round(minNW); if (mode.includes('w')) rx = Math.round(ox + ow - rw); }
+            if (rh < minNH) { rh = Math.round(minNH); if (mode.includes('n')) ry = Math.round(oy + oh - rh); }
+          }
+        }
         const scaleX = rw / ow, scaleY = rh / oh;
         nit = itemsRef.current.map(i => {
           if (i.id === itemId) return {...i, x: rx, y: ry, w: rw, h: rh};
@@ -12285,13 +12317,28 @@ ${rows}
           if (si.type === 'zone' && si.scaleContent && sizeChanged) {
             const newZX = upd.x ?? si.x;
             const newZY = upd.y ?? si.y;
-            const newZW = upd.w ?? si.w;
-            const newZH = upd.h ?? iH;
-            const scaleX = newZW / si.w;
-            const scaleY = newZH / iH;
+            let newZW = upd.w ?? si.w;
+            let newZH = upd.h ?? iH;
             const origMembers = itemsRef.current
               .filter(i => i.zoneId === si.id && i.type !== 'zone')
               .map(i => ({...i}));
+            if (origMembers.length) {
+              const PAD = 8;
+              const sX = newZW / si.w, sY = newZH / iH;
+              for (const orig of origMembers) {
+                const relX = orig.x - si.x, relY = orig.y - si.y;
+                const iW = Math.max(10, Math.round(orig.w * sX));
+                const iHi = orig.h
+                  ? Math.max(10, Math.round(orig.h * sY))
+                  : getItemH({...orig, w: iW});
+                newZW = Math.max(newZW, relX * sX + iW + PAD);
+                newZH = Math.max(newZH, relY * sY + iHi + PAD);
+              }
+              if (upd.w !== undefined) upd.w = Math.round(newZW);
+              if (upd.h !== undefined) upd.h = Math.round(newZH);
+            }
+            const scaleX = newZW / si.w;
+            const scaleY = newZH / iH;
             nit = itemsRef.current.map(i => {
               if (i.id === si.id) return {...i, ...upd};
               const orig = origMembers.find(om => om.id === i.id);

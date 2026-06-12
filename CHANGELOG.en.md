@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.21.14] — 2026-06-12
+
+### Fixed
+- **Zone resize with "Scale content" — overflow on free resize:** when resizing without Shift, items without a stored height (photos) did not scale their visual height with `scaleY`, so the zone could end up smaller than its content. Added a minimum-size guard to `onMM`, `onMU`, and the properties modal: the zone can never be made smaller than the bounding box of its scaled content.
+
 ## [1.21.13] — 2026-06-12
 
 ### Fixed
