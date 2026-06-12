@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.21.13] — 2026-06-12
+
+### Corregido
+- **Modal de propiedades — tamaño no se aplicaba en fotos:** al cambiar W en una foto, el valor se sobreescribía con el derivado del campo H (que permanecía en su valor original). Ahora: si el usuario cambia W y no H, se aplica W directamente; si cambia H, se deriva W desde H manteniendo la relación de aspecto.
+- **Modal de propiedades — W/H en proporción en tiempo real:** cuando el candado ⛓ está activo, cambiar W actualiza H automáticamente (y viceversa) mientras se escribe, sin esperar a pulsar Aplicar. Para fotos, W y H siempre se sincronizan (aspecto siempre bloqueado).
+- **Modal de propiedades — elementos bloqueados:** si el elemento tiene el bloqueo activo, todos los campos se muestran como solo lectura, el botón Aplicar queda deshabilitado y aparece un aviso "Este elemento está bloqueado" bajo los campos.
+- **Modal de propiedades — zona con "Escalar contenido":** al cambiar W o H de una zona con `scaleContent: true`, el contenido de la zona se escala proporcionalmente igual que al redimensionar arrastrando el handle.
+
 ## [1.21.12] — 2026-06-12
 
 ### Añadido

@@ -740,6 +740,9 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .pm-btn:hover{border-color:var(--acc-dim);color:var(--acc)}
 .pm-btn.primary{background:var(--acc-faint);border-color:var(--acc-dim);color:var(--acc)}
 .pm-btn.primary:hover{background:var(--acc-dim);color:var(--panel)}
+.pm-btn:disabled{opacity:.4;cursor:default;pointer-events:none}
+.pm-inp[readonly]{opacity:.45;cursor:default}
+.pm-locked-msg{font-size:9px;color:var(--muted);letter-spacing:.5px;margin-top:4px;text-align:center}
 /* ── MODAL ── */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;z-index:1000}
 .modal{background:var(--panel);border:1px solid var(--border2);padding:28px;min-width:360px;display:flex;flex-direction:column;gap:18px}
@@ -1203,7 +1206,7 @@ const I18N = {
     dropHint:'Suelta para añadir al tablero', dropHintGrid:'Suelta para añadir al mosaico', dropHintZone:'Suelta para añadir a la zona',
     dropHintNoProj:'Sin proyecto — crea uno en el panel izquierdo',
     npAspectLock:'Mantener proporción', npLockOn:'Proporción bloqueada',
-    propsMenuItem:'Propiedades…', propsTitle:'Propiedades', propsPosition:'Posición', propsSize:'Tamaño', propsRotation:'Rotación', propsApply:'Aplicar', propsCancel:'Cancelar',
+    propsMenuItem:'Propiedades…', propsTitle:'Propiedades', propsPosition:'Posición', propsSize:'Tamaño', propsRotation:'Rotación', propsApply:'Aplicar', propsCancel:'Cancelar', propsLockedNotice:'Este elemento está bloqueado',
     labelPlaceholder:'etiqueta…', rotateBtn:'Rotar 90°', bringFwdBtn:'Al frente', sendBackBtn:'Enviar atrás', deleteBtn:'Eliminar', lockBtn:'Bloquear', unlockBtn:'Desbloquear',
     noteTitlePh:'título…', noteInMemoryBtn:'Incluir en memoria', noteExcludeMemBtn:'Excluir de memoria', notesSectionTitle:'Notas',
     renameBtn:'Renombrar',
@@ -1428,7 +1431,7 @@ const I18N = {
     dropHint:'Drop to add to board', dropHintGrid:'Drop to add to grid', dropHintZone:'Drop to add to zone',
     dropHintNoProj:'No project — create one in the left panel',
     npAspectLock:'Keep aspect ratio', npLockOn:'Aspect locked',
-    propsMenuItem:'Properties…', propsTitle:'Properties', propsPosition:'Position', propsSize:'Size', propsRotation:'Rotation', propsApply:'Apply', propsCancel:'Cancel',
+    propsMenuItem:'Properties…', propsTitle:'Properties', propsPosition:'Position', propsSize:'Size', propsRotation:'Rotation', propsApply:'Apply', propsCancel:'Cancel', propsLockedNotice:'This element is locked',
     labelPlaceholder:'label…', rotateBtn:'Rotate 90°', bringFwdBtn:'Bring forward', sendBackBtn:'Send backward', deleteBtn:'Delete', lockBtn:'Lock', unlockBtn:'Unlock',
     noteTitlePh:'title…', noteInMemoryBtn:'Include in report', noteExcludeMemBtn:'Exclude from report', notesSectionTitle:'Notes',
     renameBtn:'Rename',
@@ -12216,6 +12219,7 @@ ${rows}
       {propsModal && (() => {
         const si = itemsRef.current.find(i => i.id === propsModal.itemId);
         if (!si) { setPropsModal(null); return null; }
+        const isLocked = !!si.locked;
         const usePx = !boardDpi || !boardUnits || boardUnits === 'px';
         const u = usePx ? 'px' : boardUnits;
         const prec = boardUnits === 'mm' ? 0 : boardUnits === 'in' ? 2 : 1;
@@ -12238,6 +12242,7 @@ ${rows}
         const origHDisp = toDisp(iH);
         const closeModal = () => setPropsModal(null);
         const applyProps = () => {
+          if (isLocked) return;
           const xv = parseFloat(propsXRef.current?.value);
           const yv = parseFloat(propsYRef.current?.value);
           const wv = parseFloat(propsWRef.current?.value);
@@ -12248,28 +12253,84 @@ ${rows}
           if (!isNaN(yv)) upd.y = toCanvasPx(yv);
           const wChanged = !isNaN(wv) && wv !== origWDisp;
           const hChanged = !isNaN(hv) && hv !== origHDisp;
-          if (!isNaN(wv)) upd.w = Math.max(10, toCanvasPx(wv));
-          if (!isNaN(hv)) {
-            if (isPhoto && photoAspect) {
-              upd.w = Math.max(10, Math.round(toCanvasPx(hv) * photoAspect));
-            } else {
-              upd.h = Math.max(10, toCanvasPx(hv));
+          if (isPhoto) {
+            // photos derive H from W — only use H input to set W if W was not explicitly changed
+            if (wChanged && !hChanged) {
+              upd.w = Math.max(10, toCanvasPx(wv));
+            } else if (hChanged) {
+              upd.w = Math.max(10, photoAspect ? Math.round(toCanvasPx(hv) * photoAspect) : toCanvasPx(hv));
             }
-          }
-          if (!isPhoto && propsLockRatio && si.w && iH) {
-            if (wChanged && !hChanged && upd.w) upd.h = Math.max(10, Math.round(upd.w * iH / si.w));
-            else if (hChanged && !wChanged && upd.h) upd.w = Math.max(10, Math.round(si.w * upd.h / iH));
+          } else {
+            if (propsLockRatio && si.w && iH) {
+              if (wChanged && !hChanged) {
+                upd.w = Math.max(10, toCanvasPx(wv));
+                upd.h = Math.max(10, Math.round(toCanvasPx(wv) * iH / si.w));
+              } else if (hChanged && !wChanged) {
+                upd.h = Math.max(10, toCanvasPx(hv));
+                upd.w = Math.max(10, Math.round(si.w * toCanvasPx(hv) / iH));
+              } else {
+                if (wChanged) upd.w = Math.max(10, toCanvasPx(wv));
+                if (hChanged) upd.h = Math.max(10, toCanvasPx(hv));
+              }
+            } else {
+              if (wChanged) upd.w = Math.max(10, toCanvasPx(wv));
+              if (hChanged) upd.h = Math.max(10, toCanvasPx(hv));
+            }
           }
           if (!isNaN(rv)) upd.freeRot = Math.round(rv);
           if (Object.keys(upd).length === 0) { closeModal(); return; }
           pushUndo();
-          const nit = itemsRef.current.map(i => i.id === si.id ? {...i, ...upd} : i);
+          const sizeChanged = upd.w !== undefined || upd.h !== undefined;
+          let nit;
+          if (si.type === 'zone' && si.scaleContent && sizeChanged) {
+            const newZX = upd.x ?? si.x;
+            const newZY = upd.y ?? si.y;
+            const newZW = upd.w ?? si.w;
+            const newZH = upd.h ?? iH;
+            const scaleX = newZW / si.w;
+            const scaleY = newZH / iH;
+            const origMembers = itemsRef.current
+              .filter(i => i.zoneId === si.id && i.type !== 'zone')
+              .map(i => ({...i}));
+            nit = itemsRef.current.map(i => {
+              if (i.id === si.id) return {...i, ...upd};
+              const orig = origMembers.find(om => om.id === i.id);
+              if (!orig) return i;
+              return {
+                ...orig,
+                x: Math.round(newZX + (orig.x - si.x) * scaleX),
+                y: Math.round(newZY + (orig.y - si.y) * scaleY),
+                w: Math.max(10, Math.round(orig.w * scaleX)),
+                ...(orig.h ? {h: Math.max(10, Math.round(orig.h * scaleY))} : {}),
+              };
+            });
+          } else {
+            nit = itemsRef.current.map(i => i.id === si.id ? {...i, ...upd} : i);
+          }
           setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
           closeModal();
         };
         const onKeyDown = e => {
           if (e.key === 'Enter') { e.preventDefault(); applyProps(); }
           if (e.key === 'Escape') { e.preventDefault(); closeModal(); }
+        };
+        const onWChange = e => {
+          const wv = parseFloat(e.target.value);
+          if (isNaN(wv)) return;
+          if (isPhoto && photoAspect && propsHRef.current) {
+            propsHRef.current.value = String(toDisp(toCanvasPx(wv) / photoAspect));
+          } else if (propsLockRatio && !isPhoto && propsHRef.current && si.w && iH) {
+            propsHRef.current.value = String(toDisp(toCanvasPx(wv) * iH / si.w));
+          }
+        };
+        const onHChange = e => {
+          const hv = parseFloat(e.target.value);
+          if (isNaN(hv)) return;
+          if (isPhoto && photoAspect && propsWRef.current) {
+            propsWRef.current.value = String(toDisp(toCanvasPx(hv) * photoAspect));
+          } else if (propsLockRatio && !isPhoto && propsWRef.current && si.w && iH) {
+            propsWRef.current.value = String(toDisp(si.w * toCanvasPx(hv) / iH));
+          }
         };
         return (
           <div className="pm-overlay" onClick={closeModal}>
@@ -12280,10 +12341,10 @@ ${rows}
                   <div className="pm-sec">{t('propsPosition')}</div>
                   <div className="pm-row">
                     <span className="pm-lbl">X</span>
-                    <input ref={propsXRef} className="pm-inp" type="number" defaultValue={toDisp(si.x)} onKeyDown={onKeyDown}/>
+                    <input ref={propsXRef} className="pm-inp" type="number" defaultValue={toDisp(si.x)} onKeyDown={onKeyDown} readOnly={isLocked}/>
                     <span className="pm-unit">{u}</span>
                     <span className="pm-lbl" style={{marginLeft:6}}>Y</span>
-                    <input ref={propsYRef} className="pm-inp" type="number" defaultValue={toDisp(si.y)} onKeyDown={onKeyDown}/>
+                    <input ref={propsYRef} className="pm-inp" type="number" defaultValue={toDisp(si.y)} onKeyDown={onKeyDown} readOnly={isLocked}/>
                     <span className="pm-unit">{u}</span>
                   </div>
                 </div>
@@ -12291,26 +12352,28 @@ ${rows}
                   <div className="pm-sec">{t('propsSize')}</div>
                   <div className="pm-row">
                     <span className="pm-lbl">W</span>
-                    <input ref={propsWRef} className="pm-inp" type="number" defaultValue={origWDisp} onKeyDown={onKeyDown}/>
+                    <input ref={propsWRef} className="pm-inp" type="number" defaultValue={origWDisp} onKeyDown={onKeyDown} onChange={onWChange} readOnly={isLocked}/>
                     <span className="pm-unit">{u}</span>
                     <button className={`pm-lock${propsLockRatio?' on':''}`} data-tooltip={t(propsLockRatio?'npLockOn':'npAspectLock')}
+                      disabled={isLocked || isPhoto}
                       onClick={() => { const v = !propsLockRatio; setPropsLockRatio(v); localStorage.setItem('tableau-props-lock-ratio', v); }}>⛓</button>
                     <span className="pm-lbl" style={{marginLeft:4}}>H</span>
-                    <input ref={propsHRef} className="pm-inp" type="number" defaultValue={origHDisp} onKeyDown={onKeyDown}/>
+                    <input ref={propsHRef} className="pm-inp" type="number" defaultValue={origHDisp} onKeyDown={onKeyDown} onChange={onHChange} readOnly={isLocked}/>
                     <span className="pm-unit">{u}</span>
                   </div>
                 </div>
                 <div>
                   <div className="pm-sec">{t('propsRotation')}</div>
                   <div className="pm-row">
-                    <input ref={propsRotRef} className="pm-inp" type="number" defaultValue={si.freeRot||0} onKeyDown={onKeyDown}/>
+                    <input ref={propsRotRef} className="pm-inp" type="number" defaultValue={si.freeRot||0} onKeyDown={onKeyDown} readOnly={isLocked}/>
                     <span className="pm-unit">°</span>
                   </div>
                 </div>
+                {isLocked && <div className="pm-locked-msg">{t('propsLockedNotice')}</div>}
               </div>
               <div className="pm-foot">
                 <button className="pm-btn" onClick={closeModal}>{t('propsCancel')}</button>
-                <button className="pm-btn primary" onClick={applyProps}>{t('propsApply')}</button>
+                <button className="pm-btn primary" onClick={applyProps} disabled={isLocked}>{t('propsApply')}</button>
               </div>
             </div>
           </div>

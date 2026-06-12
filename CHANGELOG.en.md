@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.21.13] — 2026-06-12
+
+### Fixed
+- **Properties modal — size not applying on photos:** when changing W on a photo, the value was overwritten by the one derived from the H field (which remained at its original value). Now: if the user changes W but not H, W is applied directly; if H is changed, W is derived from H preserving the aspect ratio.
+- **Properties modal — live proportional W/H:** when the ⛓ lock is active, changing W automatically updates H (and vice versa) as you type, without waiting for Apply. For photos, W and H are always kept in sync (aspect always locked).
+- **Properties modal — locked elements:** if the item has its lock active, all fields are shown as read-only, the Apply button is disabled, and a notice "This element is locked" appears below the fields.
+- **Properties modal — zone with "Scale content":** when changing W or H on a zone with `scaleContent: true`, the zone's contents are scaled proportionally, matching the behaviour of the drag-resize handle.
+
 ## [1.21.12] — 2026-06-12
 
 ### Added

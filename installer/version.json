@@ -1,6 +1,6 @@
 {
-  "version": "1.21.12",
+  "version": "1.21.13",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-06-12",
-  "notes": "Modal de propiedades numéricas accesible desde el menú contextual del canvas."
+  "notes": "Correcciones al modal de propiedades: tamaño en fotos, proporción en tiempo real, elementos bloqueados, escalar contenido en zonas."
 }
