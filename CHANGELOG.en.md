@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.21.12] — 2026-06-12
+
+### Added
+- **Numeric properties modal:** accessible via right-click → "Properties…" on any canvas element (photos, text, notes, zones, placeholders). Shows editable fields for X, Y, W, H and Rot using the board's units (px for variable boards; cm/mm/in for fixed boards). The ⛓ icon toggles proportional W/H scaling (state persisted in localStorage). Changes apply on clicking Apply or pressing Enter in any field, with an undo history entry. ESC closes without applying.
+
+### Improved
+- **Cleaner info panel:** removed the inline numeric properties panel that lived in the info sidebar (was hard to use due to its small size and position). Replaced by the centred modal accessible from the context menu.
+
 ## [1.21.11] — 2026-06-10
 
 ### Improved

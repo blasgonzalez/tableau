@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.21.12] — 2026-06-12
+
+### Añadido
+- **Modal de propiedades numéricas:** accesible mediante clic derecho → "Propiedades…" en cualquier elemento del canvas (fotos, texto, notas, zonas, placeholder). Muestra campos editables para X, Y, W, H y Rot con las unidades del tablero (px para tableros variables; cm/mm/in para tableros fijos). El icono ⛓ alterna el escalado proporcional de W/H (estado persistido en localStorage). Los cambios se aplican al pulsar Aplicar o Enter en cualquier campo, con entrada en el historial de deshacer. ESC cierra sin aplicar.
+
+### Mejorado
+- **Panel de info limpio:** eliminado el panel de propiedades numéricas inline que vivía en la barra lateral de información (era difícil de usar por su pequeño tamaño y posición). Reemplazado por el modal centrado accesible desde el menú contextual.
+
 ## [1.21.11] — 2026-06-10
 
 ### Mejorado

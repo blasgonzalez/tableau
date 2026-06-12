@@ -166,16 +166,6 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .info-pos-cell{font-size:10px;color:var(--dim);display:flex;align-items:center;gap:5px;letter-spacing:.3px}
 .info-pos-arr{font-size:11px;color:var(--muted);width:12px;flex-shrink:0;text-align:center}
 .info-pos-cent{font-size:8px;letter-spacing:.8px;color:var(--acc);padding-top:1px}
-.info-numprops{padding:6px 10px 5px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:4px}
-.info-np-row{display:flex;align-items:center;gap:3px}
-.info-np-lbl{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;width:12px;flex-shrink:0;text-align:right}
-.info-np-inp{width:52px;background:var(--panel);border:1px solid var(--border2);color:var(--text);font-size:9px;padding:2px 4px;font-family:'IBM Plex Mono',monospace;-moz-appearance:textfield;text-align:right;min-width:0}
-.info-np-inp::-webkit-outer-spin-button,.info-np-inp::-webkit-inner-spin-button{-webkit-appearance:none}
-.info-np-inp:focus{border-color:var(--acc-dim);outline:none;color:var(--acc)}
-.info-np-unit{font-size:8px;color:var(--muted);flex-shrink:0;min-width:14px}
-.info-np-lock{width:18px;height:18px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;font-size:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0;font-family:'IBM Plex Mono',monospace;transition:color .12s,border-color .12s}
-.info-np-lock:hover{color:var(--sub);border-color:var(--acc-dim)}
-.info-np-lock.on{color:var(--acc);border-color:var(--acc-dim)}
 .info-boards{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px}
 .ibd-tag{font-size:7px;letter-spacing:.4px;padding:1px 5px;border:1px solid var(--border2);color:var(--sub)}
 .ibd-tag.cur{border-color:var(--acc-dim);color:var(--acc);background:var(--acc-faint)}
@@ -730,6 +720,26 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .ctx-item.ctx-danger{color:#e06060}
 .ctx-item.ctx-danger:hover{color:#ff7070;background:var(--surf)}
 .ctx-sep{height:1px;background:var(--border2);margin:4px 0}
+/* ── PROPS MODAL ── */
+.pm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:1050}
+.pm-box{background:var(--panel);border:1px solid var(--border2);box-shadow:0 8px 28px rgba(0,0,0,.6);min-width:280px;display:flex;flex-direction:column}
+.pm-hd{padding:12px 16px 10px;border-bottom:1px solid var(--border);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--sub)}
+.pm-body{padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.pm-sec{font-size:8px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px}
+.pm-row{display:flex;align-items:center;gap:6px}
+.pm-lbl{font-size:9px;color:var(--muted);width:14px;flex-shrink:0;text-align:right}
+.pm-inp{width:72px;background:var(--surf);border:1px solid var(--border2);color:var(--text);font-size:11px;padding:4px 6px;font-family:'IBM Plex Mono',monospace;-moz-appearance:textfield;text-align:right;min-width:0;outline:none}
+.pm-inp::-webkit-outer-spin-button,.pm-inp::-webkit-inner-spin-button{-webkit-appearance:none}
+.pm-inp:focus{border-color:var(--acc-dim);color:var(--acc)}
+.pm-unit{font-size:9px;color:var(--muted);min-width:18px}
+.pm-lock{width:24px;height:24px;background:none;border:1px solid var(--border2);color:var(--muted);cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0;transition:color .12s,border-color .12s}
+.pm-lock:hover{color:var(--sub);border-color:var(--acc-dim)}
+.pm-lock.on{color:var(--acc);border-color:var(--acc-dim)}
+.pm-foot{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+.pm-btn{padding:6px 16px;font-family:'IBM Plex Mono',monospace;font-size:11px;border:1px solid var(--border2);cursor:pointer;letter-spacing:.3px;background:var(--surf);color:var(--text)}
+.pm-btn:hover{border-color:var(--acc-dim);color:var(--acc)}
+.pm-btn.primary{background:var(--acc-faint);border-color:var(--acc-dim);color:var(--acc)}
+.pm-btn.primary:hover{background:var(--acc-dim);color:var(--panel)}
 /* ── MODAL ── */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;z-index:1000}
 .modal{background:var(--panel);border:1px solid var(--border2);padding:28px;min-width:360px;display:flex;flex-direction:column;gap:18px}
@@ -1193,6 +1203,7 @@ const I18N = {
     dropHint:'Suelta para añadir al tablero', dropHintGrid:'Suelta para añadir al mosaico', dropHintZone:'Suelta para añadir a la zona',
     dropHintNoProj:'Sin proyecto — crea uno en el panel izquierdo',
     npAspectLock:'Mantener proporción', npLockOn:'Proporción bloqueada',
+    propsMenuItem:'Propiedades…', propsTitle:'Propiedades', propsPosition:'Posición', propsSize:'Tamaño', propsRotation:'Rotación', propsApply:'Aplicar', propsCancel:'Cancelar',
     labelPlaceholder:'etiqueta…', rotateBtn:'Rotar 90°', bringFwdBtn:'Al frente', sendBackBtn:'Enviar atrás', deleteBtn:'Eliminar', lockBtn:'Bloquear', unlockBtn:'Desbloquear',
     noteTitlePh:'título…', noteInMemoryBtn:'Incluir en memoria', noteExcludeMemBtn:'Excluir de memoria', notesSectionTitle:'Notas',
     renameBtn:'Renombrar',
@@ -1417,6 +1428,7 @@ const I18N = {
     dropHint:'Drop to add to board', dropHintGrid:'Drop to add to grid', dropHintZone:'Drop to add to zone',
     dropHintNoProj:'No project — create one in the left panel',
     npAspectLock:'Keep aspect ratio', npLockOn:'Aspect locked',
+    propsMenuItem:'Properties…', propsTitle:'Properties', propsPosition:'Position', propsSize:'Size', propsRotation:'Rotation', propsApply:'Apply', propsCancel:'Cancel',
     labelPlaceholder:'label…', rotateBtn:'Rotate 90°', bringFwdBtn:'Bring forward', sendBackBtn:'Send backward', deleteBtn:'Delete', lockBtn:'Lock', unlockBtn:'Unlock',
     noteTitlePh:'title…', noteInMemoryBtn:'Include in report', noteExcludeMemBtn:'Exclude from report', notesSectionTitle:'Notes',
     renameBtn:'Rename',
@@ -1826,7 +1838,6 @@ function App() {
   const cascadeStepRef   = useRef(0);
   const hoveredThumbRef = useRef(null);
   const displayedPhotosRef = useRef([]);
-  const [numPropsAspectLocked, setNumPropsAspectLocked] = useState(false);
   const [presentation,  setPresentation]  = useState(false);
   const presentationRef = useRef(false);
   const [presZoneIdx,   setPresZoneIdx]   = useState(-1);
@@ -1854,6 +1865,13 @@ function App() {
   const [cfgExportPad,   setCfgExportPad]   = useState('60');
   const [propsPanelId,  setPropsPanelId]  = useState(null);
   const [framePainter,  setFramePainter]  = useState(null); // {matSize,matColor,frameSize,frameColor} when active
+  const [propsModal,    setPropsModal]    = useState(null); // {itemId} when open
+  const [propsLockRatio, setPropsLockRatio] = useState(() => localStorage.getItem('tableau-props-lock-ratio') === 'true');
+  const propsXRef  = useRef(null);
+  const propsYRef  = useRef(null);
+  const propsWRef  = useRef(null);
+  const propsHRef  = useRef(null);
+  const propsRotRef = useRef(null);
   const [spaceDown,     setSpaceDown]     = useState(false);
   const spaceRef = useRef(false);
   const [textSizeDrop,   setTextSizeDrop]   = useState(false);
@@ -1981,11 +1999,6 @@ function App() {
   const boardPxRef      = useRef(null);
   const boardDpiRef     = useRef(null);
   const boardUnitsRef   = useRef('px');
-  const numPropsXRef    = useRef(null);
-  const numPropsYRef    = useRef(null);
-  const numPropsWRef    = useRef(null);
-  const numPropsHRef    = useRef(null);
-  const numPropsRotRef  = useRef(null);
   const wrapRef         = useRef(null);
   const pasteGhostRef   = useRef(null);
   const ghostDivRef     = useRef(null);
@@ -5835,8 +5848,6 @@ ${rows}
           const _fmtPx = v => boardDpiRef.current && boardUnitsRef.current && boardUnitsRef.current !== 'px'
             ? (() => { const _in = v / boardDpiRef.current; const _u = boardUnitsRef.current; return parseFloat((_u==='cm'?_in*2.54:_u==='mm'?_in*25.4:_in).toFixed(_u==='mm'?0:_u==='in'?2:1)); })()
             : Math.round(v);
-          if (numPropsXRef.current && document.activeElement !== numPropsXRef.current) numPropsXRef.current.value = _fmtPx(_nx);
-          if (numPropsYRef.current && document.activeElement !== numPropsYRef.current) numPropsYRef.current.value = _fmtPx(_ny);
         }
       }
       if (canSwap) {
@@ -5987,8 +5998,7 @@ ${rows}
       { const _fmtPx = v => boardDpiRef.current && boardUnitsRef.current && boardUnitsRef.current !== 'px'
           ? (() => { const _in = v / boardDpiRef.current; const _u = boardUnitsRef.current; return parseFloat((_u==='cm'?_in*2.54:_u==='mm'?_in*25.4:_in).toFixed(_u==='mm'?0:_u==='in'?2:1)); })()
           : Math.round(v);
-        if (numPropsWRef.current && document.activeElement !== numPropsWRef.current) numPropsWRef.current.value = _fmtPx(rw);
-        if (numPropsHRef.current && document.activeElement !== numPropsHRef.current) numPropsHRef.current.value = _fmtPx(rh); }
+}
     };
     const onMU = () => {
       window.removeEventListener('pointermove', onMM);
@@ -6051,7 +6061,6 @@ ${rows}
         : Math.round(startFreeRot + delta);
       setItems(its => its.map(i => i.id === itemId ? {...i, freeRot: finalRot} : i));
       setResizeDim({ x: e.clientX + 14, y: e.clientY - 36, label: `${((finalRot % 360) + 360) % 360}°` });
-      if (numPropsRotRef.current && document.activeElement !== numPropsRotRef.current) numPropsRotRef.current.value = finalRot;
     };
     const onMU = () => {
       window.removeEventListener('pointermove', onMM);
@@ -8550,89 +8559,6 @@ ${rows}
                     <div className="sb-sec-hd">
                       <span className="sb-sec-title">○ {t('infoTitle')}</span>
                     </div>
-                    {/* ── Numeric props panel (1 element selected) ── */}
-                    {bid && roomView === 'board' && sel.length === 1 && (() => {
-                      const si = items.find(i => i.id === sel[0]);
-                      if (!si || si.type === 'grid') return null;
-                      const usePx = !boardDpi || !boardUnits || boardUnits === 'px';
-                      const u = usePx ? 'px' : boardUnits;
-                      const prec = boardUnits === 'mm' ? 0 : boardUnits === 'in' ? 2 : 1;
-                      const toDisp = px => {
-                        if (usePx) return Math.round(px);
-                        const ins = px / boardDpi;
-                        return parseFloat((boardUnits==='cm'?ins*2.54:boardUnits==='mm'?ins*25.4:ins).toFixed(prec));
-                      };
-                      const toCanvasPx = v => {
-                        if (usePx) return Math.round(parseFloat(v)||0);
-                        const factor = boardUnits==='cm'?2.54:boardUnits==='mm'?25.4:1;
-                        return Math.round(((parseFloat(v)||0)/factor)*boardDpi);
-                      };
-                      const iH = getItemH(si);
-                      const isPhoto = !!(si.photoId);
-                      const photo = isPhoto ? photos.find(p => p.id === si.photoId) : null;
-                      const isSwapped = isPhoto && [90,270].includes(Math.abs((si.rot||0)%360));
-                      const photoHoverW = photo ? (isSwapped ? photo.h/photo.w : photo.w/photo.h) : null; // w per h
-                      const applyProp = (field, rawVal) => {
-                        const parsed = parseFloat(rawVal);
-                        if (isNaN(parsed)) return;
-                        pushUndo();
-                        let upd = {};
-                        if (field === 'x') upd.x = toCanvasPx(parsed);
-                        else if (field === 'y') upd.y = toCanvasPx(parsed);
-                        else if (field === 'w') {
-                          const nw = Math.max(10, toCanvasPx(parsed));
-                          upd.w = nw;
-                          if (!isPhoto && numPropsAspectLocked && iH) upd.h = Math.max(10, Math.round(nw*iH/si.w));
-                        } else if (field === 'h') {
-                          if (isPhoto && photoHoverW) {
-                            upd.w = Math.max(10, Math.round(toCanvasPx(parsed)*photoHoverW));
-                          } else {
-                            const nh = Math.max(10, toCanvasPx(parsed));
-                            upd.h = nh;
-                            if (numPropsAspectLocked && iH) upd.w = Math.max(10, Math.round(si.w*nh/iH));
-                          }
-                        } else if (field === 'rot') {
-                          upd.freeRot = Math.round(parsed);
-                        }
-                        const nit = itemsRef.current.map(i => i.id === si.id ? {...i,...upd} : i);
-                        setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
-                      };
-                      const handleKD = (field, e) => {
-                        if (e.key === 'Enter') { applyProp(field, e.target.value); e.target.blur(); }
-                        if (e.key === 'Escape') e.target.blur();
-                      };
-                      return (
-                        <div className="info-numprops" key={si.id}>
-                          <div className="info-np-row">
-                            <span className="info-np-lbl">X</span>
-                            <input ref={numPropsXRef} className="info-np-inp" type="number" defaultValue={toDisp(si.x)}
-                              onKeyDown={e=>handleKD('x',e)} onBlur={e=>applyProp('x',e.target.value)} onPointerDown={e=>e.stopPropagation()}/>
-                            <span className="info-np-unit">{u}</span>
-                            <span className="info-np-lbl" style={{marginLeft:4}}>Y</span>
-                            <input ref={numPropsYRef} className="info-np-inp" type="number" defaultValue={toDisp(si.y)}
-                              onKeyDown={e=>handleKD('y',e)} onBlur={e=>applyProp('y',e.target.value)} onPointerDown={e=>e.stopPropagation()}/>
-                            <span className="info-np-unit">{u}</span>
-                          </div>
-                          <div className="info-np-row">
-                            <span className="info-np-lbl">W</span>
-                            <input ref={numPropsWRef} className="info-np-inp" type="number" defaultValue={toDisp(si.w)}
-                              onKeyDown={e=>handleKD('w',e)} onBlur={e=>applyProp('w',e.target.value)} onPointerDown={e=>e.stopPropagation()}/>
-                            <span className="info-np-unit">{u}</span>
-                            {!isPhoto && <button className={`info-np-lock${numPropsAspectLocked?' on':''}`} data-tooltip={t(numPropsAspectLocked?'npLockOn':'npAspectLock')} onPointerDown={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();setNumPropsAspectLocked(v=>!v);}}>⛓</button>}
-                            <span className="info-np-lbl" style={{marginLeft:isPhoto?4:0}}>H</span>
-                            <input ref={numPropsHRef} className="info-np-inp" type="number" defaultValue={toDisp(iH)}
-                              onKeyDown={e=>handleKD('h',e)} onBlur={e=>applyProp('h',e.target.value)} onPointerDown={e=>e.stopPropagation()}/>
-                            <span className="info-np-unit">{u}</span>
-                          </div>
-                          <div className="info-np-row">
-                            <span className="info-np-lbl">↻</span>
-                            <input ref={numPropsRotRef} className="info-np-inp" type="number" defaultValue={si.freeRot||si.rot||0}
-                              onKeyDown={e=>handleKD('rot',e)} onBlur={e=>applyProp('rot',e.target.value)} onPointerDown={e=>e.stopPropagation()}/>
-                            <span className="info-np-unit">°</span>
-                          </div>
-                        </div>
-                      );
-                    })()}
                     <InfoPanel/>
                   </div>
                 )}
@@ -10887,6 +10813,8 @@ ${rows}
                   deleteItem(ctxItem.id);
                 }
               }}>× {t('deleteBtn')}</button>
+              <div className="ctx-sep"/>
+              <button className="ctx-item" onClick={() => { setPropsModal({itemId: ctxMenu.itemId}); setCtxMenu(null); }}>⊞ {t('propsMenuItem')}</button>
             </div>
           );
         }
@@ -10929,6 +10857,8 @@ ${rows}
             <div className="ctx-sep"/>
             <button className="ctx-item" onClick={() => { dupItem(ctxMenu.itemId); setCtxMenu(null); }}>⧉ {t('duplicateItem')}</button>
             <button className="ctx-item ctx-danger" onClick={() => { deleteItem(ctxMenu.itemId); setCtxMenu(null); }}>× {t('deleteBtn')}</button>
+            <div className="ctx-sep"/>
+            <button className="ctx-item" onClick={() => { setPropsModal({itemId: ctxMenu.itemId}); setCtxMenu(null); }}>⊞ {t('propsMenuItem')}</button>
           </div>
         );
       })()}
@@ -12281,6 +12211,111 @@ ${rows}
           </div>
         </div>
       )}
+
+      {/* ── Modal de propiedades numéricas ── */}
+      {propsModal && (() => {
+        const si = itemsRef.current.find(i => i.id === propsModal.itemId);
+        if (!si) { setPropsModal(null); return null; }
+        const usePx = !boardDpi || !boardUnits || boardUnits === 'px';
+        const u = usePx ? 'px' : boardUnits;
+        const prec = boardUnits === 'mm' ? 0 : boardUnits === 'in' ? 2 : 1;
+        const toDisp = px => {
+          if (usePx) return Math.round(px);
+          const ins = px / boardDpi;
+          return parseFloat((boardUnits==='cm'?ins*2.54:boardUnits==='mm'?ins*25.4:ins).toFixed(prec));
+        };
+        const toCanvasPx = v => {
+          if (usePx) return Math.round(parseFloat(v)||0);
+          const factor = boardUnits==='cm'?2.54:boardUnits==='mm'?25.4:1;
+          return Math.round(((parseFloat(v)||0)/factor)*boardDpi);
+        };
+        const iH = getItemH(si);
+        const isPhoto = !!(si.photoId);
+        const photo = isPhoto ? photosRef.current.find(p => p.id === si.photoId) : null;
+        const isSwapped = isPhoto && [90,270].includes(Math.abs((si.rot||0)%360));
+        const photoAspect = photo ? (isSwapped ? photo.h/photo.w : photo.w/photo.h) : null;
+        const origWDisp = toDisp(si.w);
+        const origHDisp = toDisp(iH);
+        const closeModal = () => setPropsModal(null);
+        const applyProps = () => {
+          const xv = parseFloat(propsXRef.current?.value);
+          const yv = parseFloat(propsYRef.current?.value);
+          const wv = parseFloat(propsWRef.current?.value);
+          const hv = parseFloat(propsHRef.current?.value);
+          const rv = parseFloat(propsRotRef.current?.value);
+          const upd = {};
+          if (!isNaN(xv)) upd.x = toCanvasPx(xv);
+          if (!isNaN(yv)) upd.y = toCanvasPx(yv);
+          const wChanged = !isNaN(wv) && wv !== origWDisp;
+          const hChanged = !isNaN(hv) && hv !== origHDisp;
+          if (!isNaN(wv)) upd.w = Math.max(10, toCanvasPx(wv));
+          if (!isNaN(hv)) {
+            if (isPhoto && photoAspect) {
+              upd.w = Math.max(10, Math.round(toCanvasPx(hv) * photoAspect));
+            } else {
+              upd.h = Math.max(10, toCanvasPx(hv));
+            }
+          }
+          if (!isPhoto && propsLockRatio && si.w && iH) {
+            if (wChanged && !hChanged && upd.w) upd.h = Math.max(10, Math.round(upd.w * iH / si.w));
+            else if (hChanged && !wChanged && upd.h) upd.w = Math.max(10, Math.round(si.w * upd.h / iH));
+          }
+          if (!isNaN(rv)) upd.freeRot = Math.round(rv);
+          if (Object.keys(upd).length === 0) { closeModal(); return; }
+          pushUndo();
+          const nit = itemsRef.current.map(i => i.id === si.id ? {...i, ...upd} : i);
+          setItems(nit); itemsRef.current = nit; saveItemsNow(nit);
+          closeModal();
+        };
+        const onKeyDown = e => {
+          if (e.key === 'Enter') { e.preventDefault(); applyProps(); }
+          if (e.key === 'Escape') { e.preventDefault(); closeModal(); }
+        };
+        return (
+          <div className="pm-overlay" onClick={closeModal}>
+            <div className="pm-box" onClick={e => e.stopPropagation()}>
+              <div className="pm-hd">{t('propsTitle')}</div>
+              <div className="pm-body">
+                <div>
+                  <div className="pm-sec">{t('propsPosition')}</div>
+                  <div className="pm-row">
+                    <span className="pm-lbl">X</span>
+                    <input ref={propsXRef} className="pm-inp" type="number" defaultValue={toDisp(si.x)} onKeyDown={onKeyDown}/>
+                    <span className="pm-unit">{u}</span>
+                    <span className="pm-lbl" style={{marginLeft:6}}>Y</span>
+                    <input ref={propsYRef} className="pm-inp" type="number" defaultValue={toDisp(si.y)} onKeyDown={onKeyDown}/>
+                    <span className="pm-unit">{u}</span>
+                  </div>
+                </div>
+                <div>
+                  <div className="pm-sec">{t('propsSize')}</div>
+                  <div className="pm-row">
+                    <span className="pm-lbl">W</span>
+                    <input ref={propsWRef} className="pm-inp" type="number" defaultValue={origWDisp} onKeyDown={onKeyDown}/>
+                    <span className="pm-unit">{u}</span>
+                    <button className={`pm-lock${propsLockRatio?' on':''}`} data-tooltip={t(propsLockRatio?'npLockOn':'npAspectLock')}
+                      onClick={() => { const v = !propsLockRatio; setPropsLockRatio(v); localStorage.setItem('tableau-props-lock-ratio', v); }}>⛓</button>
+                    <span className="pm-lbl" style={{marginLeft:4}}>H</span>
+                    <input ref={propsHRef} className="pm-inp" type="number" defaultValue={origHDisp} onKeyDown={onKeyDown}/>
+                    <span className="pm-unit">{u}</span>
+                  </div>
+                </div>
+                <div>
+                  <div className="pm-sec">{t('propsRotation')}</div>
+                  <div className="pm-row">
+                    <input ref={propsRotRef} className="pm-inp" type="number" defaultValue={si.freeRot||0} onKeyDown={onKeyDown}/>
+                    <span className="pm-unit">°</span>
+                  </div>
+                </div>
+              </div>
+              <div className="pm-foot">
+                <button className="pm-btn" onClick={closeModal}>{t('propsCancel')}</button>
+                <button className="pm-btn primary" onClick={applyProps}>{t('propsApply')}</button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {confirmModal && (
         <div className="overlay" style={{zIndex:10001}} onClick={() => setConfirmModal(null)}>

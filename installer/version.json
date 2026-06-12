@@ -1,6 +1,6 @@
 {
-  "version": "1.21.11",
+  "version": "1.21.12",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-06-10",
-  "notes": "Sistema de tooltips unificado: todos los controles usan el mismo estilo visual."
+  "releaseDate": "2026-06-12",
+  "notes": "Modal de propiedades numéricas accesible desde el menú contextual del canvas."
 }
