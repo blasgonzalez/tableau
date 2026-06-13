@@ -1,5 +1,5 @@
 {
-  "version": "1.21.16",
+  "version": "1.21.17",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-06-13",
   "notes": "Corregido parpadeo y salto de la biblioteca al pasar el cursor por las miniaturas (fix definitivo)."

@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.21.17] — 2026-06-13
+
+### Fixed
+- **Library flicker and position jump on thumbnail hover (definitive fix):** consolidates the two previous attempts into one robust solution. The info panel (`.sb-sec.info`) returns to the normal flex flow with `height: 313px; overflow: hidden; flex-shrink: 0`. Additionally, InfoPanel is refactored to always return the same DOM structure: empty state and content live in overlapping absolute layers; switching between them uses `visibility: hidden/visible` (never mounting/unmounting nodes that would change the parent container's height).
+
 ## [1.21.16] — 2026-06-13
 
 ### Fixed

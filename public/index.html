@@ -69,13 +69,13 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .sb-toggle-btn{width:24px;height:24px;margin:7px auto 0;border:1px solid var(--border2);background:transparent;color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;transition:all .15s}
 .sb-toggle-btn:hover{color:var(--text);border-color:var(--acc-dim)}
 .sb-collapsed-label{writing-mode:vertical-rl;font-size:7px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-top:12px;user-select:none}
-.sb-inner{display:flex;flex-direction:column;height:100%;overflow:hidden;position:relative;padding-bottom:250px}
+.sb-inner{display:flex;flex-direction:column;height:100%;overflow:hidden}
 
 /* sidebar sections */
 .sb-sec{display:flex;flex-direction:column;min-height:0}
 .sb-sec.nav{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
 .sb-sec.nav.collapsed{flex:0 0 auto}
-.sb-sec.info{position:absolute;bottom:0;left:0;right:0;height:250px;overflow:hidden;border-top:1px solid var(--border)}
+.sb-sec.info{flex-shrink:0;border-top:1px solid var(--border);margin-top:auto;height:313px;overflow:hidden}
 .sb-trash-btn{height:32px;display:flex;align-items:center;gap:5px;padding:0 8px 0 10px;border-top:1px solid var(--border);background:var(--deep);flex-shrink:0;cursor:pointer;transition:background .12s}
 .sb-trash-btn:hover{background:var(--hover)}
 .sb-trash-badge{background:#c04040;color:#fff;border-radius:8px;font-size:7px;padding:1px 5px;min-width:16px;text-align:center;letter-spacing:0;line-height:1.4}
@@ -7614,148 +7614,156 @@ ${rows}
         )}
       </div>
     );
-    if (!hoverInfo && !posSection) return (
-      <div className="info-empty">
-        {t('infoEmpty1')}<br/>{t('infoEmpty2')}
-      </div>
-    );
-    if (!hoverInfo) return posSection;
-    if (hoverInfo.type) {
-      const { type, label, w, h, scaleContent } = hoverInfo;
-      const physDims = boardDpi && boardUnits && boardUnits !== 'px'
-        ? `${pxToPhys(w, boardDpi, boardUnits)} × ${pxToPhys(h, boardDpi, boardUnits)}`
-        : null;
-      const pxDims = `${w} × ${h} px`;
-      const typeLabel = type === 'zone' ? (lang === 'es' ? 'ZONA' : 'ZONE')
-        : type === 'note' ? (lang === 'es' ? 'NOTA' : 'NOTE')
-        : type === 'text' ? (lang === 'es' ? 'TEXTO' : 'TEXT') : type.toUpperCase();
-      return (<>{posSection}
-        <div className="info-panel">
-          <div className="info-meta" style={{gap:5}}>
-            <div className="info-name" style={{color:'var(--muted)',fontSize:8,letterSpacing:'1.5px'}}>{typeLabel}</div>
-            <div className="info-name">{label || '—'}</div>
-            {physDims && <div className="info-phys">{physDims}</div>}
-            <div className="info-row">{pxDims}</div>
-            {scaleContent && <div className="info-row">↔ {lang === 'es' ? 'Escala contenido' : 'Scales content'}</div>}
-          </div>
+    const hasContent = !!(hoverInfo || posSection);
+    return (
+      <div style={{position:'relative',flex:1,minHeight:0,overflow:'hidden'}}>
+        <div className="info-empty"
+             style={{visibility:hasContent?'hidden':'visible',position:'absolute',inset:0}}>
+          {t('infoEmpty1')}<br/>{t('infoEmpty2')}
         </div>
-      </>);
-    }
-    const { photo, status, thumbSrc, itemW, itemH } = hoverInfo;
-    const boardsWithCtx = photo?.id ? photoBoardsWithContext(photo.id) : [];
-    const currentBoardRoom = rooms.find(r =>
-      r.walls?.some(w => w.boardId === bid || w.boardIdBack === bid) ||
-      r.blocks?.some(bl => bl.faces && Object.values(bl.faces).some(f => f?.boardId === bid))
-    );
-    const rating = photo?.rating || 0;
-    const tags = photo?.tags || [];
-    const mc = photo?.meanColor;
-    const brightness = photo?.brightness;
-    let hueLabel = null, hueColor = null;
-    if (mc) {
-      const { h, s } = rgbToHsl(mc.r, mc.g, mc.b);
-      hueColor = `rgb(${mc.r},${mc.g},${mc.b})`;
-      if (s < 0.12) {
-        hueLabel = lang === 'es' ? 'Neutro' : 'Neutral';
-      } else {
-        const names = lang === 'es'
-          ? ['Rojo','Naranja','Amarillo','Verde','Cian','Azul','Violeta','Magenta']
-          : ['Red','Orange','Yellow','Green','Cyan','Blue','Violet','Magenta'];
-        const bounds = [20, 45, 70, 155, 190, 265, 290, 340];
-        const bucket = bounds.findIndex(b => h < b);
-        hueLabel = names[bucket === -1 ? 0 : bucket];
-      }
-    }
-    const brightPct = brightness != null ? Math.round(brightness * 100) : null;
-    return (<>{posSection}
-      {currentBoardRoom && (
-        <div className="info-room-badge">
-          🏛 {currentBoardRoom.name || (lang==='es'?'Sala':'Room')}
-        </div>
-      )}
-      <div className="info-panel">
-        <img className="info-thumb"
-          src={thumbSrc || (pid && photo?.id ? `/photos/${pid}/${photo.id}/thumb` : '')}
-          alt=""
-          onError={e => e.target.style.opacity = '.2'}
-        />
-        <div className="info-meta">
-          <div className="info-name">{photo?.name || '—'}</div>
-          {(photo?.origW || photo?.w) > 0 && (() => {
-            const ow = photo.origW || photo.w, oh = photo.origH || photo.h;
-            const dpi = photo.origDpi;
-            const nativeW = dpi ? (ow / dpi * 2.54).toFixed(1) : null;
-            const nativeH = dpi ? (oh / dpi * 2.54).toFixed(1) : null;
+        <div style={{visibility:hasContent?'visible':'hidden',position:'absolute',inset:0,overflowX:'hidden',overflowY:'auto'}}>
+          {posSection}
+          {hoverInfo?.type && (() => {
+            const { type, label, w, h, scaleContent } = hoverInfo;
+            const physDims = boardDpi && boardUnits && boardUnits !== 'px'
+              ? `${pxToPhys(w, boardDpi, boardUnits)} × ${pxToPhys(h, boardDpi, boardUnits)}`
+              : null;
+            const pxDims = `${w} × ${h} px`;
+            const typeLabel = type === 'zone' ? (lang === 'es' ? 'ZONA' : 'ZONE')
+              : type === 'note' ? (lang === 'es' ? 'NOTA' : 'NOTE')
+              : type === 'text' ? (lang === 'es' ? 'TEXTO' : 'TEXT') : type.toUpperCase();
             return (
-              <>
-                <div className="info-row">{ow} × {oh} px{dpi ? ` · ${dpi} dpi` : ''}</div>
-                {nativeW && <div className="info-phys">{nativeW} × {nativeH} cm <span style={{color:'var(--muted)'}}>({dpi} dpi)</span></div>}
-              </>
+              <div className="info-panel">
+                <div className="info-meta" style={{gap:5}}>
+                  <div className="info-name" style={{color:'var(--muted)',fontSize:8,letterSpacing:'1.5px'}}>{typeLabel}</div>
+                  <div className="info-name">{label || '—'}</div>
+                  {physDims && <div className="info-phys">{physDims}</div>}
+                  <div className="info-row">{pxDims}</div>
+                  {scaleContent && <div className="info-row">↔ {lang === 'es' ? 'Escala contenido' : 'Scales content'}</div>}
+                </div>
+              </div>
             );
           })()}
-          {itemW && boardDpi && boardUnits !== 'px' && (
-            <div className="info-phys" style={{marginTop:2}}>
-              {t('inTableau')} {pxToPhys(itemW, boardDpi, boardUnits)} × {pxToPhys(itemH, boardDpi, boardUnits)}
-            </div>
-          )}
-          <div className="info-rating">
-            {rating > 0
-              ? [1,2,3,4,5].map(n => <span key={n} className={n <= rating ? 'on' : ''}>★</span>)
-              : <span className="none">{lang === 'es' ? 'sin valorar' : 'unrated'}</span>}
-          </div>
-          {(hueLabel || brightPct != null) && (
-            <div className="info-color-row">
-              {hueColor && <span className="info-color-swatch" style={{background:hueColor}}/>}
-              {hueLabel && <span className="info-color-label">{hueLabel}</span>}
-              {brightPct != null && <>
-                <div className="info-bright-bar">
-                  <div className="info-bright-bar-fill" style={{left:`${brightPct}%`}}/>
-                </div>
-                <span className="info-color-label">{brightPct}%</span>
-              </>}
-            </div>
-          )}
-          {tags.length > 0 && (
-            <div className="info-tag-list">
-              {tags.map(tag => <span key={tag} className="info-tag-chip">#{tag}</span>)}
-            </div>
-          )}
-          {photo?.exif && (
-            <div className="info-exif">
-              {photo.exif.make && <div className="info-exif-make">{photo.exif.make}</div>}
-              {photo.exif.model && <div className="info-exif-model">{photo.exif.model}</div>}
-              {photo.exif.lens && <div className="info-exif-lens">{photo.exif.lens}</div>}
-              <div className="info-exif-cam">
-                {photo.exif.focalLength && <span>{photo.exif.focalLength} mm</span>}
-                {photo.exif.aperture && <span>f/{photo.exif.aperture}</span>}
-                {photo.exif.shutter && <span>{photo.exif.shutter}</span>}
-                {photo.exif.iso && <span>ISO {photo.exif.iso}</span>}
-              </div>
-              {photo.exif.dateTaken && <div className="info-exif-date">{fmtExifDate(photo.exif.dateTaken)}</div>}
-            </div>
-          )}
-          <div className="info-boards">
-            {boardsWithCtx.length === 0
-              ? <div className="ibd-none">{t('notInAnyBoard')}</div>
-              : boardsWithCtx.map(b => {
-                  const faceLabel = b.ctx?.face ? (t('infoBoardCtxFaceLabel')||{})[b.ctx.face] || b.ctx.face : '';
-                  const ctxLine = b.ctx?.type === 'wall'
-                    ? t('infoBoardCtxWall', b.ctx.wallName, b.ctx.roomName, b.ctx.side)
-                    : b.ctx?.type === 'block'
-                    ? t('infoBoardCtxBlock', b.ctx.blockLabel, faceLabel)
-                    : null;
-                  return ctxLine
-                    ? <div key={b.id} className={`ibd-ctx-entry${b.id === bid ? ' cur' : ''}`}>
-                        <span className="ibd-ctx-label">{ctxLine}</span>
-                        <span className="ibd-ctx-board">{b.name}</span>
-                      </div>
-                    : <span key={b.id} className={`ibd-tag${b.id === bid ? ' cur' : ''}`}>{b.name}</span>;
-                })
+          {hoverInfo && !hoverInfo.type && (() => {
+            const { photo, status, thumbSrc, itemW, itemH } = hoverInfo;
+            const boardsWithCtx = photo?.id ? photoBoardsWithContext(photo.id) : [];
+            const currentBoardRoom = rooms.find(r =>
+              r.walls?.some(w => w.boardId === bid || w.boardIdBack === bid) ||
+              r.blocks?.some(bl => bl.faces && Object.values(bl.faces).some(f => f?.boardId === bid))
+            );
+            const rating = photo?.rating || 0;
+            const tags = photo?.tags || [];
+            const mc = photo?.meanColor;
+            const brightness = photo?.brightness;
+            let hueLabel = null, hueColor = null;
+            if (mc) {
+              const { h, s } = rgbToHsl(mc.r, mc.g, mc.b);
+              hueColor = `rgb(${mc.r},${mc.g},${mc.b})`;
+              if (s < 0.12) {
+                hueLabel = lang === 'es' ? 'Neutro' : 'Neutral';
+              } else {
+                const names = lang === 'es'
+                  ? ['Rojo','Naranja','Amarillo','Verde','Cian','Azul','Violeta','Magenta']
+                  : ['Red','Orange','Yellow','Green','Cyan','Blue','Violet','Magenta'];
+                const bounds = [20, 45, 70, 155, 190, 265, 290, 340];
+                const bucket = bounds.findIndex(b => h < b);
+                hueLabel = names[bucket === -1 ? 0 : bucket];
+              }
             }
-          </div>
+            const brightPct = brightness != null ? Math.round(brightness * 100) : null;
+            return (<>
+              {currentBoardRoom && (
+                <div className="info-room-badge">
+                  🏛 {currentBoardRoom.name || (lang==='es'?'Sala':'Room')}
+                </div>
+              )}
+              <div className="info-panel">
+                <img className="info-thumb"
+                  src={thumbSrc || (pid && photo?.id ? `/photos/${pid}/${photo.id}/thumb` : '')}
+                  alt=""
+                  onError={e => e.target.style.opacity = '.2'}
+                />
+                <div className="info-meta">
+                  <div className="info-name">{photo?.name || '—'}</div>
+                  {(photo?.origW || photo?.w) > 0 && (() => {
+                    const ow = photo.origW || photo.w, oh = photo.origH || photo.h;
+                    const dpi = photo.origDpi;
+                    const nativeW = dpi ? (ow / dpi * 2.54).toFixed(1) : null;
+                    const nativeH = dpi ? (oh / dpi * 2.54).toFixed(1) : null;
+                    return (
+                      <>
+                        <div className="info-row">{ow} × {oh} px{dpi ? ` · ${dpi} dpi` : ''}</div>
+                        {nativeW && <div className="info-phys">{nativeW} × {nativeH} cm <span style={{color:'var(--muted)'}}>({dpi} dpi)</span></div>}
+                      </>
+                    );
+                  })()}
+                  {itemW && boardDpi && boardUnits !== 'px' && (
+                    <div className="info-phys" style={{marginTop:2}}>
+                      {t('inTableau')} {pxToPhys(itemW, boardDpi, boardUnits)} × {pxToPhys(itemH, boardDpi, boardUnits)}
+                    </div>
+                  )}
+                  <div className="info-rating">
+                    {rating > 0
+                      ? [1,2,3,4,5].map(n => <span key={n} className={n <= rating ? 'on' : ''}>★</span>)
+                      : <span className="none">{lang === 'es' ? 'sin valorar' : 'unrated'}</span>}
+                  </div>
+                  {(hueLabel || brightPct != null) && (
+                    <div className="info-color-row">
+                      {hueColor && <span className="info-color-swatch" style={{background:hueColor}}/>}
+                      {hueLabel && <span className="info-color-label">{hueLabel}</span>}
+                      {brightPct != null && <>
+                        <div className="info-bright-bar">
+                          <div className="info-bright-bar-fill" style={{left:`${brightPct}%`}}/>
+                        </div>
+                        <span className="info-color-label">{brightPct}%</span>
+                      </>}
+                    </div>
+                  )}
+                  {tags.length > 0 && (
+                    <div className="info-tag-list">
+                      {tags.map(tag => <span key={tag} className="info-tag-chip">#{tag}</span>)}
+                    </div>
+                  )}
+                  {photo?.exif && (
+                    <div className="info-exif">
+                      {photo.exif.make && <div className="info-exif-make">{photo.exif.make}</div>}
+                      {photo.exif.model && <div className="info-exif-model">{photo.exif.model}</div>}
+                      {photo.exif.lens && <div className="info-exif-lens">{photo.exif.lens}</div>}
+                      <div className="info-exif-cam">
+                        {photo.exif.focalLength && <span>{photo.exif.focalLength} mm</span>}
+                        {photo.exif.aperture && <span>f/{photo.exif.aperture}</span>}
+                        {photo.exif.shutter && <span>{photo.exif.shutter}</span>}
+                        {photo.exif.iso && <span>ISO {photo.exif.iso}</span>}
+                      </div>
+                      {photo.exif.dateTaken && <div className="info-exif-date">{fmtExifDate(photo.exif.dateTaken)}</div>}
+                    </div>
+                  )}
+                  <div className="info-boards">
+                    {boardsWithCtx.length === 0
+                      ? <div className="ibd-none">{t('notInAnyBoard')}</div>
+                      : boardsWithCtx.map(b => {
+                          const faceLabel = b.ctx?.face ? (t('infoBoardCtxFaceLabel')||{})[b.ctx.face] || b.ctx.face : '';
+                          const ctxLine = b.ctx?.type === 'wall'
+                            ? t('infoBoardCtxWall', b.ctx.wallName, b.ctx.roomName, b.ctx.side)
+                            : b.ctx?.type === 'block'
+                            ? t('infoBoardCtxBlock', b.ctx.blockLabel, faceLabel)
+                            : null;
+                          return ctxLine
+                            ? <div key={b.id} className={`ibd-ctx-entry${b.id === bid ? ' cur' : ''}`}>
+                                <span className="ibd-ctx-label">{ctxLine}</span>
+                                <span className="ibd-ctx-board">{b.name}</span>
+                              </div>
+                            : <span key={b.id} className={`ibd-tag${b.id === bid ? ' cur' : ''}`}>{b.name}</span>;
+                        })
+                    }
+                  </div>
+                </div>
+              </div>
+            </>);
+          })()}
         </div>
       </div>
-    </>);
+    );
   };
 
   // ── CONFIG hint ───────────────────────────────────────────────────────────

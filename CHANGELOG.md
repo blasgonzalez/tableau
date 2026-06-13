@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.21.17] — 2026-06-13
+
+### Corregido
+- **Parpadeo y salto de la biblioteca al pasar el cursor por las miniaturas (fix definitivo):** se consolidan las dos correcciones anteriores en una sola solución robusta. El panel de información (`.sb-sec.info`) recupera su posición en el flujo flex normal con `height: 313px; overflow: hidden; flex-shrink: 0`. Además, InfoPanel se refactoriza para retornar siempre la misma estructura DOM: estado vacío y contenido viven en capas absolutas superpuestas; la alternancia entre ellos se hace con `visibility: hidden/visible` (nunca montando/desmontando nodos que cambien la altura del contenedor padre).
+
 ## [1.21.16] — 2026-06-13
 
 ### Corregido
