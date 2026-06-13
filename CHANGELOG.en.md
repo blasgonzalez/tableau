@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.21.15] — 2026-06-13
+
+### Fixed
+- **Library flicker and position jump when hovering thumbnails:** the info panel (`.sb-sec.info`) had no fixed height, so displaying photo details caused it to grow from ~100 px to ~300 px, shifting the layout. It now has a fixed `height: 200px` with `overflow: hidden`.
+
 ## [1.21.14] — 2026-06-12
 
 ### Fixed

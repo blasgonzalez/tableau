@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.21.15] — 2026-06-13
+
+### Corregido
+- **Parpadeo y salto de posición de la biblioteca al pasar el cursor por las miniaturas:** el panel de información (`.sb-sec.info`) no tenía altura fija, por lo que al mostrar los detalles de una foto crecía de ~100 px a ~300 px y desplazaba el layout. Ahora tiene `height: 200px` fijo con `overflow: hidden`.
+
 ## [1.21.14] — 2026-06-12
 
 ### Corregido
