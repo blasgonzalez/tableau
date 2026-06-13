@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.21.16] — 2026-06-13
+
+### Corregido
+- **Parpadeo y salto de la biblioteca al pasar el cursor por las miniaturas (fix definitivo):** el enfoque anterior (`height: 200px` fijo) no eliminaba el layout shift porque `.sb-sec.info` seguía participando en el flujo flex. Ahora se saca del flujo con `position: absolute; bottom: 0; left: 0; right: 0; height: 250px` y se añade `padding-bottom: 250px` a `.sb-inner` para que los demás elementos no queden tapados.
+
 ## [1.21.15] — 2026-06-13
 
 ### Corregido

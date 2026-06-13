@@ -69,13 +69,13 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .sb-toggle-btn{width:24px;height:24px;margin:7px auto 0;border:1px solid var(--border2);background:transparent;color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;transition:all .15s}
 .sb-toggle-btn:hover{color:var(--text);border-color:var(--acc-dim)}
 .sb-collapsed-label{writing-mode:vertical-rl;font-size:7px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-top:12px;user-select:none}
-.sb-inner{display:flex;flex-direction:column;height:100%;overflow:hidden}
+.sb-inner{display:flex;flex-direction:column;height:100%;overflow:hidden;position:relative;padding-bottom:250px}
 
 /* sidebar sections */
 .sb-sec{display:flex;flex-direction:column;min-height:0}
 .sb-sec.nav{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
 .sb-sec.nav.collapsed{flex:0 0 auto}
-.sb-sec.info{flex-shrink:0;border-top:1px solid var(--border);margin-top:auto;height:200px;overflow:hidden}
+.sb-sec.info{position:absolute;bottom:0;left:0;right:0;height:250px;overflow:hidden;border-top:1px solid var(--border)}
 .sb-trash-btn{height:32px;display:flex;align-items:center;gap:5px;padding:0 8px 0 10px;border-top:1px solid var(--border);background:var(--deep);flex-shrink:0;cursor:pointer;transition:background .12s}
 .sb-trash-btn:hover{background:var(--hover)}
 .sb-trash-badge{background:#c04040;color:#fff;border-radius:8px;font-size:7px;padding:1px 5px;min-width:16px;text-align:center;letter-spacing:0;line-height:1.4}

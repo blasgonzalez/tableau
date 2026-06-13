@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.21.16] — 2026-06-13
+
+### Fixed
+- **Library flicker and position jump on thumbnail hover (definitive fix):** the previous approach (`height: 200px`) did not eliminate the layout shift because `.sb-sec.info` was still participating in the flex flow. It is now removed from the flow with `position: absolute; bottom: 0; left: 0; right: 0; height: 250px`, and `padding-bottom: 250px` is added to `.sb-inner` so the other elements are not obscured.
+
 ## [1.21.15] — 2026-06-13
 
 ### Fixed
