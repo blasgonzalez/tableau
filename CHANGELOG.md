@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.21.18] — 2026-06-13
+
+### Corregido
+- **Parpadeo de la biblioteca al pasar el cursor por las miniaturas (eliminación del código residual):** se elimina el bloque `posSection` (distancias ↑↓←→ del ítem seleccionado al borde del tablero) que había quedado dentro de `InfoPanel` tras mover el panel de propiedades numéricas al menú contextual. Ese bloque evaluaba `sel.length > 0` en cada render y era la única fuente de variación dinámica que permanecía en el panel de info. También se eliminan las clases CSS `.info-pos*` ya sin uso.
+
 ## [1.21.17] — 2026-06-13
 
 ### Corregido

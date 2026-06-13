@@ -161,11 +161,6 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .info-name{font-size:10px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .info-row{font-size:9px;color:var(--dim);letter-spacing:.2px;line-height:1.5}
 .info-phys{font-size:9px;color:var(--acc-dim);letter-spacing:.2px}
-.info-pos{padding:7px 10px 6px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:5px}
-.info-pos-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 6px}
-.info-pos-cell{font-size:10px;color:var(--dim);display:flex;align-items:center;gap:5px;letter-spacing:.3px}
-.info-pos-arr{font-size:11px;color:var(--muted);width:12px;flex-shrink:0;text-align:center}
-.info-pos-cent{font-size:8px;letter-spacing:.8px;color:var(--acc);padding-top:1px}
 .info-boards{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px}
 .ibd-tag{font-size:7px;letter-spacing:.4px;padding:1px 5px;border:1px solid var(--border2);color:var(--sub)}
 .ibd-tag.cur{border-color:var(--acc-dim);color:var(--acc);background:var(--acc-faint)}
@@ -7585,36 +7580,7 @@ ${rows}
 
   // ── INFO PANEL render helper ──────────────────────────────────────────────
   const InfoPanel = () => {
-    // ── Live position data when item selected on fixed board ──────────────────
-    const posData = boardPx && sel.length > 0 ? (() => {
-      const anchor = items.find(i => i.id === sel[0] && i.w);
-      if (!anchor) return null;
-      let iH;
-      if (anchor.photoId) {
-        const ph = photos.find(p => p.id === anchor.photoId);
-        const isSwapped = [90,270].includes(Math.abs((anchor.rot||0)%360));
-        iH = ph ? (isSwapped ? Math.round(anchor.w*ph.w/ph.h) : Math.round(anchor.w*ph.h/ph.w)) : anchor.w;
-      } else { iH = anchor.h || (anchor.type==='note'?150:130); }
-      const x=anchor.x, y=anchor.y, w=anchor.w, h=iH;
-      const dT=y, dB=boardPx.h-(y+h), dL=x, dR=boardPx.w-(x+w);
-      const centH=Math.abs((x+w/2)-boardPx.w/2)<=2, centV=Math.abs((y+h/2)-boardPx.h/2)<=2;
-      const fmt = v => { const px=Math.round(v); return boardDpi&&boardUnits&&boardUnits!=='px'?pxToPhys(px,boardDpi,boardUnits):`${px}px`; };
-      return { dT, dB, dL, dR, centH, centV, fmt };
-    })() : null;
-    const posSection = posData && (
-      <div className="info-pos">
-        <div className="info-pos-grid">
-          <div className="info-pos-cell" style={posData.centV?{color:'var(--acc)'}:{}}><span className="info-pos-arr">↑</span>{posData.fmt(posData.dT)}</div>
-          <div className="info-pos-cell" style={posData.centV?{color:'var(--acc)'}:{}}><span className="info-pos-arr">↓</span>{posData.fmt(posData.dB)}</div>
-          <div className="info-pos-cell" style={posData.centH?{color:'var(--acc)'}:{}}><span className="info-pos-arr">←</span>{posData.fmt(posData.dL)}</div>
-          <div className="info-pos-cell" style={posData.centH?{color:'var(--acc)'}:{}}><span className="info-pos-arr">→</span>{posData.fmt(posData.dR)}</div>
-        </div>
-        {(posData.centH||posData.centV) && (
-          <div className="info-pos-cent">⊕ {posData.centH&&posData.centV?(lang==='es'?'centrado':'centered'):posData.centH?(lang==='es'?'centrado H':'centered H'):(lang==='es'?'centrado V':'centered V')}</div>
-        )}
-      </div>
-    );
-    const hasContent = !!(hoverInfo || posSection);
+    const hasContent = !!hoverInfo;
     return (
       <div style={{position:'relative',flex:1,minHeight:0,overflow:'hidden'}}>
         <div className="info-empty"
@@ -7622,7 +7588,6 @@ ${rows}
           {t('infoEmpty1')}<br/>{t('infoEmpty2')}
         </div>
         <div style={{visibility:hasContent?'visible':'hidden',position:'absolute',inset:0,overflowX:'hidden',overflowY:'auto'}}>
-          {posSection}
           {hoverInfo?.type && (() => {
             const { type, label, w, h, scaleContent } = hoverInfo;
             const physDims = boardDpi && boardUnits && boardUnits !== 'px'

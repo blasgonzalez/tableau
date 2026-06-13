@@ -1,6 +1,6 @@
 {
-  "version": "1.21.17",
+  "version": "1.21.18",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-06-13",
-  "notes": "Corregido parpadeo y salto de la biblioteca al pasar el cursor por las miniaturas (fix definitivo)."
+  "notes": "Eliminado código residual del panel de info que evaluaba sel.length en cada render, fuente definitiva del parpadeo de la biblioteca."
 }

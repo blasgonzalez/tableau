@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.21.18] — 2026-06-13
+
+### Fixed
+- **Library flicker on thumbnail hover (residual code removal):** removed the `posSection` block (selected item distances ↑↓←→ to board edges) that had been left inside `InfoPanel` after the numeric properties panel was moved to the context menu. That block evaluated `sel.length > 0` on every render and was the only remaining source of dynamic variation inside the info panel. The now-unused `.info-pos*` CSS classes were also removed.
+
 ## [1.21.17] — 2026-06-13
 
 ### Fixed
