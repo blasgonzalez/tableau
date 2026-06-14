@@ -1,13 +1,30 @@
 # Changelog
 
+## [1.22.0] — 2026-06-14
+
+### Corregido
+- **Importación ZIP — zonas y grids pierden sus fotos:** al importar un proyecto, las fotos que pertenecían a una zona perdían su `zoneId` (quedaban sueltas) y los grids aparecían vacíos. Causa raíz: el remapeo de IDs solo cubría `item.photoId`. Los grids usan `item.photoIds` (array plano de IDs), y las zonas usan `item.zoneId` que referencia el ID del item de zona (no un photoId). Fix: se pre-generan los nuevos IDs de todos los items antes de escribirlos (para construir `itemIdMap`) y se remapean también `item.zoneId` e `item.photoIds[]`.
+- **Color de pared vinculada en el plano de sala:** las paredes con tablero asignado aparecían en blanco/gris aunque el tablero estaba correctamente vinculado. Causa raíz: si `wall.color` tenía algún valor guardado (p. ej. el color por defecto `#d0c8bc` capturado accidentalmente por el picker), esa rama cortocircuitaba la lógica `linked` antes de evaluar el acento. Fix: en el plano 2D el estado `linked` tiene prioridad absoluta sobre el color personalizado.
+- **Panel abierto tras importar ZIP:** al confirmar la importación de un proyecto, el panel lateral y la sección de navegación se abren automáticamente, mostrando el proyecto importado, independientemente de si el usuario los tenía colapsados.
+
+### Nuevo
+- **HUD de etiqueta en vista 3D:** al pasar el cursor sobre una obra que tiene etiqueta, se muestra su nombre en un overlay centrado en la parte inferior del canvas. Las obras sin etiqueta no muestran nada. El HUD se oculta automáticamente en modo walk (ratón capturado) y al salir de la vista 3D.
+
 ## [1.21.19] — 2026-06-14
 
 ### Corregido
+- **Importación ZIP — zonas y grids pierden sus fotos:** al importar un proyecto, las fotos que pertenecían a una zona perdían su `zoneId` (quedaban sueltas) y los grids aparecían vacíos. Causa raíz: el remapeo de IDs solo cubría `item.photoId`. Los grids usan `item.photoIds` (array plano de IDs), y las zonas usan `item.zoneId` que referencia el ID del item de zona (no un photoId). Fix: se pre-generan los nuevos IDs de todos los items antes de escribirlos (para construir `itemIdMap`) y se remapean también `item.zoneId` e `item.photoIds[]`.
+- **Color de pared vinculada en el plano de sala:** las paredes con tablero asignado aparecían en blanco/gris aunque el tablero estaba correctamente vinculado. Causa raíz: si `wall.color` tenía algún valor guardado (p. ej. el color por defecto `#d0c8bc` capturado accidentalmente por el picker), esa rama cortocircuitaba la lógica `linked` antes de evaluar el acento. Fix: en el plano 2D el estado `linked` tiene prioridad absoluta sobre el color personalizado — si la pared tiene tablero vinculado siempre se pinta con `--acc`; el color personalizado solo se aplica a paredes sin tablero. Además la comprobación de `linked` se simplifica a `!!(wall.boardId || wall.boardIdBack)` para no depender de que el estado `boards` esté cargado.
 - **Desplazamiento permanente de la biblioteca al hacer hover en miniaturas (causa raíz definitiva):** el bug fue introducido en v1.21.11 al migrar todos los atributos `title=""` a `data-tooltip=""`. La regla CSS `[data-tooltip]:hover::after` creaba un pseudo-elemento que al aparecer/desaparecer causaba layout shifts en los contenedores flex ancestros. Solución: se eliminan completamente las reglas CSS de tooltip y se reemplaza por un tooltip JavaScript: un único `<div id="tt" style="position:fixed">` al nivel raíz de App, posicionado con `getBoundingClientRect()` via listeners `mouseover`/`mouseout` en el documento. Con `position:fixed` y coordenadas calculadas en JS el tooltip vive completamente fuera del flujo del documento y no puede causar layout shifts. Adicionalmente: `min-height:0` en `.sidebar`, `overflow-y:auto` en `.sb-sec.nav`, `height:313px;overflow:hidden` en `.sb-sec.info` e InfoPanel con visibility-toggling.
 - **Mensaje sin proyecto en la biblioteca:** cuando no hay proyecto activo (`!pid`), la biblioteca ahora muestra "Crea o selecciona un proyecto para empezar" en lugar de "Tu biblioteca está vacía".
+- **Tema "Wetzlar" — contraste insuficiente (cuarta revisión):** `--sub` sube a `#d8d8d8` (≈ 13.1:1) y `--muted` a `#aaaaaa` (≈ 6.2:1).
+- **Renombrado de temas:** "Claro · Natural" pasa a llamarse **Arles**, "Claro · Frío" pasa a llamarse **Düsseldorf**, y "Oscuro · Wetzlar" pasa a llamarse **Wetzlar**. Son nombres propios, iguales en ES y EN.
+- **Menús simultáneos en la topbar:** cuando el avatar estaba abierto y se hacía clic en preferencias (o viceversa), ambos menús permanecían visibles. Ahora solo un dropdown puede estar abierto a la vez en la topbar: abrir avatar, preferencias, exportar o grid automáticamente cierra los otros.
 
 ### Nuevo
+- **HUD de etiqueta en vista 3D:** al pasar el cursor sobre una obra que tiene etiqueta, se muestra su nombre en un overlay centrado en la parte inferior del canvas. Las obras sin etiqueta no muestran nada. El HUD se oculta automáticamente en modo walk (ratón capturado) y al salir de la vista 3D.
 - **Tema "Wetzlar":** tema oscuro diseñado para trabajar con fotografía en blanco y negro, con el rojo Leica (#cc0000) como color de acento. Variables: fondo ultra oscuro (#0f0f0f), paneles (#1a1a1a - #222222), texto claro (#e8e8e8).
+- **Transiciones suaves de cámara en la vista 3D:** la cámara ya no salta instantáneamente entre posiciones. Tres puntos reciben interpolación con easing cuadrático (`easeInOutQuad`): botón de reset de vista (800 ms), clic en superficie durante el modo walk (500 ms), y retorno a vista 3D tras "Editar tablero" desde el menú contextual de pared (600 ms, posicionando la cámara frente a la pared o cara de bloque seleccionada). Los movimientos continuos (WASD, giro de ratón, OrbitControls) no se ven afectados.
 
 ## [1.21.18] — 2026-06-13
 

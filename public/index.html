@@ -985,7 +985,7 @@ const THEMES = {
     }
   },
   'light-natural': {
-    label: 'Claro · Natural',
+    label: 'Arles',
     bg: '#f4efe6', acc: '#8a5f2e',
     vars: {
       '--bg':'#f4efe6','--surf':'#ede7dc','--panel':'#e6dfd3','--panel2':'#d8d0c2','--deep':'#f8f3ec',
@@ -1018,7 +1018,7 @@ const THEMES = {
     }
   },
   'light-cool': {
-    label: 'Claro · Frío',
+    label: 'Düsseldorf',
     bg: '#f0f2f6', acc: '#4d6fa8',
     vars: {
       '--bg':'#f0f2f6','--surf':'#e8ebf2','--panel':'#dfe3ee','--panel2':'#d2d8e6','--deep':'#f5f7fa',
@@ -1029,14 +1029,14 @@ const THEMES = {
     }
   },
   'dark-wetzlar': {
-    label: 'Oscuro · Wetzlar',
-    bg: '#0f0f0f', acc: '#cc0000',
+    label: 'Wetzlar',
+    bg: '#0d0d0d', acc: '#e00000',
     vars: {
-      '--bg':'#0f0f0f','--surf':'#1a1a1a','--panel':'#1a1a1a','--panel2':'#222222','--deep':'#0a0a0a',
-      '--border':'#2a2a2a','--border2':'#333333',
-      '--acc':'#cc0000','--acc-dim':'#4d0000','--acc-faint':'rgba(204,0,0,0.1)',
-      '--text':'#e8e8e8','--sub':'#aaaaaa','--dim':'#444444','--muted':'#666666','--danger':'#cc0000',
-      '--grid':'rgba(255,255,255,0.06)',
+      '--bg':'#0d0d0d','--surf':'#1e1e1e','--panel':'#1e1e1e','--panel2':'#2e2e2e','--deep':'#080808',
+      '--border':'#3a3a3a','--border2':'#4a4a4a',
+      '--acc':'#e00000','--acc-dim':'#5a0000','--acc-faint':'rgba(224,0,0,0.12)',
+      '--text':'#f8f8f8','--sub':'#d8d8d8','--dim':'#666666','--muted':'#aaaaaa','--danger':'#e00000',
+      '--grid':'rgba(255,255,255,0.09)',
     }
   },
 };
@@ -1186,7 +1186,7 @@ const I18N = {
   es: {
     upload:'↑ Subir', uploadPhotos:'Fotos', report:'≡ Memoria', config:'⚙ Config', exportJpeg:'Exportar',
     showPanel:'▶ Panel', preferences:'Preferencias', themeLabel:'Tema', langLabel:'Idioma',
-    themeWetzlarLabel:'Oscuro · Wetzlar',
+    themeWetzlarLabel:'Wetzlar',
     noProjHint:'Sin proyecto — crea uno en el panel izquierdo', noProjHintEmpty:'Sin proyecto',
     projBoards:'Proyectos y Tableros', newProject:'Nuevo proyecto', collapsePanel:'Colapsar panel',
     noProjectsYet:'No hay proyectos aún.', clickToCreate:'Pulsa + para crear uno.',
@@ -1413,7 +1413,7 @@ const I18N = {
   en: {
     upload:'↑ Upload', uploadPhotos:'Photos', report:'≡ Report', config:'⚙ Config', exportJpeg:'Export',
     showPanel:'▶ Panel', preferences:'Preferences', themeLabel:'Theme', langLabel:'Language',
-    themeWetzlarLabel:'Dark · Wetzlar',
+    themeWetzlarLabel:'Wetzlar',
     noProjHint:'No project — create one in the left panel', noProjHintEmpty:'No project',
     projBoards:'Projects & Boards', newProject:'New project', collapsePanel:'Collapse panel',
     noProjectsYet:'No projects yet.', clickToCreate:'Click + to create one.',
@@ -1745,6 +1745,7 @@ function App() {
   const [roomHovBlock,   setRoomHovBlock]  = useState(null); // {blockId, face:'n'|'s'|'e'|'w'|'t'}
   const [roomFilterBoards, setRoomFilterBoards] = useState(false);
   const room3DCanvasRef = useRef(null);
+  const hud3DLabelRef   = useRef(null);
   const [show3DPerson,     setShow3DPerson]    = useState(false);
   const [personMoveMode,   setPersonMoveMode]  = useState(false);
   const [walkMode3D,       setWalkMode3D]      = useState(false);
@@ -2028,6 +2029,7 @@ function App() {
   const togglePersonMoveRef  = useRef(null);
   const toggle3DWalkRef      = useRef(null);
   const copy3DItemRef        = useRef(null);
+  const pendingCameraTweenRef = useRef(null);
   const roomViewRef          = useRef('board');
   const undoStack           = useRef([]);
   const redoStack           = useRef([]);
@@ -2533,6 +2535,7 @@ function App() {
 
     let animId, renderer, controls;
     let cancelled = false;
+    let cancelTween = null;
 
     const initScene = async () => {
       const [boardItemsResults, photosData] = await Promise.all([
@@ -2592,6 +2595,31 @@ function App() {
       controls.minDistance = span * 0.05; controls.maxDistance = span * 6;
       controls.update();
 
+      // Smooth camera transitions with easing
+      const tweenCamera = (targetPos, targetLook, duration = 600, onDone) => {
+        if (cancelTween) cancelTween();
+        const startPos  = camera.position.clone();
+        const startLook = controls.target.clone();
+        const start     = performance.now();
+        let raf;
+        function step(now) {
+          const t = Math.min((now - start) / duration, 1);
+          const e = t < 0.5 ? 2*t*t : -1+(4-2*t)*t; // easeInOutQuad
+          camera.position.lerpVectors(startPos, targetPos, e);
+          controls.target.lerpVectors(startLook, targetLook, e);
+          controls.update();
+          if (t < 1) {
+            raf = requestAnimationFrame(step);
+          } else {
+            cancelTween = null;
+            if (onDone) onDone();
+          }
+        }
+        raf = requestAnimationFrame(step);
+        cancelTween = () => cancelAnimationFrame(raf);
+        return cancelTween;
+      };
+
       // Proportional zoom: scale by deltaY magnitude, same approach as SVG floor plan
       const onCanvasWheel = e2 => {
         e2.preventDefault();
@@ -2608,9 +2636,7 @@ function App() {
       // Reset view function exposed to the reset button
       reset3DViewRef.current = () => {
         if (walkActive) exitWalk();
-        camera.position.copy(initCamPos);
-        controls.target.copy(initTarget);
-        controls.update();
+        tweenCamera(initCamPos, initTarget, 800);
       };
 
       // Snapshot: render current frame → upload as photo to the library
@@ -3342,10 +3368,12 @@ function App() {
           if (normal.dot(camera.position.clone().sub(hit.point)) < 0) normal.negate();
           const dest = hit.point.clone().addScaledVector(normal, 200);
           dest.y = EYE_H;
-          camera.position.copy(dest);
-          const lookDir = hit.point.clone().sub(dest).normalize();
-          walkYaw = Math.atan2(lookDir.x, -lookDir.z);
-          walkPitch = 0;
+          const lookTarget = hit.point.clone();
+          tweenCamera(dest, lookTarget, 500, () => {
+            const lookDir = hit.point.clone().sub(dest).normalize();
+            walkYaw = Math.atan2(lookDir.x, -lookDir.z);
+            walkPitch = 0;
+          });
         } else {
           requestLock();
         }
@@ -3448,6 +3476,7 @@ function App() {
         const my = -((e.clientY - rect.top) / rect.height) * 2 + 1;
         hoverRay.setFromCamera(new THREE.Vector2(mx, my), camera);
         const hits = hoverRay.intersectObjects(itemMeshes);
+        const hudEl = hud3DLabelRef.current;
         if (hits.length > 0) {
           const ud = hits[0].object.userData;
           const group = ud.zoneId
@@ -3455,9 +3484,20 @@ function App() {
             : [hits[0].object];
           if (group.length !== hoveredGroup.length || group[0] !== hoveredGroup[0]) applyHover(group);
           canvas.style.cursor = 'pointer';
+          if (hudEl) {
+            if (walkActive || !ud.itemId) {
+              hudEl.style.display = 'none';
+            } else {
+              const item = (boardItemsMap[ud.boardId] || []).find(i => i.id === ud.itemId);
+              const lbl = item?.label?.trim();
+              if (lbl) { hudEl.textContent = lbl; hudEl.style.display = 'block'; }
+              else hudEl.style.display = 'none';
+            }
+          }
         } else {
           if (hoveredGroup.length) applyHover([]);
           canvas.style.cursor = clipboardRef.current.length > 0 ? 'crosshair' : '';
+          if (hudEl) hudEl.style.display = 'none';
         }
       };
       canvas.addEventListener('mousemove', onHoverMM);
@@ -3465,6 +3505,8 @@ function App() {
         canvas.removeEventListener('mousemove', onHoverMM);
         applyHover([]); // restore all materials on exit
         canvas.style.cursor = '';
+        const hudEl = hud3DLabelRef.current;
+        if (hudEl) hudEl.style.display = 'none';
       };
 
       // Paste-click: left-click on a board surface while clipboard is non-empty
@@ -3515,6 +3557,63 @@ function App() {
         renderer.render(scene, camera);
       };
       animate();
+
+      // Camera tween triggered by context-menu "Editar tablero": position camera
+      // facing the selected wall/block-face when re-entering 3D view.
+      const pending = pendingCameraTweenRef.current;
+      if (pending) {
+        pendingCameraTweenRef.current = null;
+        const { wallType, wallId, face } = pending;
+        let camPos = null, lookAt = null;
+        if (wallType === 'wall') {
+          const wall = room.walls.find(w => w.id === wallId);
+          if (wall) {
+            const v1 = room.vertices.find(v => v.id === wall.v1);
+            const v2 = room.vertices.find(v => v.id === wall.v2);
+            if (v1 && v2) {
+              const dx = v2.x - v1.x, dz = v2.y - v1.y;
+              const len = Math.sqrt(dx*dx + dz*dz);
+              if (len > 0) {
+                const dirX = dx/len, dirZ = dz/len;
+                const sign = face === 'A' ? 1 : -1;
+                const normX = -dirZ * sign, normZ = dirX * sign;
+                const wcx = (v1.x + v2.x) / 2, wcz = (v1.y + v2.y) / 2;
+                camPos = new THREE.Vector3(wcx + normX * 200, EYE_H, wcz + normZ * 200);
+                lookAt  = new THREE.Vector3(wcx, EYE_H, wcz);
+              }
+            }
+          }
+        } else if (wallType === 'block') {
+          const block = getBlocks(room).find(b => b.id === wallId);
+          if (block) {
+            const bx = block.x, by = block.y, bw = block.w, bd = block.d, bh = block.h;
+            const rotRad = (block.rot || 0) * Math.PI / 180;
+            const cosR = Math.cos(rotRad), sinR = Math.sin(rotRad);
+            const bcx = bx + bw/2, bcz = by + bd/2;
+            if (face === 't') {
+              camPos = new THREE.Vector3(bcx, bh + 300, bcz);
+              lookAt  = new THREE.Vector3(bcx, bh, bcz);
+            } else {
+              const rv = (lx, lz) => [bcx + (lx-bw/2)*cosR - (lz-bd/2)*sinR, bcz + (lx-bw/2)*sinR + (lz-bd/2)*cosR];
+              const [nwx,nwz] = rv(0,0), [nex,nez] = rv(bw,0), [swx,swz] = rv(0,bd);
+              const [edirX,edirZ] = [cosR, sinR], [fdirX,fdirZ] = [-sinR, cosR];
+              const fds = {
+                n: { x1:nwx, z1:nwz, dirX:edirX, dirZ:edirZ, normX: sinR,  normZ:-cosR, fW:bw },
+                s: { x1:swx, z1:swz, dirX:edirX, dirZ:edirZ, normX:-sinR,  normZ: cosR, fW:bw },
+                e: { x1:nex, z1:nez, dirX:fdirX, dirZ:fdirZ, normX: cosR,  normZ: sinR, fW:bd },
+                w: { x1:nwx, z1:nwz, dirX:fdirX, dirZ:fdirZ, normX:-cosR,  normZ:-sinR, fW:bd },
+              };
+              const fd = fds[face];
+              if (fd) {
+                const fcx = fd.x1 + fd.dirX*fd.fW/2, fcz = fd.z1 + fd.dirZ*fd.fW/2;
+                camPos = new THREE.Vector3(fcx + fd.normX*200, EYE_H, fcz + fd.normZ*200);
+                lookAt  = new THREE.Vector3(fcx, bh/2, fcz);
+              }
+            }
+          }
+        }
+        if (camPos && lookAt) tweenCamera(camPos, lookAt, 600);
+      }
 
       const onResize = () => {
         const nw = wrap.clientWidth, nh = wrap.clientHeight;
@@ -4749,6 +4848,8 @@ ${rows}
       const projs = await fetch('/api/projects').then(res => res.json());
       setProjects(projs);
       setPid(data.id);
+      setSbOpen(true);
+      setSbNavOpen(true);
       setImportState(null);
       showToast(t('importOk', data.name));
     } catch {
@@ -8187,7 +8288,7 @@ ${rows}
                 grid: (!shareRole && bid && roomView === 'board') ? (
                   <button key="grid" className={`tbtn${showGrid?' on':''}`}
                     data-tooltip={t('gridToggle')}
-                    onClick={e => { if (gridDropOpen) { setGridDropOpen(false); return; } const r = e.currentTarget.getBoundingClientRect(); setGridDropPos({ right: window.innerWidth - r.right, top: r.bottom + 4 }); setGridDropOpen(true); }}>
+                    onClick={e => { if (gridDropOpen) { setGridDropOpen(false); return; } setAvatarOpen(false); setThemeOpen(false); setSettingsOpen(false); const r = e.currentTarget.getBoundingClientRect(); setGridDropPos({ right: window.innerWidth - r.right, top: r.bottom + 4 }); setGridDropOpen(true); }}>
                     <SvgGrid/>{showGrid && snapGrid && <span className="tbtn-dot"/>}
                   </button>) : null,
                 present: (!shareRole && !tmplEditMode && bid && roomView === 'board') ? (
@@ -8202,7 +8303,7 @@ ${rows}
                 // Salida
                 export: (!shareRole && !tmplEditMode && bid) ? (
                   <button key="export" className="tbtn" data-tooltip={t('ttExport')}
-                    onClick={e => { if (exportDropOpen) { setExportDropOpen(false); return; } setGridDropOpen(false); const r = e.currentTarget.getBoundingClientRect(); setExportDropPos({ right: window.innerWidth - r.right, top: r.bottom + 4 }); setExportDropOpen(true); }}>
+                    onClick={e => { if (exportDropOpen) { setExportDropOpen(false); return; } setGridDropOpen(false); setAvatarOpen(false); setThemeOpen(false); setSettingsOpen(false); const r = e.currentTarget.getBoundingClientRect(); setExportDropPos({ right: window.innerWidth - r.right, top: r.bottom + 4 }); setExportDropOpen(true); }}>
                     <SvgExport size={15}/>
                   </button>) : null,
                 report: (!shareRole && !tmplEditMode && pid && boards.length > 0) ? (
@@ -8290,7 +8391,7 @@ ${rows}
                 </div>
               ))}
               <div className="pref-divider"/>
-              <div className="theme-opt" onClick={() => { setThemeOpen(false); setSettingsOpen(true); }}>
+              <div className="theme-opt" onClick={() => { setThemeOpen(false); setAvatarOpen(false); setSettingsOpen(true); }}>
                 <span style={{fontSize:13,lineHeight:1}}>⚙</span>
                 <span className="theme-opt-label">{t('settingsOpen')}</span>
               </div>
@@ -8299,7 +8400,7 @@ ${rows}
         </div>
         {authUser && (
           <div className="avatar-picker" onClick={e => e.stopPropagation()}>
-            <button className="avatar-btn" onClick={() => setAvatarOpen(o => !o)} data-tooltip={authUser.username}>
+            <button className="avatar-btn" onClick={() => { if (!avatarOpen) { setThemeOpen(false); setSettingsOpen(false); } setAvatarOpen(o => !o); }} data-tooltip={authUser.username}>
               {authUser.username[0].toUpperCase()}
             </button>
             {avatarOpen && (
@@ -8651,7 +8752,7 @@ ${rows}
                         if(!v1||!v2) return null;
                         const mx=(v1.x+v2.x)/2, my=(v1.y+v2.y)/2;
                         const len=roomWallLen(wall,room.vertices);
-                        const linked = (wall.boardId && boards.find(b=>b.id===wall.boardId)) || (wall.boardIdBack && boards.find(b=>b.id===wall.boardIdBack));
+                        const linked = !!(wall.boardId || wall.boardIdBack);
                         const hov = roomHovWall === wall.id;
                         const hovSide = roomHovSide?.wallId === wall.id ? roomHovSide.side : null;
                         const isTabique = wall.height && wall.height < (room.ceilingHeight||280);
@@ -8665,8 +8766,8 @@ ${rows}
                             {/* Wide invisible hit area for easier hover */}
                             <line x1={v1.x} y1={v1.y} x2={v2.x} y2={v2.y} stroke="transparent" strokeWidth={Math.max(svgFontSz*1.4, sw*2)} style={{pointerEvents:'stroke'}}/>
                             <line x1={v1.x} y1={v1.y} x2={v2.x} y2={v2.y}
-                              stroke={hov?'var(--acc)':(wall.color||wall.colorBack?wall.color||wall.colorBack:linked?'var(--acc)':'var(--dim)')}
-                              strokeWidth={hov?sw+3:sw} opacity={hov?1:(wall.color||wall.colorBack)?0.9:linked?1:0.8}
+                              stroke={hov||linked?'var(--acc)':(wall.color||wall.colorBack||'var(--dim)')}
+                              strokeWidth={hov?sw+3:sw} opacity={hov||linked?1:(wall.color||wall.colorBack)?0.9:0.8}
                               strokeDasharray={isTabique?`${sw*2.5} ${sw*.8}`:undefined}/>
                             <text x={mx} y={my+svgFontSz*(isTabique?-.1:.4)} textAnchor="middle" fontSize={svgFontSz}
                               fill={hov?'var(--acc)':'var(--text)'} stroke="var(--bg)" strokeWidth={3} paintOrder="stroke"
@@ -9190,6 +9291,7 @@ ${rows}
               <div className="room-view">
                 <div className="room-svg-wrap" style={{background:'#1e1e1e', position:'relative'}}>
                   <canvas ref={room3DCanvasRef} style={{display:'block', width:'100%', height:'100%'}}/>
+                  <div ref={hud3DLabelRef} style={{position:'absolute',bottom:16,left:'50%',transform:'translateX(-50%)',background:'rgba(0,0,0,0.65)',color:'#fff',padding:'4px 12px',borderRadius:4,fontSize:12,pointerEvents:'none',display:'none',maxWidth:'60%',textAlign:'center',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',zIndex:5}}/>
                   {walkMode3D && !walkStarted && (
                     <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(0,0,0,.55)',zIndex:5,cursor:'pointer'}}
                       onClick={() => { setWalkStarted(true); const c = room3DCanvasRef.current; if (c) c.requestPointerLock(); }}>
@@ -9231,7 +9333,8 @@ ${rows}
                           {ctx3DWallMenu.boardName || t('noBoard')}
                         </div>
                         <button className="ctx-item" onClick={() => {
-                          const {boardId}=ctx3DWallMenu; setCtx3DWallMenu(null);
+                          const {boardId,wallType,wallId,face}=ctx3DWallMenu; setCtx3DWallMenu(null);
+                          pendingCameraTweenRef.current={wallType,wallId,face};
                           setBid(boardId); bidRef.current=boardId; setRoomView('board');
                         }}>{t('wall3DEdit')}</button>
                         {clipboardRef.current?.length > 0 && (

@@ -2315,10 +2315,14 @@ app.post('/api/projects/import/:tempId/confirm', requireAuth, (req, res) => {
     oldBoards.forEach(b => {
       const entry = zip.getEntry(`boards/${b.id}.json`);
       const items = entry ? JSON.parse(entry.getData().toString('utf8')) : [];
+      const itemIdMap = {};
+      items.forEach(item => { itemIdMap[item.id] = newId(); });
       writeJSON(boardFile(newPid, boardIdMap[b.id], dd), items.map(item => ({
         ...item,
-        id: newId(),
+        id: itemIdMap[item.id],
         ...(item.photoId ? { photoId: photoIdMap[item.photoId] || item.photoId } : {}),
+        ...(item.zoneId  ? { zoneId:  itemIdMap[item.zoneId]  || item.zoneId  } : {}),
+        ...(item.photoIds ? { photoIds: item.photoIds.map(pid => photoIdMap[pid] || pid) } : {}),
       })));
     });
 

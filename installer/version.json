@@ -1,6 +1,6 @@
 {
-  "version": "1.21.19",
+  "version": "1.22.0",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-06-14",
-  "notes": "Tooltip system rediseñado: JS position:fixed eliminando layout shifts. Mensaje mejorado sin proyecto. Nuevo tema Wetzlar para fotografía B&N."
+  "notes": "Fix importación ZIP (zonas y grids). HUD etiqueta en vista 3D. Fix color pared vinculada. Panel abierto tras importar."
 }

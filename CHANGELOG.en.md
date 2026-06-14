@@ -1,13 +1,30 @@
 # Changelog
 
+## [1.22.0] — 2026-06-14
+
+### Fixed
+- **ZIP import — zones and grids lose their photos:** when importing a project, photos that belonged to a zone lost their `zoneId` (appearing detached) and grids appeared empty. Root cause: the ID remap only covered `item.photoId`. Grids use `item.photoIds` (a flat ID array) and zones use `item.zoneId` which references the zone item's ID (not a photoId). Fix: new IDs are pre-generated for all items before writing (to build `itemIdMap`), and `item.zoneId` and `item.photoIds[]` are also remapped.
+- **Linked wall color in room floor plan:** walls with an assigned board appeared white/gray even though the board was correctly linked. Root cause: if `wall.color` had any saved value (e.g. the default `#d0c8bc` accidentally captured by the color picker), that branch short-circuited the `linked` logic before the accent was evaluated. Fix: in the 2D floor plan the `linked` state takes absolute priority over the custom color.
+- **Panel open after ZIP import:** when confirming a project import, the sidebar and navigation section open automatically, showing the imported project, regardless of whether the user had them collapsed.
+
+### New
+- **Label HUD in 3D view:** hovering over an artwork that has a label shows its name in a centered overlay at the bottom of the canvas. Artworks without a label show nothing. The HUD is hidden automatically in walk mode (mouse captured) and when leaving the 3D view.
+
 ## [1.21.19] — 2026-06-14
 
 ### Fixed
+- **ZIP import — zones and grids lose their photos:** when importing a project, photos that belonged to a zone lost their `zoneId` (appearing detached) and grids appeared empty. Root cause: the ID remap only covered `item.photoId`. Grids use `item.photoIds` (a flat ID array) and zones use `item.zoneId` which references the zone item's ID (not a photoId). Fix: new IDs are pre-generated for all items before writing (to build `itemIdMap`), and `item.zoneId` and `item.photoIds[]` are also remapped.
+- **Linked wall color in room floor plan:** walls with an assigned board appeared white/gray even though the board was correctly linked. Root cause: if `wall.color` had any saved value (e.g. the default `#d0c8bc` accidentally captured by the color picker), that branch short-circuited the `linked` logic before the accent was evaluated. Fix: in the 2D floor plan the `linked` state takes absolute priority over the custom color — if the wall has a linked board it always paints with `--acc`; the custom color only applies to walls without a board. The `linked` check is also simplified to `!!(wall.boardId || wall.boardIdBack)` to avoid depending on the `boards` state being loaded.
 - **Persistent library shift on thumbnail hover (definitive root cause):** the bug was introduced in v1.21.11 when all `title=""` attributes were migrated to `data-tooltip=""`. The CSS rule `[data-tooltip]:hover::after` created a pseudo-element whose appearance/disappearance caused layout shifts in ancestor flex containers. Fix: the CSS tooltip rules are removed entirely and replaced with a JavaScript tooltip: a single `<div id="tt" style="position:fixed">` at the root of App, positioned via `getBoundingClientRect()` in `mouseover`/`mouseout` listeners on the document. With `position:fixed` and JS-calculated coordinates, the tooltip lives completely outside the document flow and cannot cause layout shifts. Additionally: `min-height:0` on `.sidebar`, `overflow-y:auto` on `.sb-sec.nav`, `height:313px;overflow:hidden` on `.sb-sec.info`, and InfoPanel with visibility-toggling.
 - **No project message in library:** when no project is active (`!pid`), the library now displays "Create or select a project to get started" instead of "Your library is empty".
+- **"Wetzlar" theme — insufficient contrast (fourth revision):** `--sub` raised to `#d8d8d8` (≈ 13.1:1) and `--muted` to `#aaaaaa` (≈ 6.2:1).
+- **Theme renames:** "Claro · Natural" is now **Arles**, "Claro · Frío" is now **Düsseldorf**, and "Dark · Wetzlar" is now **Wetzlar**. Proper names, identical in ES and EN.
+- **Simultaneous menus in topbar:** when the avatar was open and the user clicked on preferences (or vice versa), both menus remained visible. Now only one dropdown can be open at a time in the topbar: opening avatar, preferences, export, or grid automatically closes the others.
 
 ### New
+- **Label HUD in 3D view:** hovering over an artwork that has a label shows its name in a centered overlay at the bottom of the canvas. Artworks without a label show nothing. The HUD is hidden automatically in walk mode (mouse captured) and when leaving the 3D view.
 - **"Wetzlar" theme:** dark theme designed for black and white photography work, with Leica red (#cc0000) as the accent color. Variables: ultra-dark background (#0f0f0f), panels (#1a1a1a–#222222), light text (#e8e8e8).
+- **Smooth camera transitions in 3D view:** the camera no longer jumps instantly between positions. Three points receive quadratic easing interpolation (`easeInOutQuad`): the view-reset button (800 ms), clicking a surface in walk mode (500 ms), and re-entering 3D view after "Edit board" from the wall context menu (600 ms, positioning the camera facing the selected wall or block face). Continuous movements (WASD, mouse drag, OrbitControls) are unaffected.
 
 ## [1.21.18] — 2026-06-13
 
