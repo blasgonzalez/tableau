@@ -29,7 +29,18 @@
       "Bash(Measure-Object -Line)",
       "Bash(Select-Object -ExpandProperty Lines)",
       "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d['version']\\)\")",
-      "Bash(grep -v \"//\\\\|tooltip\\\\|title\\\\|placeholder\")"
+      "Bash(grep -v \"//\\\\|tooltip\\\\|title\\\\|placeholder\")",
+      "Bash(awk 'NR>=8579 && NR<=10055')",
+      "Bash(awk 'NR>=8579 && NR<=8620')",
+      "Bash(grep -v \"^[0-9]*:.*\\\\\\(/\\\\*\\\\|//\\\\\\)\")",
+      "Bash(awk 'NR>=8545 && NR<=8570')",
+      "Bash(grep -v \"//\\\\|showLibPreview\\\\|libPreviewToggle\")",
+      "Bash(awk 'NR>=8569 && NR<=8575 {print NR\": \"$0}' public/index.html)",
+      "Bash(awk 'NR==10361 || NR==10362 || NR==10363 || NR==10364 || NR==10365 {print NR\": \"$0}' public/index.html)",
+      "Bash(git diff *)",
+      "Read(//c/tmp/**)",
+      "Bash(mkdir -p /tmp)",
+      "Read(//tmp/**)"
     ],
     "additionalDirectories": [
       "d:\\blasg\\Pictures\\Proyectos\\tableau\\fonts"

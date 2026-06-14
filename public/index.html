@@ -64,7 +64,7 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .main-area{flex:1;display:flex;overflow:hidden}
 
 /* ── SIDEBAR ── */
-.sidebar{width:var(--sb-w);background:var(--surf);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;z-index:100}
+.sidebar{width:var(--sb-w);background:var(--surf);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;z-index:100;min-height:0}
 .sb-toggle-strip{height:100%;width:36px;display:flex;flex-direction:column;align-items:center;cursor:pointer}
 .sb-toggle-btn{width:24px;height:24px;margin:7px auto 0;border:1px solid var(--border2);background:transparent;color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;transition:all .15s}
 .sb-toggle-btn:hover{color:var(--text);border-color:var(--acc-dim)}
@@ -73,7 +73,7 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 
 /* sidebar sections */
 .sb-sec{display:flex;flex-direction:column;min-height:0}
-.sb-sec.nav{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+.sb-sec.nav{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column}
 .sb-sec.nav.collapsed{flex:0 0 auto}
 .sb-sec.info{flex-shrink:0;border-top:1px solid var(--border);margin-top:auto;height:313px;overflow:hidden}
 .sb-trash-btn{height:32px;display:flex;align-items:center;gap:5px;padding:0 8px 0 10px;border-top:1px solid var(--border);background:var(--deep);flex-shrink:0;cursor:pointer;transition:background .12s}
@@ -944,9 +944,7 @@ select.btn option,select.inp option{background:var(--panel);color:var(--text)}
 .clip-banner-msg{font-size:9.5px;color:var(--sub);letter-spacing:.3px;flex:1;line-height:1.3}
 .clip-banner-cancel{background:none;border:1px solid var(--border2);color:var(--muted);font-size:9px;padding:3px 10px;cursor:pointer;font-family:inherit;letter-spacing:.4px;flex-shrink:0;transition:border-color .15s,color .15s}
 .clip-banner-cancel:hover{border-color:var(--danger);color:var(--danger)}
-/* ── TOOLTIPS ── */
-[data-tooltip]{position:relative}
-[data-tooltip]:hover::after{content:attr(data-tooltip);position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:11px;white-space:nowrap;pointer-events:none;z-index:9999}
+
 /* ── SHORTCUTS PANEL ── */
 .sc-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1500;display:flex;align-items:center;justify-content:center}
 .sc-modal{background:var(--panel);border:1px solid var(--border2);max-width:580px;width:90%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.7)}
@@ -2366,7 +2364,24 @@ function App() {
         setReady(true); // mostrar pantalla de login
       }
     }).catch(() => { loadData(); }); // fallback modo local
-    return () => { clearInterval(hbInterval); clearInterval(updateInterval); document.removeEventListener('visibilitychange', onVisible); };
+    const showTT = e => {
+      const el = e.target.closest('[data-tooltip]');
+      const tt = document.getElementById('tt');
+      if (el && tt) {
+        tt.textContent = el.getAttribute('data-tooltip');
+        tt.style.display = 'block';
+        const r = el.getBoundingClientRect();
+        tt.style.left = Math.round(r.left + r.width/2 - tt.offsetWidth/2) + 'px';
+        tt.style.top = Math.round(r.bottom + 6) + 'px';
+      }
+    };
+    const hideTT = e => {
+      if (!e.target.closest('[data-tooltip]'))
+        document.getElementById('tt').style.display = 'none';
+    };
+    document.addEventListener('mouseover', showTT);
+    document.addEventListener('mouseout', hideTT);
+    return () => { clearInterval(hbInterval); clearInterval(updateInterval); document.removeEventListener('visibilitychange', onVisible); document.removeEventListener('mouseover', showTT); document.removeEventListener('mouseout', hideTT); };
   }, []);
 
   useEffect(() => {
@@ -7582,7 +7597,7 @@ ${rows}
   const InfoPanel = () => {
     const hasContent = !!hoverInfo;
     return (
-      <div style={{position:'relative',flex:1,minHeight:0,overflow:'hidden'}}>
+      <div style={{flex:1,minHeight:0,position:'relative',overflow:'hidden'}}>
         <div className="info-empty"
              style={{visibility:hasContent?'hidden':'visible',position:'absolute',inset:0}}>
           {t('infoEmpty1')}<br/>{t('infoEmpty2')}
@@ -8560,14 +8575,12 @@ ${rows}
                   {trashCount.total > 0 && <span className="sb-trash-badge">{trashCount.total}</span>}
                 </div>}
 
-                {/* INFO — panel fijo (placeholder vacío si no hay datos);
-                    solo se oculta en la vista de sala para no reflujar el panel */}
                 {!shareRole && roomView !== 'room' && (
                   <div className="sb-sec info">
                     <div className="sb-sec-hd">
                       <span className="sb-sec-title">○ {t('infoTitle')}</span>
                     </div>
-                    <InfoPanel/>
+                    {InfoPanel()}
                   </div>
                 )}
 
@@ -12911,6 +12924,7 @@ ${rows}
           </div>
         </div>
       )}
+    <div id="tt" style={{position:'fixed',pointerEvents:'none',zIndex:99999,background:'var(--panel2)',color:'var(--text)',border:'1px solid var(--border)',borderRadius:4,padding:'3px 8px',fontSize:11,whiteSpace:'nowrap',display:'none'}}/>
     </div>
   );
 }

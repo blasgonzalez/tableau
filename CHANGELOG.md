@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.21.19] — 2026-06-14
+
+### Corregido
+- **Desplazamiento permanente de la biblioteca al hacer hover en miniaturas (causa raíz definitiva):** el bug fue introducido en v1.21.11 al migrar todos los atributos `title=""` a `data-tooltip=""`. La regla CSS `[data-tooltip]:hover::after` creaba un pseudo-elemento que al aparecer/desaparecer causaba layout shifts en los contenedores flex ancestros. Solución: se eliminan completamente las reglas CSS de tooltip y se reemplaza por un tooltip JavaScript: un único `<div id="tt" style="position:fixed">` al nivel raíz de App, posicionado con `getBoundingClientRect()` via listeners `mouseover`/`mouseout` en el documento. Con `position:fixed` y coordenadas calculadas en JS el tooltip vive completamente fuera del flujo del documento y no puede causar layout shifts. Adicionalmente: `min-height:0` en `.sidebar`, `overflow-y:auto` en `.sb-sec.nav`, `height:313px;overflow:hidden` en `.sb-sec.info` e InfoPanel con visibility-toggling.
+
 ## [1.21.18] — 2026-06-13
 
 ### Corregido

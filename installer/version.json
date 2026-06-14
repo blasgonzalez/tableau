@@ -1,6 +1,6 @@
 {
-  "version": "1.21.18",
+  "version": "1.21.19",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-06-13",
+  "releaseDate": "2026-06-14",
   "notes": "Eliminado código residual del panel de info que evaluaba sel.length en cada render, fuente definitiva del parpadeo de la biblioteca."
 }
