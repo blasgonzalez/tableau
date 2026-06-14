@@ -4,6 +4,10 @@
 
 ### Fixed
 - **Persistent library shift on thumbnail hover (definitive root cause):** the bug was introduced in v1.21.11 when all `title=""` attributes were migrated to `data-tooltip=""`. The CSS rule `[data-tooltip]:hover::after` created a pseudo-element whose appearance/disappearance caused layout shifts in ancestor flex containers. Fix: the CSS tooltip rules are removed entirely and replaced with a JavaScript tooltip: a single `<div id="tt" style="position:fixed">` at the root of App, positioned via `getBoundingClientRect()` in `mouseover`/`mouseout` listeners on the document. With `position:fixed` and JS-calculated coordinates, the tooltip lives completely outside the document flow and cannot cause layout shifts. Additionally: `min-height:0` on `.sidebar`, `overflow-y:auto` on `.sb-sec.nav`, `height:313px;overflow:hidden` on `.sb-sec.info`, and InfoPanel with visibility-toggling.
+- **No project message in library:** when no project is active (`!pid`), the library now displays "Create or select a project to get started" instead of "Your library is empty".
+
+### New
+- **"Wetzlar" theme:** dark theme designed for black and white photography work, with Leica red (#cc0000) as the accent color. Variables: ultra-dark background (#0f0f0f), panels (#1a1a1a–#222222), light text (#e8e8e8).
 
 ## [1.21.18] — 2026-06-13
 

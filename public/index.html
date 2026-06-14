@@ -1028,6 +1028,17 @@ const THEMES = {
       '--grid':'rgba(0,0,0,0.08)',
     }
   },
+  'dark-wetzlar': {
+    label: 'Oscuro · Wetzlar',
+    bg: '#0f0f0f', acc: '#cc0000',
+    vars: {
+      '--bg':'#0f0f0f','--surf':'#1a1a1a','--panel':'#1a1a1a','--panel2':'#222222','--deep':'#0a0a0a',
+      '--border':'#2a2a2a','--border2':'#333333',
+      '--acc':'#cc0000','--acc-dim':'#4d0000','--acc-faint':'rgba(204,0,0,0.1)',
+      '--text':'#e8e8e8','--sub':'#aaaaaa','--dim':'#444444','--muted':'#666666','--danger':'#cc0000',
+      '--grid':'rgba(255,255,255,0.06)',
+    }
+  },
 };
 
 // Progressive zoom stops (each ≤ ~1.34× the previous, no brutal jumps) that
@@ -1175,6 +1186,7 @@ const I18N = {
   es: {
     upload:'↑ Subir', uploadPhotos:'Fotos', report:'≡ Memoria', config:'⚙ Config', exportJpeg:'Exportar',
     showPanel:'▶ Panel', preferences:'Preferencias', themeLabel:'Tema', langLabel:'Idioma',
+    themeWetzlarLabel:'Oscuro · Wetzlar',
     noProjHint:'Sin proyecto — crea uno en el panel izquierdo', noProjHintEmpty:'Sin proyecto',
     projBoards:'Proyectos y Tableros', newProject:'Nuevo proyecto', collapsePanel:'Colapsar panel',
     noProjectsYet:'No hay proyectos aún.', clickToCreate:'Pulsa + para crear uno.',
@@ -1344,6 +1356,7 @@ const I18N = {
     boardDefaults:'Tableros nuevos', defFrame:'Marco por defecto', projSaved:'Guardado',
     obLibTitle:'Tu biblioteca está vacía', obLibSub:'Empieza añadiendo algunas fotos.',
     obLibUpload:'↑ Subir fotos', obLibDrag:'o arrastra archivos aquí',
+    noProjectLib:'Crea o selecciona un proyecto para empezar',
     obLibHelpLink:'¿Qué puedo hacer?',
     obHelpTitle:'¿Qué puedo hacer en Tableau?',
     obHelpCap1T:'Tableros visuales', obHelpCap1D:'Coloca y mueve fotos libremente en lienzos a escala real.',
@@ -1400,6 +1413,7 @@ const I18N = {
   en: {
     upload:'↑ Upload', uploadPhotos:'Photos', report:'≡ Report', config:'⚙ Config', exportJpeg:'Export',
     showPanel:'▶ Panel', preferences:'Preferences', themeLabel:'Theme', langLabel:'Language',
+    themeWetzlarLabel:'Dark · Wetzlar',
     noProjHint:'No project — create one in the left panel', noProjHintEmpty:'No project',
     projBoards:'Projects & Boards', newProject:'New project', collapsePanel:'Collapse panel',
     noProjectsYet:'No projects yet.', clickToCreate:'Click + to create one.',
@@ -1569,6 +1583,7 @@ const I18N = {
     boardDefaults:'New boards', defFrame:'Default frame', projSaved:'Saved',
     obLibTitle:'Your library is empty', obLibSub:'Start by adding some photos.',
     obLibUpload:'↑ Upload photos', obLibDrag:'or drag files here',
+    noProjectLib:'Create or select a project to get started',
     obLibHelpLink:'What can I do?',
     obHelpTitle:'What can I do in Tableau?',
     obHelpCap1T:'Visual boards', obHelpCap1D:'Place and move photos freely on real-scale canvases.',
@@ -10203,7 +10218,9 @@ ${rows}
                     <div className="lib-scroll">
                       {photos.length === 0 ? (
                         <div className="lib-empty">
-                          {!onboarding.lib.dismissed ? (<>
+                          {!pid ? (
+                            <span className="lib-empty-title" style={{color:'var(--sub)'}}>{t('noProjectLib')}</span>
+                          ) : !onboarding.lib.dismissed ? (<>
                             <span className="lib-empty-title">{t('obLibTitle')}</span>
                             <span className="lib-empty-sub">{t('obLibSub')}</span>
                             <label htmlFor="tb-upload" className="lib-empty-upload-btn">{t('obLibUpload')}</label>

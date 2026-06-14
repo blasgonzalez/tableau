@@ -2,5 +2,5 @@
   "version": "1.21.19",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-06-14",
-  "notes": "Eliminado código residual del panel de info que evaluaba sel.length en cada render, fuente definitiva del parpadeo de la biblioteca."
+  "notes": "Tooltip system rediseñado: JS position:fixed eliminando layout shifts. Mensaje mejorado sin proyecto. Nuevo tema Wetzlar para fotografía B&N."
 }
