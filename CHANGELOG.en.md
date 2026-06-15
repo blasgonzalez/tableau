@@ -1,13 +1,30 @@
 # Changelog
 
+## [1.22.1] — 2026-06-15
+
+### Fixed
+- **Multiple dropdowns open simultaneously in topbar:** when clicking the avatar with preferences open (or vice versa), both menus remained visible. Fix: each dropdown button (avatar, preferences, export, grid) now closes all others before opening its own. Only one dropdown can be open at a time in the topbar.
+- **Artwork view from 3D — click did not respond:** OrbitControls was consuming the `click` event before it reached the artwork view handler. Fix: listeners changed from `mousedown`+`click` to `pointerdown`+`pointerup` with a movement threshold check (4 px), which OrbitControls does not intercept.
+- **Perpendicular snap in walk mode — jarring second phase:** when clicking a wall in walk mode, camera position moved with easing but the camera orientation was applied abruptly at the end of the tween. Fix: yaw/pitch now interpolates in parallel over the same 500 ms with the same quadratic easing, with no direct assignment at completion.
+
+### New
+- **Double-click in 3D view → artwork view:** in orbit mode (in addition to the existing single click) and in walk mode, double-clicking a photo opens the artwork fullscreen view. In walk mode, double-click opens the artwork without interfering with single-click behaviour (perpendicular camera snap).
+- **Theme renames:** "Alto Contraste" → **Rochester**; "Oscuro · Frío" → **Tokyo**.
+
 ## [1.22.0] — 2026-06-14
 
 ### Fixed
 - **ZIP import — zones and grids lose their photos:** when importing a project, photos that belonged to a zone lost their `zoneId` (appearing detached) and grids appeared empty. Root cause: the ID remap only covered `item.photoId`. Grids use `item.photoIds` (a flat ID array) and zones use `item.zoneId` which references the zone item's ID (not a photoId). Fix: new IDs are pre-generated for all items before writing (to build `itemIdMap`), and `item.zoneId` and `item.photoIds[]` are also remapped.
 - **Linked wall color in room floor plan:** walls with an assigned board appeared white/gray even though the board was correctly linked. Root cause: if `wall.color` had any saved value (e.g. the default `#d0c8bc` accidentally captured by the color picker), that branch short-circuited the `linked` logic before the accent was evaluated. Fix: in the 2D floor plan the `linked` state takes absolute priority over the custom color.
 - **Panel open after ZIP import:** when confirming a project import, the sidebar and navigation section open automatically, showing the imported project, regardless of whether the user had them collapsed.
+- **Theme renames:** "Alto Contraste" (High Contrast) is now **Rochester**; "Oscuro · Frío" (Dark Cool) is now **Tokyo**.
+- **Artwork view from 3D — click did not respond:** OrbitControls was consuming the `click` event before it reached the artwork view handler. Fix: listeners changed from `mousedown`+`click` to `pointerdown`+`pointerup` with a movement threshold check (4 px), which OrbitControls does not intercept.
+- **Multiple dropdowns open simultaneously in topbar:** when clicking the avatar with preferences open (or vice versa), both menus remained visible. Fix: each dropdown button (avatar, preferences, export, grid) now closes all others before opening its own. Only one dropdown can be open at a time in the topbar.
+- **Perpendicular snap in walk mode — jarring second phase:** when clicking a wall in walk mode, camera position moved with easing but the camera orientation was applied abruptly at the end of the tween. Fix: yaw/pitch now interpolates in parallel over the same 500 ms with the same quadratic easing, with no direct assignment at completion.
 
 ### New
+- **Double-click in 3D view → artwork view:** in orbit mode (in addition to the existing single click) and in walk mode, double-clicking a photo opens the artwork fullscreen view. In walk mode, double-click opens the artwork without interfering with single-click behaviour (perpendicular camera snap).
+- **Artwork view from 3D (M1):** clicking a photo in the 3D view (outside walk mode and with no active clipboard) opens the artwork fullscreen. ← or ESC closes it and restores the exact camera position. ← → navigates all photos in the room in order (walls → blocks) with circular looping. The bottom panel shows the item label, physical dimensions calculated from the board DPI, and published public comments. Grids first show the full grid fullscreen (Level 1); clicking a cell opens the individual photo (Level 2) with navigation between the grid cells. Works in visitor mode (?room=TOKEN).
 - **Label HUD in 3D view:** hovering over an artwork that has a label shows its name in a centered overlay at the bottom of the canvas. Artworks without a label show nothing. The HUD is hidden automatically in walk mode (mouse captured) and when leaving the 3D view.
 
 ## [1.21.19] — 2026-06-14

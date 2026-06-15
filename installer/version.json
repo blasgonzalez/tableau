@@ -1,6 +1,6 @@
 {
-  "version": "1.22.0",
+  "version": "1.22.1",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-06-14",
-  "notes": "Fix importación ZIP (zonas y grids). HUD etiqueta en vista 3D. Fix color pared vinculada. Panel abierto tras importar."
+  "releaseDate": "2026-06-15",
+  "notes": "Vista de obra desde el 3D: clic/doble clic abre pantalla completa con navegación circular. Temas Tokyo y Rochester. Fixes de interacción en vista 3D."
 }

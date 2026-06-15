@@ -1,13 +1,30 @@
 # Changelog
 
+## [1.22.1] — 2026-06-15
+
+### Corregido
+- **Múltiples dropdowns abiertos simultáneamente en la topbar:** al hacer clic en el avatar con preferencias abierto (o viceversa), ambos menús permanecían visibles. Fix: cada botón de dropdown (avatar, preferencias, exportar, grid) ahora cierra todos los demás antes de abrir el suyo. Solo un dropdown puede estar abierto a la vez en la topbar.
+- **Vista de obra desde el 3D — clic no respondía:** OrbitControls consumía el evento `click` antes de que llegara al handler de la vista de obra. Fix: los listeners cambian de `mousedown`+`click` a `pointerdown`+`pointerup` con comprobación de umbral de movimiento (4 px), que no son interceptados por OrbitControls.
+- **Snap a la perpendicular en walk mode — segundo tramo brusco:** al hacer clic en una pared en walk mode, la posición se movía con easing pero la orientación de cámara se aplicaba de golpe al final del tween. Fix: la rotación (yaw/pitch) ahora se interpola en paralelo durante los mismos 500 ms con el mismo easing cuadrático, sin ninguna asignación directa al finalizar.
+
+### Nuevo
+- **Doble clic en vista 3D → vista de obra:** en modo orbital (además del clic simple ya existente) y en modo walk, hacer doble clic sobre una foto abre la vista de obra a pantalla completa. En walk mode el doble clic abre la obra sin interferir con el comportamiento del clic simple (posicionar cámara perpendicular).
+- **Temas renombrados:** "Alto Contraste" → **Rochester**; "Oscuro · Frío" → **Tokyo**.
+
 ## [1.22.0] — 2026-06-14
 
 ### Corregido
 - **Importación ZIP — zonas y grids pierden sus fotos:** al importar un proyecto, las fotos que pertenecían a una zona perdían su `zoneId` (quedaban sueltas) y los grids aparecían vacíos. Causa raíz: el remapeo de IDs solo cubría `item.photoId`. Los grids usan `item.photoIds` (array plano de IDs), y las zonas usan `item.zoneId` que referencia el ID del item de zona (no un photoId). Fix: se pre-generan los nuevos IDs de todos los items antes de escribirlos (para construir `itemIdMap`) y se remapean también `item.zoneId` e `item.photoIds[]`.
 - **Color de pared vinculada en el plano de sala:** las paredes con tablero asignado aparecían en blanco/gris aunque el tablero estaba correctamente vinculado. Causa raíz: si `wall.color` tenía algún valor guardado (p. ej. el color por defecto `#d0c8bc` capturado accidentalmente por el picker), esa rama cortocircuitaba la lógica `linked` antes de evaluar el acento. Fix: en el plano 2D el estado `linked` tiene prioridad absoluta sobre el color personalizado.
 - **Panel abierto tras importar ZIP:** al confirmar la importación de un proyecto, el panel lateral y la sección de navegación se abren automáticamente, mostrando el proyecto importado, independientemente de si el usuario los tenía colapsados.
+- **Renombrado de temas:** "Alto Contraste" pasa a llamarse **Rochester**; "Oscuro · Frío" pasa a llamarse **Tokyo**.
+- **Vista de obra desde el 3D — clic no respondía:** OrbitControls consumía el evento `click` antes de que llegara al handler de la vista de obra. Fix: los listeners cambian de `mousedown`+`click` a `pointerdown`+`pointerup` con comprobación de umbral de movimiento (4 px), que no son interceptados por OrbitControls.
+- **Múltiples dropdowns abiertos simultáneamente en la topbar:** al hacer clic en el avatar con preferencias abierto (o viceversa), ambos menús permanecían visibles. Fix: cada botón de dropdown (avatar, preferencias, exportar, grid) ahora cierra todos los demás antes de abrir el suyo. Solo un dropdown puede estar abierto a la vez en la topbar.
+- **Snap a la perpendicular en walk mode — segundo tramo brusco:** al hacer clic en una pared en walk mode, la posición se movía con easing pero la orientación de cámara se aplicaba de golpe al final del tween. Fix: la rotación (yaw/pitch) ahora se interpola en paralelo durante los mismos 500 ms con el mismo easing cuadrático, sin ninguna asignación directa al finalizar.
 
 ### Nuevo
+- **Doble clic en vista 3D → vista de obra:** en modo orbital (además del clic simple ya existente) y en modo walk, hacer doble clic sobre una foto abre la vista de obra a pantalla completa. En walk mode el doble clic abre la obra sin interferir con el comportamiento del clic simple (posicionar cámara perpendicular).
+- **Vista de obra desde el 3D (M1):** clic en una foto en la vista 3D (fuera de walk mode y sin portapapeles activo) abre la obra a pantalla completa. ← o ESC cierra y restaura la posición exacta de cámara. ← → navega por todas las fotos de la sala en orden (paredes → bloques) con loop circular. El panel inferior muestra la etiqueta del item, las dimensiones físicas calculadas con el DPI del tablero, y los comentarios públicos publicados. Los grids muestran primero el grid completo a pantalla (Nivel 1); al hacer clic en una celda se abre la foto individual (Nivel 2) con navegación entre las celdas del grid. Funciona en modo visitante (?room=TOKEN).
 - **HUD de etiqueta en vista 3D:** al pasar el cursor sobre una obra que tiene etiqueta, se muestra su nombre en un overlay centrado en la parte inferior del canvas. Las obras sin etiqueta no muestran nada. El HUD se oculta automáticamente en modo walk (ratón capturado) y al salir de la vista 3D.
 
 ## [1.21.19] — 2026-06-14

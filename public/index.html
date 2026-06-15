@@ -892,6 +892,17 @@ select.inp{cursor:pointer;appearance:none;padding-right:28px;background-image:ur
 .fullscreen-no-board{font-size:9px;color:rgba(255,255,255,.2);font-family:'IBM Plex Mono',monospace;font-style:italic}
 .fullscreen-exif{font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.2px;text-align:right;line-height:1.8;font-family:'IBM Plex Mono',monospace}
 .fullscreen-counter{position:fixed;top:14px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,.3);font-family:'IBM Plex Mono',monospace;letter-spacing:.5px;pointer-events:none}
+.artwork3d-back{position:fixed;top:14px;left:16px;background:none;border:none;color:rgba(255,255,255,.45);font-size:13px;cursor:pointer;padding:4px 8px;font-family:'IBM Plex Mono',monospace;letter-spacing:.3px;transition:color .15s;z-index:901}
+.artwork3d-back:hover{color:#fff}
+.artwork3d-label{font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.85);letter-spacing:.3px;font-style:italic}
+.artwork3d-dims{font-size:9px;color:rgba(255,255,255,.3);font-family:'IBM Plex Mono',monospace;letter-spacing:.2px}
+.artwork3d-comments{display:flex;flex-direction:column;gap:7px;margin-top:5px;max-height:130px;overflow-y:auto}
+.artwork3d-comment{display:flex;flex-direction:column;gap:2px}
+.artwork3d-comment-author{font-size:8px;color:rgba(255,255,255,.3);font-family:'IBM Plex Mono',monospace;letter-spacing:.3px;text-transform:uppercase}
+.artwork3d-comment-text{font-size:10px;color:rgba(255,255,255,.6);line-height:1.5}
+.artwork3d-grid-cell{cursor:pointer;position:relative;background:#111;flex-shrink:0;box-sizing:border-box;overflow:hidden}
+.artwork3d-grid-cell img{display:block;width:100%;height:100%;object-fit:cover}
+.artwork3d-grid-cell:hover{outline:2px solid rgba(255,255,255,.4)}
 .lib-preview{position:fixed;background:var(--panel);border:1px solid var(--border2);z-index:700;box-shadow:0 6px 24px rgba(0,0,0,.6);pointer-events:none;padding:4px}
 .lib-preview.pinned{z-index:710;border-color:var(--acc-dim);box-shadow:0 8px 32px rgba(0,0,0,.75);position:fixed;padding-top:4px}
 .lib-preview img{display:block;max-width:280px;max-height:280px;object-fit:contain;background:#111}
@@ -996,7 +1007,7 @@ const THEMES = {
     }
   },
   'dark-cool': {
-    label: 'Oscuro · Frío',
+    label: 'Tokyo',
     bg: '#0a0d14', acc: '#7aaee0',
     vars: {
       '--bg':'#0a0d14','--surf':'#121826','--panel':'#18203a','--panel2':'#1e2a4a','--deep':'#080b12',
@@ -1007,7 +1018,7 @@ const THEMES = {
     }
   },
   'high-contrast': {
-    label: 'Alto Contraste',
+    label: 'Rochester',
     bg: '#000000', acc: '#ffd040',
     vars: {
       '--bg':'#000000','--surf':'#0e0e0e','--panel':'#161616','--panel2':'#202020','--deep':'#080808',
@@ -1409,6 +1420,7 @@ const I18N = {
     commentsRoomLabel: n => `Sala · ${n} comentario${n!==1?'s':''}`,
     commentsProjectLabel: n => `Proyecto · ${n} comentario${n!==1?'s':''}`,
     commentsObsTitle:'Observaciones',
+    artwork3DBack:'← Volver', artwork3DOf:(i,n)=>`${i} de ${n}`,
   },
   en: {
     upload:'↑ Upload', uploadPhotos:'Photos', report:'≡ Report', config:'⚙ Config', exportJpeg:'Export',
@@ -1625,6 +1637,7 @@ const I18N = {
     commentsRoomLabel: n => `Room · ${n} comment${n!==1?'s':''}`,
     commentsProjectLabel: n => `Project · ${n} comment${n!==1?'s':''}`,
     commentsObsTitle:'Observations',
+    artwork3DBack:'← Back', artwork3DOf:(i,n)=>`${i} of ${n}`,
     shareRoom:'Share room', shareRoomTitle:'Share room — 3D view', shareRoomLink:'Room link',
     shareRoomGenerate:'Generate link', shareRoomRevoke:'Revoke', shareRoomCopy:'Copy link',
     shareRoomCopied:'Link copied', shareRoomRegenerate:'Regenerate (revokes current)',
@@ -1845,6 +1858,11 @@ function App() {
   const [libPreview,      setLibPreview]      = useState(null); // {photo, x, y}
   const [pinnedPreview,   setPinnedPreview]   = useState(null); // {photo, x, y} — click-pinned
   const [fullscreenPhoto, setFullscreenPhoto] = useState(null); // {photo, index}
+  const [artwork3D,        setArtwork3D]       = useState(null); // {photo,item,boardId,roomPhotos,idx,fromGrid?}
+  const artwork3DRef       = useRef(null);
+  const [artwork3DGrid,    setArtwork3DGrid]   = useState(null); // {item,boardId} | null
+  const artwork3DGridRef   = useRef(null);
+  const [artwork3DComments,setArtwork3DComments] = useState([]);
   const previewTimer    = useRef(null);
   const thumbClickTimer  = useRef(null);
   const cascadeStepRef   = useRef(0);
@@ -2024,6 +2042,8 @@ function App() {
   const roomVboxRef     = useRef({x:-50,y:-50,w:1300,h:900});
   const importRoomRef        = useRef(null);
   const reset3DViewRef       = useRef(null);
+  const savedCam3DRef        = useRef(null); // {pos,target,wasWalk} — saved on artwork3D open
+  const restoreCam3DRef      = useRef(null); // function set by 3D useEffect to restore camera
   const snapshot3DRef        = useRef(null);
   const toggle3DPersonRef    = useRef(null);
   const togglePersonMoveRef  = useRef(null);
@@ -2055,6 +2075,8 @@ function App() {
   useEffect(() => { allBoardItemsRef.current = allBoardItems; }, [allBoardItems]);
   useEffect(() => { boardsRef.current        = boards;        }, [boards]);
   useEffect(() => { roomViewRef.current      = roomView;      }, [roomView]);
+  useEffect(() => { artwork3DRef.current     = artwork3D;     }, [artwork3D]);
+  useEffect(() => { artwork3DGridRef.current = artwork3DGrid; }, [artwork3DGrid]);
   useEffect(() => {
     if (!ctxMenu) return;
     const close = () => setCtxMenu(null);
@@ -2639,6 +2661,17 @@ function App() {
         tweenCamera(initCamPos, initTarget, 800);
       };
 
+      // Restore camera after closing artwork3D view
+      restoreCam3DRef.current = () => {
+        const saved = savedCam3DRef.current;
+        if (!saved) return;
+        tweenCamera(saved.pos, saved.target, 600);
+        savedCam3DRef.current = null;
+        if (saved.wasWalk && toggle3DWalkRef.current) {
+          setTimeout(() => { if (toggle3DWalkRef.current) toggle3DWalkRef.current(); }, 650);
+        }
+      };
+
       // Snapshot: render current frame → upload as photo to the library
       snapshot3DRef.current = async () => {
         renderer.render(scene, camera);
@@ -2783,7 +2816,7 @@ function App() {
             let rowY = it.y;
             layout.rows.forEach(row => {
               row.ids.forEach((photoId, c) => {
-                if (photoId) renderItems.push({ photoId, x: it.x + c*(layout.cellW+layout.gapPx), y: rowY, w: layout.cellW });
+                if (photoId) renderItems.push({ photoId, x: it.x + c*(layout.cellW+layout.gapPx), y: rowY, w: layout.cellW, gridItemId: it.id });
               });
               rowY += row.h + layout.gapPx;
             });
@@ -2833,7 +2866,8 @@ function App() {
           pMesh.userData.itemId  = item.id;
           pMesh.userData.boardId = boardId;
           pMesh.userData.photoId = item.photoId;
-          pMesh.userData.zoneId  = item.zoneId || null;
+          pMesh.userData.zoneId     = item.zoneId || null;
+          pMesh.userData.gridItemId = item.gridItemId || null;
           faceGroup.add(pMesh);
           walkTargets.push(pMesh);
           itemMeshes.push(pMesh);
@@ -3285,6 +3319,7 @@ function App() {
       // ── Walk mode ─────────────────────────────────────────────
       let walkActive = false;
       let walkYaw = 0, walkPitch = 0;
+      let cancelYawTween = null;
       const walkKeys = {};
       const EYE_H = 160;
       const WALK_SPEED = span * 0.005;
@@ -3369,11 +3404,29 @@ function App() {
           const dest = hit.point.clone().addScaledVector(normal, 200);
           dest.y = EYE_H;
           const lookTarget = hit.point.clone();
-          tweenCamera(dest, lookTarget, 500, () => {
-            const lookDir = hit.point.clone().sub(dest).normalize();
-            walkYaw = Math.atan2(lookDir.x, -lookDir.z);
-            walkPitch = 0;
-          });
+          // Smooth yaw/pitch transition parallel to the position tween — no direct assignment at end
+          const lookDir = hit.point.clone().sub(dest).normalize();
+          const targetYaw = Math.atan2(lookDir.x, -lookDir.z);
+          const startYaw = walkYaw;
+          let dyaw = (targetYaw - startYaw) % (Math.PI * 2);
+          if (dyaw > Math.PI) dyaw -= Math.PI * 2;
+          if (dyaw < -Math.PI) dyaw += Math.PI * 2;
+          const startPitch = walkPitch;
+          const SNAP_DURATION = 500;
+          const t0 = performance.now();
+          if (cancelYawTween) cancelYawTween();
+          let yawRaf;
+          const stepYaw = now => {
+            const t = Math.min((now - t0) / SNAP_DURATION, 1);
+            const ease = t < 0.5 ? 2*t*t : -1+(4-2*t)*t;
+            walkYaw   = startYaw + dyaw * ease;
+            walkPitch = startPitch * (1 - ease);
+            if (t < 1) { yawRaf = requestAnimationFrame(stepYaw); }
+            else { cancelYawTween = null; }
+          };
+          yawRaf = requestAnimationFrame(stepYaw);
+          cancelYawTween = () => { cancelAnimationFrame(yawRaf); cancelYawTween = null; };
+          tweenCamera(dest, lookTarget, SNAP_DURATION);
         } else {
           requestLock();
         }
@@ -3535,6 +3588,86 @@ function App() {
       canvas.addEventListener('click', onPasteClick);
       controls._pasteClickCleanup = () => { canvas.removeEventListener('click', onPasteClick); };
 
+      // Shared helper: open artwork3D or grid3D from a photo mesh's userData
+      const openFrom3D = ud => {
+        if (!ud.photoId) return;
+        if (cancelYawTween) cancelYawTween();
+        savedCam3DRef.current = { pos: camera.position.clone(), target: controls.target.clone(), wasWalk: walkActive };
+        if (ud.gridItemId) {
+          const gridItem = (allBoardItemsRef.current[ud.boardId] || []).find(i => i.id === ud.gridItemId);
+          if (gridItem) {
+            setArtwork3DGrid({ item: gridItem, boardId: ud.boardId });
+            artwork3DGridRef.current = { item: gridItem, boardId: ud.boardId };
+          }
+        } else {
+          const room_ = roomRef.current;
+          const allBI = allBoardItemsRef.current;
+          const photoMap_ = {};
+          photosRef.current.forEach(p => { photoMap_[p.id] = p; });
+          const roomPhotos = [];
+          const seen = new Set();
+          const addBoard = bid => {
+            if (!bid) return;
+            (allBI[bid] || []).filter(i => i.photoId && (!i.type || i.type === 'photo')).forEach(itm => {
+              const k = `${bid}:${itm.id}`;
+              if (seen.has(k)) return; seen.add(k);
+              const ph = photoMap_[itm.photoId];
+              if (ph) roomPhotos.push({ photo: ph, item: itm, boardId: bid });
+            });
+          };
+          (room_?.walls || []).forEach(w => { addBoard(w.boardId); addBoard(w.boardIdBack); });
+          (room_?.blocks || []).forEach(b => ['n','s','e','w','t'].forEach(f => addBoard(b.faces?.[f]?.boardId)));
+          const photo = photoMap_[ud.photoId];
+          const itm = (allBI[ud.boardId] || []).find(i => i.id === ud.itemId);
+          const idx = roomPhotos.findIndex(rp => rp.item.id === ud.itemId && rp.boardId === ud.boardId);
+          const val = { photo, item: itm, boardId: ud.boardId, roomPhotos, idx: Math.max(0, idx) };
+          setArtwork3D(val); artwork3DRef.current = val;
+        }
+      };
+
+      // Left-click in orbit mode (no clipboard) → open artwork/grid view
+      // Uses pointerdown+pointerup instead of click because OrbitControls swallows the click event
+      const itemRay = new THREE.Raycaster();
+      let clickStartXY = null;
+      const onMouseDown3DItem = e => { if (e.button === 0) clickStartXY = { x: e.clientX, y: e.clientY }; };
+      const onItemClick3D = e => {
+        if (e.button !== 0) return;
+        if (walkActive) return;
+        if (clipboardRef.current.length) return;
+        if (!clickStartXY) return;
+        const dx = e.clientX - clickStartXY.x, dy = e.clientY - clickStartXY.y;
+        clickStartXY = null;
+        if (dx*dx + dy*dy > 16) return; // drag (>4 px) — let OrbitControls handle it
+        const rect = canvas.getBoundingClientRect();
+        const mx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        const my = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        itemRay.setFromCamera(new THREE.Vector2(mx, my), camera);
+        const hits = itemRay.intersectObjects(itemMeshes);
+        if (hits.length === 0) return;
+        openFrom3D(hits[0].object.userData);
+      };
+
+      // Double-click in any mode → open artwork/grid view (walk mode: bypasses snap behaviour)
+      const onDblClick3D = e => {
+        if (clipboardRef.current.length) return;
+        const rect = canvas.getBoundingClientRect();
+        const mx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        const my = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        itemRay.setFromCamera(new THREE.Vector2(mx, my), camera);
+        const hits = itemRay.intersectObjects(itemMeshes);
+        if (!hits.length) return;
+        openFrom3D(hits[0].object.userData);
+      };
+
+      canvas.addEventListener('pointerdown', onMouseDown3DItem);
+      canvas.addEventListener('pointerup', onItemClick3D);
+      canvas.addEventListener('dblclick', onDblClick3D);
+      controls._itemClickCleanup = () => {
+        canvas.removeEventListener('pointerdown', onMouseDown3DItem);
+        canvas.removeEventListener('pointerup', onItemClick3D);
+        canvas.removeEventListener('dblclick', onDblClick3D);
+      };
+
       // Set initial cursor if clipboard already has content on 3D mount
       if (clipboardRef.current.length > 0) canvas.style.cursor = 'crosshair';
 
@@ -3645,6 +3778,8 @@ function App() {
       if (controls?._ctxCleanup)        controls._ctxCleanup();
       if (controls?._hoverCleanup)      controls._hoverCleanup();
       if (controls?._pasteClickCleanup) controls._pasteClickCleanup();
+      if (controls?._itemClickCleanup)  controls._itemClickCleanup();
+      restoreCam3DRef.current = null;
       if (controls) controls.dispose();
       if (renderer) {
         renderer._threeScene?.traverse(obj => {
@@ -4832,6 +4967,12 @@ ${rows}
     }
   };
 
+  const closeArtwork3D = () => {
+    setArtwork3D(null); artwork3DRef.current = null;
+    setArtwork3DGrid(null); artwork3DGridRef.current = null;
+    if (restoreCam3DRef.current) restoreCam3DRef.current();
+  };
+
   const confirmImport = async mode => {
     if (!importState) return;
     const { tempId, existingProject } = importState;
@@ -5300,6 +5441,44 @@ ${rows}
         }
         return;
       }
+      // artwork3D (Nivel 2 — foto individual desde el 3D)
+      if (artwork3DRef.current) {
+        if (e.key === 'Escape') {
+          if (artwork3DGridRef.current) {
+            // Came from grid → back to Nivel 1
+            setArtwork3D(null); artwork3DRef.current = null;
+          } else {
+            setArtwork3D(null); artwork3DRef.current = null;
+            setArtwork3DGrid(null); artwork3DGridRef.current = null;
+            if (restoreCam3DRef.current) restoreCam3DRef.current();
+          }
+          return;
+        }
+        if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+          setArtwork3D(prev => {
+            if (!prev) return null;
+            const rp = prev.roomPhotos;
+            if (!rp.length) return prev;
+            const n = e.key === 'ArrowRight' ? prev.idx + 1 : prev.idx - 1;
+            const next = ((n % rp.length) + rp.length) % rp.length;
+            const { photo, item, boardId } = rp[next];
+            const val = { ...prev, photo, item, boardId, idx: next };
+            artwork3DRef.current = val;
+            return val;
+          });
+          return;
+        }
+        return;
+      }
+      // artwork3DGrid (Nivel 1 — grid completo)
+      if (artwork3DGridRef.current) {
+        if (e.key === 'Escape') {
+          setArtwork3DGrid(null); artwork3DGridRef.current = null;
+          if (restoreCam3DRef.current) restoreCam3DRef.current();
+          return;
+        }
+        return;
+      }
       if (presentation && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) {
         const allIt = itemsRef.current;
         const sortedZones = allIt.filter(i => i.type === 'zone').sort((a, b) => a.x - b.x)
@@ -5335,6 +5514,18 @@ ${rows}
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [fullscreenPhoto, presentation, pinnedPreview, fillPlaceholder, replaceMode, sectCtxMenu, framePainter]);
+
+  useEffect(() => {
+    if (!artwork3D?.photo?.id) { setArtwork3DComments([]); return; }
+    const pid_ = pidRef.current;
+    if (!pid_) return;
+    let cancelled = false;
+    fetch(`/api/projects/${pid_}/comments?entityType=photo&entityId=${artwork3D.photo.id}`)
+      .then(r => r.ok ? r.json() : [])
+      .then(data => { if (!cancelled) setArtwork3DComments((data||[]).filter(c=>c.status==='published'&&c.visibility==='public')); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [artwork3D?.photo?.id]);
 
   const deletePhoto = id => {
     const placedBoards = boards.filter(b =>
@@ -8288,7 +8479,7 @@ ${rows}
                 grid: (!shareRole && bid && roomView === 'board') ? (
                   <button key="grid" className={`tbtn${showGrid?' on':''}`}
                     data-tooltip={t('gridToggle')}
-                    onClick={e => { if (gridDropOpen) { setGridDropOpen(false); return; } setAvatarOpen(false); setThemeOpen(false); setSettingsOpen(false); const r = e.currentTarget.getBoundingClientRect(); setGridDropPos({ right: window.innerWidth - r.right, top: r.bottom + 4 }); setGridDropOpen(true); }}>
+                    onClick={e => { if (gridDropOpen) { setGridDropOpen(false); return; } setExportDropOpen(false); setAvatarOpen(false); setThemeOpen(false); setSettingsOpen(false); const r = e.currentTarget.getBoundingClientRect(); setGridDropPos({ right: window.innerWidth - r.right, top: r.bottom + 4 }); setGridDropOpen(true); }}>
                     <SvgGrid/>{showGrid && snapGrid && <span className="tbtn-dot"/>}
                   </button>) : null,
                 present: (!shareRole && !tmplEditMode && bid && roomView === 'board') ? (
@@ -8363,7 +8554,7 @@ ${rows}
           </>
         )}
         <div className="theme-picker" onClick={e => e.stopPropagation()}>
-          <button className="btn theme-btn" onClick={() => setThemeOpen(o => !o)} data-tooltip={t('ttPrefs')}>
+          <button className="btn theme-btn" onClick={() => { if (!themeOpen) { setAvatarOpen(false); setSettingsOpen(false); } setThemeOpen(o => !o); }} data-tooltip={t('ttPrefs')}>
             <span className="theme-dot" style={{background: THEMES[theme]?.acc}}/>
           </button>
           {themeOpen && (
@@ -8391,7 +8582,7 @@ ${rows}
                 </div>
               ))}
               <div className="pref-divider"/>
-              <div className="theme-opt" onClick={() => { setThemeOpen(false); setAvatarOpen(false); setSettingsOpen(true); }}>
+              <div className="theme-opt" onClick={() => { setThemeOpen(false); setAvatarOpen(false); setExportDropOpen(false); setGridDropOpen(false); setSettingsOpen(true); }}>
                 <span style={{fontSize:13,lineHeight:1}}>⚙</span>
                 <span className="theme-opt-label">{t('settingsOpen')}</span>
               </div>
@@ -8400,7 +8591,7 @@ ${rows}
         </div>
         {authUser && (
           <div className="avatar-picker" onClick={e => e.stopPropagation()}>
-            <button className="avatar-btn" onClick={() => { if (!avatarOpen) { setThemeOpen(false); setSettingsOpen(false); } setAvatarOpen(o => !o); }} data-tooltip={authUser.username}>
+            <button className="avatar-btn" onClick={() => { setThemeOpen(false); setSettingsOpen(false); setAvatarOpen(o => !o); }} data-tooltip={authUser.username}>
               {authUser.username[0].toUpperCase()}
             </button>
             {avatarOpen && (
@@ -10681,6 +10872,98 @@ ${rows}
           <div className="lib-preview-name">{pinnedPreview.photo.name}</div>
         </div>
       )}
+
+      {/* ── Artwork 3D — Nivel 1: grid completo ── */}
+      {artwork3DGrid && !artwork3D && (() => {
+        const { item: grid, boardId: gridBoardId } = artwork3DGrid;
+        const board = boards.find(b => b.id === gridBoardId);
+        const layout = calcGridLayout(grid, photos, board?.dpi || 150, board?.units || 'cm');
+        const scaleX = (window.innerWidth  - 80) / grid.w;
+        const scaleY = (window.innerHeight - 80) / layout.totalH;
+        const scale  = Math.min(scaleX, scaleY, 1);
+        const photoMap_ = {};
+        photos.forEach(p => { photoMap_[p.id] = p; });
+        return (
+          <div className="fullscreen-overlay" style={{cursor:'default'}} onClick={closeArtwork3D}>
+            <button className="artwork3d-back" onClick={e => { e.stopPropagation(); closeArtwork3D(); }}>{t('artwork3DBack')}</button>
+            <div style={{display:'flex',flexDirection:'column',gap:layout.gapPx*scale}} onClick={e => e.stopPropagation()}>
+              {layout.rows.map((row, ri) => (
+                <div key={ri} style={{display:'flex',gap:layout.gapPx*scale}}>
+                  {row.ids.map((photoId, ci) => {
+                    const p = photoId ? photoMap_[photoId] : null;
+                    const cw = Math.round(layout.cellW * scale);
+                    const ch = Math.round(row.h * scale);
+                    return (
+                      <div key={ci} className="artwork3d-grid-cell" style={{width:cw,height:ch,cursor:p?'pointer':'default'}}
+                        onClick={e => {
+                          if (!p) return;
+                          e.stopPropagation();
+                          const gridPhotos = layout.rows.flatMap(r => r.ids.filter(Boolean).map(pid => photoMap_[pid])).filter(Boolean);
+                          const gridRoomPhotos = gridPhotos.map(gp => ({ photo: gp, item: grid, boardId: gridBoardId }));
+                          const gIdx = gridPhotos.findIndex(gp => gp.id === photoId);
+                          const val = { photo: p, item: grid, boardId: gridBoardId, roomPhotos: gridRoomPhotos, idx: gIdx >= 0 ? gIdx : 0, fromGrid: true };
+                          setArtwork3D(val); artwork3DRef.current = val;
+                        }}>
+                        {p && <img src={`/photos/${pid}/${p.id}`} style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}} />}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── Artwork 3D — Nivel 2: foto individual ── */}
+      {artwork3D && (() => {
+        const { photo, item, boardId: awBid, roomPhotos, idx, fromGrid } = artwork3D;
+        const board = boards.find(b => b.id === awBid);
+        const navigate = delta => {
+          const n = ((idx + delta) % roomPhotos.length + roomPhotos.length) % roomPhotos.length;
+          const { photo: p2, item: it2, boardId: bid2 } = roomPhotos[n];
+          const val = { ...artwork3D, photo: p2, item: it2, boardId: bid2, idx: n };
+          setArtwork3D(val); artwork3DRef.current = val;
+        };
+        const goBack = () => {
+          setArtwork3D(null); artwork3DRef.current = null;
+          if (!fromGrid) {
+            setArtwork3DGrid(null); artwork3DGridRef.current = null;
+            if (restoreCam3DRef.current) restoreCam3DRef.current();
+          }
+        };
+        let physDims = null;
+        if (board && item && photo?.w > 0 && photo?.h > 0) {
+          const iw = pxToPhys(item.w, board.dpi, board.units);
+          const ih = pxToPhys(Math.round(item.w * photo.h / photo.w), board.dpi, board.units);
+          if (iw && ih) physDims = `${iw} × ${ih}`;
+        }
+        return (
+          <div className="fullscreen-overlay" onClick={goBack}>
+            <button className="artwork3d-back" onClick={e => { e.stopPropagation(); goBack(); }}>{t('artwork3DBack')}</button>
+            <div className="fullscreen-counter">{t('artwork3DOf', idx + 1, roomPhotos.length)}</div>
+            <img className="fullscreen-img" src={`/photos/${pid}/${photo.id}`} alt={item?.label || photo.name} onClick={e => e.stopPropagation()} />
+            {roomPhotos.length > 1 && <button className="fullscreen-nav prev" onClick={e => { e.stopPropagation(); navigate(-1); }}>‹</button>}
+            {roomPhotos.length > 1 && <button className="fullscreen-nav next" onClick={e => { e.stopPropagation(); navigate(1); }}>›</button>}
+            <div className="fullscreen-meta" onClick={e => e.stopPropagation()}>
+              <div className="fullscreen-info-left">
+                {item?.label && <div className="artwork3d-label">{item.label}</div>}
+                {physDims && <div className="artwork3d-dims">{physDims}</div>}
+                {artwork3DComments.length > 0 && (
+                  <div className="artwork3d-comments">
+                    {artwork3DComments.map(c => (
+                      <div key={c.id} className="artwork3d-comment">
+                        <div className="artwork3d-comment-author">{c.authorName}</div>
+                        <div className="artwork3d-comment-text">{c.text}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {fullscreenPhoto && (() => {
         const { photo, index } = fullscreenPhoto;
