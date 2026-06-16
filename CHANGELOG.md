@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.22.6] — 2026-06-16
+
+### Corregido
+- **Navegación ← → antes de que los datos de sala estén listos — solución robusta:** el indicador booleano `room3DReady` no era suficiente: el usuario podía pulsar las flechas antes de que el estado React se actualizara y ver zonas o grids vacíos. Fix: `initScene` crea una `Promise` que resuelve cuando `boardItemsMap` y `room3DPhotoMapRef` están completamente poblados; `navigateToRoomItem` es ahora `async` y hace `await` de esa Promise antes de ejecutar cualquier navegación. Las flechas ← → ya no se deshabilitan visualmente — el usuario puede pulsarlas en cualquier momento y la navegación simplemente espera a que los datos estén disponibles.
+
 ## [1.22.5] — 2026-06-15
 
 ### Nuevo

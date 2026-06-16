@@ -1864,7 +1864,7 @@ function App() {
   const artwork3DGridRef   = useRef(null);
   const [artwork3DZone,    setArtwork3DZone]   = useState(null); // {zone,members,photoMap,boardId,wallColor,roomPhotos,roomIdx}
   const [room3DReady,      setRoom3DReady]      = useState(false);
-  const room3DReadyRef     = useRef(false);
+  const room3DReadyPromiseRef = useRef(null);
   const [artwork3DComments,setArtwork3DComments] = useState([]);
   const previewTimer    = useRef(null);
   const thumbClickTimer  = useRef(null);
@@ -2571,7 +2571,10 @@ function App() {
     let animId, renderer, controls;
     let cancelled = false;
     let cancelTween = null;
-    setRoom3DReady(false); room3DReadyRef.current = false;
+    setRoom3DReady(false);
+    let resolveRoom3DReady;
+    const room3DReadyPromise = new Promise(resolve => { resolveRoom3DReady = resolve; });
+    room3DReadyPromiseRef.current = room3DReadyPromise;
 
     const initScene = async () => {
       const [boardItemsResults, photosData] = await Promise.all([
@@ -3805,7 +3808,7 @@ function App() {
 
       scene._threeScene = scene; // keep ref for dispose
       renderer._threeScene = scene;
-      setRoom3DReady(true); room3DReadyRef.current = true;
+      setRoom3DReady(true); resolveRoom3DReady();
     };
 
     initScene();
@@ -5021,8 +5024,8 @@ ${rows}
     setArtwork3DZone(null);
     if (restoreCam3DRef.current) restoreCam3DRef.current();
   };
-  const navigateToRoomItem = (roomPhotos, n) => {
-    if (!room3DReadyRef.current) return;
+  const navigateToRoomItem = async (roomPhotos, n) => {
+    await room3DReadyPromiseRef.current;
     const next = roomPhotos[n];
     if (!next) return;
     setArtwork3D(null); artwork3DRef.current = null;
@@ -10960,8 +10963,8 @@ ${rows}
                 </div>
             }
             {gridRP && gridRP.length > 1 && <>
-              <button className="fullscreen-nav prev" style={{color:tc,opacity:room3DReady?1:0.4,pointerEvents:room3DReady?'auto':'none'}} onClick={e => { e.stopPropagation(); const n=((gridRoomIdx-1+gridRP.length)%gridRP.length); navigateToRoomItem(gridRP,n); }}>‹</button>
-              <button className="fullscreen-nav next" style={{color:tc,opacity:room3DReady?1:0.4,pointerEvents:room3DReady?'auto':'none'}} onClick={e => { e.stopPropagation(); const n=(gridRoomIdx+1)%gridRP.length; navigateToRoomItem(gridRP,n); }}>›</button>
+              <button className="fullscreen-nav prev" style={{color:tc}} onClick={e => { e.stopPropagation(); const n=((gridRoomIdx-1+gridRP.length)%gridRP.length); navigateToRoomItem(gridRP,n); }}>‹</button>
+              <button className="fullscreen-nav next" style={{color:tc}} onClick={e => { e.stopPropagation(); const n=(gridRoomIdx+1)%gridRP.length; navigateToRoomItem(gridRP,n); }}>›</button>
             </>}
           </div>
         );
@@ -11012,8 +11015,8 @@ ${rows}
                 </div>
             }
             {zoneRP && zoneRP.length > 1 && <>
-              <button className="fullscreen-nav prev" style={{color:tc,opacity:room3DReady?1:0.4,pointerEvents:room3DReady?'auto':'none'}} onClick={e => { e.stopPropagation(); const n=((zoneRoomIdx-1+zoneRP.length)%zoneRP.length); navigateToRoomItem(zoneRP,n); }}>‹</button>
-              <button className="fullscreen-nav next" style={{color:tc,opacity:room3DReady?1:0.4,pointerEvents:room3DReady?'auto':'none'}} onClick={e => { e.stopPropagation(); const n=(zoneRoomIdx+1)%zoneRP.length; navigateToRoomItem(zoneRP,n); }}>›</button>
+              <button className="fullscreen-nav prev" style={{color:tc}} onClick={e => { e.stopPropagation(); const n=((zoneRoomIdx-1+zoneRP.length)%zoneRP.length); navigateToRoomItem(zoneRP,n); }}>‹</button>
+              <button className="fullscreen-nav next" style={{color:tc}} onClick={e => { e.stopPropagation(); const n=(zoneRoomIdx+1)%zoneRP.length; navigateToRoomItem(zoneRP,n); }}>›</button>
             </>}
           </div>
         );
@@ -11107,8 +11110,8 @@ ${rows}
                   return <img style={imgStyle} src={`/photos/${pid}/${photo.id}`} alt={item?.label || photo.name} onClick={e => e.stopPropagation()} />;
                 })()
             }
-            {navCount > 1 && <button className="fullscreen-nav prev" style={{color:tc,opacity:room3DReady?1:0.4,pointerEvents:room3DReady?'auto':'none'}} onClick={e => { e.stopPropagation(); navigate(-1); }}>‹</button>}
-            {navCount > 1 && <button className="fullscreen-nav next" style={{color:tc,opacity:room3DReady?1:0.4,pointerEvents:room3DReady?'auto':'none'}} onClick={e => { e.stopPropagation(); navigate(1); }}>›</button>}
+            {navCount > 1 && <button className="fullscreen-nav prev" style={{color:tc}} onClick={e => { e.stopPropagation(); navigate(-1); }}>‹</button>}
+            {navCount > 1 && <button className="fullscreen-nav next" style={{color:tc}} onClick={e => { e.stopPropagation(); navigate(1); }}>›</button>}
             <div className="fullscreen-meta" onClick={e => e.stopPropagation()}>
               <div className="fullscreen-info-left">
                 {item?.label && <div className="artwork3d-label" style={{color:tc}}>{item.label}</div>}

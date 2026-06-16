@@ -1,6 +1,6 @@
 {
-  "version": "1.22.5",
+  "version": "1.22.6",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-06-15",
-  "notes": "Tema Le Gras (azul-gris plata, inspirado en la primera fotografía de la historia). Fix: menús contextuales ya no se cortan al borde del viewport."
+  "releaseDate": "2026-06-16",
+  "notes": "Fix: navegación de obra en sala 3D ahora usa Promise para garantizar que los datos estén listos antes de navegar."
 }

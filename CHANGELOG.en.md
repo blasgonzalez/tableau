@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.22.6] — 2026-06-16
+
+### Fixed
+- **← → navigation before room data is ready — robust solution:** the boolean `room3DReady` flag was not sufficient: the user could press the arrows before the React state update cycle completed and see empty zones or grids. Fix: `initScene` creates a `Promise` that resolves once `boardItemsMap` and `room3DPhotoMapRef` are fully populated; `navigateToRoomItem` is now `async` and `await`s that Promise before executing any navigation. The ← → arrows are no longer visually disabled — the user can press them at any time and navigation simply waits for data to be available.
+
 ## [1.22.5] — 2026-06-15
 
 ### New
