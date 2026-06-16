@@ -1,6 +1,6 @@
 {
-  "version": "1.22.7",
+  "version": "1.22.8",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-06-16",
-  "notes": "Panel de Backups en Ajustes: configura intervalo, retención, lista, backup manual y restauración desde el propio interfaz."
+  "notes": "Correcciones en la vista de obra: teclas ← → en zona/grid, posicionamiento correcto de fotos en vista de zona."
 }

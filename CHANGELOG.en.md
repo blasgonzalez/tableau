@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.8] — 2026-06-16
+
+### Fixed
+- **Artwork view — ← → keyboard keys did not await the 3D scene Promise:** the keyboard handler was not `async` and updated state directly via `setArtwork3D()`, bypassing `navigateToRoomItem`. This caused keyboard navigation to skip the `await room3DReadyPromiseRef.current` that the on-screen arrow buttons correctly respect, resulting in broken transitions if the 3D scene had not yet finished loading. Fix: the handler is now `async`; ← → keys read `artwork3DRef.current` and call `await navigateToRoomItem(rp, n)`.
+- **Artwork view — ← → keys inactive at level 1 (zone/grid):** the keyboard handler only checked `artwork3DRef.current` (level 2 — individual photo); when room navigation landed on a zone or grid (level 1), ← → did nothing even though the on-screen buttons worked. Fix: `artwork3DZoneRef` is introduced following the existing state+ref dual pattern; the handler merges the level-1 block for zone and grid, responds to ← → in both cases with `await navigateToRoomItem`, and also fixes Escape from zone drilldown (now returns to level 1 overview instead of closing the entire artwork view).
+- **Zone view — incorrect member positions:** the zone overview used `zone.w/zone.h` (the canvas frame) as the bounding box for scaling and positioning; if members did not start exactly at the `(zone.x, zone.y)` corner of the frame, they appeared shifted. Fix: scale and container are now computed from the **real member bounding box** (`minX/minY/maxX/maxY` in zone-relative coordinates), and each member is positioned by subtracting `minX/minY` from its relative offset, ensuring the layout fills the viewport correctly. Additionally, photo item heights were falling back to `m.w` when `m.h` is `undefined`; fix: the actual height is now derived from `photoMap` via `Math.round(m.w * photo.h / photo.w)`, correcting both the vertical bounding box and each member's rendered height.
+
 ## [1.22.7] — 2026-06-16
 
 ### New
@@ -8,9 +15,6 @@
 ### Improved
 - **Help tips in Settings:** the "Help tips" section (formerly "Getting-started guides") now only appears when the user has dismissed at least one tip — if there is nothing to reset, the option is not shown. An explanatory description is added. Both the label and the behaviour are clearer.
 - **"Backup now" button:** shows a loading state (`…`) while the backup is in progress and is disabled to prevent simultaneous runs. The backup list refreshes automatically on completion.
-
-### Fixed
-- **Artwork view — ← → keyboard keys did not await the 3D scene Promise:** the keyboard handler was not `async` and updated state directly via `setArtwork3D()`, bypassing `navigateToRoomItem`. This caused keyboard navigation to skip the `await room3DReadyPromiseRef.current` that the on-screen arrow buttons correctly respect, resulting in broken transitions if the 3D scene had not yet finished loading. Fix: the handler is now `async`; ← → keys read `artwork3DRef.current` and call `await navigateToRoomItem(rp, n)`.
 
 ## [1.22.6] — 2026-06-16
 

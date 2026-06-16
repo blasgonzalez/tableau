@@ -1875,6 +1875,7 @@ function App() {
   const [artwork3DGrid,    setArtwork3DGrid]   = useState(null); // {item,boardId,wallColor,roomPhotos,roomIdx}
   const artwork3DGridRef   = useRef(null);
   const [artwork3DZone,    setArtwork3DZone]   = useState(null); // {zone,members,photoMap,boardId,wallColor,roomPhotos,roomIdx}
+  const artwork3DZoneRef   = useRef(null);
   const [room3DReady,      setRoom3DReady]      = useState(false);
   const room3DReadyPromiseRef = useRef(null);
   const [artwork3DComments,setArtwork3DComments] = useState([]);
@@ -2096,6 +2097,7 @@ function App() {
   useEffect(() => { roomViewRef.current      = roomView;      }, [roomView]);
   useEffect(() => { artwork3DRef.current     = artwork3D;     }, [artwork3D]);
   useEffect(() => { artwork3DGridRef.current = artwork3DGrid; }, [artwork3DGrid]);
+  useEffect(() => { artwork3DZoneRef.current = artwork3DZone; }, [artwork3DZone]);
   useEffect(() => {
     if (!ctxMenu) return;
     const close = () => setCtxMenu(null);
@@ -3685,7 +3687,8 @@ function App() {
           if (zoneItem) {
             const members = (allBI[ud.boardId] || []).filter(i => i.zoneId === ud.zoneId);
             const roomIdx = roomPhotos.findIndex(rp => rp.item.id === ud.zoneId && rp.boardId === ud.boardId);
-            setArtwork3DZone({ zone: zoneItem, members, photoMap: photoMap_, boardId: ud.boardId, wallColor: wc, roomPhotos, roomIdx: Math.max(0, roomIdx) });
+            const valZ3 = { zone: zoneItem, members, photoMap: photoMap_, boardId: ud.boardId, wallColor: wc, roomPhotos, roomIdx: Math.max(0, roomIdx) };
+            setArtwork3DZone(valZ3); artwork3DZoneRef.current = valZ3;
             return;
           }
         }
@@ -5042,7 +5045,7 @@ ${rows}
   const closeArtwork3D = () => {
     setArtwork3D(null); artwork3DRef.current = null;
     setArtwork3DGrid(null); artwork3DGridRef.current = null;
-    setArtwork3DZone(null);
+    setArtwork3DZone(null); artwork3DZoneRef.current = null;
     if (restoreCam3DRef.current) restoreCam3DRef.current();
   };
   const navigateToRoomItem = async (roomPhotos, n) => {
@@ -5050,7 +5053,7 @@ ${rows}
     const next = roomPhotos[n];
     if (!next) return;
     setArtwork3D(null); artwork3DRef.current = null;
-    setArtwork3DZone(null);
+    setArtwork3DZone(null); artwork3DZoneRef.current = null;
     setArtwork3DGrid(null); artwork3DGridRef.current = null;
     if (next.itemType === 'grid') {
       const val = { item: next.item, boardId: next.boardId, wallColor: next.wallColor, roomPhotos, roomIdx: n };
@@ -5058,7 +5061,8 @@ ${rows}
     } else if (next.itemType === 'zone') {
       const members = next.members || [];
       const pm = room3DPhotoMapRef.current;
-      setArtwork3DZone({ zone: next.item, members, photoMap: pm, boardId: next.boardId, wallColor: next.wallColor, roomPhotos, roomIdx: n });
+      const valZ = { zone: next.item, members, photoMap: pm, boardId: next.boardId, wallColor: next.wallColor, roomPhotos, roomIdx: n };
+      setArtwork3DZone(valZ); artwork3DZoneRef.current = valZ;
     } else {
       const val = { photo: next.photo || null, item: next.item, boardId: next.boardId, wallColor: next.wallColor, roomPhotos, idx: n };
       setArtwork3D(val); artwork3DRef.current = val;
@@ -5536,12 +5540,13 @@ ${rows}
       // artwork3D (Nivel 2 — foto individual desde el 3D)
       if (artwork3DRef.current) {
         if (e.key === 'Escape') {
-          if (artwork3DGridRef.current) {
-            // Came from grid → back to Nivel 1
+          if (artwork3DGridRef.current || artwork3DZoneRef.current) {
+            // Came from grid or zone → back to Nivel 1
             setArtwork3D(null); artwork3DRef.current = null;
           } else {
             setArtwork3D(null); artwork3DRef.current = null;
             setArtwork3DGrid(null); artwork3DGridRef.current = null;
+            setArtwork3DZone(null); artwork3DZoneRef.current = null;
             if (restoreCam3DRef.current) restoreCam3DRef.current();
           }
           return;
@@ -5558,11 +5563,22 @@ ${rows}
         }
         return;
       }
-      // artwork3DGrid (Nivel 1 — grid completo)
-      if (artwork3DGridRef.current) {
+      // Nivel 1 — zona o grid (sin drilldown activo)
+      if (artwork3DZoneRef.current || artwork3DGridRef.current) {
         if (e.key === 'Escape') {
+          setArtwork3DZone(null); artwork3DZoneRef.current = null;
           setArtwork3DGrid(null); artwork3DGridRef.current = null;
           if (restoreCam3DRef.current) restoreCam3DRef.current();
+          return;
+        }
+        if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+          const cur = artwork3DZoneRef.current || artwork3DGridRef.current;
+          if (!cur) return;
+          const rp = cur.roomPhotos;
+          if (!rp || !rp.length) return;
+          const delta = e.key === 'ArrowRight' ? 1 : -1;
+          const n = ((cur.roomIdx + delta) % rp.length + rp.length) % rp.length;
+          await navigateToRoomItem(rp, n);
           return;
         }
         return;
@@ -10993,11 +11009,17 @@ ${rows}
         const wc = zoneWC || '#d0c8bc';
         const tc = bgContrast(wc);
         const tcMuted = tc === '#ffffff' ? 'rgba(255,255,255,.45)' : 'rgba(0,0,0,.45)';
-        // Scale zone members to viewport using zone's bounding box
-        const zH = zone.h || 320;
-        const scaleX = (window.innerWidth  - 100) / zone.w;
-        const scaleY = (window.innerHeight - 100) / zH;
-        const scale  = Math.min(scaleX, scaleY, 1);
+        // Scale zone members to viewport using real member bounding box
+        const vpW = window.innerWidth  - 100;
+        const vpH = window.innerHeight - 100;
+        const memberH = m => { const ph = zpm?.[m.photoId]; return m.h ?? (ph ? Math.round(m.w * ph.h / ph.w) : m.w); };
+        const minX = members.length ? Math.min(...members.map(m => m.x - zone.x)) : 0;
+        const minY = members.length ? Math.min(...members.map(m => m.y - zone.y)) : 0;
+        const maxX = members.length ? Math.max(...members.map(m => m.x - zone.x + m.w)) : zone.w;
+        const maxY = members.length ? Math.max(...members.map(m => m.y - zone.y + memberH(m))) : (zone.h || 320);
+        const bbW  = Math.max(1, maxX - minX);
+        const bbH  = Math.max(1, maxY - minY);
+        const scale = Math.min(vpW / bbW, vpH / bbH, 1);
         const board = boards.find(b => b.id === zoneBid);
         return (
           <div className="fullscreen-overlay" style={{background:wc,cursor:'default'}} onClick={closeArtwork3D}>
@@ -11006,12 +11028,12 @@ ${rows}
             {zoneRP && zoneRP.length > 1 && <div className="fullscreen-counter" style={{color:tcMuted}}>{t('artwork3DOf', (zoneRoomIdx||0)+1, zoneRP.length)}</div>}
             {!room3DReady
               ? <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8}}><div className="splash-dots"><span style={{background:tc}}></span><span style={{background:tc}}></span><span style={{background:tc}}></span></div><div style={{fontSize:11,color:tcMuted,letterSpacing:.5}}>{t('room3DLoading')}</div></div>
-              : <div style={{position:'relative',width:Math.round(zone.w*scale),height:Math.round(zH*scale)}} onClick={e => e.stopPropagation()}>
+              : <div style={{position:'relative',width:Math.round(bbW*scale),height:Math.round(bbH*scale)}} onClick={e => e.stopPropagation()}>
                   {members.map(member => {
-                    const relX = (member.x - zone.x) * scale;
-                    const relY = (member.y - zone.y) * scale;
+                    const relX = (member.x - zone.x - minX) * scale;
+                    const relY = (member.y - zone.y - minY) * scale;
                     const mW = Math.round(member.w * scale);
-                    const mH = Math.round((member.h || member.w * (member.type === 'text' ? 0.5 : 1)) * scale);
+                    const mH = Math.round((member.type === 'text' ? (member.h || member.w * 0.5) : memberH(member)) * scale);
                     const isText = member.type === 'text';
                     const mp = !isText ? zpm?.[member.photoId] : null;
                     if (!isText && !mp) return null;
@@ -11066,7 +11088,7 @@ ${rows}
           setArtwork3D(null); artwork3DRef.current = null;
           if (fromZone) { /* artwork3DZone still set — shows zone overview */ }
           else if (fromGrid) { /* artwork3DGrid still set — shows grid */ }
-          else { setArtwork3DGrid(null); artwork3DGridRef.current = null; setArtwork3DZone(null); if (restoreCam3DRef.current) restoreCam3DRef.current(); }
+          else { setArtwork3DGrid(null); artwork3DGridRef.current = null; setArtwork3DZone(null); artwork3DZoneRef.current = null; if (restoreCam3DRef.current) restoreCam3DRef.current(); }
         };
         // Physical dimensions (owner only)
         let physDims = null;

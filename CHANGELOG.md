@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.8] — 2026-06-16
+
+### Corregido
+- **Vista de obra — teclas ← → no esperaban el Promise de la escena 3D:** el handler de teclado no era `async` y actualizaba el estado directamente con `setArtwork3D()`, sin pasar por `navigateToRoomItem`. Esto hacía que la navegación con teclado se saltara el `await room3DReadyPromiseRef.current` que los botones de flecha en pantalla sí respetan, causando transiciones rotas si la escena 3D aún no había terminado de cargar. Fix: el handler es ahora `async`; las teclas ← → leen `artwork3DRef.current` y llaman `await navigateToRoomItem(rp, n)`.
+- **Vista de obra — teclas ← → inactivas en nivel 1 (zona/grid):** el handler de teclado solo comprobaba `artwork3DRef.current` (nivel 2 — foto individual); cuando la navegación de sala llegaba a una zona o grid (nivel 1), las teclas ← → no hacían nada, aunque los botones en pantalla sí funcionaban. Fix: se introduce `artwork3DZoneRef` siguiendo el patrón estado+ref dual ya existente; el handler unifica el bloque de nivel 1 para zona y grid, responde a ← → en ambos casos con `await navigateToRoomItem`, y corrige también Escape desde drilldown de zona (vuelve al nivel 1 en lugar de cerrar la vista entera).
+- **Vista de zona — posiciones incorrectas de los members:** la vista de conjunto de zona usaba `zone.w/zone.h` (el frame del canvas) como bounding box para escalar y posicionar; si los members no empezaban exactamente en la esquina `(zone.x, zone.y)` del frame, aparecían desplazados. Fix: el scale y el contenedor se calculan ahora sobre el **bounding box real** de los members (`minX/minY/maxX/maxY` en coordenadas relativas a la zona), y cada member se posiciona restando `minX/minY` al offset relativo, garantizando que el conjunto llena el viewport correctamente. Adicionalmente, la altura de los items de foto se calculaba con `m.w` como fallback cuando `m.h` es `undefined`; fix: la altura real se obtiene de `photoMap` via `Math.round(m.w * photo.h / photo.w)`, corrigiendo tanto el bounding box vertical como la posición de cada member.
+
 ## [1.22.7] — 2026-06-16
 
 ### Nuevo
@@ -8,9 +15,6 @@
 ### Mejorado
 - **Consejos de ayuda en Ajustes:** la sección "Consejos de ayuda" (antes "Guías de inicio") ahora solo aparece cuando el usuario ha descartado algún consejo — si no hay nada que reiniciar, la opción no se muestra. Se añade descripción explicativa del botón. Tanto el texto como el comportamiento son más claros.
 - **Botón "Hacer backup ahora":** muestra estado de carga (`…`) mientras el backup está en progreso y se deshabilita para evitar lanzamientos simultáneos. La lista de backups se refresca automáticamente al completarse.
-
-### Corregido
-- **Vista de obra — teclas ← → no esperaban el Promise de la escena 3D:** el handler de teclado no era `async` y actualizaba el estado directamente con `setArtwork3D()`, sin pasar por `navigateToRoomItem`. Esto hacía que la navegación con teclado se saltara el `await room3DReadyPromiseRef.current` que los botones de flecha en pantalla sí respetan, causando transiciones rotas si la escena 3D aún no había terminado de cargar. Fix: el handler es ahora `async`; las teclas ← → leen `artwork3DRef.current` y llaman `await navigateToRoomItem(rp, n)`.
 
 ## [1.22.6] — 2026-06-16
 
