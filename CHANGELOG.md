@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.22.7] — 2026-06-16
+
+### Nuevo
+- **Panel de Backups en Ajustes (modo local):** nueva pestaña "Backups" en el modal de Ajustes, disponible solo en modo local (sin autenticación). Permite activar/desactivar los backups automáticos, configurar el intervalo (en horas) y el número máximo de copias a retener. Muestra la lista de backups existentes con fecha y tamaño. Desde la lista se puede lanzar un backup manual, eliminar una copia individual o restaurar el sistema desde cualquier backup (con confirmación y snapshot automático previo a la restauración). La configuración se guarda en `data/config.json` y persiste entre reinicios del servidor, sobrescribiendo las variables de entorno.
+
+### Mejorado
+- **Consejos de ayuda en Ajustes:** la sección "Consejos de ayuda" (antes "Guías de inicio") ahora solo aparece cuando el usuario ha descartado algún consejo — si no hay nada que reiniciar, la opción no se muestra. Se añade descripción explicativa del botón. Tanto el texto como el comportamiento son más claros.
+- **Botón "Hacer backup ahora":** muestra estado de carga (`…`) mientras el backup está en progreso y se deshabilita para evitar lanzamientos simultáneos. La lista de backups se refresca automáticamente al completarse.
+
 ## [1.22.6] — 2026-06-16
 
 ### Corregido

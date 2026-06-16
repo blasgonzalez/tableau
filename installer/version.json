@@ -1,6 +1,6 @@
 {
-  "version": "1.22.6",
+  "version": "1.22.7",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-06-16",
-  "notes": "Fix: navegación de obra en sala 3D ahora usa Promise para garantizar que los datos estén listos antes de navegar."
+  "notes": "Panel de Backups en Ajustes: configura intervalo, retención, lista, backup manual y restauración desde el propio interfaz."
 }

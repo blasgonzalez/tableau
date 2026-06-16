@@ -47,7 +47,11 @@
       "Bash(git -C \"d:/blasg/Pictures/Proyectos/tableau\" diff HEAD -- .claude/settings.json)",
       "Bash(git -C \"d:/blasg/Pictures/Proyectos/tableau\" add CHANGELOG.md CHANGELOG.en.md installer/tableau.iss installer/version.json package.json package-lock.json public/index.html .claude/settings.json)",
       "Bash(git -C d:/blasg/Pictures/Proyectos/tableau commit -m ' *)",
-      "Bash(npm version *)"
+      "Bash(npm version *)",
+      "Bash(git -C \"d:/blasg/Pictures/Proyectos/tableau\" rm --cached backups/ -r)",
+      "Bash(git -C \"d:/blasg/Pictures/Proyectos/tableau\" ls-files backups/)",
+      "Bash(git -C \"d:/blasg/Pictures/Proyectos/tableau\" status --short)",
+      "Bash(git -C \"d:/blasg/Pictures/Proyectos/tableau\" log --oneline -5)"
     ],
     "additionalDirectories": [
       "d:\\blasg\\Pictures\\Proyectos\\tableau\\fonts"

@@ -82,12 +82,32 @@ const IMAGE_EXT      = new Set(['.jpg', '.jpeg', '.png', '.webp', '.tiff', '.tif
 // TABLEAU_BACKUP_DIR           → carpeta destino (defecto: backups/ junto a data/)
 // TABLEAU_BACKUP_INTERVAL_MIN  → intervalo en minutos (defecto: 60)
 // TABLEAU_BACKUP_MAX_KEEP      → máximo de ZIPs a retener (defecto: 10)
-const BACKUP_ENABLED      = process.env.TABLEAU_BACKUP !== 'false';
-const BACKUP_DIR          = process.env.TABLEAU_BACKUP_DIR
+// Estos valores son los defaults de env; config.json los sobreescribe en runtime.
+const BACKUP_DIR = process.env.TABLEAU_BACKUP_DIR
   || path.join(path.dirname(DATA_DIR), 'backups');
-const BACKUP_INTERVAL_MIN = parseInt(process.env.TABLEAU_BACKUP_INTERVAL_MIN || '60');
-const BACKUP_INTERVAL_MS  = BACKUP_INTERVAL_MIN * 60_000;
-const BACKUP_MAX_KEEP     = parseInt(process.env.TABLEAU_BACKUP_MAX_KEEP || '10');
+let backupEnabled     = process.env.TABLEAU_BACKUP !== 'false';
+let backupIntervalMin = parseInt(process.env.TABLEAU_BACKUP_INTERVAL_MIN || '60');
+let backupMaxKeep     = parseInt(process.env.TABLEAU_BACKUP_MAX_KEEP     || '10');
+
+const CONFIG_FILE = path.join(DATA_DIR, 'config.json');
+function loadConfig() {
+  try {
+    const cfg = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
+    if (cfg.backup) {
+      if (typeof cfg.backup.enabled     === 'boolean') backupEnabled     = cfg.backup.enabled;
+      if (typeof cfg.backup.intervalMin === 'number')  backupIntervalMin = cfg.backup.intervalMin;
+      if (typeof cfg.backup.maxKeep     === 'number')  backupMaxKeep     = cfg.backup.maxKeep;
+    }
+  } catch (_) {}
+}
+function saveConfig(patch) {
+  let cfg = {};
+  try { cfg = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8')); } catch (_) {}
+  Object.assign(cfg, patch);
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+  fs.writeFileSync(CONFIG_FILE, JSON.stringify(cfg, null, 2));
+}
+loadConfig();
 
 // ── File system helpers ──────────────────────────────────────────────────────
 const ensureDir = d => { if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true }); };
@@ -216,7 +236,7 @@ function rotateBackups() {
     const files = fs.readdirSync(BACKUP_DIR)
       .filter(f => /^tableau_\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}\.zip$/.test(f))
       .sort();
-    for (let i = 0; i < files.length - BACKUP_MAX_KEEP; i++) {
+    for (let i = 0; i < files.length - backupMaxKeep; i++) {
       fs.unlinkSync(path.join(BACKUP_DIR, files[i]));
       console.log(`[backup] Rotado (eliminado): ${files[i]}`);
     }
@@ -225,8 +245,8 @@ function rotateBackups() {
   }
 }
 
-async function runBackup() {
-  if (!BACKUP_ENABLED) return { ok: false, skipped: true };
+async function runBackup(force = false) {
+  if (!force && !backupEnabled) return { ok: false, skipped: true };
   try { ensureDir(BACKUP_DIR); } catch (e) {
     console.error(`[backup] No se puede crear directorio: ${e.message}`);
     return { ok: false, error: e.message };
@@ -1050,11 +1070,20 @@ async function checkForUpdates() {
   } catch {}
 }
 
+let backupTimer = null;
+function startBackupTimer() {
+  if (backupTimer) { clearInterval(backupTimer); backupTimer = null; }
+  if (backupEnabled) {
+    backupTimer = setInterval(runBackup, backupIntervalMin * 60_000);
+    backupTimer.unref();
+  }
+}
+
 if (require.main === module || process.env.PASSENGER_USE_FEEDBACK_FD) {
   checkForUpdates();
   setInterval(checkForUpdates, 24 * 60 * 60 * 1000);
   runStartupPurge();
-  if (BACKUP_ENABLED) setInterval(runBackup, BACKUP_INTERVAL_MS).unref();
+  startBackupTimer();
 }
 
 // ── Link preview ─────────────────────────────────────────────────────────────
@@ -1127,8 +1156,76 @@ app.get('/api/backup/list', requireBackupAccess, (_req, res) => {
         const { size, mtime } = fs.statSync(path.join(BACKUP_DIR, f));
         return { name: f, size, created: mtime };
       });
-    res.json({ dir: BACKUP_DIR, interval_min: BACKUP_INTERVAL_MIN, max_keep: BACKUP_MAX_KEEP, files });
+    res.json({ dir: BACKUP_DIR, interval_min: backupIntervalMin, max_keep: backupMaxKeep, files });
   } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.delete('/api/backup/:filename', requireBackupAccess, (req, res) => {
+  const { filename } = req.params;
+  if (!/^tableau_\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}\.zip$/.test(filename))
+    return res.status(400).json({ error: 'Nombre de archivo inválido' });
+  try {
+    fs.unlinkSync(path.join(BACKUP_DIR, filename));
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(404).json({ error: e.message });
+  }
+});
+
+// Config (local mode only)
+app.get('/api/config', (req, res) => {
+  if (AUTH_ENABLED) return res.status(403).json({ error: 'No disponible en modo servidor' });
+  res.json({ backup: { enabled: backupEnabled, intervalMin: backupIntervalMin, maxKeep: backupMaxKeep } });
+});
+
+app.patch('/api/config', express.json(), (req, res) => {
+  if (AUTH_ENABLED) return res.status(403).json({ error: 'No disponible en modo servidor' });
+  const { backup } = req.body || {};
+  if (backup) {
+    if (typeof backup.enabled     === 'boolean') backupEnabled     = backup.enabled;
+    if (typeof backup.intervalMin === 'number' && backup.intervalMin >= 5)  backupIntervalMin = backup.intervalMin;
+    if (typeof backup.maxKeep     === 'number' && backup.maxKeep     >= 1)  backupMaxKeep     = backup.maxKeep;
+    saveConfig({ backup: { enabled: backupEnabled, intervalMin: backupIntervalMin, maxKeep: backupMaxKeep } });
+    startBackupTimer();
+  }
+  res.json({ backup: { enabled: backupEnabled, intervalMin: backupIntervalMin, maxKeep: backupMaxKeep } });
+});
+
+app.post('/api/restore/:filename', async (req, res) => {
+  if (AUTH_ENABLED) return res.status(403).json({ error: 'No disponible en modo servidor' });
+  const { filename } = req.params;
+  if (!/^tableau_\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}\.zip$/.test(filename))
+    return res.status(400).json({ error: 'Nombre de archivo inválido' });
+  const zipPath = path.join(BACKUP_DIR, filename);
+  if (!fs.existsSync(zipPath)) return res.status(404).json({ error: 'Archivo no encontrado' });
+  // Pre-restore snapshot (preserve current state; ignore failure)
+  await runBackup(true).catch(() => {});
+  try {
+    const zip = new AdmZip(zipPath);
+    // Preserve config.json across restore
+    let savedConfig = null;
+    try { savedConfig = fs.readFileSync(CONFIG_FILE, 'utf8'); } catch (_) {}
+    // Clear DATA_DIR
+    for (const entry of fs.readdirSync(DATA_DIR)) {
+      fs.rmSync(path.join(DATA_DIR, entry), { recursive: true, force: true });
+    }
+    // Extract entries under data/ prefix
+    for (const entry of zip.getEntries()) {
+      if (entry.isDirectory) continue;
+      if (!entry.entryName.startsWith('data/')) continue;
+      const rel  = entry.entryName.slice('data/'.length);
+      const dest = path.join(DATA_DIR, rel);
+      fs.mkdirSync(path.dirname(dest), { recursive: true });
+      fs.writeFileSync(dest, entry.getData());
+    }
+    // Re-write config.json (not restored from backup)
+    if (savedConfig) fs.writeFileSync(CONFIG_FILE, savedConfig);
+    console.log(`[restore] OK ← ${filename}`);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error(`[restore] Error: ${e.message}`);
     res.status(500).json({ error: e.message });
   }
 });

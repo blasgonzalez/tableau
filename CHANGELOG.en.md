@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.22.7] — 2026-06-16
+
+### New
+- **Backup panel in Settings (local mode):** new "Backups" tab in the Settings modal, available only in local mode (no authentication). Allows enabling/disabling automatic backups, configuring the interval (in hours) and maximum number of copies to retain. Shows the list of existing backups with date and size. From the list you can trigger a manual backup, delete an individual copy, or restore the system from any backup (with confirmation and an automatic snapshot before restore). Configuration is saved to `data/config.json` and persists across server restarts, overriding environment variables.
+
+### Improved
+- **Help tips in Settings:** the "Help tips" section (formerly "Getting-started guides") now only appears when the user has dismissed at least one tip — if there is nothing to reset, the option is not shown. An explanatory description is added. Both the label and the behaviour are clearer.
+- **"Backup now" button:** shows a loading state (`…`) while the backup is in progress and is disabled to prevent simultaneous runs. The backup list refreshes automatically on completion.
+
 ## [1.22.6] — 2026-06-16
 
 ### Fixed

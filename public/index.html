@@ -1362,7 +1362,13 @@ const I18N = {
     menu3DCopy:'Copiar', menu3DCut:'Cortar', menu3DCopyZone:'Copiar zona', menu3DCutZone:'Cortar zona',
     wall3DEdit:'✏️ Editar tablero', wall3DPaste:'📋 Pegar aquí', wall3DCreate:'+ Crear tablero', wall3DCreatePaste:'📋 Crear y pegar', wall3DNoBoard:'Cara sin tablero',
     acctChangePass:'Cambiar clave', acctAdmin:'⚙ Admin', acctSignOut:'Cerrar sesión',
-    settingsTitle:'Ajustes', settingsOpen:'Ajustes…', settingsGeneral:'General', settingsProject:'Proyecto',
+    settingsTitle:'Ajustes', settingsOpen:'Ajustes…', settingsGeneral:'General', settingsProject:'Proyecto', settingsBackup:'Backups',
+    backupEnabled:'Backups automáticos', backupInterval:'Intervalo (horas)', backupMaxKeep:'Copias a retener',
+    backupNow:'Hacer backup ahora', backupNowOk:'Backup completado', backupNowErr:'Error al hacer backup',
+    backupRestoreBtn:'Restaurar', backupRestoreConfirm:(f)=>`¿Restaurar desde "${f}"? Se hará un backup del estado actual antes de restaurar. La aplicación se recargará.`,
+    backupDeleteConfirm:(f)=>`¿Eliminar el backup "${f}"?`,
+    backupRestoreOk:'Restauración completada. Recargando…', backupRestoreErr:'Error al restaurar',
+    backupEmpty:'No hay backups todavía.', backupSaved:'Configuración guardada',
     projNotes:'Notas', projNotesPh:'Descripción, referencias, ideas…',
     boardDefaults:'Tableros nuevos', defFrame:'Marco por defecto', projSaved:'Guardado',
     obLibTitle:'Tu biblioteca está vacía', obLibSub:'Empieza añadiendo algunas fotos.',
@@ -1376,7 +1382,7 @@ const I18N = {
     obHelpClose:'Entendido',
     obBoardHint:'Arrastra una foto desde la biblioteca para colocarla en el tablero.',
     obDontShowAgain:'No mostrar de nuevo', obDismissTitle:'Ocultar esta guía',
-    obSettingsTitle:'Guías de inicio', obResetBtn:'↺ Reiniciar guías de inicio', obResetDone:'Guías de inicio reiniciadas',
+    obSettingsTitle:'Consejos de ayuda', obSettingsDesc:'Los mensajes de ayuda que aparecen la primera vez que usas cada función.', obResetBtn:'↺ Volver a mostrar los consejos de ayuda', obResetDone:'Los consejos de ayuda se mostrarán de nuevo',
     ttPresent:'Presentación', ttMemory:'Memoria del proyecto', ttVersions:'Versiones (snapshots)', ttExport:'Exportar tablero', ttPrefs:'Preferencias', ttShortcuts:'Atajos de teclado (F1)',
     ttGroup:'Agrupar', ttUngroup:'Desagrupar', ttCopy:'Copiar (Ctrl+C)', ttCut:'Cortar (Ctrl+X)', ttDuplicate:'Duplicar (Ctrl+D)', ttDelete:'Eliminar (Supr)', ttSwap:'Intercambiar posición', ttCopyBoard:'Copiar a nuevo tablero',
     ttZoomIn:'Acercar (Ctrl++)', ttZoomOut:'Alejar (Ctrl+−)', ttZoomFit:'Ajustar vista (Ctrl+0)',
@@ -1590,7 +1596,13 @@ const I18N = {
     menu3DCopy:'Copy', menu3DCut:'Cut', menu3DCopyZone:'Copy zone', menu3DCutZone:'Cut zone',
     wall3DEdit:'✏️ Edit board', wall3DPaste:'📋 Paste here', wall3DCreate:'+ Create board', wall3DCreatePaste:'📋 Create & paste', wall3DNoBoard:'No board on this face',
     acctChangePass:'Change password', acctAdmin:'⚙ Admin', acctSignOut:'Sign out',
-    settingsTitle:'Settings', settingsOpen:'Settings…', settingsGeneral:'General', settingsProject:'Project',
+    settingsTitle:'Settings', settingsOpen:'Settings…', settingsGeneral:'General', settingsProject:'Project', settingsBackup:'Backups',
+    backupEnabled:'Automatic backups', backupInterval:'Interval (hours)', backupMaxKeep:'Copies to keep',
+    backupNow:'Backup now', backupNowOk:'Backup completed', backupNowErr:'Backup failed',
+    backupRestoreBtn:'Restore', backupRestoreConfirm:(f)=>`Restore from "${f}"? A backup of the current state will be made first. The app will reload.`,
+    backupDeleteConfirm:(f)=>`Delete backup "${f}"?`,
+    backupRestoreOk:'Restore completed. Reloading…', backupRestoreErr:'Restore failed',
+    backupEmpty:'No backups yet.', backupSaved:'Settings saved',
     projNotes:'Notes', projNotesPh:'Description, references, ideas…',
     boardDefaults:'New boards', defFrame:'Default frame', projSaved:'Saved',
     obLibTitle:'Your library is empty', obLibSub:'Start by adding some photos.',
@@ -1604,7 +1616,7 @@ const I18N = {
     obHelpClose:'Got it',
     obBoardHint:'Drag a photo from the library to place it on the board.',
     obDontShowAgain:"Don't show again", obDismissTitle:'Hide this guide',
-    obSettingsTitle:'Getting-started guides', obResetBtn:'↺ Reset getting-started guides', obResetDone:'Getting-started guides reset',
+    obSettingsTitle:'Help tips', obSettingsDesc:'The help messages that appear the first time you use each feature.', obResetBtn:'↺ Show help tips again', obResetDone:'Help tips will be shown again',
     ttPresent:'Presentation', ttMemory:'Project report', ttVersions:'Board versions (snapshots)', ttExport:'Export board', ttPrefs:'Preferences', ttShortcuts:'Keyboard shortcuts (F1)',
     ttGroup:'Group', ttUngroup:'Ungroup', ttCopy:'Copy (Ctrl+C)', ttCut:'Cut (Ctrl+X)', ttDuplicate:'Duplicate (Ctrl+D)', ttDelete:'Delete (Del)', ttSwap:'Swap positions', ttCopyBoard:'Copy to new board',
     ttZoomIn:'Zoom in (Ctrl++)', ttZoomOut:'Zoom out (Ctrl+−)', ttZoomFit:'Fit view (Ctrl+0)',
@@ -1926,6 +1938,8 @@ function App() {
   const [settingsProjName,  setSettingsProjName]  = useState('');
   const [settingsProjNotes, setSettingsProjNotes] = useState('');
   const [settingsProjDefs,  setSettingsProjDefs]  = useState({ units:'cm', dpi:150, defaultFrame:0, exportFmt:'jpg' });
+  const [backupConfig,  setBackupConfig]  = useState(null); // {enabled, intervalMin, maxKeep}
+  const [backupList,    setBackupList]    = useState(null); // [{name, size, created}]
   const [appVersion,    setAppVersion]    = useState('');
   const [updateInfo,    setUpdateInfo]    = useState(null);
   const [updateDismissed, setUpdateDismissed] = useState(false);
@@ -2522,6 +2536,13 @@ function App() {
     if (!settingsOpen || settingsTab !== 'project' || !pid || !authMode || shareRole) return;
     api.get(`/api/projects/${pid}/share`).then(d => setSettingsShare(d)).catch(() => setSettingsShare(null));
   }, [settingsOpen, settingsTab, pid]);
+
+  // Load backup config + list when BACKUPS tab is active
+  useEffect(() => {
+    if (!settingsOpen || settingsTab !== 'backup' || authMode) return;
+    api.get('/api/config').then(d => setBackupConfig(d.backup)).catch(() => {});
+    api.get('/api/backup/list').then(d => setBackupList(d.files || [])).catch(() => setBackupList([]));
+  }, [settingsOpen, settingsTab]);
 
   useEffect(() => {
     if (!pid) {
@@ -13227,7 +13248,7 @@ ${rows}
             <div style={{display:'flex',flex:1,overflow:'hidden',minHeight:0}}>
               {/* Sidebar */}
               <div style={{width:120,flexShrink:0,borderRight:'1px solid var(--border)',padding:'8px 0',display:'flex',flexDirection:'column',gap:1}}>
-                {[['general', t('settingsGeneral')], ...(pid ? [['project', t('settingsProject')]] : [])].map(([tab, label]) => (
+                {[['general', t('settingsGeneral')], ...(pid ? [['project', t('settingsProject')]] : []), ...(!authMode ? [['backup', t('settingsBackup')]] : [])].map(([tab, label]) => (
                   <button key={tab}
                     style={{padding:'9px 14px',background:settingsTab===tab?'var(--acc-faint)':'transparent',border:'none',borderLeft:settingsTab===tab?'2px solid var(--acc)':'2px solid transparent',color:settingsTab===tab?'var(--acc)':'var(--sub)',textAlign:'left',cursor:'pointer',fontSize:11,letterSpacing:.3,fontFamily:"'IBM Plex Mono',monospace",transition:'all .12s'}}
                     onClick={() => { setSettingsTab(tab); localStorage.setItem('tb-settings-tab', tab); }}>
@@ -13273,13 +13294,16 @@ ${rows}
                         </div>
                       </div>
                     )}
+                    {(onboarding.board.dismissed || onboarding.lib.dismissed || onboarding.helpDismissed) && (
                     <div>
-                      <div className="pref-sec-hd" style={{padding:'0 0 6px'}}>{t('obSettingsTitle')}</div>
+                      <div className="pref-sec-hd" style={{padding:'0 0 4px'}}>{t('obSettingsTitle')}</div>
+                      <div style={{fontSize:11,color:'var(--fg-dim)',marginBottom:8,lineHeight:1.4}}>{t('obSettingsDesc')}</div>
                       <button className="theme-opt" style={{width:'100%',border:'none',cursor:'pointer',justifyContent:'flex-start',gap:8}}
                         onClick={() => { resetOnboarding(); showToast(t('obResetDone')); }}>
                         <span style={{fontSize:12,lineHeight:1,color:'var(--acc-dim)'}}>{t('obResetBtn')}</span>
                       </button>
                     </div>
+                    )}
                     <div className="pref-divider" style={{margin:0}}/>
                     <div className="pref-about" style={{padding:0}}>
                       <span className="pref-about-name">Tableau{appVersion ? ` · v${appVersion}` : ''}</span>
@@ -13387,6 +13411,99 @@ ${rows}
                         }
                       </div>
                     )}
+                  </>;
+                })()}
+
+                {settingsTab === 'backup' && !authMode && (() => {
+                  const inpSt = { width:70, padding:'5px 8px', background:'var(--input)', border:'1px solid var(--border)', borderRadius:4, color:'var(--text)', fontSize:12, outline:'none', boxSizing:'border-box' };
+                  const saveBackupConfig = async patch => {
+                    const next = { ...backupConfig, ...patch };
+                    setBackupConfig(next);
+                    await api.patch('/api/config', { backup: next });
+                    showToast(t('backupSaved'));
+                  };
+                  const [backupRunning, setBackupRunning] = React.useState(false);
+                  const doBackupNow = async () => {
+                    setBackupRunning(true);
+                    const r = await api.post('/api/backup', {}).catch(() => null);
+                    setBackupRunning(false);
+                    if (r?.ok) {
+                      showToast(t('backupNowOk'));
+                      api.get('/api/backup/list').then(d => setBackupList(d.files || [])).catch(() => {});
+                    } else {
+                      showToast(t('backupNowErr'));
+                    }
+                  };
+                  const doDelete = async name => {
+                    if (!window.confirm(t('backupDeleteConfirm', name))) return;
+                    await api.delete(`/api/backup/${name}`).catch(() => {});
+                    setBackupList(bl => bl.filter(b => b.name !== name));
+                  };
+                  const doRestore = async name => {
+                    if (!window.confirm(t('backupRestoreConfirm', name))) return;
+                    const r = await api.post(`/api/restore/${name}`, {}).catch(() => null);
+                    if (r?.ok) {
+                      showToast(t('backupRestoreOk'));
+                      setTimeout(() => window.location.reload(), 1200);
+                    } else {
+                      showToast(t('backupRestoreErr'));
+                    }
+                  };
+                  const fmtSize = b => b.size >= 1024*1024 ? `${(b.size/1024/1024).toFixed(1)} MB` : `${Math.round(b.size/1024)} KB`;
+                  const fmtDate = b => new Date(b.created).toLocaleString();
+                  return <>
+                    {/* Config */}
+                    <div>
+                      <div className="pref-sec-hd" style={{padding:'0 0 10px'}}>{t('backupEnabled')}</div>
+                      <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                        <div className={`theme-opt${backupConfig?.enabled ? ' active' : ''}`}
+                          onClick={() => saveBackupConfig({ enabled: !backupConfig?.enabled })}>
+                          <span style={{fontSize:13}}>{backupConfig?.enabled ? '◉' : '○'}</span>
+                          <span className="theme-opt-label">{t('backupEnabled')}</span>
+                          {backupConfig?.enabled && <span style={{color:'var(--acc)',fontSize:11}}>✓</span>}
+                        </div>
+                        {backupConfig?.enabled && (
+                          <div style={{display:'grid',gridTemplateColumns:'auto 1fr',gap:'8px 12px',alignItems:'center',paddingLeft:4}}>
+                            <span style={{fontSize:11,color:'var(--sub)'}}>{t('backupInterval')}</span>
+                            <input type="number" min={1} max={168} value={Math.round((backupConfig?.intervalMin||60)/60)} style={inpSt}
+                              onChange={e => setBackupConfig(c => ({...c, intervalMin: (parseInt(e.target.value)||1)*60}))}
+                              onBlur={e => saveBackupConfig({ intervalMin: (parseInt(e.target.value)||1)*60 })} />
+                            <span style={{fontSize:11,color:'var(--sub)'}}>{t('backupMaxKeep')}</span>
+                            <input type="number" min={1} max={99} value={backupConfig?.maxKeep||10} style={inpSt}
+                              onChange={e => setBackupConfig(c => ({...c, maxKeep: parseInt(e.target.value)||1}))}
+                              onBlur={e => saveBackupConfig({ maxKeep: parseInt(e.target.value)||1 })} />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="pref-divider" style={{margin:0}}/>
+                    {/* Manual backup */}
+                    <div>
+                      <button className="btn acc" style={{fontSize:11,padding:'5px 12px'}} onClick={doBackupNow} disabled={backupRunning}>
+                        {backupRunning ? '…' : t('backupNow')}
+                      </button>
+                    </div>
+                    {/* List */}
+                    <div>
+                      <div className="pref-sec-hd" style={{padding:'0 0 8px'}}>Backups</div>
+                      {backupList === null
+                        ? <span style={{fontSize:11,color:'var(--muted)'}}>…</span>
+                        : backupList.length === 0
+                          ? <span style={{fontSize:11,color:'var(--muted)'}}>{t('backupEmpty')}</span>
+                          : <div style={{display:'flex',flexDirection:'column',gap:4}}>
+                              {backupList.map(b => (
+                                <div key={b.name} style={{display:'flex',alignItems:'center',gap:8,padding:'6px 8px',background:'var(--acc-faint)',borderRadius:4}}>
+                                  <div style={{flex:1,minWidth:0}}>
+                                    <div style={{fontSize:11,color:'var(--text)',fontFamily:"'IBM Plex Mono',monospace",overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{fmtDate(b)}</div>
+                                    <div style={{fontSize:10,color:'var(--muted)'}}>{fmtSize(b)}</div>
+                                  </div>
+                                  <button className="btn" style={{fontSize:10,padding:'3px 8px',whiteSpace:'nowrap'}} onClick={() => doRestore(b.name)}>{t('backupRestoreBtn')}</button>
+                                  <button className="btn" style={{fontSize:10,padding:'3px 8px',whiteSpace:'nowrap',color:'var(--danger,#e06c75)',borderColor:'var(--danger,#e06c75)'}} onClick={() => doDelete(b.name)}>×</button>
+                                </div>
+                              ))}
+                            </div>
+                      }
+                    </div>
                   </>;
                 })()}
               </div>
