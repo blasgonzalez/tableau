@@ -1,5 +1,45 @@
 # Changelog
 
+## [1.22.5] — 2026-06-15
+
+### New
+- **"Le Gras" theme** (renamed from "Oscuro · Ámbar"): completely neutral pure grey palette inspired by the first photograph in history — Niépce's heliograph (1826). No colour tint, pure monochromatic greys. Adjusted --sub (#d0d0d0), --muted (#b8b8b8) and --dim (#606060) for clear readability on dark background.
+- **Artwork view M1 — owner/visitor parity:** the owner now has exactly the same experience as a shared-room visitor in the artwork view. Zones: overview of all members scaled on the wall colour, with drilldown to individual items. Grids: full mosaic view with room ← → arrows. Loose texts: fullscreen view with exact typography and alignment on wall colour. ← → navigation traverses all room-level items (loose photos, zones, grids, texts) sorted by X position.
+- **Artwork view M1 — wall colour background:** all views (individual photo, zone overview, grid) now show the colour of the wall/block where the board is mounted as the background. Control colours (arrows, counter, ← Back button) adapt automatically based on background luminance.
+- **Frames in artwork view:** photos are displayed with their mat and moulding as configured on the board, scaled proportionally to the on-screen display size.
+- **Owner extras in artwork view:** physical dimensions with DPI, board name, and "Edit in board →" button to go directly to the canvas.
+
+### Fixed
+- **Context menus clipped at viewport edge:** right-click menus (canvas items, grids, rooms, vertices, columns, walls) were cut off when appearing near the right or bottom edge of the screen. Fix: the menu renders at cursor position and, after mounting in the DOM, adjusts if its bounding rect overflows the viewport.
+- **Frame panel clipped at viewport edge:** the mat/moulding panel was clipped when the photo was near the edge of the visible area, because it lived inside the `.bitem` element affected by `overflow:hidden` and canvas zoom. Fix: the panel is now mounted outside the canvas wrapper with `position:fixed` and clamped viewport coordinates, matching the Properties modal approach.
+- **Artwork view — ← → arrow navigation for zones, grids and texts (owner and visitor):** `navigateToRoomItem` read `allBoardItemsRef.current` to compute zone members when navigating with arrows; in owner mode this ref was overwritten on 3D entry (with only the room-linked boards) and in visitor mode it was never populated. Fix: zone members are pre-computed when inserting each zone entry into `roomPhotos` inside `openFrom3D`, which already uses the local `boardItemsMap` (always in sync with rendered meshes); `navigateToRoomItem` reads them from `next.members` without relying on any external ref.
+- **Artwork view ← → navigation order:** the `roomPhotos` array was globally sorted by `item.x`, mixing items from different boards and breaking the physical room traversal order. Fix: within `addBoard`, each board's items are sorted by `item.x` before being appended; the `addBoard` call order (walls in sequence → block faces in sequence) determines the order across boards.
+- **Zone and grid empty when navigating with ← → immediately after room loads:** `openFrom3D` and `navigateToRoomItem` used `photosRef.current` (React state) to build the photo map for zones and grids. In the first seconds of a session that ref is empty even though boards are already rendered in 3D, because the project photos async load hadn't yet completed its render cycle. Fix: `initScene` stores its local `photoMap` (built from the API in the same `Promise.all` as board items) in `room3DPhotoMapRef`; both `openFrom3D` and `navigateToRoomItem` now use that ref instead of `photosRef.current`.
+- **Zone and grid empty when navigating very quickly with ← → on entering 3D:** `navigateToRoomItem` could run before `initScene` finished loading data (boardItemsMap + photoMap). Fix: new `room3DReady` state (false on 3D entry, true when `initScene` completes); `navigateToRoomItem` returns early if `!room3DReady`; ← → arrows show at opacity 0.4 with no pointer events while the scene is not yet ready; all three views (photo, zone, grid) display a "Loading…" spinner instead of empty content during that window.
+- **Frame clipped in artwork fullscreen view:** the `box-shadow` simulating mat and moulding extended beyond the viewport because the image reached its `.fullscreen-img` maximum before the frame was added. Fix: the `<img>` receives `maxWidth`/`maxHeight` that subtract `2 × (matD + moldD)` from the available space, shrinking the image enough for the `box-shadow` to fit within the viewport.
+
+## [1.22.4] — 2026-06-15
+
+### Fixed
+- **Photo view — black background instead of wall colour:** individual photos and grid cells in the artwork view were displaying a black background instead of the wall colour of the board they were placed on. Zone and text views already handled this correctly. Fix: the photo view and grid Level 1 view now apply `wallColor` (propagated from `openFrom3D`) as the overlay background, consistent with zone and text views.
+- **Label and indicator contrast on light backgrounds:** the ← Back button, ← → arrows, "X of N" counter, photo labels, and dimension text used a fixed white colour. On light wall backgrounds (beige, cream, white) these were invisible. Fix: all overlay elements now derive their colour via `bgContrast(wallColor)` and use semi-transparent black when the background is light.
+
+## [1.22.3] — 2026-06-15
+
+### New
+- **Artwork navigation redesign (M1):** the ← → navigation now covers ALL room-level elements across all boards, ordered by X position: standalone photos, grids, zones, and texts. Previously it only navigated photos.
+- **Zone view in 3D:** clicking or double-clicking a zone member in the 3D view opens a fullscreen view of the complete zone, with the wall colour as background. All zone items (photos and texts) are rendered to scale with frames. Clicking an item within the zone enters drilldown (← → navigates within the zone).
+- **Text view in 3D:** text items (standalone or as zone drilldown) have their own fullscreen view rendering the text with exact typeface, size, weight, and alignment on the board's wall colour background.
+- **Room nav arrows at Level 1:** grid and zone Level 1 views now show the ← → room navigation arrows with the "X of N" counter, matching the individual photo view.
+
+### Fixed
+- **Artwork view in shared room (?room=TOKEN) — no navigation arrows or grids:** when opening a photo in room visitor mode, the ← → navigation arrows between artworks did not appear and grids could not be opened. Root cause: `openFrom3D` built the navigation array (`roomPhotos`) by reading `allBoardItemsRef`, which is not initialised in room-share mode (it is only populated in owner mode). Fix: `openFrom3D` now uses `boardItemsMap` (a local variable in `initScene`, always in sync with the rendered meshes), which works in both modes.
+
+## [1.22.2] — 2026-06-15
+
+### Fixed
+- **Artwork view in shared room (?room=TOKEN) — no navigation arrows or grids:** when opening a photo in room visitor mode, the ← → navigation arrows between artworks did not appear and grids could not be opened. Root cause: `openFrom3D` built the navigation array (`roomPhotos`) by reading `allBoardItemsRef`, which is not initialised in room-share mode (it is only populated in owner mode). Fix: `openFrom3D` now uses `boardItemsMap` (a local variable in `initScene`, always in sync with the rendered meshes), which works in both modes.
+
 ## [1.22.1] — 2026-06-15
 
 ### Fixed

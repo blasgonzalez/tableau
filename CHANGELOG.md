@@ -1,5 +1,45 @@
 # Changelog
 
+## [1.22.5] — 2026-06-15
+
+### Nuevo
+- **Tema "Le Gras"** (renombrado desde "Oscuro · Ámbar"): paleta completamente neutral de grises puros. Inspirada en la primera fotografía de la historia — el heliograbado de Niépce (1826). Sin tintes de color, grises puros. Ajustados --sub (#d0d0d0), --muted (#b8b8b8) y --dim (#606060) para legibilidad clara sobre fondo oscuro.
+- **Vista de obra M1 — paridad owner/visitante:** el owner tiene ahora exactamente la misma experiencia que el visitante de sala compartida en la vista de obra. Zonas: vista de conjunto con todos los miembros escalados sobre el color de pared, con drilldown a elementos individuales. Grids: vista del mosaico completo con flechas ← → de sala. Textos sueltos: vista fullscreen con tipografía y alineación exactas sobre el color de pared. Navegación ← → recorre todos los elementos del nivel de sala (fotos sueltas, zonas, grids, textos) ordenados por posición X.
+- **Vista de obra M1 — fondo de color de pared:** todas las vistas (foto individual, zona, grid) muestran ahora el color de la pared/bloque donde está ubicado el tablero como fondo. El color de los controles (flechas, contador, botón ← Volver) se adapta automáticamente según la luminancia del fondo.
+- **Marcos en la vista de obra:** las fotos se muestran con su paspartú y moldura configurados en el tablero, escalados proporcionalmente al tamaño de visualización en pantalla.
+- **Extras del owner en la vista de obra:** dimensiones físicas con DPI, nombre del tablero, y botón "Editar en tablero →" para ir directamente al canvas.
+
+### Corregido
+- **Menús contextuales cortados en el borde del viewport:** los menús de clic derecho (elementos del canvas, grids, salas, vértices, columnas, paredes) se cortaban al aparecer cerca del borde derecho o inferior de la pantalla. Fix: el menú se renderiza en la posición del cursor y, tras montarse en el DOM, se ajusta si su bounding rect sobrepasa el viewport.
+- **Panel de marco cortado en el borde del viewport:** el panel de paspartú/moldura se recortaba cuando la foto estaba cerca del borde del área visible, porque el panel vivía dentro del elemento `.bitem` afectado por `overflow:hidden` y el zoom del canvas. Fix: el panel ahora se monta fuera del canvas wrapper con `position:fixed` y coordenadas de viewport (clampeadas), igual que el modal de Propiedades.
+- **Vista de obra — navegación ← → para zonas, grids y textos (owner y visitante):** `navigateToRoomItem` leía `allBoardItemsRef.current` para calcular los miembros de zona al pulsar las flechas; en modo owner ese ref se sobreescribía al entrar en 3D (con solo los tableros enlazados a la sala) y en modo visitante nunca se populaba. Fix: los miembros de zona se pre-calculan al insertar cada zona en `roomPhotos` dentro de `openFrom3D`, que ya usa `boardItemsMap` local (siempre sincronizado con los meshes renderizados); `navigateToRoomItem` los consume desde `next.members` sin depender de ningún ref externo.
+- **Orden de navegación ← → en la vista de obra:** el array `roomPhotos` se ordenaba globalmente por `item.x`, mezclando ítems de distintos tableros y rompiendo el recorrido físico de la sala. Fix: dentro de `addBoard` los ítems de cada tablero se ordenan por `item.x` antes de añadirlos; el orden de llamada a `addBoard` (paredes en orden → caras de bloques en orden) determina el orden entre tableros.
+- **Zona y grid vacíos al navegar con ← → inmediatamente tras cargar la sala:** `openFrom3D` y `navigateToRoomItem` usaban `photosRef.current` (estado React) para construir el photoMap de zonas y grids. En los primeros segundos de sesión ese estado está vacío aunque los tableros ya estén renderizados en 3D, porque la carga de fotos del proyecto (async) no había completado su ciclo de render. Fix: `initScene` almacena su `photoMap` local (construido desde la API en el mismo `Promise.all` que los items de tablero) en `room3DPhotoMapRef`; tanto `openFrom3D` como `navigateToRoomItem` usan ese ref en lugar de `photosRef.current`.
+- **Zona y grid vacíos al navegar muy rápido con ← → al entrar en 3D:** `navigateToRoomItem` podía ejecutarse antes de que `initScene` completara la carga de datos (boardItemsMap + photoMap). Fix: nuevo estado `room3DReady` (false al entrar en 3D, true al finalizar `initScene`); `navigateToRoomItem` retorna inmediatamente si `!room3DReady`; las flechas ← → se muestran en opacity 0.4 y sin eventos de puntero mientras la escena no está lista; las tres vistas (foto, zona, grid) muestran un spinner "Cargando…" en lugar de contenido vacío durante ese período.
+- **Marco cortado en la vista de obra fullscreen:** el `box-shadow` que simula paspartú y moldura sobresalía del viewport porque la imagen alcanzaba el máximo permitido por `.fullscreen-img` antes de añadir el frame. Fix: el `<img>` recibe `maxWidth`/`maxHeight` que restan `2 × (matD + moldD)` del espacio disponible, de modo que la imagen shrinkea lo suficiente para que el `box-shadow` quepa dentro del viewport.
+
+## [1.22.4] — 2026-06-15
+
+### Corregido
+- **Vista de foto — fondo negro en lugar del color de pared:** las fotos individuales y las celdas de grid en vista de obra mostraban fondo negro en lugar del color de la pared donde estaban colocadas. Las vistas de zona y texto ya lo hacían correctamente. Fix: la vista de foto y la vista de grid Level 1 aplican ahora `wallColor` (propagado desde `openFrom3D`) como fondo del overlay, igual que las vistas de zona y texto.
+- **Contraste de etiquetas e indicadores sobre fondos claros:** los botones ← Volver, las flechas ← →, el contador "X de N", las etiquetas de foto y las dimensiones usaban color blanco fijo. Sobre fondos de pared claros (beige, crema, blanco) resultaban invisibles. Fix: todos los elementos overlay calculan ahora su color mediante `bgContrast(wallColor)` y usan negro semitransparente si el fondo es claro.
+
+## [1.22.3] — 2026-06-15
+
+### Nuevo
+- **Rediseño de la navegación de vista de obra (M1):** la navegación ← → recorre ahora TODOS los elementos del nivel de sala de todos los tableros, en orden de posición X: fotos sueltas, grids, zonas y textos. Anteriormente solo navegaba entre fotos.
+- **Vista de zona en 3D:** al hacer clic o doble clic sobre un elemento de una zona en la vista 3D, se abre una vista fullscreen de la zona completa con fondo del color de pared del tablero. Todos los items de la zona (fotos y textos) se renderizan a escala con marcos. Al hacer clic en un item dentro de la zona se entra en el drilldown (← → navega dentro de la zona).
+- **Vista de texto en 3D:** los items de tipo texto (tanto sueltos como los de una zona en drilldown) tienen su propia vista fullscreen con el texto renderizado con la tipografía, tamaño, peso y alineación exactos sobre el color de fondo de la pared del tablero.
+- **Flechas de navegación de sala en Level 1:** las vistas Level 1 (grid y zona) muestran ahora las flechas ← → de navegación de sala, con el contador "X de N", igual que la vista de foto individual.
+
+### Corregido
+- **Vista de obra en sala compartida (?room=TOKEN) — sin flechas de navegación ni grids:** al abrir una foto en modo visitante de sala, las flechas ← → de navegación entre obras no aparecían y los grids no se podían abrir. Causa raíz: `openFrom3D` construía el array de navegación (`roomPhotos`) leyendo `allBoardItemsRef`, que no se inicializa en modo sala compartida (solo se popula en el modo owner). Fix: `openFrom3D` usa ahora `boardItemsMap` (variable local de `initScene`, siempre sincronizada con los meshes renderizados), que funciona en ambos modos.
+
+## [1.22.2] — 2026-06-15
+
+### Corregido
+- **Vista de obra en sala compartida (?room=TOKEN) — sin flechas de navegación ni grids:** al abrir una foto en modo visitante de sala, las flechas ← → de navegación entre obras no aparecían y los grids no se podían abrir. Causa raíz: `openFrom3D` construía el array de navegación (`roomPhotos`) leyendo `allBoardItemsRef`, que no se inicializa en modo sala compartida (solo se popula en el modo owner). Fix: `openFrom3D` usa ahora `boardItemsMap` (variable local de `initScene`, siempre sincronizada con los meshes renderizados), que funciona en ambos modos.
+
 ## [1.22.1] — 2026-06-15
 
 ### Corregido

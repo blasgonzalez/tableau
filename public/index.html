@@ -985,13 +985,13 @@ const { useState, useEffect, useLayoutEffect, useRef, useCallback } = React;
 
 const THEMES = {
   'dark-amber': {
-    label: 'Oscuro · Ámbar',
-    bg: '#0d0c0b', acc: '#c4894a',
+    label: 'Le Gras',
+    bg: '#171717', acc: '#a0a0a0',
     vars: {
-      '--bg':'#0d0c0b','--surf':'#171412','--panel':'#1e1a14','--panel2':'#27211a','--deep':'#110f0c',
-      '--border':'#2e261c','--border2':'#443420',
-      '--acc':'#c4894a','--acc-dim':'#8a5f2e','--acc-faint':'rgba(196,137,74,0.1)',
-      '--text':'#e2d6c2','--sub':'#b6a694','--dim':'#9a8a78','--muted':'#7e7060','--danger':'#c45050',
+      '--bg':'#171717','--bg2':'#1c1c1c','--surf':'#222222','--surf2':'#282828','--panel':'#222222','--panel2':'#2e2e2e','--deep':'#0f0f0f',
+      '--border':'#383838','--border2':'#464646',
+      '--acc':'#a0a0a0','--acc-dim':'#303030','--acc-faint':'rgba(160,160,160,0.1)',
+      '--text':'#e8e8e8','--sub':'#d0d0d0','--muted':'#b8b8b8','--dim':'#606060','--danger':'#c07070',
       '--grid':'rgba(255,255,255,0.07)',
     }
   },
@@ -1420,7 +1420,7 @@ const I18N = {
     commentsRoomLabel: n => `Sala · ${n} comentario${n!==1?'s':''}`,
     commentsProjectLabel: n => `Proyecto · ${n} comentario${n!==1?'s':''}`,
     commentsObsTitle:'Observaciones',
-    artwork3DBack:'← Volver', artwork3DOf:(i,n)=>`${i} de ${n}`,
+    artwork3DBack:'← Volver', artwork3DOf:(i,n)=>`${i} de ${n}`, room3DLoading:'Cargando...',
   },
   en: {
     upload:'↑ Upload', uploadPhotos:'Photos', report:'≡ Report', config:'⚙ Config', exportJpeg:'Export',
@@ -1637,7 +1637,7 @@ const I18N = {
     commentsRoomLabel: n => `Room · ${n} comment${n!==1?'s':''}`,
     commentsProjectLabel: n => `Project · ${n} comment${n!==1?'s':''}`,
     commentsObsTitle:'Observations',
-    artwork3DBack:'← Back', artwork3DOf:(i,n)=>`${i} of ${n}`,
+    artwork3DBack:'← Back', artwork3DOf:(i,n)=>`${i} of ${n}`, room3DLoading:'Loading...',
     shareRoom:'Share room', shareRoomTitle:'Share room — 3D view', shareRoomLink:'Room link',
     shareRoomGenerate:'Generate link', shareRoomRevoke:'Revoke', shareRoomCopy:'Copy link',
     shareRoomCopied:'Link copied', shareRoomRegenerate:'Regenerate (revokes current)',
@@ -1858,10 +1858,13 @@ function App() {
   const [libPreview,      setLibPreview]      = useState(null); // {photo, x, y}
   const [pinnedPreview,   setPinnedPreview]   = useState(null); // {photo, x, y} — click-pinned
   const [fullscreenPhoto, setFullscreenPhoto] = useState(null); // {photo, index}
-  const [artwork3D,        setArtwork3D]       = useState(null); // {photo,item,boardId,roomPhotos,idx,fromGrid?}
+  const [artwork3D,        setArtwork3D]       = useState(null); // {photo,item,boardId,wallColor,roomPhotos,idx,fromGrid?,fromZone?,zoneMembers?,zoneIdx?}
   const artwork3DRef       = useRef(null);
-  const [artwork3DGrid,    setArtwork3DGrid]   = useState(null); // {item,boardId} | null
+  const [artwork3DGrid,    setArtwork3DGrid]   = useState(null); // {item,boardId,wallColor,roomPhotos,roomIdx}
   const artwork3DGridRef   = useRef(null);
+  const [artwork3DZone,    setArtwork3DZone]   = useState(null); // {zone,members,photoMap,boardId,wallColor,roomPhotos,roomIdx}
+  const [room3DReady,      setRoom3DReady]      = useState(false);
+  const room3DReadyRef     = useRef(false);
   const [artwork3DComments,setArtwork3DComments] = useState([]);
   const previewTimer    = useRef(null);
   const thumbClickTimer  = useRef(null);
@@ -1934,6 +1937,7 @@ function App() {
   const [showHelpOverlay, setShowHelpOverlay] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const showShortcutsRef = useRef(false);
+  const ctxMenuRef = useRef(null);
   const [helpDontShow,  setHelpDontShow]  = useState(false);
   const dismissGuide = key => {
     setOnboarding(prev => {
@@ -2022,6 +2026,7 @@ function App() {
   const pidRef          = useRef(null);
   const bidRef          = useRef(null);
   const photosRef       = useRef([]);
+  const room3DPhotoMapRef = useRef({});
   const allBoardItemsRef= useRef({});
   const boardsRef       = useRef([]);
   const uploadSectRef   = useRef(null);
@@ -2083,6 +2088,14 @@ function App() {
     document.addEventListener('pointerdown', close);
     return () => document.removeEventListener('pointerdown', close);
   }, [ctxMenu !== null]);
+  useEffect(() => {
+    if (!ctxMenu) return;
+    const el = ctxMenuRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    if (r.right  > window.innerWidth)  el.style.left = (window.innerWidth  - r.width  - 8) + 'px';
+    if (r.bottom > window.innerHeight) el.style.top  = (window.innerHeight - r.height - 8) + 'px';
+  }, [ctxMenu]);
 
   useEffect(() => {
     if (!projCtxMenu) return;
@@ -2558,6 +2571,7 @@ function App() {
     let animId, renderer, controls;
     let cancelled = false;
     let cancelTween = null;
+    setRoom3DReady(false); room3DReadyRef.current = false;
 
     const initScene = async () => {
       const [boardItemsResults, photosData] = await Promise.all([
@@ -2581,6 +2595,7 @@ function App() {
       boardItemsResults.forEach(({ boardId, items }) => { boardItemsMap[boardId] = items; });
       const photoMap = {};
       (photosData || []).forEach(p => { photoMap[p.id] = p; });
+      room3DPhotoMapRef.current = photoMap;
 
       const canvas = room3DCanvasRef.current;
       if (!canvas) return;
@@ -3588,41 +3603,73 @@ function App() {
       canvas.addEventListener('click', onPasteClick);
       controls._pasteClickCleanup = () => { canvas.removeEventListener('click', onPasteClick); };
 
-      // Shared helper: open artwork3D or grid3D from a photo mesh's userData
+      // Shared helper: open artwork3D / zone / grid view from a photo mesh's userData
       const openFrom3D = ud => {
         if (!ud.photoId) return;
         if (cancelYawTween) cancelYawTween();
         savedCam3DRef.current = { pos: camera.position.clone(), target: controls.target.clone(), wasWalk: walkActive };
-        if (ud.gridItemId) {
-          const gridItem = (allBoardItemsRef.current[ud.boardId] || []).find(i => i.id === ud.gridItemId);
-          if (gridItem) {
-            setArtwork3DGrid({ item: gridItem, boardId: ud.boardId });
-            artwork3DGridRef.current = { item: gridItem, boardId: ud.boardId };
-          }
-        } else {
-          const room_ = roomRef.current;
-          const allBI = allBoardItemsRef.current;
-          const photoMap_ = {};
-          photosRef.current.forEach(p => { photoMap_[p.id] = p; });
-          const roomPhotos = [];
-          const seen = new Set();
-          const addBoard = bid => {
-            if (!bid) return;
-            (allBI[bid] || []).filter(i => i.photoId && (!i.type || i.type === 'photo')).forEach(itm => {
-              const k = `${bid}:${itm.id}`;
-              if (seen.has(k)) return; seen.add(k);
+        const room_ = roomRef.current;
+        const allBI = boardItemsMap;
+        const photoMap_ = photoMap;
+        // Build wall color map (boardId → wall/block color)
+        const boardWallColor = {};
+        (room_?.walls || []).forEach(w => {
+          if (w.boardId)     boardWallColor[w.boardId]     = w.color     || '#d0c8bc';
+          if (w.boardIdBack) boardWallColor[w.boardIdBack] = w.colorBack || '#d0c8bc';
+        });
+        (room_?.blocks || []).forEach(b => ['n','s','e','w','t'].forEach(f => {
+          const bId = b.faces?.[f]?.boardId;
+          if (bId) boardWallColor[bId] = b.color || '#d0c8bc';
+        }));
+        // Build room-level navigation list: walls in room order → items per board sorted by x → blocks in room order
+        const roomPhotos = [];
+        const seen = new Set();
+        const addBoard = bid => {
+          if (!bid) return;
+          const wc = boardWallColor[bid] || '#d0c8bc';
+          const sorted = [...(allBI[bid] || [])].sort((a, b) => (a.x || 0) - (b.x || 0));
+          sorted.forEach(itm => {
+            const k = `${bid}:${itm.id}`;
+            if (seen.has(k)) return;
+            if (itm.type === 'zone') {
+              const members = (allBI[bid] || []).filter(i => i.zoneId === itm.id);
+              seen.add(k); roomPhotos.push({ photo: null, item: itm, boardId: bid, wallColor: wc, itemType: 'zone', members });
+            } else if (itm.type === 'grid') {
+              seen.add(k); roomPhotos.push({ photo: null, item: itm, boardId: bid, wallColor: wc, itemType: 'grid' });
+            } else if (itm.type === 'text' && !itm.zoneId) {
+              seen.add(k); roomPhotos.push({ photo: null, item: itm, boardId: bid, wallColor: wc, itemType: 'text' });
+            } else if (itm.photoId && (!itm.type || itm.type === 'photo') && !itm.zoneId && !itm.gridItemId) {
               const ph = photoMap_[itm.photoId];
-              if (ph) roomPhotos.push({ photo: ph, item: itm, boardId: bid });
-            });
-          };
-          (room_?.walls || []).forEach(w => { addBoard(w.boardId); addBoard(w.boardIdBack); });
-          (room_?.blocks || []).forEach(b => ['n','s','e','w','t'].forEach(f => addBoard(b.faces?.[f]?.boardId)));
-          const photo = photoMap_[ud.photoId];
-          const itm = (allBI[ud.boardId] || []).find(i => i.id === ud.itemId);
-          const idx = roomPhotos.findIndex(rp => rp.item.id === ud.itemId && rp.boardId === ud.boardId);
-          const val = { photo, item: itm, boardId: ud.boardId, roomPhotos, idx: Math.max(0, idx) };
-          setArtwork3D(val); artwork3DRef.current = val;
+              if (ph) { seen.add(k); roomPhotos.push({ photo: ph, item: itm, boardId: bid, wallColor: wc, itemType: 'photo' }); }
+            }
+          });
+        };
+        (room_?.walls || []).forEach(w => { addBoard(w.boardId); addBoard(w.boardIdBack); });
+        (room_?.blocks || []).forEach(b => ['n','s','e','w','t'].forEach(f => addBoard(b.faces?.[f]?.boardId)));
+        const wc = boardWallColor[ud.boardId] || '#d0c8bc';
+        if (ud.gridItemId) {
+          const gridItem = (allBI[ud.boardId] || []).find(i => i.id === ud.gridItemId);
+          if (gridItem) {
+            const roomIdx = roomPhotos.findIndex(rp => rp.item.id === ud.gridItemId && rp.boardId === ud.boardId);
+            const val = { item: gridItem, boardId: ud.boardId, wallColor: wc, roomPhotos, roomIdx: Math.max(0, roomIdx) };
+            setArtwork3DGrid(val); artwork3DGridRef.current = val;
+          }
+          return;
         }
+        if (ud.zoneId) {
+          const zoneItem = (allBI[ud.boardId] || []).find(i => i.id === ud.zoneId);
+          if (zoneItem) {
+            const members = (allBI[ud.boardId] || []).filter(i => i.zoneId === ud.zoneId);
+            const roomIdx = roomPhotos.findIndex(rp => rp.item.id === ud.zoneId && rp.boardId === ud.boardId);
+            setArtwork3DZone({ zone: zoneItem, members, photoMap: photoMap_, boardId: ud.boardId, wallColor: wc, roomPhotos, roomIdx: Math.max(0, roomIdx) });
+            return;
+          }
+        }
+        const photo = photoMap_[ud.photoId];
+        const itm = (allBI[ud.boardId] || []).find(i => i.id === ud.itemId);
+        const idx = roomPhotos.findIndex(rp => rp.item.id === ud.itemId && rp.boardId === ud.boardId);
+        const val = { photo, item: itm, boardId: ud.boardId, wallColor: wc, roomPhotos, idx: Math.max(0, idx) };
+        setArtwork3D(val); artwork3DRef.current = val;
       };
 
       // Left-click in orbit mode (no clipboard) → open artwork/grid view
@@ -3758,6 +3805,7 @@ function App() {
 
       scene._threeScene = scene; // keep ref for dispose
       renderer._threeScene = scene;
+      setRoom3DReady(true); room3DReadyRef.current = true;
     };
 
     initScene();
@@ -4970,7 +5018,27 @@ ${rows}
   const closeArtwork3D = () => {
     setArtwork3D(null); artwork3DRef.current = null;
     setArtwork3DGrid(null); artwork3DGridRef.current = null;
+    setArtwork3DZone(null);
     if (restoreCam3DRef.current) restoreCam3DRef.current();
+  };
+  const navigateToRoomItem = (roomPhotos, n) => {
+    if (!room3DReadyRef.current) return;
+    const next = roomPhotos[n];
+    if (!next) return;
+    setArtwork3D(null); artwork3DRef.current = null;
+    setArtwork3DZone(null);
+    setArtwork3DGrid(null); artwork3DGridRef.current = null;
+    if (next.itemType === 'grid') {
+      const val = { item: next.item, boardId: next.boardId, wallColor: next.wallColor, roomPhotos, roomIdx: n };
+      setArtwork3DGrid(val); artwork3DGridRef.current = val;
+    } else if (next.itemType === 'zone') {
+      const members = next.members || [];
+      const pm = room3DPhotoMapRef.current;
+      setArtwork3DZone({ zone: next.item, members, photoMap: pm, boardId: next.boardId, wallColor: next.wallColor, roomPhotos, roomIdx: n });
+    } else {
+      const val = { photo: next.photo || null, item: next.item, boardId: next.boardId, wallColor: next.wallColor, roomPhotos, idx: n };
+      setArtwork3D(val); artwork3DRef.current = val;
+    }
   };
 
   const confirmImport = async mode => {
@@ -10204,7 +10272,7 @@ ${rows}
                   const offY = (displayH - naturalH) / 2;
                   return (
                     <div key={item.id} className={`bitem${sel.includes(item.id)?' sel':''}${sel[0]===item.id?' anchor':''}${item.locked?' locked':''}${item.groupId?' grouped':''}${replaceMode?.itemId===item.id?' replacing':''}${dragSwapTarget===item.id?' swap-target':''}${presentation&&presSwapSel===item.id?' pres-swap-sel':''}`}
-                      style={{ left: item.x, top: item.y, width: item.w, zIndex: propsPanelId === item.id ? 9999 : item.z||1, ...(inSelectedZone ? {pointerEvents:'none'} : {}), ...(item.freeRot ? {transform:`rotate(${item.freeRot}deg)`,transformOrigin:'center center'} : {}) }}
+                      style={{ left: item.x, top: item.y, width: item.w, zIndex: propsPanelId?.id === item.id ? 9999 : item.z||1, ...(inSelectedZone ? {pointerEvents:'none'} : {}), ...(item.freeRot ? {transform:`rotate(${item.freeRot}deg)`,transformOrigin:'center center'} : {}) }}
                       onPointerDown={e => onItemPD(e, item.id)}
                       onClick={e => handleItemClick(e, item)}
                       onContextMenu={e => openCtxMenu(e, item.id)}
@@ -10222,33 +10290,6 @@ ${rows}
                           onClick={e => { e.stopPropagation(); updateItemLocked(item.id, !item.locked); }}>{item.locked ? <SvgUnlock/> : <SvgLock/>}</button>
                         <button className="ibc del" data-tooltip={t('ttDeleteItem')} onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
                       </div>
-                      {propsPanelId === item.id && (() => {
-                        const fu = boardUnits !== 'px' ? boardUnits : 'px';
-                        const step = boardUnits === 'mm' ? 1 : 0.1;
-                        const updFrame = (field, val) => { const u = itemsRef.current.map(i => i.id === item.id ? {...i, [field]: val} : i); itemsRef.current = u; setItems(u); };
-                        return (
-                          <div className="props-panel" onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
-                            <div className="props-sec">{t('matLabel')} ({fu})</div>
-                            <div className="props-row">
-                              <span className="props-lbl">{lang==='es'?'Tamaño':'Size'}</span>
-                              <input type="color" className="props-color" value={item.matColor||'#ffffff'} onPointerDown={e=>e.stopPropagation()} onChange={e=>updFrame('matColor',e.target.value)}/>
-                              <input type="number" className="props-inp" value={item.matSize ?? item.frame ?? 0} min="0" step={step}
-                                onFocus={pushUndo} onPointerDown={e=>e.stopPropagation()}
-                                onChange={e=>updFrame('matSize', parseFloat(e.target.value)||0)}
-                                onBlur={saveLabel}/>
-                            </div>
-                            <div className="props-sec">{t('moldingLabel')} ({fu})</div>
-                            <div className="props-row">
-                              <span className="props-lbl">{lang==='es'?'Tamaño':'Size'}</span>
-                              <input type="color" className="props-color" value={item.frameColor||'#5a3e1b'} onPointerDown={e=>e.stopPropagation()} onChange={e=>updFrame('frameColor',e.target.value)}/>
-                              <input type="number" className="props-inp" value={item.frameSize||0} min="0" step={step}
-                                onFocus={pushUndo} onPointerDown={e=>e.stopPropagation()}
-                                onChange={e=>updFrame('frameSize', parseFloat(e.target.value)||0)}
-                                onBlur={saveLabel}/>
-                            </div>
-                          </div>
-                        );
-                      })()}
                       {(() => {
                         const matPx  = physToPx(item.matSize  ?? item.frame  ?? 0, boardDpi, boardUnits);
                         const moldPx = physToPx(item.frameSize ?? 0,               boardDpi, boardUnits);
@@ -10875,7 +10916,7 @@ ${rows}
 
       {/* ── Artwork 3D — Nivel 1: grid completo ── */}
       {artwork3DGrid && !artwork3D && (() => {
-        const { item: grid, boardId: gridBoardId } = artwork3DGrid;
+        const { item: grid, boardId: gridBoardId, wallColor: gridWC, roomPhotos: gridRP, roomIdx: gridRoomIdx } = artwork3DGrid;
         const board = boards.find(b => b.id === gridBoardId);
         const layout = calcGridLayout(grid, photos, board?.dpi || 150, board?.units || 'cm');
         const scaleX = (window.innerWidth  - 80) / grid.w;
@@ -10883,82 +10924,208 @@ ${rows}
         const scale  = Math.min(scaleX, scaleY, 1);
         const photoMap_ = {};
         photos.forEach(p => { photoMap_[p.id] = p; });
+        const wc = gridWC || '#d0c8bc';
+        const tc = bgContrast(wc);
+        const tcMuted = tc === '#ffffff' ? 'rgba(255,255,255,.45)' : 'rgba(0,0,0,.45)';
         return (
-          <div className="fullscreen-overlay" style={{cursor:'default'}} onClick={closeArtwork3D}>
-            <button className="artwork3d-back" onClick={e => { e.stopPropagation(); closeArtwork3D(); }}>{t('artwork3DBack')}</button>
-            <div style={{display:'flex',flexDirection:'column',gap:layout.gapPx*scale}} onClick={e => e.stopPropagation()}>
-              {layout.rows.map((row, ri) => (
-                <div key={ri} style={{display:'flex',gap:layout.gapPx*scale}}>
-                  {row.ids.map((photoId, ci) => {
-                    const p = photoId ? photoMap_[photoId] : null;
-                    const cw = Math.round(layout.cellW * scale);
-                    const ch = Math.round(row.h * scale);
-                    return (
-                      <div key={ci} className="artwork3d-grid-cell" style={{width:cw,height:ch,cursor:p?'pointer':'default'}}
-                        onClick={e => {
-                          if (!p) return;
-                          e.stopPropagation();
-                          const gridPhotos = layout.rows.flatMap(r => r.ids.filter(Boolean).map(pid => photoMap_[pid])).filter(Boolean);
-                          const gridRoomPhotos = gridPhotos.map(gp => ({ photo: gp, item: grid, boardId: gridBoardId }));
-                          const gIdx = gridPhotos.findIndex(gp => gp.id === photoId);
-                          const val = { photo: p, item: grid, boardId: gridBoardId, roomPhotos: gridRoomPhotos, idx: gIdx >= 0 ? gIdx : 0, fromGrid: true };
-                          setArtwork3D(val); artwork3DRef.current = val;
-                        }}>
-                        {p && <img src={`/photos/${pid}/${p.id}`} style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}} />}
-                      </div>
-                    );
-                  })}
+          <div className="fullscreen-overlay" style={{background: wc, cursor:'default'}} onClick={closeArtwork3D}>
+            <button className="artwork3d-back" style={{color:tcMuted}} onClick={e => { e.stopPropagation(); closeArtwork3D(); }}>{t('artwork3DBack')}</button>
+            {gridRP && gridRP.length > 1 && <div className="fullscreen-counter" style={{color:tcMuted}}>{t('artwork3DOf', (gridRoomIdx||0)+1, gridRP.length)}</div>}
+            {!room3DReady
+              ? <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8}}><div className="splash-dots"><span style={{background:tc}}></span><span style={{background:tc}}></span><span style={{background:tc}}></span></div><div style={{fontSize:11,color:tcMuted,letterSpacing:.5}}>{t('room3DLoading')}</div></div>
+              : <div style={{display:'flex',flexDirection:'column',gap:layout.gapPx*scale}} onClick={e => e.stopPropagation()}>
+                  {layout.rows.map((row, ri) => (
+                    <div key={ri} style={{display:'flex',gap:layout.gapPx*scale}}>
+                      {row.ids.map((photoId, ci) => {
+                        const p = photoId ? photoMap_[photoId] : null;
+                        const cw = Math.round(layout.cellW * scale);
+                        const ch = Math.round(row.h * scale);
+                        return (
+                          <div key={ci} className="artwork3d-grid-cell" style={{width:cw,height:ch,cursor:p?'pointer':'default'}}
+                            onClick={e => {
+                              if (!p) return;
+                              e.stopPropagation();
+                              const gridPhotos = layout.rows.flatMap(r => r.ids.filter(Boolean).map(pid2 => photoMap_[pid2])).filter(Boolean);
+                              const gridRoomPhotos = gridPhotos.map(gp => ({ photo: gp, item: grid, boardId: gridBoardId, wallColor: wc, itemType: 'photo' }));
+                              const gIdx = gridPhotos.findIndex(gp => gp.id === photoId);
+                              const val = { photo: p, item: grid, boardId: gridBoardId, wallColor: wc, roomPhotos: gridRoomPhotos, idx: gIdx >= 0 ? gIdx : 0, fromGrid: true };
+                              setArtwork3D(val); artwork3DRef.current = val;
+                            }}>
+                            {p && <img src={`/photos/${pid}/${p.id}`} style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}} />}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+            }
+            {gridRP && gridRP.length > 1 && <>
+              <button className="fullscreen-nav prev" style={{color:tc,opacity:room3DReady?1:0.4,pointerEvents:room3DReady?'auto':'none'}} onClick={e => { e.stopPropagation(); const n=((gridRoomIdx-1+gridRP.length)%gridRP.length); navigateToRoomItem(gridRP,n); }}>‹</button>
+              <button className="fullscreen-nav next" style={{color:tc,opacity:room3DReady?1:0.4,pointerEvents:room3DReady?'auto':'none'}} onClick={e => { e.stopPropagation(); const n=(gridRoomIdx+1)%gridRP.length; navigateToRoomItem(gridRP,n); }}>›</button>
+            </>}
           </div>
         );
       })()}
 
-      {/* ── Artwork 3D — Nivel 2: foto individual ── */}
+      {/* ── Artwork 3D — Zona: vista de conjunto ── */}
+      {artwork3DZone && !artwork3D && (() => {
+        const { zone, members, photoMap: zpm, boardId: zoneBid, wallColor: zoneWC, roomPhotos: zoneRP, roomIdx: zoneRoomIdx } = artwork3DZone;
+        const wc = zoneWC || '#d0c8bc';
+        const tc = bgContrast(wc);
+        const tcMuted = tc === '#ffffff' ? 'rgba(255,255,255,.45)' : 'rgba(0,0,0,.45)';
+        // Scale zone members to viewport using zone's bounding box
+        const zH = zone.h || 320;
+        const scaleX = (window.innerWidth  - 100) / zone.w;
+        const scaleY = (window.innerHeight - 100) / zH;
+        const scale  = Math.min(scaleX, scaleY, 1);
+        const board = boards.find(b => b.id === zoneBid);
+        return (
+          <div className="fullscreen-overlay" style={{background:wc,cursor:'default'}} onClick={closeArtwork3D}>
+            <button className="artwork3d-back" style={{color:tcMuted}} onClick={e => { e.stopPropagation(); closeArtwork3D(); }}>{t('artwork3DBack')}</button>
+            {zone.label && <div className="artwork3d-label" style={{position:'fixed',top:14,left:'50%',transform:'translateX(-50%)',color:tc}}>{zone.label}</div>}
+            {zoneRP && zoneRP.length > 1 && <div className="fullscreen-counter" style={{color:tcMuted}}>{t('artwork3DOf', (zoneRoomIdx||0)+1, zoneRP.length)}</div>}
+            {!room3DReady
+              ? <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8}}><div className="splash-dots"><span style={{background:tc}}></span><span style={{background:tc}}></span><span style={{background:tc}}></span></div><div style={{fontSize:11,color:tcMuted,letterSpacing:.5}}>{t('room3DLoading')}</div></div>
+              : <div style={{position:'relative',width:Math.round(zone.w*scale),height:Math.round(zH*scale)}} onClick={e => e.stopPropagation()}>
+                  {members.map(member => {
+                    const relX = (member.x - zone.x) * scale;
+                    const relY = (member.y - zone.y) * scale;
+                    const mW = Math.round(member.w * scale);
+                    const mH = Math.round((member.h || member.w * (member.type === 'text' ? 0.5 : 1)) * scale);
+                    const isText = member.type === 'text';
+                    const mp = !isText ? zpm?.[member.photoId] : null;
+                    if (!isText && !mp) return null;
+                    return (
+                      <div key={member.id} style={{position:'absolute',left:relX,top:relY,width:mW,height:mH,cursor:'pointer',overflow:'hidden'}}
+                        onClick={e => { e.stopPropagation();
+                          const zIdx = members.indexOf(member);
+                          const val = { photo: mp||null, item: member, boardId: zoneBid, wallColor: wc, roomPhotos: zoneRP, idx: zoneRoomIdx||0, fromZone: true, zoneMembers: members, zoneIdx: zIdx, zpm };
+                          setArtwork3D(val); artwork3DRef.current = val;
+                        }}>
+                        {isText
+                          ? (() => { const tFont = TEXT_FONTS.find(f => f.id === (member.fontFamily||'serif'))||TEXT_FONTS[0]; return <div style={{width:'100%',height:'100%',fontSize:(member.fontSize||64)*scale,fontFamily:tFont.family,fontWeight:member.fontWeight||'normal',fontStyle:member.fontStyle||'normal',textAlign:member.textAlign||'center',color:member.textColor||tc,overflow:'hidden',display:'flex',alignItems:'center',justifyContent:member.textAlign==='right'?'flex-end':member.textAlign==='center'?'center':'flex-start',padding:4*scale}}>{member.text}</div>; })()
+                          : <img src={`/photos/${pid}/${mp.id}/thumb`} style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}} />
+                        }
+                      </div>
+                    );
+                  })}
+                </div>
+            }
+            {zoneRP && zoneRP.length > 1 && <>
+              <button className="fullscreen-nav prev" style={{color:tc,opacity:room3DReady?1:0.4,pointerEvents:room3DReady?'auto':'none'}} onClick={e => { e.stopPropagation(); const n=((zoneRoomIdx-1+zoneRP.length)%zoneRP.length); navigateToRoomItem(zoneRP,n); }}>‹</button>
+              <button className="fullscreen-nav next" style={{color:tc,opacity:room3DReady?1:0.4,pointerEvents:room3DReady?'auto':'none'}} onClick={e => { e.stopPropagation(); const n=(zoneRoomIdx+1)%zoneRP.length; navigateToRoomItem(zoneRP,n); }}>›</button>
+            </>}
+          </div>
+        );
+      })()}
+
+      {/* ── Artwork 3D — Nivel 2: foto / texto individual ── */}
       {artwork3D && (() => {
-        const { photo, item, boardId: awBid, roomPhotos, idx, fromGrid } = artwork3D;
+        const { photo, item, boardId: awBid, wallColor: awWC, roomPhotos, idx, fromGrid, fromZone, zoneMembers, zoneIdx, zpm } = artwork3D;
         const board = boards.find(b => b.id === awBid);
+        const isText = item?.type === 'text';
+        const wc = awWC || '#d0c8bc';
+        const tc = bgContrast(wc);
+        const tcMuted = tc === '#ffffff' ? 'rgba(255,255,255,.45)' : 'rgba(0,0,0,.45)';
+        // Navigation
+        const navCount = fromZone && zoneMembers ? zoneMembers.length : roomPhotos?.length || 1;
+        const navIdx   = fromZone && zoneMembers ? zoneIdx : idx;
         const navigate = delta => {
-          const n = ((idx + delta) % roomPhotos.length + roomPhotos.length) % roomPhotos.length;
-          const { photo: p2, item: it2, boardId: bid2 } = roomPhotos[n];
-          const val = { ...artwork3D, photo: p2, item: it2, boardId: bid2, idx: n };
-          setArtwork3D(val); artwork3DRef.current = val;
+          if (fromZone && zoneMembers) {
+            const n = ((zoneIdx + delta) % zoneMembers.length + zoneMembers.length) % zoneMembers.length;
+            const nextMember = zoneMembers[n];
+            const nextPhoto = nextMember.photoId ? (zpm?.[nextMember.photoId] || photosRef.current.find(p => p.id === nextMember.photoId) || null) : null;
+            const val = { ...artwork3D, photo: nextPhoto, item: nextMember, zoneIdx: n };
+            setArtwork3D(val); artwork3DRef.current = val;
+          } else if (roomPhotos?.length > 1) {
+            const n = ((idx + delta) % roomPhotos.length + roomPhotos.length) % roomPhotos.length;
+            navigateToRoomItem(roomPhotos, n);
+          }
         };
         const goBack = () => {
           setArtwork3D(null); artwork3DRef.current = null;
-          if (!fromGrid) {
-            setArtwork3DGrid(null); artwork3DGridRef.current = null;
-            if (restoreCam3DRef.current) restoreCam3DRef.current();
-          }
+          if (fromZone) { /* artwork3DZone still set — shows zone overview */ }
+          else if (fromGrid) { /* artwork3DGrid still set — shows grid */ }
+          else { setArtwork3DGrid(null); artwork3DGridRef.current = null; setArtwork3DZone(null); if (restoreCam3DRef.current) restoreCam3DRef.current(); }
         };
+        // Physical dimensions (owner only)
         let physDims = null;
-        if (board && item && photo?.w > 0 && photo?.h > 0) {
+        if (!roomShareMode && board && item && photo?.w > 0 && photo?.h > 0) {
           const iw = pxToPhys(item.w, board.dpi, board.units);
           const ih = pxToPhys(Math.round(item.w * photo.h / photo.w), board.dpi, board.units);
-          if (iw && ih) physDims = `${iw} × ${ih}`;
+          if (iw && ih) physDims = `${iw} × ${ih} ${board.units||'px'} · ${board.dpi||150} dpi`;
         }
+        // Frame (mat + moulding) for photo items
+        let matD = 0, moldD = 0, matC = '#ffffff', moldC = '#5a3e1b';
+        if (!isText && photo?.w > 0 && item) {
+          const matPx  = physToPx(item.matSize  ?? item.frame  ?? 0, board?.dpi, board?.units);
+          const moldPx = physToPx(item.frameSize ?? 0, board?.dpi, board?.units);
+          if (matPx > 0 || moldPx > 0) {
+            const vpW = window.innerWidth - 160, vpH = window.innerHeight - 140;
+            const aspect = photo.w / Math.max(1, photo.h);
+            const dispW = Math.min(photo.w, vpW, vpH * aspect);
+            const scale = dispW / Math.max(1, item.w);
+            matD  = Math.max(1, Math.round(matPx  * scale));
+            moldD = Math.max(1, Math.round(moldPx * scale));
+            matC  = item.matColor   || '#ffffff';
+            moldC = item.frameColor || '#5a3e1b';
+          }
+        }
+        // Text view
+        if (isText) {
+          const tFont = TEXT_FONTS.find(f => f.id === (item.fontFamily||'serif'))||TEXT_FONTS[0];
+          return (
+            <div className="fullscreen-overlay" style={{background:wc}} onClick={goBack}>
+              <button className="artwork3d-back" style={{color:tcMuted}} onClick={e => { e.stopPropagation(); goBack(); }}>{t('artwork3DBack')}</button>
+              {navCount > 1 && <div className="fullscreen-counter" style={{color:tcMuted}}>{t('artwork3DOf', navIdx+1, navCount)}</div>}
+              <div style={{maxWidth:'80vw',maxHeight:'80vh',overflow:'hidden',display:'flex',alignItems:'center',justifyContent:item.textAlign==='right'?'flex-end':item.textAlign==='center'?'center':'flex-start',fontSize:Math.min(item.fontSize||64, 80),fontFamily:tFont.family,fontWeight:item.fontWeight||'normal',fontStyle:item.fontStyle||'normal',textAlign:item.textAlign||'center',color:item.textColor||tc,whiteSpace:'pre-wrap',lineHeight:1.35,padding:'0 40px'}}
+                onClick={e => e.stopPropagation()}>{item.text}</div>
+              {navCount > 1 && <button className="fullscreen-nav prev" style={{color:tc}} onClick={e => { e.stopPropagation(); navigate(-1); }}>‹</button>}
+              {navCount > 1 && <button className="fullscreen-nav next" style={{color:tc}} onClick={e => { e.stopPropagation(); navigate(1); }}>›</button>}
+            </div>
+          );
+        }
+        // Photo view
         return (
-          <div className="fullscreen-overlay" onClick={goBack}>
-            <button className="artwork3d-back" onClick={e => { e.stopPropagation(); goBack(); }}>{t('artwork3DBack')}</button>
-            <div className="fullscreen-counter">{t('artwork3DOf', idx + 1, roomPhotos.length)}</div>
-            <img className="fullscreen-img" src={`/photos/${pid}/${photo.id}`} alt={item?.label || photo.name} onClick={e => e.stopPropagation()} />
-            {roomPhotos.length > 1 && <button className="fullscreen-nav prev" onClick={e => { e.stopPropagation(); navigate(-1); }}>‹</button>}
-            {roomPhotos.length > 1 && <button className="fullscreen-nav next" onClick={e => { e.stopPropagation(); navigate(1); }}>›</button>}
+          <div className="fullscreen-overlay" style={{background:wc}} onClick={goBack}>
+            <button className="artwork3d-back" style={{color:tcMuted}} onClick={e => { e.stopPropagation(); goBack(); }}>{t('artwork3DBack')}</button>
+            {navCount > 1 && <div className="fullscreen-counter" style={{color:tcMuted}}>{t('artwork3DOf', navIdx+1, navCount)}</div>}
+            {!room3DReady
+              ? <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8}}><div className="splash-dots"><span style={{background:tc}}></span><span style={{background:tc}}></span><span style={{background:tc}}></span></div><div style={{fontSize:11,color:tcMuted,letterSpacing:.5}}>{t('room3DLoading')}</div></div>
+              : photo && (() => {
+                  const frameThick = matD + moldD;
+                  const shadows = [];
+                  if (matD  > 0) shadows.push(`0 0 0 ${matD}px ${matC}`);
+                  if (moldD > 0) shadows.push(`0 0 0 ${matD+moldD}px ${moldC}`);
+                  if (frameThick > 0) shadows.push(`0 0 0 ${frameThick+1}px rgba(0,0,0,.25)`);
+                  const imgStyle = {
+                    maxWidth:  `calc(100vw - ${120+2*frameThick}px)`,
+                    maxHeight: `calc(100vh - ${100+2*frameThick}px)`,
+                    display:'block', objectFit:'contain', userSelect:'none',
+                    ...(shadows.length ? {boxShadow: shadows.join(', ')} : {}),
+                  };
+                  return <img style={imgStyle} src={`/photos/${pid}/${photo.id}`} alt={item?.label || photo.name} onClick={e => e.stopPropagation()} />;
+                })()
+            }
+            {navCount > 1 && <button className="fullscreen-nav prev" style={{color:tc,opacity:room3DReady?1:0.4,pointerEvents:room3DReady?'auto':'none'}} onClick={e => { e.stopPropagation(); navigate(-1); }}>‹</button>}
+            {navCount > 1 && <button className="fullscreen-nav next" style={{color:tc,opacity:room3DReady?1:0.4,pointerEvents:room3DReady?'auto':'none'}} onClick={e => { e.stopPropagation(); navigate(1); }}>›</button>}
             <div className="fullscreen-meta" onClick={e => e.stopPropagation()}>
               <div className="fullscreen-info-left">
-                {item?.label && <div className="artwork3d-label">{item.label}</div>}
-                {physDims && <div className="artwork3d-dims">{physDims}</div>}
+                {item?.label && <div className="artwork3d-label" style={{color:tc}}>{item.label}</div>}
+                {physDims && <div className="artwork3d-dims" style={{color:tcMuted}}>{physDims}</div>}
+                {!roomShareMode && board && <div className="artwork3d-dims" style={{color:tcMuted}}>{board.name}</div>}
                 {artwork3DComments.length > 0 && (
                   <div className="artwork3d-comments">
                     {artwork3DComments.map(c => (
                       <div key={c.id} className="artwork3d-comment">
-                        <div className="artwork3d-comment-author">{c.authorName}</div>
-                        <div className="artwork3d-comment-text">{c.text}</div>
+                        <div className="artwork3d-comment-author" style={{color:tcMuted}}>{c.authorName}</div>
+                        <div className="artwork3d-comment-text" style={{color:tc==='#ffffff'?'rgba(255,255,255,.6)':'rgba(0,0,0,.7)'}}>{c.text}</div>
                       </div>
                     ))}
                   </div>
                 )}
+                {!roomShareMode && photo && <button className="artwork3d-dims" style={{marginTop:6,cursor:'pointer',background:'none',border:'1px solid '+tcMuted,color:tcMuted,padding:'2px 8px',borderRadius:2,fontFamily:'IBM Plex Mono,monospace',fontSize:9,letterSpacing:.5}}
+                  onClick={() => { closeArtwork3D(); setBid(awBid); bidRef.current = awBid; }}>{lang==='es'?'Editar en tablero →':'Edit in board →'}</button>}
               </div>
             </div>
           </div>
@@ -11180,7 +11347,7 @@ ${rows}
         if (!ctxItem) return null;
         if (ctxItem.type === 'grid') {
           return (
-            <div className="ctx-menu" style={{left: ctxMenu.x, top: ctxMenu.y}}
+            <div ref={ctxMenuRef} className="ctx-menu" style={{left: ctxMenu.x, top: ctxMenu.y}}
               onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()} onContextMenu={e => e.preventDefault()}>
               <button className="ctx-item" onClick={() => { bringFwd(ctxMenu.itemId); setCtxMenu(null); }}>↑ {t('bringFwdBtn')}</button>
               <button className="ctx-item" onClick={() => { sendBack(ctxMenu.itemId); setCtxMenu(null); }}>↓ {t('sendBackBtn')}</button>
@@ -11207,7 +11374,7 @@ ${rows}
           const zoneMembers = items.filter(i => i.zoneId === ctxItem.id);
           const hasMembers = zoneMembers.length > 0;
           return (
-            <div className="ctx-menu" style={{left: ctxMenu.x, top: ctxMenu.y}}
+            <div ref={ctxMenuRef} className="ctx-menu" style={{left: ctxMenu.x, top: ctxMenu.y}}
               onPointerDown={e => e.stopPropagation()} onContextMenu={e => e.preventDefault()}>
               <div style={{padding:'6px 12px 3px',fontSize:8,color:'var(--dim)',letterSpacing:1.5,textTransform:'uppercase'}}>{t('zoneColor')}</div>
               <div style={{display:'flex',gap:6,padding:'4px 12px 8px',alignItems:'center'}}>
@@ -11245,11 +11412,11 @@ ${rows}
         const isNote = ctxItem.type === 'note';
         const isNoteOrText = ctxItem.type === 'note' || ctxItem.type === 'text';
         return (
-          <div className="ctx-menu" style={{left: ctxMenu.x, top: ctxMenu.y}}
+          <div ref={ctxMenuRef} className="ctx-menu" style={{left: ctxMenu.x, top: ctxMenu.y}}
             onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()} onContextMenu={e => e.preventDefault()}>
             <button className="ctx-item" onClick={() => { bringFwd(ctxMenu.itemId); setCtxMenu(null); }}>↑ {t('bringFwdBtn')}</button>
             <button className="ctx-item" onClick={() => { sendBack(ctxMenu.itemId); setCtxMenu(null); }}>↓ {t('sendBackBtn')}</button>
-            {!isNoteOrText && <button className="ctx-item" onClick={() => { setPropsPanelId(id => id === ctxMenu.itemId ? null : ctxMenu.itemId); setCtxMenu(null); }}>▣ {t('frameLabel')}</button>}
+            {!isNoteOrText && <button className="ctx-item" onClick={() => { if(propsPanelId?.id===ctxMenu.itemId){setPropsPanelId(null);}else{const pw=220,ph=180;const vx=Math.min(ctxMenu.x,window.innerWidth-pw-8);const vy=Math.min(ctxMenu.y,window.innerHeight-ph-8);setPropsPanelId({id:ctxMenu.itemId,x:vx,y:vy});}setCtxMenu(null); }}>▣ {t('frameLabel')}</button>}
             {!isNoteOrText && <button className="ctx-item" style={{color: framePainter ? 'var(--acc)' : undefined}}
               onClick={() => { const fp = {matSize: ctxItem.matSize ?? ctxItem.frame ?? 0, matColor: ctxItem.matColor||'#ffffff', frameSize: ctxItem.frameSize||0, frameColor: ctxItem.frameColor||'#5a3e1b'}; setFramePainter(fp); setCtxMenu(null); }}>▣ {t('framePainterCopy')}</button>}
             {!isNoteOrText && <button className="ctx-item" style={{color: ctxItem?.label ? 'var(--acc)' : undefined}}
@@ -12635,6 +12802,39 @@ ${rows}
           </div>
         </div>
       )}
+
+      {/* ── Panel de marco (position:fixed, fuera del canvas) ── */}
+      {propsPanelId && (() => {
+        const si = itemsRef.current.find(i => i.id === propsPanelId.id);
+        if (!si) return null;
+        const fu = boardUnits !== 'px' ? boardUnits : 'px';
+        const step = boardUnits === 'mm' ? 1 : 0.1;
+        const updFrame = (field, val) => { const u = itemsRef.current.map(i => i.id === si.id ? {...i, [field]: val} : i); itemsRef.current = u; setItems(u); };
+        return (
+          <div className="props-panel"
+            style={{position:'fixed', left:propsPanelId.x, top:propsPanelId.y, zIndex:10000, zoom:1}}
+            onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
+            <div className="props-sec">{t('matLabel')} ({fu})</div>
+            <div className="props-row">
+              <span className="props-lbl">{lang==='es'?'Tamaño':'Size'}</span>
+              <input type="color" className="props-color" value={si.matColor||'#ffffff'} onPointerDown={e=>e.stopPropagation()} onChange={e=>updFrame('matColor',e.target.value)}/>
+              <input type="number" className="props-inp" value={si.matSize ?? si.frame ?? 0} min="0" step={step}
+                onFocus={pushUndo} onPointerDown={e=>e.stopPropagation()}
+                onChange={e=>updFrame('matSize', parseFloat(e.target.value)||0)}
+                onBlur={saveLabel}/>
+            </div>
+            <div className="props-sec">{t('moldingLabel')} ({fu})</div>
+            <div className="props-row">
+              <span className="props-lbl">{lang==='es'?'Tamaño':'Size'}</span>
+              <input type="color" className="props-color" value={si.frameColor||'#5a3e1b'} onPointerDown={e=>e.stopPropagation()} onChange={e=>updFrame('frameColor',e.target.value)}/>
+              <input type="number" className="props-inp" value={si.frameSize||0} min="0" step={step}
+                onFocus={pushUndo} onPointerDown={e=>e.stopPropagation()}
+                onChange={e=>updFrame('frameSize', parseFloat(e.target.value)||0)}
+                onBlur={saveLabel}/>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── Modal de propiedades numéricas ── */}
       {propsModal && (() => {

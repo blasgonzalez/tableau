@@ -40,7 +40,12 @@
       "Bash(git diff *)",
       "Read(//c/tmp/**)",
       "Bash(mkdir -p /tmp)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(git -C \"d:/blasg/Pictures/Proyectos/tableau\" status)",
+      "Bash(git -C \"d:/blasg/Pictures/Proyectos/tableau\" diff --stat HEAD)",
+      "Bash(git -C \"d:/blasg/Pictures/Proyectos/tableau\" diff HEAD -- package.json installer/version.json)",
+      "Bash(git -C \"d:/blasg/Pictures/Proyectos/tableau\" diff HEAD -- .claude/settings.json)",
+      "Bash(git -C \"d:/blasg/Pictures/Proyectos/tableau\" add CHANGELOG.md CHANGELOG.en.md installer/tableau.iss installer/version.json package.json package-lock.json public/index.html .claude/settings.json)"
     ],
     "additionalDirectories": [
       "d:\\blasg\\Pictures\\Proyectos\\tableau\\fonts"

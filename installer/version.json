@@ -1,6 +1,6 @@
 {
-  "version": "1.22.1",
+  "version": "1.22.5",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-06-15",
-  "notes": "Vista de obra desde el 3D: clic/doble clic abre pantalla completa con navegación circular. Temas Tokyo y Rochester. Fixes de interacción en vista 3D."
+  "notes": "Tema Le Gras (azul-gris plata, inspirado en la primera fotografía de la historia). Fix: menús contextuales ya no se cortan al borde del viewport."
 }
