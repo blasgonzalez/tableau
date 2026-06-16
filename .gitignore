@@ -1,5 +1,6 @@
 node_modules/
 dist/
 data/
+backups/
 public/_built.html
 scripts/users.json
