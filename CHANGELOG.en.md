@@ -9,6 +9,9 @@
 - **Help tips in Settings:** the "Help tips" section (formerly "Getting-started guides") now only appears when the user has dismissed at least one tip — if there is nothing to reset, the option is not shown. An explanatory description is added. Both the label and the behaviour are clearer.
 - **"Backup now" button:** shows a loading state (`…`) while the backup is in progress and is disabled to prevent simultaneous runs. The backup list refreshes automatically on completion.
 
+### Fixed
+- **Artwork view — ← → keyboard keys did not await the 3D scene Promise:** the keyboard handler was not `async` and updated state directly via `setArtwork3D()`, bypassing `navigateToRoomItem`. This caused keyboard navigation to skip the `await room3DReadyPromiseRef.current` that the on-screen arrow buttons correctly respect, resulting in broken transitions if the 3D scene had not yet finished loading. Fix: the handler is now `async`; ← → keys read `artwork3DRef.current` and call `await navigateToRoomItem(rp, n)`.
+
 ## [1.22.6] — 2026-06-16
 
 ### Fixed

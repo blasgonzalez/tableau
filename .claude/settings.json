@@ -51,7 +51,11 @@
       "Bash(git -C \"d:/blasg/Pictures/Proyectos/tableau\" rm --cached backups/ -r)",
       "Bash(git -C \"d:/blasg/Pictures/Proyectos/tableau\" ls-files backups/)",
       "Bash(git -C \"d:/blasg/Pictures/Proyectos/tableau\" status --short)",
-      "Bash(git -C \"d:/blasg/Pictures/Proyectos/tableau\" log --oneline -5)"
+      "Bash(git -C \"d:/blasg/Pictures/Proyectos/tableau\" log --oneline -5)",
+      "Bash(git filter-branch *)",
+      "Bash(git stash *)",
+      "Bash(FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch --force --index-filter \"git rm -rf --cached --ignore-unmatch backups/\" --prune-empty --tag-name-filter cat -- --all)",
+      "Bash(git update-ref *)"
     ],
     "additionalDirectories": [
       "d:\\blasg\\Pictures\\Proyectos\\tableau\\fonts"

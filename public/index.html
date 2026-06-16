@@ -5518,7 +5518,7 @@ ${rows}
 
 
   useEffect(() => {
-    const handler = e => {
+    const handler = async e => {
       if (fullscreenPhoto) {
         if (e.key === 'Escape') { setFullscreenPhoto(null); return; }
         if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
@@ -5547,17 +5547,13 @@ ${rows}
           return;
         }
         if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
-          setArtwork3D(prev => {
-            if (!prev) return null;
-            const rp = prev.roomPhotos;
-            if (!rp.length) return prev;
-            const n = e.key === 'ArrowRight' ? prev.idx + 1 : prev.idx - 1;
-            const next = ((n % rp.length) + rp.length) % rp.length;
-            const { photo, item, boardId } = rp[next];
-            const val = { ...prev, photo, item, boardId, idx: next };
-            artwork3DRef.current = val;
-            return val;
-          });
+          const cur = artwork3DRef.current;
+          if (!cur) return;
+          const rp = cur.roomPhotos;
+          if (!rp || !rp.length) return;
+          const delta = e.key === 'ArrowRight' ? 1 : -1;
+          const n = ((cur.idx + delta) % rp.length + rp.length) % rp.length;
+          await navigateToRoomItem(rp, n);
           return;
         }
         return;

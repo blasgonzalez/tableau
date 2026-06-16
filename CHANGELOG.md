@@ -9,6 +9,9 @@
 - **Consejos de ayuda en Ajustes:** la sección "Consejos de ayuda" (antes "Guías de inicio") ahora solo aparece cuando el usuario ha descartado algún consejo — si no hay nada que reiniciar, la opción no se muestra. Se añade descripción explicativa del botón. Tanto el texto como el comportamiento son más claros.
 - **Botón "Hacer backup ahora":** muestra estado de carga (`…`) mientras el backup está en progreso y se deshabilita para evitar lanzamientos simultáneos. La lista de backups se refresca automáticamente al completarse.
 
+### Corregido
+- **Vista de obra — teclas ← → no esperaban el Promise de la escena 3D:** el handler de teclado no era `async` y actualizaba el estado directamente con `setArtwork3D()`, sin pasar por `navigateToRoomItem`. Esto hacía que la navegación con teclado se saltara el `await room3DReadyPromiseRef.current` que los botones de flecha en pantalla sí respetan, causando transiciones rotas si la escena 3D aún no había terminado de cargar. Fix: el handler es ahora `async`; las teclas ← → leen `artwork3DRef.current` y llaman `await navigateToRoomItem(rp, n)`.
+
 ## [1.22.6] — 2026-06-16
 
 ### Corregido
