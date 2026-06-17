@@ -1,13 +1,26 @@
 # Changelog
 
+## [1.22.10] — 2026-06-17
+
+### Corregido
+- **Vista 3D en móvil — pinch-to-zoom no funcionaba:** `controls.enableZoom` estaba en `false` (el zoom de rueda se gestionaba con un handler proporcional personalizado), lo que también desactivaba el zoom por pinch de OrbitControls. Fix: `enableZoom = true` — OrbitControls gestiona ahora tanto la rueda del ratón como el gesto de dos dedos; se elimina el handler `onCanvasWheel` manual; y se añade `renderer.domElement.style.touchAction = 'none'` para que el navegador no intercepte los gestos táctiles antes de que lleguen a Three.js.
+
+## [1.22.9] — 2026-06-17
+
+### Mejorado
+- **Vista 3D compartida — experiencia en móvil:** en dispositivos táctiles (`window.innerWidth < 768 || 'ontouchstart' in window`) el canvas ocupa ahora el 100% del viewport; el panel lateral de instrucciones de ratón no se renderiza (las instrucciones de ratón no tienen sentido en touch); la barra de botones muestra solo Centrar, Persona y 💬 (si hay comentarios), todos con tamaño mínimo de 44 × 44 px; el botón Pasear y Capturar se ocultan; el overlay de instrucciones de modo paseo no aparece; y OrbitControls activa explícitamente un dedo = orbitar y dos dedos = zoom/pan mediante `controls.touches = { ONE: TOUCH.ROTATE, TWO: TOUCH.DOLLY_PAN }`. El comportamiento en escritorio no cambia.
+
+### Corregido
+- **Vista 3D — clic en elementos de texto no abría la vista de obra:** los meshes de texto están en `itemMeshes` y son detectables por el raycaster, pero `openFrom3D` salía inmediatamente con `if (!ud.photoId) return`, bloqueando cualquier elemento sin `photoId`. Fix: la guarda es ahora `if (!ud.itemId && !ud.photoId) return`, permitiendo que los textos (que tienen `itemId` pero no `photoId`) pasen y abran la vista individual correctamente.
+- **Vista 3D orbital — límite de ángulo de cámara:** la cámara podía orbitar por debajo del plano del suelo. Se añade `controls.maxPolarAngle = Math.PI * 0.48`, limitando la órbita a justo por encima de la rasante y evitando ángulos imposibles en una galería real.
+- **Vista de obra — orden de navegación entre tableros no respetaba el panel lateral:** `openFrom3D` construía `roomPhotos` iterando `room.walls` y `room.blocks` en orden geométrico, ignorando el orden definido por el usuario en el panel lateral izquierdo. Fix: se recogen todos los `boardId` vinculados a la sala, se ordenan según su posición en `boards[]` (el array que refleja el orden del panel), y se llama a `addBoard` en ese orden. El orden de los items dentro de cada tablero (por posición X) no cambia.
+
 ## [1.22.8] — 2026-06-16
 
 ### Corregido
 - **Vista de obra — teclas ← → no esperaban el Promise de la escena 3D:** el handler de teclado no era `async` y actualizaba el estado directamente con `setArtwork3D()`, sin pasar por `navigateToRoomItem`. Esto hacía que la navegación con teclado se saltara el `await room3DReadyPromiseRef.current` que los botones de flecha en pantalla sí respetan, causando transiciones rotas si la escena 3D aún no había terminado de cargar. Fix: el handler es ahora `async`; las teclas ← → leen `artwork3DRef.current` y llaman `await navigateToRoomItem(rp, n)`.
 - **Vista de obra — teclas ← → inactivas en nivel 1 (zona/grid):** el handler de teclado solo comprobaba `artwork3DRef.current` (nivel 2 — foto individual); cuando la navegación de sala llegaba a una zona o grid (nivel 1), las teclas ← → no hacían nada, aunque los botones en pantalla sí funcionaban. Fix: se introduce `artwork3DZoneRef` siguiendo el patrón estado+ref dual ya existente; el handler unifica el bloque de nivel 1 para zona y grid, responde a ← → en ambos casos con `await navigateToRoomItem`, y corrige también Escape desde drilldown de zona (vuelve al nivel 1 en lugar de cerrar la vista entera).
 - **Vista de zona — posiciones incorrectas de los members:** la vista de conjunto de zona usaba `zone.w/zone.h` (el frame del canvas) como bounding box para escalar y posicionar; si los members no empezaban exactamente en la esquina `(zone.x, zone.y)` del frame, aparecían desplazados. Fix: el scale y el contenedor se calculan ahora sobre el **bounding box real** de los members (`minX/minY/maxX/maxY` en coordenadas relativas a la zona), y cada member se posiciona restando `minX/minY` al offset relativo, garantizando que el conjunto llena el viewport correctamente. Adicionalmente, la altura de los items de foto se calculaba con `m.w` como fallback cuando `m.h` es `undefined`; fix: la altura real se obtiene de `photoMap` via `Math.round(m.w * photo.h / photo.w)`, corrigiendo tanto el bounding box vertical como la posición de cada member.
-- **Vista 3D — clic en elementos de texto no abría la vista de obra:** los meshes de texto están en `itemMeshes` y son detectables por el raycaster, pero `openFrom3D` salía inmediatamente con `if (!ud.photoId) return`, bloqueando cualquier elemento sin `photoId`. Fix: la guarda es ahora `if (!ud.itemId && !ud.photoId) return`, permitiendo que los textos (que tienen `itemId` pero no `photoId`) pasen y abran la vista individual correctamente.
-- **Vista de obra — orden de navegación entre tableros no respetaba el panel lateral:** `openFrom3D` construía `roomPhotos` iterando `room.walls` y `room.blocks` en orden geométrico, ignorando el orden definido por el usuario en el panel lateral izquierdo. Fix: se recogen todos los `boardId` vinculados a la sala, se ordenan según su posición en `boards[]` (el array que refleja el orden del panel), y se llama a `addBoard` en ese orden. El orden de los items dentro de cada tablero (por posición X) no cambia.
 
 ## [1.22.7] — 2026-06-16
 

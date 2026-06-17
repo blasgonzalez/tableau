@@ -1,13 +1,26 @@
 # Changelog
 
+## [1.22.10] — 2026-06-17
+
+### Fixed
+- **3D view on mobile — pinch-to-zoom not working:** `controls.enableZoom` was `false` (wheel zoom was handled by a custom proportional handler), which also disabled OrbitControls' pinch-to-zoom. Fix: `enableZoom = true` — OrbitControls now handles both mouse wheel and two-finger pinch; the manual `onCanvasWheel` handler is removed; and `renderer.domElement.style.touchAction = 'none'` is added so the browser does not intercept touch gestures before they reach Three.js.
+
+## [1.22.9] — 2026-06-17
+
+### Improved
+- **Shared 3D view — mobile experience:** on touch devices (`window.innerWidth < 768 || 'ontouchstart' in window`) the canvas now fills 100% of the viewport; the mouse-instruction side panel is not rendered (mouse instructions are meaningless on touch); the button bar shows only Reset view, Person, and 💬 (if comments are enabled), all with a minimum 44 × 44 px touch target; Walk and Snapshot buttons are hidden; the walk-mode instruction overlay is suppressed; and OrbitControls explicitly enables one finger = orbit, two fingers = zoom/pan via `controls.touches = { ONE: TOUCH.ROTATE, TWO: TOUCH.DOLLY_PAN }`. Desktop behaviour is unchanged.
+
+### Fixed
+- **3D view — clicking text elements did not open artwork view:** text meshes are in `itemMeshes` and are hit by the raycaster, but `openFrom3D` exited immediately with `if (!ud.photoId) return`, blocking any element without a `photoId`. Fix: the guard is now `if (!ud.itemId && !ud.photoId) return`, allowing text items (which have `itemId` but no `photoId`) to proceed and open the individual artwork view correctly.
+- **3D orbital view — camera angle limit:** the camera could orbit below the floor plane. Added `controls.maxPolarAngle = Math.PI * 0.48`, capping the orbit just above the horizon and preventing impossible angles in a real gallery.
+- **Artwork view — board navigation order did not match the left panel:** `openFrom3D` built `roomPhotos` by iterating `room.walls` and `room.blocks` in geometric order, ignoring the order defined by the user in the left sidebar. Fix: all `boardId`s linked to the room are collected, sorted by their position in `boards[]` (the array that reflects the sidebar order), and `addBoard` is called in that order. The order of items within each board (by X position) is unchanged.
+
 ## [1.22.8] — 2026-06-16
 
 ### Fixed
 - **Artwork view — ← → keyboard keys did not await the 3D scene Promise:** the keyboard handler was not `async` and updated state directly via `setArtwork3D()`, bypassing `navigateToRoomItem`. This caused keyboard navigation to skip the `await room3DReadyPromiseRef.current` that the on-screen arrow buttons correctly respect, resulting in broken transitions if the 3D scene had not yet finished loading. Fix: the handler is now `async`; ← → keys read `artwork3DRef.current` and call `await navigateToRoomItem(rp, n)`.
 - **Artwork view — ← → keys inactive at level 1 (zone/grid):** the keyboard handler only checked `artwork3DRef.current` (level 2 — individual photo); when room navigation landed on a zone or grid (level 1), ← → did nothing even though the on-screen buttons worked. Fix: `artwork3DZoneRef` is introduced following the existing state+ref dual pattern; the handler merges the level-1 block for zone and grid, responds to ← → in both cases with `await navigateToRoomItem`, and also fixes Escape from zone drilldown (now returns to level 1 overview instead of closing the entire artwork view).
 - **Zone view — incorrect member positions:** the zone overview used `zone.w/zone.h` (the canvas frame) as the bounding box for scaling and positioning; if members did not start exactly at the `(zone.x, zone.y)` corner of the frame, they appeared shifted. Fix: scale and container are now computed from the **real member bounding box** (`minX/minY/maxX/maxY` in zone-relative coordinates), and each member is positioned by subtracting `minX/minY` from its relative offset, ensuring the layout fills the viewport correctly. Additionally, photo item heights were falling back to `m.w` when `m.h` is `undefined`; fix: the actual height is now derived from `photoMap` via `Math.round(m.w * photo.h / photo.w)`, correcting both the vertical bounding box and each member's rendered height.
-- **3D view — clicking text elements did not open artwork view:** text meshes are in `itemMeshes` and are hit by the raycaster, but `openFrom3D` exited immediately with `if (!ud.photoId) return`, blocking any element without a `photoId`. Fix: the guard is now `if (!ud.itemId && !ud.photoId) return`, allowing text items (which have `itemId` but no `photoId`) to proceed and open the individual artwork view correctly.
-- **Artwork view — board navigation order did not match the left panel:** `openFrom3D` built `roomPhotos` by iterating `room.walls` and `room.blocks` in geometric order, ignoring the order defined by the user in the left sidebar. Fix: all `boardId`s linked to the room are collected, sorted by their position in `boards[]` (the array that reflects the sidebar order), and `addBoard` is called in that order. The order of items within each board (by X position) is unchanged.
 
 ## [1.22.7] — 2026-06-16
 
