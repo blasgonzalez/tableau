@@ -1,6 +1,6 @@
 {
-  "version": "1.22.10",
+  "version": "1.22.11",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-06-17",
-  "notes": "Corrección del pinch-to-zoom en la vista 3D en móvil."
+  "notes": ""
 }

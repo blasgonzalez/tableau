@@ -4693,7 +4693,9 @@ ${rows}
     if (!its.length) return { items: its, dx: 0, dy: 0 };
     const minX = Math.min(...its.map(i => i.x));
     const minY = Math.min(...its.map(i => i.y));
-    if (!minX && !minY) return { items: its, dx: 0, dy: 0 };
+    // Only normalize to fix negative coordinates — shifting items that are all at positive
+    // positions causes an uncompensatable viewport jump when scrollLeft/scrollTop is already 0.
+    if (minX >= 0 && minY >= 0) return { items: its, dx: 0, dy: 0 };
     return { items: its.map(i => ({ ...i, x: i.x - minX, y: i.y - minY })), dx: minX, dy: minY };
   };
 
@@ -4705,9 +4707,12 @@ ${rows}
     const { items: norm, dx, dy } = normalizeItems(its);
     setItems(norm); itemsRef.current = norm;
     if ((dx || dy) && wrapRef.current) {
-      const wr = wrapRef.current;
-      wr.scrollLeft = Math.max(0, wr.scrollLeft - dx * zoomRef.current);
-      wr.scrollTop  = Math.max(0, wr.scrollTop  - dy * zoomRef.current);
+      const snapDx = dx, snapDy = dy, snapZ = zoomRef.current;
+      requestAnimationFrame(() => {
+        if (!wrapRef.current) return;
+        wrapRef.current.scrollLeft = Math.max(0, wrapRef.current.scrollLeft - snapDx * snapZ);
+        wrapRef.current.scrollTop  = Math.max(0, wrapRef.current.scrollTop  - snapDy * snapZ);
+      });
     }
     return norm;
   };
