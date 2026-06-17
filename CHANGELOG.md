@@ -2,7 +2,11 @@
 
 ## [1.22.10] — 2026-06-17
 
+### Mejorado
+- **Barras de scroll del canvas — más visibles y fáciles de usar:** las scrollbars ahora tienen 8 × 8 px (el doble de ancho/alto) con esquinas redondeadas y colores que contrastan mejor contra el fondo del tablero. Al pasar el ratón sobre el thumb cambia a un color más claro para mayor feedback visual.
+
 ### Corregido
+- **Tablero variable — primera foto pegada al borde izquierdo:** al añadir la primera foto a un tablero vacío de tamaño variable, `applyNormalized` desplazaba su `x` a 0 (el `minX` del array de un solo elemento era la propia `x`), ignorando la posición del cursor. Fix: se omite la normalización cuando el tablero estaba vacío (`wasEmpty`); la foto cae donde el usuario la soltó y `fitWidth()` ajusta la vista. Las fotos siguientes siguen normalizando con normalidad.
 - **Vista 3D en móvil — pinch-to-zoom no funcionaba:** `controls.enableZoom` estaba en `false` (el zoom de rueda se gestionaba con un handler proporcional personalizado), lo que también desactivaba el zoom por pinch de OrbitControls. Fix: `enableZoom = true` — OrbitControls gestiona ahora tanto la rueda del ratón como el gesto de dos dedos; se elimina el handler `onCanvasWheel` manual; y se añade `renderer.domElement.style.touchAction = 'none'` para que el navegador no intercepte los gestos táctiles antes de que lleguen a Three.js.
 
 ## [1.22.9] — 2026-06-17

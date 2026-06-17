@@ -300,6 +300,11 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .canvas-wrap.lib-expanded .bitem-bar,.canvas-wrap.lib-expanded .zone-hdr{display:none !important}
 .canvas-wrap.frame-painter .bitem:not(.locked){cursor:copy}
 .canvas-wrap.paste-ghost-mode,.canvas-wrap.paste-ghost-mode *{cursor:crosshair !important}
+.canvas-wrap::-webkit-scrollbar{width:8px;height:8px}
+.canvas-wrap::-webkit-scrollbar-track{background:var(--bg2)}
+.canvas-wrap::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+.canvas-wrap::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+.canvas-wrap::-webkit-scrollbar-corner{background:var(--bg2)}
 .canvas{position:relative;min-width:3000px;min-height:2200px;z-index:1}
 .canvas-drop-hint{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(196,137,74,.06);border:3px dashed var(--acc-dim);font-size:14px;letter-spacing:3px;color:var(--acc);pointer-events:none;z-index:500}
 .canvas-drop-hint.no-proj{background:rgba(238,0,85,.05);border-color:#e05;color:#e05}
@@ -4809,10 +4814,11 @@ ${rows}
     const item = tmplEditModeRef.current
       ? { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), type: 'placeholder', x, y, w, h: finalH, z: maxZ + 1, rot: 0 }
       : { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), photoId: photo.id, x, y, w, z: maxZ + 1, label: '', rot: 0, frame: boardsRef.current.find(b => b.id === bidRef.current)?.defaultFrame || 0, ...(placedZone ? { zoneId: placedZone.id } : {}) };
-    const nit = [...itemsRef.current, item];
-    const norm = applyNormalized(nit);
+    let nit = [...itemsRef.current, item];
+    if (!wasEmpty) nit = applyNormalized(nit);
+    else { setItems(nit); itemsRef.current = nit; }
     selRef.current = [item.id]; setSel([item.id]);
-    saveItemsNow(norm);
+    saveItemsNow(nit);
     if (wasEmpty) requestAnimationFrame(() => fitWidth());
   };
 

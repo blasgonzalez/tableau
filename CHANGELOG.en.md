@@ -2,7 +2,11 @@
 
 ## [1.22.10] — 2026-06-17
 
+### Improved
+- **Canvas scrollbars — more visible and easier to use:** scrollbars are now 8 × 8 px (twice as wide/tall) with rounded corners and colours that contrast better against the board background. Hovering over the thumb changes to a lighter colour for better visual feedback.
+
 ### Fixed
+- **Variable board — first photo snapping to left edge:** when adding the first photo to an empty variable-size board, `applyNormalized` shifted its `x` to 0 (the `minX` of a single-element array was the item's own `x`), ignoring the cursor position. Fix: normalization is skipped when the board was empty (`wasEmpty`); the photo lands where the user dropped it and `fitWidth()` adjusts the view. Subsequent photos continue to normalize correctly.
 - **3D view on mobile — pinch-to-zoom not working:** `controls.enableZoom` was `false` (wheel zoom was handled by a custom proportional handler), which also disabled OrbitControls' pinch-to-zoom. Fix: `enableZoom = true` — OrbitControls now handles both mouse wheel and two-finger pinch; the manual `onCanvasWheel` handler is removed; and `renderer.domElement.style.touchAction = 'none'` is added so the browser does not intercept touch gestures before they reach Three.js.
 
 ## [1.22.9] — 2026-06-17
