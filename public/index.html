@@ -3631,7 +3631,7 @@ function App() {
 
       // Shared helper: open artwork3D / zone / grid view from a photo mesh's userData
       const openFrom3D = ud => {
-        if (!ud.photoId) return;
+        if (!ud.itemId && !ud.photoId) return;
         if (cancelYawTween) cancelYawTween();
         savedCam3DRef.current = { pos: camera.position.clone(), target: controls.target.clone(), wasWalk: walkActive };
         const room_ = roomRef.current;
@@ -3670,8 +3670,12 @@ function App() {
             }
           });
         };
-        (room_?.walls || []).forEach(w => { addBoard(w.boardId); addBoard(w.boardIdBack); });
-        (room_?.blocks || []).forEach(b => ['n','s','e','w','t'].forEach(f => addBoard(b.faces?.[f]?.boardId)));
+        // Collect all boardIds linked to the room, then sort by their position in boards[]
+        const roomBoardIds = new Set();
+        (room_?.walls || []).forEach(w => { if (w.boardId) roomBoardIds.add(w.boardId); if (w.boardIdBack) roomBoardIds.add(w.boardIdBack); });
+        (room_?.blocks || []).forEach(b => ['n','s','e','w','t'].forEach(f => { const bId = b.faces?.[f]?.boardId; if (bId) roomBoardIds.add(bId); }));
+        const boardOrder = boardsRef.current.map(b => b.id);
+        [...roomBoardIds].sort((a, b) => { const ia = boardOrder.indexOf(a); const ib = boardOrder.indexOf(b); return (ia === -1 ? Infinity : ia) - (ib === -1 ? Infinity : ib); }).forEach(addBoard);
         const wc = boardWallColor[ud.boardId] || '#d0c8bc';
         if (ud.gridItemId) {
           const gridItem = (allBI[ud.boardId] || []).find(i => i.id === ud.gridItemId);
