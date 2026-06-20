@@ -1215,7 +1215,7 @@ const I18N = {
     versionsTitle:'Versiones del tablero', saveVersion:'Guardar versión', versionSaved:'Versión guardada', versionRestored:'Versión restaurada', versionDeleted:'Versión eliminada', restoreVersion:'Restaurar', confirmRestore:'¿Restaurar esta versión? El estado actual se perderá.', confirmDeleteVersion:'¿Eliminar esta versión?', noVersions:'Sin versiones guardadas', versionItems:(n) => `${n} elemento${n!==1?'s':''}`,
     fillPlaceholderHint:'Haz clic en una foto de la biblioteca para asignarla al marco',
     original:'Original:', inTableau:'En tableau:', notInAnyBoard:'No está en ningún tablero',
-    filterScopeProject:'En el proyecto', filterScopeRoom:'En esta sala',
+    filterScopeProject:'En el proyecto', filterScopeRoom:'En esta sala', filterScopeBoard:'En este tablero',
     infoBoardCtxWall:(wn,rn,s)=>`Pared ${wn} — ${rn} (cara ${s})`,
     infoBoardCtxBlock:(bl,fn)=>`Bloque ${bl} — cara ${fn}`,
     infoBoardCtxFaceLabel:{n:'Norte',s:'Sur',e:'Este',w:'Oeste',t:'Superior'},
@@ -1449,7 +1449,7 @@ const I18N = {
     versionsTitle:'Board versions', saveVersion:'Save version', versionSaved:'Version saved', versionRestored:'Version restored', versionDeleted:'Version deleted', restoreVersion:'Restore', confirmRestore:'Restore this version? Current state will be lost.', confirmDeleteVersion:'Delete this version?', noVersions:'No saved versions', versionItems:(n) => `${n} item${n!==1?'s':''}`,
     fillPlaceholderHint:'Click a photo in the library to assign it to this frame',
     original:'Original:', inTableau:'In tableau:', notInAnyBoard:'Not in any board',
-    filterScopeProject:'In project', filterScopeRoom:'In this room',
+    filterScopeProject:'In project', filterScopeRoom:'In this room', filterScopeBoard:'In this board',
     infoBoardCtxWall:(wn,rn,s)=>`Wall ${wn} — ${rn} (side ${s})`,
     infoBoardCtxBlock:(bl,fn)=>`Block ${bl} — ${fn} face`,
     infoBoardCtxFaceLabel:{n:'North',s:'South',e:'East',w:'West',t:'Top'},
@@ -1805,7 +1805,7 @@ function App() {
   const libHeightRef    = useRef(parseInt(localStorage.getItem('tb-libh') || '160'));
   const [photoSort,     setPhotoSort]     = useState(() => localStorage.getItem('photoSort') || 'imported');
   const [photoFilter,   setPhotoFilter]   = useState(() => localStorage.getItem('photoFilter') || 'all');
-  const [unplacedScope, setUnplacedScope] = useState('project'); // 'project' | 'room'
+  const [unplacedScope, setUnplacedScope] = useState('project'); // 'project' | 'room' | 'board'
   const [libSearch,     setLibSearch]     = useState('');
   const [thumbSize,     setThumbSize]     = useState(() => parseInt(localStorage.getItem('thumbSize') || '84'));
   const [labelEditId,   setLabelEditId]   = useState(null);
@@ -4642,14 +4642,19 @@ ${rows}
   };
 
   // ── helpers ───────────────────────────────────────────────────────────────
+  // Returns true if photoId appears in any item of the board's item list,
+  // covering both direct photos (item.photoId) and grid items (item.photoIds[]).
+  const isPhotoInBoardItems = (photoId, items) =>
+    items.some(i => i.photoId === photoId || (i.photoIds && i.photoIds.includes(photoId)));
+
   const photoBoardNames = (photoId) =>
     boardsRef.current
-      .filter(b => (allBoardItemsRef.current[b.id] || []).some(i => i.photoId === photoId))
+      .filter(b => isPhotoInBoardItems(photoId, allBoardItemsRef.current[b.id] || []))
       .map(b => b.name);
 
   const photoBoardsDetailed = (photoId) =>
     boardsRef.current
-      .filter(b => (allBoardItemsRef.current[b.id] || []).some(i => i.photoId === photoId))
+      .filter(b => isPhotoInBoardItems(photoId, allBoardItemsRef.current[b.id] || []))
       .map(b => ({ id: b.id, name: b.name }));
 
   const getRoomBoardIds = (r) => {
@@ -4667,7 +4672,7 @@ ${rows}
 
   const photoBoardsWithContext = (photoId) =>
     boardsRef.current
-      .filter(b => (allBoardItemsRef.current[b.id] || []).some(i => i.photoId === photoId))
+      .filter(b => isPhotoInBoardItems(photoId, allBoardItemsRef.current[b.id] || []))
       .map(b => {
         let ctx = null;
         for (const r of rooms) {
@@ -10488,12 +10493,16 @@ ${rows}
               const allTags = [...new Set(photos.flatMap(p => p.tags || []))].sort();
               const rejectedCount = photos.filter(p => p.rejected).length;
               const hasRoomScope = room && getRoomBoardIds(room).size > 0;
-              const effectiveScope = (unplacedScope === 'room' && hasRoomScope) ? 'room' : 'project';
+              const effectiveScope = (unplacedScope === 'room' && hasRoomScope) ? 'room'
+                : (unplacedScope === 'board' && bid) ? 'board'
+                : 'project';
               const roomScopeBoardIds = effectiveScope === 'room' ? getRoomBoardIds(room) : null;
               const displayedPhotos = (photoFilter === 'pending'
-                ? sortedPhotos.filter(p => roomScopeBoardIds
-                    ? !boardsRef.current.some(b => roomScopeBoardIds.has(b.id) && (allBoardItemsRef.current[b.id]||[]).some(i => i.photoId === p.id))
-                    : photoBoardNames(p.id).length === 0)
+                ? sortedPhotos.filter(p => effectiveScope === 'board'
+                    ? !isPhotoInBoardItems(p.id, allBoardItemsRef.current[bid] || [])
+                    : roomScopeBoardIds
+                      ? !boardsRef.current.some(b => roomScopeBoardIds.has(b.id) && isPhotoInBoardItems(p.id, allBoardItemsRef.current[b.id] || []))
+                      : photoBoardNames(p.id).length === 0)
                 : sortedPhotos)
                 .filter(p => rejectedFilter === true ? p.rejected : rejectedFilter === false ? !p.rejected : true)
                 .filter(p => tagFilter.length === 0 || tagFilter.some(t => (p.tags || []).includes(t)))
@@ -10530,11 +10539,12 @@ ${rows}
                         onChange={e => { e.stopPropagation(); setUnplacedScope(e.target.value); }}>
                         <option value="project">{t('filterScopeProject')}</option>
                         {hasRoomScope && <option value="room">{t('filterScopeRoom')}</option>}
+                        {bid && <option value="board">{t('filterScopeBoard')}</option>}
                       </select>
                     )}
                     <button className={`lib-filter${orientFilter ? ' active' : ''}`}
                       data-tooltip={t('orientFilterHint', orientFilter)}
-                      onClick={e => { e.stopPropagation(); setOrientFilter(f => f === null ? 'L' : f === 'L' ? 'P' : f === 'P' ? 'S' : null); }}>
+                      onClick={e => { e.stopPropagation(); const next = orientFilter === null ? 'L' : orientFilter === 'L' ? 'P' : orientFilter === 'P' ? 'S' : null; setOrientFilter(next); const _tt = document.getElementById('tt'); if (_tt && _tt.style.display !== 'none') _tt.textContent = t('orientFilterHint', next); }}>
                       {orientFilter === 'L' ? '▬' : orientFilter === 'P' ? '▮' : orientFilter === 'S' ? '■' : '▬▮'}
                     </button>
                     {(rejectedCount > 0 || rejectedFilter !== false) && (
@@ -10619,7 +10629,7 @@ ${rows}
                         const plItem = fillPlaceholder ? items.find(i => i.id === fillPlaceholder.itemId) : null;
                         const targetRatio = plItem ? plItem.h / plItem.w : null;
                         const renderThumb = p => {
-                          const inBoard = items.some(i => i.photoId === p.id);
+                          const inBoard = isPhotoInBoardItems(p.id, items);
                           const isSel = libSel.includes(p.id);
                           let fitClass = '';
                           if (targetRatio && p.w && p.h) {

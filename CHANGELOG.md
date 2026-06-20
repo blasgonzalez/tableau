@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.22.11] — 2026-06-17
+
+### Mejorado
+- **Biblioteca — filtro "Sin colocar": nuevo ámbito "En este tablero":** el selector de ámbito añade una tercera opción que muestra las fotos que no están colocadas en el tablero activo (bid), aunque sí estén en otros tableros del proyecto. Solo aparece cuando hay un tablero activo.
+- **Biblioteca — tooltip del filtro de orientación:** al hacer clic para cambiar el ciclo null→L→P→S→null, el div `#tt` se actualizaba al valor anterior porque el sistema de tooltips solo captura `data-tooltip` en `mouseover`. Fix: el `onClick` calcula explícitamente el próximo valor y actualiza `#tt.textContent` de forma síncrona si el tooltip está visible.
+
+### Corregido
+- **Biblioteca — fotos en mosaicos (grids) no reconocidas como colocadas:** la comprobación de si una foto estaba colocada en el tablero activo solo miraba `item.photoId` (fotos sueltas), ignorando `item.photoIds[]` de los items de tipo grid. Afectaba al badge "EN TABLEAU" en las miniaturas, al filtro "Sin colocar" en sus tres ámbitos (proyecto, sala, tablero) y a las funciones auxiliares `photoBoardNames` / `photoBoardsDetailed` / `photoBoardsWithContext`. Fix: nuevo helper `isPhotoInBoardItems` que comprueba ambos campos, aplicado en todos los puntos afectados.
+
 ## [1.22.10] — 2026-06-17
 
 ### Mejorado

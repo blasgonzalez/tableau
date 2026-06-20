@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.22.11] — 2026-06-17
+
+### Improved
+- **Library — "Unplaced" filter: new "In this board" scope:** the scope selector adds a third option that shows photos not placed in the active board (bid), even if they appear in other boards of the same project. Only shown when a board is active.
+- **Library — orientation filter tooltip:** when clicking to cycle null→L→P→S→null, the `#tt` div kept showing the old value because the tooltip system only captures `data-tooltip` on `mouseover`. Fix: the `onClick` explicitly computes the next value and synchronously updates `#tt.textContent` when the tooltip is visible.
+
+### Fixed
+- **Library — photos inside grids not recognised as placed:** the check for whether a photo was placed in the active board only looked at `item.photoId` (standalone photos), ignoring `item.photoIds[]` from grid items. This affected the "IN TABLEAU" badge on thumbnails, the "Unplaced" filter across all three scopes (project, room, board), and the `photoBoardNames` / `photoBoardsDetailed` / `photoBoardsWithContext` helper functions. Fix: new `isPhotoInBoardItems` helper that checks both fields, applied at every affected call site.
+
 ## [1.22.10] — 2026-06-17
 
 ### Improved
