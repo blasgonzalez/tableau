@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.23.0] — 2026-06-21
+
+### Internal (no visible change)
+- **Room model — groundwork for multiple boards per wall face (Phase 0):** migration from the scalar `boardId`/`boardIdBack` field on walls to a list model `boardsA`/`boardsB` (array of `{boardId, offset}`). In this phase each face still has at most one board; app behaviour is unchanged.
+  - Lazy server-side migration (`loadRooms`): legacy rooms are normalised in memory on load; the new format is persisted on the next natural save.
+  - Defensive client-side normalisation: rooms received from the API pass through `normalizeRoom` before entering React state.
+  - New helpers: `normalizeWall`, `wallBoardIds`, `wallLinksBoard`, `wallSideBoard`, `normalizeRoom` (client and server).
+  - All wall read/write sites (`roomBoardIds`, 3D view, SVG, side panel, context menu, vertex merge, ZIP import, duplicate room, delete room/vertex) updated to the new model.
+
 ## [1.22.11] — 2026-06-17
 
 ### Improved

@@ -320,13 +320,39 @@ function resolveShareToken(token) {
   return loadShares()[token] || null;
 }
 
+// ── Room wall helpers (Fase 0: ≤1 tablero por cara) ──────────────────────────
+function normalizeWall(wall) {
+  if ('boardsA' in wall && 'boardsB' in wall) return wall;
+  const { boardId, boardIdBack, ...rest } = wall;
+  return {
+    ...rest,
+    boardsA: boardId     ? [{ boardId, offset: 0 }] : [],
+    boardsB: boardIdBack ? [{ boardId: boardIdBack, offset: 0 }] : [],
+  };
+}
+
+function wallBoardIds(wall) {
+  return [
+    ...(wall.boardsA || []).map(e => e.boardId),
+    ...(wall.boardsB || []).map(e => e.boardId),
+  ].filter(Boolean);
+}
+
 // ── Room share helpers ────────────────────────────────────────────────────────
 // NOTE: columns do not link boards today; include here if that changes.
 function roomBoardIds(room) {
   return new Set([
-    ...(room.walls  || []).flatMap(w => [w.boardId, w.boardIdBack].filter(Boolean)),
+    ...(room.walls  || []).flatMap(wallBoardIds),
     ...(room.blocks || []).flatMap(b => Object.values(b.faces || {}).map(f => f?.boardId).filter(Boolean)),
   ]);
+}
+
+function loadRooms(pid, dd = DATA_DIR) {
+  migrateRooms(pid, dd);
+  return readJSON(roomsFile(pid, dd), []).map(r => ({
+    ...r,
+    walls: (r.walls || []).map(normalizeWall),
+  }));
 }
 
 function roomPhotoIds(dd, pid, room) {
@@ -894,7 +920,7 @@ app.get('/api/shares', requireAuth, (req, res) => {
     const proj = allProjs.find(p => p.id === s.projectId);
     if (s.type === 'room') {
       if (!roomsCache[s.projectId])
-        roomsCache[s.projectId] = readJSON(roomsFile(s.projectId, req.dd), []);
+        roomsCache[s.projectId] = loadRooms(s.projectId, req.dd);
       const room = roomsCache[s.projectId].find(r => r.id === s.roomId);
       result.push({ token, type: 'room', projectId: s.projectId, projectName: proj?.name || s.projectId,
         roomId: s.roomId, roomName: room?.name || '', email: s.email || null,
@@ -982,7 +1008,7 @@ app.get('/api/rooms/share/:token', (req, res) => {
   const share = resolveShareToken(req.params.token);
   if (!share || share.type !== 'room') return res.status(404).json({ error: 'Enlace de sala no válido' });
   const dd    = path.join(DATA_DIR, share.ownerId);
-  const rooms = readJSON(roomsFile(share.projectId, dd), []);
+  const rooms = loadRooms(share.projectId, dd);
   const room  = rooms.find(r => r.id === share.roomId);
   if (!room) return res.status(404).json({ error: 'Sala no encontrada' });
   res.json({ projectId: share.projectId, roomId: share.roomId, roomName: room.name || '', allowComments: share.allowComments || false });
@@ -1281,7 +1307,7 @@ app.delete('/api/projects/:pid', requireAuth, (req, res) => {
 // ── Boards ───────────────────────────────────────────────────────────────────
 app.get('/api/projects/:pid/boards', resolveAccess, (req, res) => {
   if (req.shareScope === 'room') {
-    const room = readJSON(roomsFile(req.params.pid, req.dd), []).find(r => r.id === req.shareRoomId);
+    const room = loadRooms(req.params.pid, req.dd).find(r => r.id === req.shareRoomId);
     if (!room) return res.json([]);
     const bids = roomBoardIds(room);
     return res.json(readJSON(boardsMeta(req.params.pid, req.dd)).filter(b => bids.has(b.id) && !b.private));
@@ -1377,8 +1403,7 @@ app.put('/api/projects/:pid/boards/order', requireAuth, (req, res) => {
 // ── Rooms (multi-room) ────────────────────────────────────────────────────────
 app.get('/api/projects/:pid/rooms', resolveAccess, (req, res) => {
   const { pid } = req.params;
-  migrateRooms(pid, req.dd);
-  const rooms = readJSON(roomsFile(pid, req.dd), []);
+  const rooms = loadRooms(pid, req.dd);
   if (req.shareScope === 'room')
     return res.json(rooms.filter(r => r.id === req.shareRoomId));
   res.json(rooms);
@@ -1386,8 +1411,7 @@ app.get('/api/projects/:pid/rooms', resolveAccess, (req, res) => {
 
 app.post('/api/projects/:pid/rooms', requireAuth, (req, res) => {
   const { pid } = req.params;
-  migrateRooms(pid, req.dd);
-  const rooms = readJSON(roomsFile(pid, req.dd), []);
+  const rooms = loadRooms(pid, req.dd);
   const r = { id: `r${Date.now().toString(36)}`, ...req.body };
   rooms.push(r);
   writeJSON(roomsFile(pid, req.dd), rooms);
@@ -1396,7 +1420,7 @@ app.post('/api/projects/:pid/rooms', requireAuth, (req, res) => {
 
 app.put('/api/projects/:pid/rooms/:rid', requireAuth, (req, res) => {
   const { pid, rid } = req.params;
-  const rooms = readJSON(roomsFile(pid, req.dd), []);
+  const rooms = loadRooms(pid, req.dd);
   const idx = rooms.findIndex(r => r.id === rid);
   if (idx === -1) return res.status(404).json({ error: 'not found' });
   rooms[idx] = { ...rooms[idx], ...req.body, id: rid };
@@ -1408,11 +1432,11 @@ app.delete('/api/projects/:pid/rooms/:rid', requireAuth, (req, res) => {
   const { pid, rid } = req.params;
   const dd = req.dd;
   const f = roomsFile(pid, dd);
-  const rooms = readJSON(f, []);
+  const rooms = loadRooms(pid, dd);
   const room = rooms.find(r => r.id === rid);
   if (room) {
     const boardIds = new Set([
-      ...(room.walls  || []).flatMap(w => [w.boardId, w.boardIdBack].filter(Boolean)),
+      ...(room.walls  || []).flatMap(wallBoardIds),
       ...(room.blocks || []).flatMap(b => Object.values(b.faces || {}).map(f => f?.boardId).filter(Boolean)),
       ...(room.columns|| []).flatMap(c => Object.values(c.faces || {}).map(f => f?.boardId).filter(Boolean)),
     ]);
@@ -1444,14 +1468,14 @@ app.delete('/api/projects/:pid/rooms/:rid', requireAuth, (req, res) => {
 
 app.post('/api/projects/:pid/rooms/:rid/duplicate', requireAuth, (req, res) => {
   const { pid, rid } = req.params;
-  const rooms = readJSON(roomsFile(pid, req.dd), []);
+  const rooms = loadRooms(pid, req.dd);
   const original = rooms.find(r => r.id === rid);
   if (!original) return res.status(404).json({ error: 'not found' });
   const copy = {
     ...original,
     id: `r${Date.now().toString(36)}`,
     name: original.name + (req.body?.lang === 'en' ? ' (copy)' : ' (copia)'),
-    walls:  (original.walls  || []).map(({ boardId, boardIdBack, ...w }) => w),
+    walls:  (original.walls  || []).map(w => ({ ...w, boardsA: [], boardsB: [] })),
     blocks: (original.blocks || []).map(b => ({
       ...b,
       faces: Object.fromEntries(
@@ -1481,7 +1505,7 @@ app.post('/api/projects/:pid/rooms/:rid/share', requireAuth, (req, res) => {
   if (!AUTH_ENABLED) return res.status(400).json({ error: 'Solo disponible en modo servidor' });
   const { pid, rid } = req.params;
   const ownerId = req.session.userId;
-  const rooms = readJSON(roomsFile(pid, req.dd), []);
+  const rooms = loadRooms(pid, req.dd);
   if (!rooms.find(r => r.id === rid)) return res.status(404).json({ error: 'Sala no encontrada' });
   const shares = loadShares();
   for (const [tok, s] of Object.entries(shares)) {
@@ -1537,7 +1561,7 @@ app.post('/api/projects/:pid/rooms/:rid/share/invite', requireAuth, async (req, 
     if (s.type === 'room' && s.ownerId === req.session.userId && s.projectId === pid && s.roomId === rid) { token = tok; break; }
   }
   if (!token) {
-    const rooms = readJSON(roomsFile(pid, req.dd), []);
+    const rooms = loadRooms(pid, req.dd);
     if (!rooms.find(r => r.id === rid)) return res.status(404).json({ error: 'Sala no encontrada' });
     token = uuidv4().replace(/-/g, '');
     shares[token] = { type: 'room', ownerId: req.session.userId, projectId: pid, roomId: rid, role: 'view', created: Date.now() };
@@ -1547,7 +1571,7 @@ app.post('/api/projects/:pid/rooms/:rid/share/invite', requireAuth, async (req, 
   const url      = `${APP_URL}/?room=${token}`;
   const proj     = readJSON(projsFile(req.dd)).find(p => p.id === pid);
   const projName = proj?.name || 'Tableau';
-  const rooms    = readJSON(roomsFile(pid, req.dd), []);
+  const rooms    = loadRooms(pid, req.dd);
   const room     = rooms.find(r => r.id === rid);
   const roomName = room?.name || '';
   const senderName = sender?.username || 'Un usuario';
@@ -1594,7 +1618,7 @@ app.delete('/api/projects/:pid/room', requireAuth, (req, res) => {
 app.get('/api/projects/:pid/photos', resolveAccess, (req, res) => {
   const { pid } = req.params;
   if (req.shareScope === 'room') {
-    const rooms = readJSON(roomsFile(pid, req.dd), []);
+    const rooms = loadRooms(pid, req.dd);
     const room  = rooms.find(r => r.id === req.shareRoomId);
     if (!room) return res.json([]);
     const allowed = roomPhotoIds(req.dd, pid, room);
@@ -1954,7 +1978,7 @@ app.post('/api/projects/:pid/photos/:photoId/copy-to/:targetPid', requireAuth, (
 app.get('/photos/:pid/:id', resolveAccess, (req, res) => {
   const { pid, id } = req.params;
   if (req.shareScope === 'room') {
-    const room = readJSON(roomsFile(pid, req.dd), []).find(r => r.id === req.shareRoomId);
+    const room = loadRooms(pid, req.dd).find(r => r.id === req.shareRoomId);
     if (!room || !roomPhotoIds(req.dd, pid, room).has(id)) return res.status(403).end();
   }
   const file = path.join(photoDir(pid, req.dd), `${id}.jpg`);
@@ -1964,7 +1988,7 @@ app.get('/photos/:pid/:id', resolveAccess, (req, res) => {
 app.get('/photos/:pid/:id/thumb', resolveAccess, (req, res) => {
   const { pid, id } = req.params;
   if (req.shareScope === 'room') {
-    const room = readJSON(roomsFile(pid, req.dd), []).find(r => r.id === req.shareRoomId);
+    const room = loadRooms(pid, req.dd).find(r => r.id === req.shareRoomId);
     if (!room || !roomPhotoIds(req.dd, pid, room).has(id)) return res.status(403).end();
   }
   const file = path.join(photoDir(pid, req.dd), `${id}_thumb.jpg`);
@@ -1975,7 +1999,7 @@ app.get('/photos/:pid/:id/thumb', resolveAccess, (req, res) => {
 app.get('/api/boards/:pid/:bid/items', resolveAccess, (req, res) => {
   const { pid, bid } = req.params;
   if (req.shareScope === 'room') {
-    const room = readJSON(roomsFile(pid, req.dd), []).find(r => r.id === req.shareRoomId);
+    const room = loadRooms(pid, req.dd).find(r => r.id === req.shareRoomId);
     if (!room || !roomBoardIds(room).has(bid)) return res.status(403).json({ error: 'Acceso denegado' });
     const board = readJSON(boardsMeta(pid, req.dd)).find(b => b.id === bid);
     if (board?.private) return res.status(403).json({ error: 'Acceso denegado' });
@@ -2426,11 +2450,14 @@ app.post('/api/projects/import/:tempId/confirm', requireAuth, (req, res) => {
     if (oldRooms.length) {
       const newRooms = oldRooms.map(room => ({
         ...room,
-        walls: (room.walls || []).map(wall => ({
-          ...wall,
-          ...(wall.boardId     ? { boardId:     boardIdMap[wall.boardId]     || wall.boardId     } : {}),
-          ...(wall.boardIdBack ? { boardIdBack: boardIdMap[wall.boardIdBack] || wall.boardIdBack } : {}),
-        })),
+        walls: (room.walls || []).map(wall => {
+          const nw = normalizeWall(wall);
+          return {
+            ...nw,
+            boardsA: nw.boardsA.map(e => ({ ...e, boardId: boardIdMap[e.boardId] || e.boardId })),
+            boardsB: nw.boardsB.map(e => ({ ...e, boardId: boardIdMap[e.boardId] || e.boardId })),
+          };
+        }),
         blocks: (room.blocks || []).map(block => ({
           ...block,
           faces: Object.fromEntries(
@@ -2491,7 +2518,7 @@ app.post('/api/projects/:pid/comments', resolveAccess, (req, res) => {
   if (!isOwner) {
     if (!req.shareAllowComments) return res.status(403).json({ error: 'Los comentarios no están habilitados en este enlace' });
     if (req.shareScope === 'room') {
-      const rooms = readJSON(roomsFile(pid, req.dd), []);
+      const rooms = loadRooms(pid, req.dd);
       const room  = rooms.find(r => r.id === req.shareRoomId);
       if (!room) return res.status(403).json({ error: 'Acceso denegado' });
       const roomBids = roomBoardIds(room);

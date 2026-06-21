@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.23.0] — 2026-06-21
+
+### Interno (sin cambio visible)
+- **Modelo de sala — preparación para múltiples tableros por cara de pared (Fase 0):** migración del campo escalar `boardId`/`boardIdBack` en las paredes al modelo de lista `boardsA`/`boardsB` (array de `{boardId, offset}`). En esta fase cada cara sigue teniendo máximo un tablero; el comportamiento de la app no cambia.
+  - Migración perezosa en servidor (`loadRooms`): las salas antiguas se normalizan en memoria al cargarse; el formato nuevo se persiste en el siguiente guardado natural.
+  - Normalización defensiva en cliente: las salas recibidas de la API pasan por `normalizeRoom` antes de entrar al estado React.
+  - Nuevos helpers: `normalizeWall`, `wallBoardIds`, `wallLinksBoard`, `wallSideBoard`, `normalizeRoom` (cliente y servidor).
+  - Todos los puntos de lectura/escritura de paredes (`roomBoardIds`, 3D, SVG, panel lateral, menú contextual, merge de vértice, import ZIP, duplicar sala, borrar sala/vértice) actualizados al nuevo modelo.
+
 ## [1.22.11] — 2026-06-17
 
 ### Mejorado
