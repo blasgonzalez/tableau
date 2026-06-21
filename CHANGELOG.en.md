@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.23.5-fase3a] — 2026-06-21
+
+### Internal (no visible change)
+- **Rooms — Phase 3a: per-board vertical position model:** each `boardsA`/`boardsB` entry expands from `{boardId, offset}` to `{boardId, offset, hangY}`, where `hangY` is the height of the board's centre above the floor in cm.
+  - Full lazy migration: `normalizeWall` now always iterates all entries (even when the wall already has `boardsA`/`boardsB`) and guarantees `hangY ?? 150` and `offset ?? 0`. Legacy rooms are normalised on the first `loadRooms` without any data rewrite.
+  - `normalizeWall` updated in both `server.js` and `index.html` (both copies identical).
+  - 3D renderer: `wallSides` now propagates `hangY: e.hangY ?? 150`; the `forEach` destructures `hangY`; `hangCenterY` is no longer a hard-coded constant — it reads the entry value. The room looks pixel-for-pixel identical to Phase 2 (all existing boards have `hangY = 150`).
+  - `hangCenterY` variable structured for Phase 3b (per-board vertical-position UI).
+
 ## [1.23.4] — 2026-06-21
 
 ### Fixed

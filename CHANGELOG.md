@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.23.5-fase3a] — 2026-06-21
+
+### Interno (sin cambio visible)
+- **Salas — Fase 3a: modelo de posición vertical por tablero:** cada entrada de `boardsA`/`boardsB` pasa de `{boardId, offset}` a `{boardId, offset, hangY}`, donde `hangY` es la altura del centro del tablero sobre el suelo en cm.
+  - Migración perezosa completa: `normalizeWall` siempre recorre todas las entradas (aunque la pared ya tenga `boardsA`/`boardsB`) y garantiza `hangY ?? 150` y `offset ?? 0`. Salas antiguas quedan normalizadas en el primer `loadRooms` sin necesidad de reescribir los datos.
+  - `normalizeWall` actualizada en `server.js` e `index.html` (ambas copias idénticas).
+  - Renderer 3D: `wallSides` propaga `hangY: e.hangY ?? 150`; el `forEach` desestructura `hangY`; `hangCenterY` deja de ser una constante fija y lee el valor de la entrada. Sala se ve idéntica a Fase 2 (todos los tableros existentes tienen `hangY = 150`).
+  - Variable `hangCenterY` preparada para Fase 3b (UI de ajuste vertical por tablero).
+
 ## [1.23.4] — 2026-06-21
 
 ### Corregido

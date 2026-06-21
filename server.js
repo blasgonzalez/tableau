@@ -322,12 +322,15 @@ function resolveShareToken(token) {
 
 // ── Room wall helpers (Fase 0: ≤1 tablero por cara) ──────────────────────────
 function normalizeWall(wall) {
-  if ('boardsA' in wall && 'boardsB' in wall) return wall;
+  const normalizeEntry = e => ({ ...e, offset: e.offset ?? 0, hangY: e.hangY ?? 150 });
+  if ('boardsA' in wall && 'boardsB' in wall) {
+    return { ...wall, boardsA: wall.boardsA.map(normalizeEntry), boardsB: wall.boardsB.map(normalizeEntry) };
+  }
   const { boardId, boardIdBack, ...rest } = wall;
   return {
     ...rest,
-    boardsA: boardId     ? [{ boardId, offset: 0 }] : [],
-    boardsB: boardIdBack ? [{ boardId: boardIdBack, offset: 0 }] : [],
+    boardsA: boardId     ? [{ boardId, offset: 0, hangY: 150 }] : [],
+    boardsB: boardIdBack ? [{ boardId: boardIdBack, offset: 0, hangY: 150 }] : [],
   };
 }
 

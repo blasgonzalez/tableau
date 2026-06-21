@@ -2836,9 +2836,9 @@ function App() {
         const wallFaceLen = Math.max(0, len - startOffset - endOffset);
 
         const wallSides = [];
-        (wall.boardsA || []).forEach(e => wallSides.push({boardId: e.boardId, sideSign:  1, offset: e.offset || 0}));
-        (wall.boardsB || []).forEach(e => wallSides.push({boardId: e.boardId, sideSign: -1, offset: e.offset || 0}));
-        wallSides.forEach(({boardId, sideSign, offset}) => {
+        (wall.boardsA || []).forEach(e => wallSides.push({boardId: e.boardId, sideSign:  1, offset: e.offset || 0, hangY: e.hangY ?? 150}));
+        (wall.boardsB || []).forEach(e => wallSides.push({boardId: e.boardId, sideSign: -1, offset: e.offset || 0, hangY: e.hangY ?? 150}));
+        wallSides.forEach(({boardId, sideSign, offset, hangY}) => {
         const board = boards.find(b => b.id === boardId);
         const rawItems = boardItemsMap[boardId] || [];
         const bItems = rawItems.filter(i => !i.type || i.type === 'photo' || i.type === 'text' || i.type === 'grid');
@@ -2847,9 +2847,9 @@ function App() {
         if (!bPx) return;
         const fW = board.fixedW;
         const fH = board.fixedH;
-        // Fase 3: hangCenterY vendrá del posicionamiento del usuario en la
-        // pared (offset vertical del tablero), no será fijo a 150cm.
-        const hangCenterY = 150;
+        // Fase 3: hangCenterY viene de entry.hangY (normalizado a 150 por defecto).
+        // Fase 3b añadirá UI para que el usuario lo ajuste por tablero.
+        const hangCenterY = hangY;
         const normX = -dirZ * sideSign, normZ = dirX * sideSign;
         const hexWall = wColor.startsWith('#') ? wColor : '#d0c8bc';
 
@@ -6945,12 +6945,15 @@ ${rows}
   };
 
   const normalizeWall = wall => {
-    if ('boardsA' in wall && 'boardsB' in wall) return wall;
+    const normalizeEntry = e => ({ ...e, offset: e.offset ?? 0, hangY: e.hangY ?? 150 });
+    if ('boardsA' in wall && 'boardsB' in wall) {
+      return { ...wall, boardsA: wall.boardsA.map(normalizeEntry), boardsB: wall.boardsB.map(normalizeEntry) };
+    }
     const { boardId, boardIdBack, ...rest } = wall;
     return {
       ...rest,
-      boardsA: boardId     ? [{ boardId, offset: 0 }] : [],
-      boardsB: boardIdBack ? [{ boardId: boardIdBack, offset: 0 }] : [],
+      boardsA: boardId     ? [{ boardId, offset: 0, hangY: 150 }] : [],
+      boardsB: boardIdBack ? [{ boardId: boardIdBack, offset: 0, hangY: 150 }] : [],
     };
   };
   const wallBoardIds = wall => [
