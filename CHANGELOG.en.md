@@ -1,5 +1,40 @@
 # Changelog
 
+## [1.23.4] — 2026-06-21
+
+### Fixed
+- **Rooms — wall boards:** when linking a variable board, the fixed copy's bounding box computed the wrong height because it used the stored `item.h` (undefined or stale for photo items). Each photo's height is now derived from the `photo.h/photo.w` ratio (or its inverse for 90°/270° rotation), mirroring the canvas rendering formula exactly. Item coordinates in the copy are also shifted by subtracting the bounding-box origin so content starts at (0,0) and is not clipped.
+- **Rooms — 3D view:** the renderer stretched boards vertically to fill the full wall height. It now uses the board's physical height (`fixedH`) to scale items, and anchors the board centre at 150 cm above the floor (museistic standard). The `hangCenterY` variable is structured for per-board configurability in a future phase.
+
+## [1.23.3-fase2b] — 2026-06-21
+
+### Improved
+- **Rooms — validations when linking a board to a wall:**
+  - **Board already linked to another wall/face:** instead of sharing the same board across two locations, a copy is created (via `duplicate`) and the copy is linked. The original is left untouched. The toast message states which wall it was already on.
+  - **Variable board:** instead of asking whether to resize to the wall dimensions, the content bounding box (photo/text items, excluding notes and zones) is computed in the board's units via its DPI, a fixed copy with those dimensions is created, and the copy is linked. The original variable board is left untouched.
+  - **Empty variable board (no physical items):** blocked with a toast; no copy is created and nothing is linked.
+  - **Free-space warning:** if the copy's width (in cm) exceeds the remaining free space on the face, the toast appends "Takes X cm; Y cm free."
+  - Linked copies appear automatically nested under the room in the board tree (via `roomOfBoard`/`wallLinksBoard`).
+  - Fixed boards not already linked anywhere are still assigned directly, without a copy.
+
+## [1.23.2-fase2] — 2026-06-21
+
+### Improved
+- **Rooms — multiple boards per wall face (Phase 2):** a face A or B can now hold N boards placed sequentially. Each board uses its own `fixedW`; successive boards are placed flush against the previous one with no gap (`offset = ΣfixedW` of predecessors).
+  - Side panel: each face now shows a list of rows (one per board) with individual navigate and unlink buttons. A `+` button always visible at the bottom of each face to add another board.
+  - `+` button / `createRoomBoardSide`: first board gets `fixedW = len` (full wall); additional boards get `fixedW = len/2` as a starting point the user can adjust. Name includes a numeric suffix from the 2nd board onward.
+  - Drag & drop: dropping a board onto a face adds it to the list instead of replacing. Silent skip if the same board is already linked. Mismatch check applies only to the first board in the face.
+  - Unlink (`unlinkBoardFromWall`): removes the board by `boardId` and repacks the offsets of the remaining boards so they stay flush in sequence.
+  - 3D renderer: removed the `Math.min(fW, wallFaceLen)` clamp — each board renders its full fixed width from its offset, potentially extending beyond the wall (overlap warnings will come in Phase 4).
+
+## [1.23.1-fase1] — 2026-06-21
+
+### Internal (no visible change)
+- **3D wall renderer — Phase 1:** the render loop now iterates directly over `boardsA`/`boardsB` entries instead of a fixed board per face. Each entry propagates its `offset` into the horizontal position calculation (`ix`), ready for Phase 2 where boards will have non-zero offsets. With offset = 0 (this phase) the room looks pixel-for-pixel identical.
+  - `wallSides` entries now include `offset: e.offset || 0`.
+  - `ix = startOffset + offset + (item.x + item.w/2) / bPx.w * Math.min(fW, wallFaceLen - offset)`.
+  - Code annotations for Phase 2 (remove `Math.min` clamp) and Phase 3 (per-segment context-menu plane, per-segment hit-testing on wall body).
+
 ## [1.23.0] — 2026-06-21
 
 ### Internal (no visible change)

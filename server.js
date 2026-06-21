@@ -1376,15 +1376,19 @@ app.delete('/api/projects/:pid/boards/:bid', requireAuth, (req, res) => {
 
 app.post('/api/projects/:pid/boards/:bid/duplicate', requireAuth, (req, res) => {
   const { pid, bid } = req.params;
+  const { offsetX = 0, offsetY = 0 } = req.body || {};
   const boards = readJSON(boardsMeta(pid, req.dd));
   const original = boards.find(b => b.id === bid);
   if (!original) return res.status(404).json({ error: 'Tablero no encontrado' });
   const copy = { ...original, id: newId(), name: original.name + ' (copia)', created: Date.now() };
   const items = readJSON(boardFile(pid, bid, req.dd), []);
+  const shifted = (offsetX || offsetY)
+    ? items.map(it => ({ ...it, x: (it.x || 0) - offsetX, y: (it.y || 0) - offsetY }))
+    : items;
   const idx = boards.findIndex(b => b.id === bid);
   boards.splice(idx + 1, 0, copy);
   writeJSON(boardsMeta(pid, req.dd), boards);
-  writeJSON(boardFile(pid, copy.id, req.dd), items);
+  writeJSON(boardFile(pid, copy.id, req.dd), shifted);
   res.json(copy);
 });
 

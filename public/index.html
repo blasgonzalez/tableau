@@ -2803,12 +2803,16 @@ function App() {
         wMesh.rotation.y = rotY;
         wMesh.userData.isWalkTarget = true;
         // Unambiguous single-board wall: expose boardId for paste-click navigation
+        // Fase 3: con N tableros, reemplazar por hit-testing por segmento (raycasting
+        // contra planos individuales) para determinar el tablero en el punto de click.
         const _allWallIds = wallBoardIds(wall);
         if (_allWallIds.length === 1) wMesh.userData.boardId = _allWallIds[0];
         scene.add(wMesh);
         walkTargets.push(wMesh);
 
         // Invisible face planes for right-click wall menu (one per side A/B)
+        // Fase 3: con N tableros por cara, generar un plano por entrada de la lista,
+        // con ancho = longitud del segmento y posición = offset a lo largo de la pared.
         {
           const normAX = -dirZ, normAZ = dirX;
           const wcx = (x1+x2)/2, wcz = (z1+z2)/2;
@@ -2832,9 +2836,9 @@ function App() {
         const wallFaceLen = Math.max(0, len - startOffset - endOffset);
 
         const wallSides = [];
-        (wall.boardsA || []).forEach(e => wallSides.push({boardId: e.boardId, sideSign:  1}));
-        (wall.boardsB || []).forEach(e => wallSides.push({boardId: e.boardId, sideSign: -1}));
-        wallSides.forEach(({boardId, sideSign}) => {
+        (wall.boardsA || []).forEach(e => wallSides.push({boardId: e.boardId, sideSign:  1, offset: e.offset || 0}));
+        (wall.boardsB || []).forEach(e => wallSides.push({boardId: e.boardId, sideSign: -1, offset: e.offset || 0}));
+        wallSides.forEach(({boardId, sideSign, offset}) => {
         const board = boards.find(b => b.id === boardId);
         const rawItems = boardItemsMap[boardId] || [];
         const bItems = rawItems.filter(i => !i.type || i.type === 'photo' || i.type === 'text' || i.type === 'grid');
@@ -2842,6 +2846,10 @@ function App() {
         const bPx = getBoardPx(board);
         if (!bPx) return;
         const fW = board.fixedW;
+        const fH = board.fixedH;
+        // Fase 3: hangCenterY vendrá del posicionamiento del usuario en la
+        // pared (offset vertical del tablero), no será fijo a 150cm.
+        const hangCenterY = 150;
         const normX = -dirZ * sideSign, normZ = dirX * sideSign;
         const hexWall = wColor.startsWith('#') ? wColor : '#d0c8bc';
 
@@ -2870,13 +2878,13 @@ function App() {
           const itemH = isText ? (item.h || item.w * 0.3)
                       : photo ? item.w * (isSwapped ? photo.w / photo.h : photo.h / photo.w) : item.w;
           const iw = item.w / bPx.w * fW;
-          const ih = itemH / bPx.h * wh;
-          const minH = isText ? wh * 0.03 : 0;
+          const ih = itemH / bPx.h * fH;
+          const minH = isText ? fH * 0.03 : 0;
           const sizeScale = (minH > 0 && ih > 0 && ih < minH) ? minH / ih : 1;
           const finalIw = iw * sizeScale;
           const finalIh = Math.max(ih, minH);
-          const ix = startOffset + (item.x + item.w/2) / bPx.w * Math.min(fW, wallFaceLen);
-          const iy = wh * (1 - (item.y + itemH/2) / bPx.h);
+          const ix = startOffset + offset + (item.x + item.w/2) / bPx.w * fW;
+          const iy = (hangCenterY - fH/2) + fH * (1 - (item.y + itemH/2) / bPx.h);
           const itemRotRad = -((item.rot || 0) + (item.freeRot || 0)) * Math.PI / 180;
           const pos = { x: x1 + dirX*ix + normX*(wt/2+2), y: iy, z: z1 + dirZ*ix + normZ*(wt/2+2) };
           const faceGroup = new THREE.Group();
@@ -2890,7 +2898,7 @@ function App() {
               .filter(([px]) => px > 0)
               .forEach(([px, col, back]) => {
                 const fw = (item.w + 2*px) / bPx.w * fW;
-                const fh = (itemH + 2*px) / bPx.h * wh;
+                const fh = (itemH + 2*px) / bPx.h * fH;
                 const fm = new THREE.Mesh(new THREE.PlaneGeometry(isSwapped ? fh : fw, isSwapped ? fw : fh), new THREE.MeshLambertMaterial({color:col,side:THREE.DoubleSide}));
                 fm.position.set(0, 0, -back); fm.rotation.z = itemRotRad; faceGroup.add(fm);
               });
@@ -7393,18 +7401,23 @@ ${rows}
     const listField = side === 'A' ? 'boardsA' : 'boardsB';
     const len = Math.round(roomWallLen(wall, r.vertices));
     const wallH = wall.height ?? (r.ceilingHeight || 280);
-    const label = `${wall.name}${side==='B'?' B':''}`;
+    const existingList = wall[listField] || [];
+    const offset = existingList.reduce((sum, e) => sum + (boardsRef.current.find(b=>b.id===e.boardId)?.fixedW || 0), 0);
+    const isFirst = existingList.length === 0;
+    const boardW = isFirst ? len : Math.round(len / 2);
+    const suffix = isFirst ? '' : ` ${existingList.length + 1}`;
+    const label = `${wall.name}${side==='B'?' B':''}${suffix}`;
     const b = await api.post(`/api/projects/${pidRef.current}/boards`, {name:label});
     const TARGET_W = 4000;
-    const dpi = Math.max(1, Math.round(TARGET_W / len * 2.54 * 10) / 10);
+    const dpi = Math.max(1, Math.round(TARGET_W / boardW * 2.54 * 10) / 10);
     // defaultW = ~60cm in canvas px — sensible starting size for a print on a wall
     const defaultW = Math.round(60 / 2.54 * dpi);
     await api.patch(`/api/projects/${pidRef.current}/boards/${b.id}`, {
-      fixed:true, fixedW:len, fixedH:wallH, dpi, units:'cm', defaultW,
+      fixed:true, fixedW:boardW, fixedH:wallH, dpi, units:'cm', defaultW,
     });
-    const fullB = {...b, fixed:true, fixedW:len, fixedH:wallH, dpi, units:'cm', defaultW};
+    const fullB = {...b, fixed:true, fixedW:boardW, fixedH:wallH, dpi, units:'cm', defaultW};
     setBoards(bs=>[...bs, fullB]);
-    const updatedRoom = {...r, walls:r.walls.map(w=>w.id===wallId?{...w,[listField]:[{boardId:b.id,offset:0}]}:w)};
+    const updatedRoom = {...r, walls:r.walls.map(w=>w.id===wallId?{...w,[listField]:[...existingList,{boardId:b.id,offset}]}:w)};
     saveRoom(updatedRoom);
     setBid(b.id); bidRef.current = b.id;
     setRoomView('board');
@@ -7439,11 +7452,21 @@ ${rows}
     return brd.id;
   };
 
-  const unlinkBoardFromWall = (wallId, side) => {
+  const unlinkBoardFromWall = (wallId, side, boardId) => {
     const r = roomRef.current; if (!r) return;
     const listField = side === 'A' ? 'boardsA' : 'boardsB';
+    const wall = r.walls.find(w => w.id === wallId); if (!wall) return;
+    const remaining = (wall[listField] || [])
+      .filter(e => e.boardId !== boardId)
+      .sort((a, b) => (a.offset || 0) - (b.offset || 0));
+    let cum = 0;
+    const repacked = remaining.map(e => {
+      const entry = { ...e, offset: cum };
+      cum += boardsRef.current.find(b => b.id === e.boardId)?.fixedW || 0;
+      return entry;
+    });
     saveRoom({...r, walls: r.walls.map(w =>
-      w.id !== wallId ? w : {...w, [listField]: []}
+      w.id !== wallId ? w : {...w, [listField]: repacked}
     )});
   };
 
@@ -7451,37 +7474,141 @@ ${rows}
     const r = roomRef.current; if (!r) return;
     const b = boardsRef.current.find(x => x.id === bId); if (!b) return;
     const listField = side === 'A' ? 'boardsA' : 'boardsB';
-    const existingId = (wall[listField] || [])[0]?.boardId || null;
+    const existingList = wall[listField] || [];
+    // Skip silently if this board is already linked to this face
+    if (existingList.some(e => e.boardId === bId)) return;
+    const offset = existingList.reduce((sum, e) => sum + (boardsRef.current.find(b=>b.id===e.boardId)?.fixedW || 0), 0);
+    const isFirst = existingList.length === 0;
     const len = roomWallLen(wall, r.vertices);
     const wallH = wall.height ?? (r.ceilingHeight || 280);
     const isVariable = !b.fixed || !b.fixedW;
-    const hasMismatch = !isVariable && b.units === 'cm' &&
+    // Mismatch check only relevant for the first board (full-wall comparison)
+    const hasMismatch = isFirst && !isVariable && b.units === 'cm' &&
       (Math.abs((b.fixedW||0) - len) > 0.5 || Math.abs((b.fixedH||0) - wallH) > 0.5);
 
+    // True if this board is already linked to any wall or block face in any room
+    const isLinkedElsewhere = roomsRef.current.some(r2 =>
+      r2.walls?.some(w =>
+        (w.boardsA||[]).some(e => e.boardId === bId) ||
+        (w.boardsB||[]).some(e => e.boardId === bId)
+      ) ||
+      r2.blocks?.some(bl => bl.faces && Object.values(bl.faces).some(f => f?.boardId === bId))
+    );
+
     const doAssign = async (opts = {}) => {
-      if (opts.fix) {
-        const newW = Math.round(len * 10) / 10;
-        const newH = Math.round(wallH * 10) / 10;
-        const dpi = b.dpi || Math.max(1, Math.round(4000 / newW * 2.54 * 10) / 10);
-        await api.patch(`/api/projects/${pidRef.current}/boards/${b.id}`, {fixed:true, fixedW:newW, fixedH:newH, dpi, units:'cm'});
-        setBoards(bs => bs.map(x => x.id === b.id ? {...x, fixed:true, fixedW:newW, fixedH:newH, dpi, units:'cm'} : x));
-      }
       const rr = roomRef.current; if (!rr) return;
-      const updated = {...rr, walls: rr.walls.map(w => w.id===wall.id ? {...w, [listField]: [{boardId:bId,offset:0}]} : w)};
+      const updated = {...rr, walls: rr.walls.map(w => w.id===wall.id ? {...w, [listField]: [...(w[listField]||[]), {boardId:bId, offset}]} : w)};
       saveRoom(updated);
       if (opts.sync) syncWallBoard(wall, b);
       else showToast(t('salaAssigned'));
     };
 
-    const askVariable = () => setConfirmModal({
-      message: lang==='es'
-        ? `"${b.name}" no tiene dimensiones fijas y no aparecerá en la vista 3D. ¿Ajustarlo a las medidas de la pared (${Math.round(len)}×${Math.round(wallH)} cm)?`
-        : `"${b.name}" has no fixed size and won't appear in 3D. Adjust it to the wall size (${Math.round(len)}×${Math.round(wallH)} cm)?`,
-      danger: false,
-      confirmLabel: lang==='es' ? 'Ajustar y asignar' : 'Adjust and assign',
-      onConfirm: () => doAssign({fix: true}),
-      extra: <button className="btn" style={{marginTop:4,width:'100%'}} onClick={()=>{setConfirmModal(null);doAssign({});}}>{lang==='es'?'Asignar sin ajustar (sin 3D)':'Assign without adjusting (no 3D)'}</button>,
-    });
+    // Creates a copy of the board, optionally fixes its dimensions to the content
+    // bounding box (variable boards), then links the copy to this wall face.
+    const doCopy = async () => {
+      let newFixed = null; // {fixedW, fixedH, dpi, units} — set for variable boards
+      if (isVariable) {
+        let its = allBoardItemsRef.current[bId];
+        if (!its) {
+          try { its = await api.get(`/api/boards/${pidRef.current}/${bId}/items`); }
+          catch { showToast(lang==='es' ? 'Error al leer el tablero.' : 'Error reading board.', true); return; }
+        }
+        const realItems = (its || []).filter(i => i.type !== 'note' && i.type !== 'zone');
+        if (!realItems.length) {
+          showToast(lang==='es'
+            ? `"${b.name}" está vacío y no se puede colocar en la pared.`
+            : `"${b.name}" is empty and cannot be placed on the wall.`, true);
+          return;
+        }
+        const dpi = b.dpi; // always present: server sets def.dpi || 150 on creation
+        const units = b.units || 'cm';
+        const fromPx = px => {
+          if (units === 'cm') return Math.round(px / dpi * 2.54 * 10) / 10;
+          if (units === 'mm') return Math.round(px / dpi * 25.4 * 10) / 10;
+          if (units === 'in') return Math.round(px / dpi * 10) / 10;
+          return Math.round(px * 10) / 10;
+        };
+        // Mirror the canvas rendering formula exactly (see Three.js render loop):
+        // photo height = item.w * (photo.h/photo.w), swapped when rot=90°/270°.
+        // Stored item.h is stale and ignored for photo items.
+        const getItemH = (item) => {
+          if (item.type === 'text') return item.h || item.w * 0.3;
+          const photo = photosRef.current.find(p => p.id === item.photoId);
+          if (photo && photo.w) {
+            const isSwapped = (item.rot || 0) % 180 !== 0;
+            return item.w * (isSwapped ? photo.w / photo.h : photo.h / photo.w);
+          }
+          return item.h || item.w || 0;
+        };
+        const x1 = Math.min(...realItems.map(i => i.x || 0));
+        const y1 = Math.min(...realItems.map(i => i.y || 0));
+        const x2 = Math.max(...realItems.map(i => (i.x || 0) + (i.w || 0)));
+        const y2 = Math.max(...realItems.map(i => (i.y || 0) + getItemH(i)));
+        newFixed = { fixedW: fromPx(x2 - x1), fixedH: fromPx(y2 - y1), dpi, units, offsetX: x1, offsetY: y1 };
+      }
+
+      let copy;
+      const dupBody = newFixed ? { offsetX: newFixed.offsetX, offsetY: newFixed.offsetY } : {};
+      try { copy = await api.post(`/api/projects/${pidRef.current}/boards/${bId}/duplicate`, dupBody); }
+      catch { showToast(lang==='es' ? 'Error al duplicar el tablero.' : 'Error duplicating board.', true); return; }
+      setBoards(bs => {
+        const idx = bs.findIndex(x => x.id === bId);
+        const next = [...bs]; next.splice(idx + 1, 0, copy); return next;
+      });
+
+      if (newFixed) {
+        const { fixedW, fixedH, dpi, units } = newFixed;
+        try {
+          await api.patch(`/api/projects/${pidRef.current}/boards/${copy.id}`, { fixed: true, fixedW, fixedH, dpi, units });
+          setBoards(bs => bs.map(x => x.id === copy.id ? {...x, fixed:true, fixedW, fixedH, dpi, units} : x));
+        } catch { /* dimension patch failed; copy linked as variable */ }
+      }
+
+      const rr = roomRef.current; if (!rr) return;
+      saveRoom({...rr, walls: rr.walls.map(w => w.id===wall.id
+        ? {...w, [listField]: [...(w[listField]||[]), {boardId:copy.id, offset}]} : w)});
+
+      // Space warning: only when both sides are in cm
+      const copyWCm = newFixed
+        ? (newFixed.units === 'cm' ? newFixed.fixedW : null)
+        : (copy.units === 'cm' ? copy.fixedW : null);
+      const freeLen = len - offset;
+      const spaceMsg = copyWCm != null && copyWCm > freeLen + 0.5
+        ? (lang==='es'
+          ? ` Ocupa ${Math.round(copyWCm)} cm; quedan ${Math.round(Math.max(0, freeLen))} cm.`
+          : ` Takes ${Math.round(copyWCm)} cm; ${Math.round(Math.max(0, freeLen))} cm free.`)
+        : '';
+
+      const findLinkedName = () => {
+        for (const r2 of roomsRef.current) {
+          for (const w of (r2.walls || []))
+            if ((w.boardsA||[]).some(e=>e.boardId===bId)||(w.boardsB||[]).some(e=>e.boardId===bId))
+              return w.name || (lang==='es'?'una pared':'a wall');
+          for (const bl of (r2.blocks || []))
+            if (bl.faces && Object.values(bl.faces).some(f=>f?.boardId===bId))
+              return bl.label || (lang==='es'?'un bloque':'a block');
+        }
+        return '';
+      };
+
+      let mainMsg;
+      if (isLinkedElsewhere && isVariable) {
+        const where = findLinkedName();
+        mainMsg = lang==='es'
+          ? `"${b.name}" ya está en "${where}" y es variable. Copia fija (${Math.round(newFixed.fixedW)}x${Math.round(newFixed.fixedH)} ${newFixed.units}) creada.`
+          : `"${b.name}" is already on "${where}" and is variable. Fixed copy (${Math.round(newFixed.fixedW)}x${Math.round(newFixed.fixedH)} ${newFixed.units}) created.`;
+      } else if (isLinkedElsewhere) {
+        const where = findLinkedName();
+        mainMsg = lang==='es'
+          ? `"${b.name}" ya está en "${where}". Copia creada.`
+          : `"${b.name}" is already on "${where}". Copy created.`;
+      } else {
+        mainMsg = lang==='es'
+          ? `Copia fija de "${b.name}" (${Math.round(newFixed.fixedW)}x${Math.round(newFixed.fixedH)} ${newFixed.units}) creada.`
+          : `Fixed copy of "${b.name}" (${Math.round(newFixed.fixedW)}x${Math.round(newFixed.fixedH)} ${newFixed.units}) created.`;
+      }
+      showToast(mainMsg + spaceMsg);
+    };
 
     const askMismatch = () => setConfirmModal({
       message: t('salaAssignMismatch', Math.round(b.fixedW||0), Math.round(b.fixedH||0), Math.round(len), Math.round(wallH)),
@@ -7492,23 +7619,12 @@ ${rows}
     });
 
     const proceed = () => {
-      if (isVariable) askVariable();
+      if (isLinkedElsewhere || isVariable) doCopy();
       else if (hasMismatch) askMismatch();
       else doAssign({});
     };
 
-    if (existingId && existingId !== bId) {
-      const existing = boardsRef.current.find(x => x.id === existingId);
-      setConfirmModal({
-        message: lang==='es'
-          ? `La cara ${side} ya tiene el tablero "${existing?.name||''}". ¿Reemplazarlo?`
-          : `Side ${side} already has board "${existing?.name||''}". Replace it?`,
-        danger: false,
-        onConfirm: proceed,
-      });
-    } else {
-      proceed();
-    }
+    proceed();
   };
 
   const performBoardSync = async (board, newW, newH, successKey) => {
@@ -9482,26 +9598,33 @@ ${rows}
                         <div className="room-empty">{t('salaNoWalls')}</div>
                       ) : <>{room.walls.filter(wall => !roomFilterBoards || wallBoardIds(wall).length > 0).map(wall => {
                         const len = roomWallLen(wall, room.vertices);
-                        const boardA = wallSideBoard(wall,'A') ? boards.find(b=>b.id===wallSideBoard(wall,'A')) : null;
-                        const boardB = wallSideBoard(wall,'B') ? boards.find(b=>b.id===wallSideBoard(wall,'B')) : null;
                         const wallH = wall.height ?? (room.ceilingHeight||280);
-                        const mmA = boardA && boardA.fixed && boardA.units==='cm' && (Math.abs(boardA.fixedW-len)>0.5 || Math.abs((boardA.fixedH||0)-wallH)>0.5);
-                        const mmB = boardB && boardB.fixed && boardB.units==='cm' && (Math.abs(boardB.fixedW-len)>0.5 || Math.abs((boardB.fixedH||0)-wallH)>0.5);
                         const colA = wall.color    || '#d0c8bc';
                         const colB = wall.colorBack|| '#d0c8bc';
-                        const sideBtn = (side, board, mismatch, color) => (
-                          <div style={{display:'flex',alignItems:'center',gap:1,flexShrink:0}}>
-                            {mismatch && <span className="room-wall-warn" style={{fontSize:9}}>⚠</span>}
-                            {board && (
-                              <button className="btn room-wall-unlink" style={{fontSize:9,padding:'0 3px',flexShrink:0,color:'var(--dim)',lineHeight:1}}
-                                data-tooltip={t('salaDeleteWall')}
-                                onClick={()=>unlinkBoardFromWall(wall.id,side)}>×</button>
-                            )}
-                            <button className={`btn${board?' acc':''}`} style={{fontSize:8,padding:'1px 4px',flexShrink:0,borderLeft:`3px solid ${color}`}}
-                              onMouseEnter={()=>setRoomHovSide({wallId:wall.id,side})}
-                              onMouseLeave={()=>setRoomHovSide(null)}
-                              onClick={()=>{ if(board){setBid(board.id);bidRef.current=board.id;setRoomView('board');} else createRoomBoardSide(wall.id,side); }}>
-                              {side}{board?' ▶':' +'}
+                        const sideList = (side, list, color) => (
+                          <div style={{display:'flex',flexDirection:'column',gap:1,flexShrink:0,alignItems:'flex-end'}}>
+                            {(list||[]).map(e => {
+                              const board = boards.find(b=>b.id===e.boardId);
+                              if (!board) return null;
+                              const mm = board.fixed && board.units==='cm' && Math.abs((board.fixedH||0)-wallH)>0.5;
+                              return (
+                                <div key={e.boardId} style={{display:'flex',alignItems:'center',gap:1}}>
+                                  {mm && <span className="room-wall-warn" style={{fontSize:9}}>⚠</span>}
+                                  <button className="btn room-wall-unlink" style={{fontSize:9,padding:'0 3px',flexShrink:0,color:'var(--dim)',lineHeight:1}}
+                                    data-tooltip={t('salaDeleteWall')}
+                                    onClick={()=>unlinkBoardFromWall(wall.id,side,e.boardId)}>×</button>
+                                  <button className="btn acc" style={{fontSize:8,padding:'1px 4px',flexShrink:0,borderLeft:`3px solid ${color}`}}
+                                    onMouseEnter={()=>setRoomHovSide({wallId:wall.id,side})}
+                                    onMouseLeave={()=>setRoomHovSide(null)}
+                                    onClick={()=>{setBid(board.id);bidRef.current=board.id;setRoomView('board');}}>
+                                    {board.name} ▶
+                                  </button>
+                                </div>
+                              );
+                            })}
+                            <button className="btn" style={{fontSize:8,padding:'1px 4px',flexShrink:0,borderLeft:`3px solid ${color}`}}
+                              onClick={()=>createRoomBoardSide(wall.id,side)}>
+                              {side} +
                             </button>
                           </div>
                         );
@@ -9531,8 +9654,8 @@ ${rows}
                               </span>
                             )}
                             <span className="room-wall-len">{cmLabel(len)}</span>
-                            {sideBtn('A', boardA, mmA, colA)}
-                            {sideBtn('B', boardB, mmB, colB)}
+                            {sideList('A', wall.boardsA, colA)}
+                            {sideList('B', wall.boardsB, colB)}
                           </div>
                         );
                       })}

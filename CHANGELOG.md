@@ -1,5 +1,40 @@
 # Changelog
 
+## [1.23.4] — 2026-06-21
+
+### Corregido
+- **Salas — tableros por pared:** al vincular un tablero variable, el bounding box de la copia fija calculaba mal el alto porque usaba `item.h` almacenado (indefinido o desactualizado para fotos). El alto de cada foto se deriva ahora de la proporción `photo.h/photo.w` (o inversa si hay rotación 90°/270°), igual que hace el canvas. Además, las coordenadas de los ítems en la copia se desplazan restando el origen del bounding box, de modo que el contenido empieza en (0,0) y no queda recortado.
+- **Salas — vista 3D:** el renderer estiraba el tablero verticalmente para ocupar todo el alto de la pared. Ahora usa el alto físico del tablero (`fixedH`) para escalar los ítems, y ancla el centro del tablero a 150 cm del suelo (estándar museístico). La variable `hangCenterY` está preparada para ser configurable por tablero en una fase posterior.
+
+## [1.23.3-fase2b] — 2026-06-21
+
+### Mejorado
+- **Salas — validaciones al vincular un tablero a una pared:**
+  - **Tablero ya vinculado a otra pared/cara:** en lugar de compartir el mismo tablero en dos sitios, se crea una copia (via `duplicate`) y se vincula la copia. El original queda intacto. El aviso indica en qué pared estaba ya asignado.
+  - **Tablero variable:** en lugar de preguntar si ajustar a las medidas de la pared, se calcula el bounding box del contenido (ítems tipo foto/texto, excluyendo notas y zonas), se convierte a las unidades del tablero vía su DPI, se crea una copia fija con esas dimensiones y se vincula la copia. El tablero variable original queda intacto.
+  - **Tablero variable vacío (sin ítems físicos):** se bloquea con aviso; no se crea copia ni se vincula.
+  - **Aviso de espacio libre:** si el ancho de la copia (en cm) supera el espacio libre restante en la cara, el aviso incluye "Ocupa X cm; quedan Y cm."
+  - Las copias vinculadas aparecen automáticamente anidadas bajo la sala en el árbol de tableros (vía `roomOfBoard`/`wallLinksBoard`).
+  - Los tableros fijos no vinculados a ningún sitio se siguen asignando directamente, sin copia.
+
+## [1.23.2-fase2] — 2026-06-21
+
+### Mejorado
+- **Salas — múltiples tableros por cara de pared (Fase 2):** una cara A o B puede tener ahora N tableros colocados en secuencia. Cada tablero ocupa su `fixedW` propio; los sucesivos se posicionan pegados al anterior sin hueco (`offset = ΣfixedW` de los previos).
+  - Panel lateral: cada cara muestra una lista de filas (una por tablero) con botón de navegación y desvinculación individual. Botón `+` siempre visible al final de cada cara para añadir otro tablero.
+  - Botón `+` / `createRoomBoardSide`: primer tablero recibe `fixedW = len` (toda la pared); tableros adicionales reciben `fixedW = len/2` como punto de partida ajustable. El nombre incluye un sufijo numérico a partir del 2.º.
+  - Drag & drop: soltar un tablero en una cara lo añade a la lista en lugar de reemplazar. Skip silencioso si el mismo tablero ya está vinculado. Check de mismatch solo aplica al primer tablero de la cara.
+  - Desvincular (`unlinkBoardFromWall`): elimina el tablero indicado por `boardId` y repaqueta los offsets de los restantes para que sigan pegados en secuencia.
+  - Renderer 3D: eliminado el clamp `Math.min(fW, wallFaceLen)` — cada tablero renderiza su ancho fijo completo desde su offset, pudiendo salirse de la pared (avisos de solape llegarán en Fase 4).
+
+## [1.23.1-fase1] — 2026-06-21
+
+### Interno (sin cambio visible)
+- **Renderer 3D de paredes — Fase 1:** el bucle de render itera directamente sobre los elementos de `boardsA`/`boardsB` (en lugar de un tablero fijo por cara). Cada entrada propaga su `offset` hasta el cálculo de posición horizontal (`ix`), listo para Fase 2 donde los tableros tendrán offsets no nulos. Con offset = 0 (esta fase) la sala se ve píxel a píxel idéntica.
+  - `wallSides` entries ahora incluyen `offset: e.offset || 0`.
+  - `ix = startOffset + offset + (item.x + item.w/2) / bPx.w * Math.min(fW, wallFaceLen - offset)`.
+  - Anotaciones en código para Fase 2 (eliminar clamp `Math.min`) y Fase 3 (plano de menú contextual por segmento, hit-testing por segmento en cuerpo de pared).
+
 ## [1.23.0] — 2026-06-21
 
 ### Interno (sin cambio visible)

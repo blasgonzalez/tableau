@@ -1,6 +1,6 @@
 {
-  "version": "1.23.0",
+  "version": "1.23.4",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-06-21",
-  "notes": ""
+  "notes": "Tableros por pared: bounding box y renderizado 3D corregidos al vincular tableros variables a paredes."
 }
