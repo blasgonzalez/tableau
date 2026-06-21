@@ -1,5 +1,73 @@
 # Changelog
 
+## [1.25.0] — 2026-06-21
+
+### New
+- **Bidirectional hover between tree, 2D floor plan, and 3D view:** a single `hoveredBoardId` state connects all three surfaces.
+  - **Side tree:** hovering a board row highlights the specific face where that board lives in the SVG floor plan: red halo for face A, blue for face B (reusing the existing `hovSide` visual language). The row receives a `hov` class (left border in `--acc`) that does not override the `active` highlight of the open board (`.hov:not(.active)`).
+  - **2D plan → tree:** entering a wall in the SVG sets `hoveredBoardId` to the first linked board, highlighting its row in the tree.
+  - **3D → tree and plan:** `onHoverMM` compares against `hoveredBoardIdRef` before calling the setter, preventing re-renders on every `mousemove`. On exit from the 3D view, `_hoverCleanup` clears `hoveredBoardId`.
+  - **`hovSide` derivation in the SVG:** extended to include `hoveredBoardId` (face A if the board is in `boardsA`, face B if in `boardsB`). The orange `hov` stroke does not include `hoveredBoardId` — hovering from the tree shows only the face halo, not the orange wall stroke.
+
+## [1.24.0] — 2026-06-21
+
+### New
+- **Rooms — Wall front view (Phase 3):** double-clicking a wall in the SVG floor plan or in the 3D view opens a modal showing the wall surface to scale. Displays each linked board's content (photos, grids, text) positioned by `offset` and `hangY`. A/B toggle to switch faces. Author-only.
+- **Drag boards in front view:** each board is draggable with pointer capture. Orange snap guides to standard eye height (150 cm), wall centres, and edges/centres of other boards on the same face. Vertical and horizontal clamping keeps boards within the wall boundaries. Persisted immediately on release.
+- **Access from 3D view:** double-clicking a wall body (no artwork on top) opens the front view with the correct face (A or B based on the clicked side).
+- **Per-board vertical position (`hangY`):** each `boardsA`/`boardsB` entry now includes `hangY` (cm from floor to board centre). Lazy migration: old rooms receive `hangY = 150` on first `loadRooms`.
+
+### Fixed
+- **Face B — wrong position in 3D and front view:** face B boards appeared on the opposite side from where they should be. Fixed in the 3D renderer (`ix` now measured from v2 for face B) and removed the redundant mirroring from the front view.
+- **Front view — drag: horizontal clamp** prevented boards from being dragged outside the wall edges.
+- **Front view — grids, text, colours and overflow** fixed (grids expanded, font and alignment for text items, colours matching the 3D renderer, overflow hidden).
+
+---
+
+## [1.23.6-fase3c-r2] — 2026-06-21
+
+### Fixed
+- **Face B — wrong position in 3D and front view:** face B boards appeared on the opposite side from where they should be, both in the 3D renderer and in the front view. Root cause: the formula `ix = startOffset + offset + itemFrac·fW` was identical for face A and face B, ignoring that face B viewers look from the opposite side of the wall. Fixed in three places:
+  1. **3D renderer:** for face B (`sideSign === -1`), now uses `ix = startOffset + wallFaceLen − offset − itemFrac·fW`, measuring offset from the v2 end (visual left for a face B viewer) instead of v1. Items within the board are also projected in the correct order.
+  2. **Front view — drawing:** removed the mirroring formula `(wallLen − offset − fWcm)·scale`; now uses `offset·scale` for both faces. The correct mirroring now lives in the 3D renderer.
+  3. **Front view — drag:** removed the sign inversion `startOffset − dxCm` for face B; now uses `startOffset + dxCm` for both faces, consistent with the unified offset convention.
+- Removed the temporary `console.log('[WFV B]', ...)` diagnostic added in r1.
+
+## [1.23.6-fase3c-r1] — 2026-06-21
+
+### Fixed
+- **Front view — drag: horizontal clamp:** a board could be dragged outside the wall boundaries (offset < 0 or offset > wallLen − fWcm), leaving it floating off the surface. Added clamp `offset ∈ [0, wallLen − fWcm]`. Overlapping between boards remains unrestricted; the clamp only prevents a board from going past the wall edges. Applied identically for face A and face B (on the internal offset).
+- **Front view — face B diagnostic (in progress):** temporary `console.log('[WFV B]', ...)` added in `onPointerMove` to report `dxCm`, `startOffset`, `rawOffset`, and `newOffset` while investigating Bug 1 (drag direction inverted on face B). Will be removed in the next commit.
+
+## [1.23.6-fase3c] — 2026-06-21
+
+### New
+- **Rooms — board drag-to-reposition in the wall front view (Phase 3c):** each board in the wall front view is now draggable to adjust its horizontal position (`offset`) and vertical position (`hangY`). Owner only (the front view is already owner-only).
+  - **Live drag:** the board follows the cursor; a single `PUT` is issued on pointer-up. No server requests during movement.
+  - **Pointer capture:** `setPointerCapture` is called on the board `div` at `pointerdown`, so the drag is not lost if the cursor leaves the board or even the modal.
+  - **Snap with orange guides** to: eye-level height (board centre at 150 cm from the floor), vertical wall centre, horizontal wall centre, and the edges/centres of other boards on the same face. Threshold: 8 screen-px. Guides appear as 1 px accent-colour (`var(--acc)`) lines inside the wall surface.
+  - **Vertical clamp:** the board cannot go above the ceiling or below the floor (`hangY` ∈ `[fHcm/2, ceilH − fHcm/2]`). No horizontal clamp (overflow warnings are Phase 4).
+  - **Face B mirroring:** dragging right in face B's front view moves the board to the right as seen in the 3D view looking at that face (the `offset` mirroring is applied correctly in both directions).
+  - **Full persistence:** on pointer-up, the matching `boardsA`/`boardsB` entry is updated (`offset` and `hangY`) and `saveRoom` is called. The internal `wallFrontView` state is also updated so the modal immediately reflects the saved position without needing to be reopened.
+  - **3D verification:** moving a board in the front view and switching to the 3D view shows the board at its new position.
+
+## [1.23.6-fase3b-r3] — 2026-06-21
+
+### New
+- **Rooms — wall front view entry from the 3D view:** double-clicking on a wall body in the 3D view (an empty area with no artwork on top) opens the wall front view for that wall, with the correct face (A or B depending on which side was clicked). Owner only (`roomShareMode = false`). Visitors have no access.
+  - Double-clicking on a photo/artwork in 3D keeps its existing behaviour (opens the artwork view): `itemMeshes` takes priority.
+  - Uses the existing invisible `wallMeshes` face planes (already present for the context menu), which carry `userData.wallId` and `userData.face`. The solid `wMesh` body is not touched.
+  - `openWallFrontView` now accepts an optional second argument `initialFace`; if omitted, the previous heuristic applies (face A unless only face B has a board).
+
+## [1.23.6-fase3b-r2] — 2026-06-21
+
+### Fixed
+- **Wall front view — grids:** items of type `grid` (photo mosaic in cells) are now expanded with `calcGridLayout` and rendered photo by photo. Previously they were silently ignored.
+- **Wall front view — text:** `text` items now display `item.text` (not `item.label`), with the correct font (`fontFamily` via `TEXT_FONTS`), `fontWeight`, `fontStyle`, `textAlign`, and `textColor`, all scaled to the on-screen board size. Previously a generic placeholder was shown with a proportional font size.
+- **Wall front view — A/B toggle covered by surface:** the controls `<div>` now receives `position:relative; zIndex:2`; the surface adds `overflow:hidden`. If a board's `boardT` was negative (the board overflowed the top edge of the surface), it would invade the controls area. Both fixes eliminate the problem.
+- **Wall front view — fixed UI text size:** the board name label used `fontSize: Math.max(7, boardH * 0.055)`, which scales with the board's on-screen height. Now a fixed `fontSize: 9` is used, independent of surface zoom.
+- **Wall front view — colours matching 3D:** the wall fallback colour was `'#c8bdb0'`; the 3D renderer uses `'#d0c8bc'`. Fixed. The board background was `'#f0ebe4'`; the canvas uses `'#fff'` for fixed boards. Fixed.
+
 ## [1.23.6-fase3b] — 2026-06-21
 
 ### New

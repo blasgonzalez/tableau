@@ -1,5 +1,73 @@
 # Changelog
 
+## [1.25.0] — 2026-06-21
+
+### Nuevo
+- **Hover bidireccional entre árbol, plano 2D y vista 3D:** un único estado `hoveredBoardId` conecta las tres superficies.
+  - **Árbol lateral:** hover sobre la fila de un tablero resalta la cara donde está ese tablero en el plano SVG: halo rojo si cara A, azul si cara B (reutilizando el lenguaje visual existente de `hovSide`). La fila recibe clase `hov` (borde izquierdo `--acc`) que no pisa el resaltado `active` del tablero abierto (`.hov:not(.active)`).
+  - **Plano 2D → árbol:** al entrar en una pared del SVG se activa `hoveredBoardId` con el primer tablero vinculado, resaltando su fila en el árbol.
+  - **Vista 3D → árbol y plano:** `onHoverMM` compara con `hoveredBoardIdRef` antes de llamar al setter, evitando re-renders en cada `mousemove`. Al salir de la vista 3D, `_hoverCleanup` limpia `hoveredBoardId`.
+  - **Derivación de `hovSide` en el SVG:** extendida para incluir `hoveredBoardId` (cara A si el tablero está en `boardsA`, cara B si en `boardsB`). El `hov` de naranja-pared no incluye `hoveredBoardId` — el hover desde el árbol solo muestra el halo de cara, no el trazo naranja.
+
+## [1.24.0] — 2026-06-21
+
+### Nuevo
+- **Salas — Vista frontal de pared (Fase 3):** doble clic sobre una pared en el plano SVG o en la vista 3D abre un modal con la superficie a escala real. Muestra el contenido de cada tablero vinculado (fotos, mosaicos, texto) posicionado por `offset` y `hangY`. Toggle A/B para alternar caras. Solo para el autor.
+- **Arrastre de tableros en la vista frontal:** cada tablero es arrastrable con pointer capture. Snap con guías naranjas a altura estándar (150 cm), centros de pared y bordes/centros de otros tableros. Clamp vertical y horizontal para mantener el tablero dentro de la pared. Persistencia inmediata al soltar.
+- **Acceso desde la vista 3D:** doble clic sobre el cuerpo de una pared (sin obra encima) abre la vista frontal con la cara correcta (A o B según el lado clicado).
+- **Posición vertical por tablero (`hangY`):** cada entrada de `boardsA`/`boardsB` incluye `hangY` (cm desde el suelo al centro del tablero). Migración perezosa: salas antiguas reciben `hangY = 150` en el primer `loadRooms`.
+
+### Corregido
+- **Cara B — posición incorrecta en 3D y en vista frontal:** los tableros de cara B aparecían en el lado contrario al esperado. Fix en el renderer 3D (`ix` medido desde v2 para cara B) y eliminación del espejado redundante en la vista frontal.
+- **Vista frontal — arrastre: clamp horizontal** impedía arrastrar tableros fuera de los bordes de la pared.
+- **Vista frontal — grids, textos, colores y overflow** corregidos (mosaicos expandidos, fuente y alineación de texto, colores fieles al 3D, overflow oculto).
+
+---
+
+## [1.23.6-fase3c-r2] — 2026-06-21
+
+### Corregido
+- **Cara B — posición incorrecta en 3D y en vista frontal:** los tableros de cara B aparecían en el lado opuesto al esperado tanto en el renderer 3D como en la vista frontal. Causa: la fórmula `ix = startOffset + offset + itemFrac·fW` era idéntica para cara A y cara B, sin tener en cuenta que el espectador de cara B mira desde el lado contrario de la pared. Fix en tres puntos:
+  1. **Renderer 3D:** para cara B (`sideSign === -1`) se usa `ix = startOffset + wallFaceLen − offset − itemFrac·fW`, que mide el offset desde el extremo v2 (izquierda visual del espectador de cara B) en lugar de v1. Los ítems internos del tablero también se proyectan en el orden correcto.
+  2. **Vista frontal — dibujo:** eliminado el espejado `(wallLen − offset − fWcm)·scale`; ahora se usa `offset·scale` para ambas caras. El espejado correcto vive en el 3D.
+  3. **Vista frontal — arrastre:** eliminada la inversión `startOffset − dxCm` para cara B; ahora se usa `startOffset + dxCm` para ambas caras, consistente con la nueva convención.
+- Eliminado el `console.log('[WFV B]', ...)` de diagnóstico temporal añadido en r1.
+
+## [1.23.6-fase3c-r1] — 2026-06-21
+
+### Corregido
+- **Vista frontal — arrastre: clamp horizontal:** un tablero podía arrastrarse fuera de los límites de la pared (offset < 0 u offset > wallLen − fWcm) quedando flotando fuera de la superficie. Se añade clamp `offset ∈ [0, wallLen − fWcm]`. Los solapamientos entre tableros siguen siendo libres (no se bloquean); el clamp solo impide que el tablero salga de los bordes de la pared. Se aplica igual en cara A y cara B (sobre el offset interno).
+- **Vista frontal — diagnóstico cara B (en curso):** añadido `console.log('[WFV B]', ...)` temporal en `onPointerMove` para reportar `dxCm`, `startOffset`, `rawOffset` y `newOffset` mientras se investiga el Bug 1 (arrastre invertido en cara B). Se retirará en el commit siguiente.
+
+## [1.23.6-fase3c] — 2026-06-21
+
+### Nuevo
+- **Salas — arrastre de tableros en la vista frontal de pared (Fase 3c):** cada tablero de la vista frontal es ahora arrastrable para ajustar su posición horizontal (`offset`) y vertical (`hangY`). Solo para el autor (la vista frontal ya es solo del autor).
+  - **Arrastre en vivo:** el tablero sigue al cursor; al soltar se persiste un único `PUT` de la sala. No hay peticiones durante el movimiento.
+  - **Pointer capture:** `setPointerCapture` sobre el `div` del tablero en `pointerdown`, lo que evita perder el arrastre si el cursor sale del tablero o del modal.
+  - **Snap con guías naranjas** a: altura de visión estándar (centro a 150 cm del suelo), centro vertical de la pared, centro horizontal de la pared, y bordes/centros de los demás tableros de la misma cara. Umbral: 8 px de pantalla. Las guías se muestran como líneas de 1 px del color de acento (`var(--acc)`) dentro de la superficie.
+  - **Clamp vertical:** el tablero no puede salir por arriba ni por abajo de la pared (`hangY` ∈ `[fHcm/2, ceilH − fHcm/2]`). Horizontalmente no hay límite (los avisos de desbordamiento son Fase 4).
+  - **Cara B:** mover a la derecha en la vista frontal de la cara B desplaza el tablero a la derecha tal como se ve en la vista 3D mirando esa cara (el espejado de `offset` se aplica correctamente en ambas direcciones).
+  - **Persistencia completa:** al soltar, se actualiza `boardsA`/`boardsB` de la entrada correspondiente (`offset` y `hangY`) y se llama a `saveRoom`. El `wallFrontView` interno también se actualiza para que el modal refleje la posición guardada sin necesidad de reabrirlo.
+  - **Verificación 3D:** mover un tablero en la vista frontal y reabrirla, o cambiar a la vista 3D, muestra el tablero en la posición nueva.
+
+## [1.23.6-fase3b-r3] — 2026-06-21
+
+### Nuevo
+- **Salas — entrada a vista frontal de pared desde la vista 3D:** doble clic sobre el cuerpo de una pared en la vista 3D (zona sin obra encima) abre la vista frontal de esa pared, con la cara correcta (A o B según el lado clicado). Solo para el autor (`roomShareMode = false`). El visitante no tiene acceso.
+  - El doble clic sobre una foto/obra en 3D mantiene el comportamiento actual (abre la vista de obra): `itemMeshes` tiene prioridad.
+  - Usa los planos invisibles de `wallMeshes` (ya existentes para el menú contextual), que tienen `userData.wallId` y `userData.face`. El cuerpo sólido `wMesh` no se toca.
+  - `openWallFrontView` acepta ahora un segundo argumento `initialFace` opcional; si se omite, mantiene la heurística anterior (cara A salvo que solo haya tablero en B).
+
+## [1.23.6-fase3b-r2] — 2026-06-21
+
+### Corregido
+- **Vista frontal de pared — grids:** los ítems tipo `grid` (mosaico de fotos en celdas) ahora se expanden con `calcGridLayout` y se renderizan foto por foto. Antes se ignoraban.
+- **Vista frontal de pared — textos:** los ítems `text` ahora muestran `item.text` (no `item.label`), con la fuente correcta (`fontFamily` via `TEXT_FONTS`), `fontWeight`, `fontStyle`, `textAlign` y `textColor`, escalados al tamaño del tablero pantalla. Antes mostraban un placeholder genérico con tamaño de fuente proporcional al alto.
+- **Vista frontal de pared — toggle A/B tapado:** el `<div>` de controles recibe `position:relative; zIndex:2`; la superficie añade `overflow:hidden`. Si un tablero sobresalía por encima del borde superior de la superficie (bordes negativos en `boardT`), el desbordamiento invadía el área de controles. Ambas correcciones eliminan el problema.
+- **Vista frontal de pared — tamaño de texto UI fijo:** el label del nombre del tablero usaba `fontSize: Math.max(7, boardH * 0.055)`, que escala con la altura del tablero en pantalla. Ahora usa `fontSize: 9` fijo, independiente del zoom de la superficie.
+- **Vista frontal de pared — colores fieles al 3D:** el color de fallback de la pared era `'#c8bdb0'`; el renderer 3D usa `'#d0c8bc'`. Corregido. El fondo de cada tablero era `'#f0ebe4'`; el canvas usa `'#fff'` para tableros fijos. Corregido.
+
 ## [1.23.6-fase3b] — 2026-06-21
 
 ### Nuevo
