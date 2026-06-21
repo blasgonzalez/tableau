@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.23.6-fase3b] — 2026-06-21
+
+### New
+- **Rooms — Wall front view (Phase 3b):** double-clicking a wall in the SVG floor plan opens a read-only visualisation modal (owner only). Shows the wall surface to scale (length × ceiling height) with the wall's background colour. Each linked board appears as a rectangle positioned by its horizontal `offset` and vertical `hangY`, with actual content (photo thumbnails, text) scaled proportionally inside. An A/B toggle in the header switches between the two faces. Close with ESC or clicking outside. Read-only: nothing is draggable yet (reserved for Phase 3c). Blocks are not touched.
+
 ## [1.23.5-fase3a] — 2026-06-21
 
 ### Internal (no visible change)

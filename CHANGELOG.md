@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.23.6-fase3b] — 2026-06-21
+
+### Nuevo
+- **Salas — Vista frontal de pared (Fase 3b):** doble clic sobre una pared en el plano SVG abre un modal de visualización (solo owner). Muestra la superficie de la pared a escala (largo × altura de techo) con el color de fondo de la pared. Cada tablero vinculado aparece como un rectángulo posicionado por su `offset` horizontal y `hangY` vertical, con el contenido real (miniaturas de fotos, texto) escalado proporcionalmente dentro. Toggle A/B en la cabecera para alternar entre caras. Cierre con ESC o clic fuera. Solo lectura: no se puede arrastrar nada (reservado para Fase 3c). Los bloques no se tocan.
+
 ## [1.23.5-fase3a] — 2026-06-21
 
 ### Interno (sin cambio visible)

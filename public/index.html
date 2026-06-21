@@ -1877,6 +1877,9 @@ function App() {
   const [libPreview,      setLibPreview]      = useState(null); // {photo, x, y}
   const [pinnedPreview,   setPinnedPreview]   = useState(null); // {photo, x, y} — click-pinned
   const [fullscreenPhoto, setFullscreenPhoto] = useState(null); // {photo, index}
+  const [wallFrontView,   setWallFrontView]   = useState(null); // {wall, face:'A'|'B'} — Fase 3b
+  const wallFrontViewRef  = useRef(null);
+  const [wallFrontItems,  setWallFrontItems]  = useState({}); // {boardId: items[]}
   const [artwork3D,        setArtwork3D]       = useState(null); // {photo,item,boardId,wallColor,roomPhotos,idx,fromGrid?,fromZone?,zoneMembers?,zoneIdx?}
   const artwork3DRef       = useRef(null);
   const [artwork3DGrid,    setArtwork3DGrid]   = useState(null); // {item,boardId,wallColor,roomPhotos,roomIdx}
@@ -5539,6 +5542,10 @@ ${rows}
 
   useEffect(() => {
     const handler = async e => {
+      if (wallFrontViewRef.current) {
+        if (e.key === 'Escape') { setWallFrontView(null); wallFrontViewRef.current = null; setWallFrontItems({}); }
+        return;
+      }
       if (fullscreenPhoto) {
         if (e.key === 'Escape') { setFullscreenPhoto(null); return; }
         if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
@@ -5633,7 +5640,7 @@ ${rows}
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [fullscreenPhoto, presentation, pinnedPreview, fillPlaceholder, replaceMode, sectCtxMenu, framePainter]);
+  }, [fullscreenPhoto, wallFrontView, presentation, pinnedPreview, fillPlaceholder, replaceMode, sectCtxMenu, framePainter]);
 
   useEffect(() => {
     if (!artwork3D?.photo?.id) { setArtwork3DComments([]); return; }
@@ -6988,6 +6995,21 @@ ${rows}
     setRoom(r); roomRef.current = r;
     setRooms(rs => { const next = rs.map(x => x.id === r.id ? r : x); roomsRef.current = next; return next; });
     api.put(`/api/projects/${pidRef.current}/rooms/${r.id}`, r);
+  };
+
+  const openWallFrontView = wall => {
+    const hasA = (wall.boardsA||[]).length > 0;
+    const hasB = (wall.boardsB||[]).length > 0;
+    const face = (!hasA && hasB) ? 'B' : 'A';
+    setWallFrontView({wall, face});
+    wallFrontViewRef.current = {wall, face};
+    setWallFrontItems({});
+    const pid_ = pidRef.current;
+    Promise.all([...(wall.boardsA||[]), ...(wall.boardsB||[])].map(en => {
+      const bid = en.boardId;
+      if (allBoardItemsRef.current[bid]) return Promise.resolve([bid, allBoardItemsRef.current[bid]]);
+      return api.get(`/api/projects/${pid_}/boards/${bid}/items`).then(it => [bid, it]).catch(() => [bid, []]);
+    })).then(pairs => setWallFrontItems(Object.fromEntries(pairs)));
   };
 
   const switchRoom = rid => {
@@ -9205,7 +9227,8 @@ ${rows}
                           <g key={wall.id}
                             onMouseEnter={()=>!roomDrawing&&setRoomHovWall(wall.id)}
                             onMouseLeave={()=>setRoomHovWall(null)}
-                            onContextMenu={e=>{if(shareRole)return;e.preventDefault();e.stopPropagation();setRoomWallCtx({wallId:wall.id,x:e.clientX,y:e.clientY});}}>
+                            onContextMenu={e=>{if(shareRole)return;e.preventDefault();e.stopPropagation();setRoomWallCtx({wallId:wall.id,x:e.clientX,y:e.clientY});}}
+                            onDoubleClick={e=>{if(shareRole||roomDrawing)return;e.stopPropagation();openWallFrontView(normalizeWall(wall));}}>
                             {/* Wide invisible hit area for easier hover */}
                             <line x1={v1.x} y1={v1.y} x2={v2.x} y2={v2.y} stroke="transparent" strokeWidth={Math.max(svgFontSz*1.4, sw*2)} style={{pointerEvents:'stroke'}}/>
                             <line x1={v1.x} y1={v1.y} x2={v2.x} y2={v2.y}
@@ -11335,6 +11358,96 @@ ${rows}
                 )}
                 {!roomShareMode && photo && <button className="artwork3d-dims" style={{marginTop:6,cursor:'pointer',background:'none',border:'1px solid '+tcMuted,color:tcMuted,padding:'2px 8px',borderRadius:2,fontFamily:'IBM Plex Mono,monospace',fontSize:9,letterSpacing:.5}}
                   onClick={() => { closeArtwork3D(); setBid(awBid); bidRef.current = awBid; }}>{lang==='es'?'Editar en tablero →':'Edit in board →'}</button>}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {wallFrontView && room && (() => {
+        const {wall: wfvWall, face} = wallFrontView;
+        const wallLen = roomWallLen(wfvWall, room.vertices);
+        const ceilH   = room.ceilingHeight || 280;
+        const entries = face === 'A' ? (wfvWall.boardsA || []) : (wfvWall.boardsB || []);
+        const hasA = (wfvWall.boardsA || []).length > 0;
+        const hasB = (wfvWall.boardsB || []).length > 0;
+        const vw = Math.max(200, window.innerWidth - 80);
+        const vh = Math.max(100, window.innerHeight - 140);
+        const scale = Math.min(vw / Math.max(wallLen, 1), vh / Math.max(ceilH, 1));
+        const surfW  = wallLen * scale;
+        const surfH  = ceilH  * scale;
+        const wColor = wfvWall.color || wfvWall.colorBack || '#c8bdb0';
+        const toCm = (v, u, dpi) => !u||u==='cm' ? v : u==='mm' ? v/10 : u==='in' ? v*2.54 : v/(dpi||300)*2.54;
+        const photoMap_ = Object.fromEntries(photos.map(p => [p.id, p]));
+        const closeWfv = () => { setWallFrontView(null); wallFrontViewRef.current = null; setWallFrontItems({}); };
+        return (
+          <div className="fullscreen-overlay" onClick={closeWfv}>
+            <button className="fullscreen-close" onClick={e=>{e.stopPropagation();closeWfv();}}>×</button>
+            <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:10,pointerEvents:'auto'}} onClick={e=>e.stopPropagation()}>
+              <span style={{color:'rgba(255,255,255,.4)',fontSize:10,fontFamily:"'IBM Plex Mono',monospace"}}>
+                {lang==='es'?'Pared':'Wall'} · {cmLabel(wallLen)}
+              </span>
+              <div style={{display:'flex',gap:2}}>
+                {['A','B'].map(f => (
+                  <button key={f}
+                    onClick={e=>{e.stopPropagation();setWallFrontView(p=>({...p,face:f}));}}
+                    style={{padding:'2px 10px',fontSize:10,fontFamily:"'IBM Plex Mono',monospace",cursor:'pointer',border:'1px solid',
+                      borderColor: face===f ? 'var(--acc)' : 'rgba(255,255,255,.15)',
+                      background:  face===f ? 'var(--acc)' : 'rgba(255,255,255,.07)',
+                      color:       face===f ? 'var(--bg)'  : 'rgba(255,255,255,.45)',
+                      opacity: (f==='A' ? (hasA||!hasB) : (hasB||!hasA)) ? 1 : 0.35,
+                    }}>
+                    {lang==='es'?'Cara ':'Side '}{f}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div style={{position:'relative',width:surfW,height:surfH,background:wColor,flexShrink:0}} onClick={e=>e.stopPropagation()}>
+              <div style={{position:'absolute',bottom:0,left:0,right:0,height:2,background:'rgba(0,0,0,.2)'}}/>
+              {entries.map(entry => {
+                const board = boards.find(b => b.id === entry.boardId);
+                if (!board?.fixed || !board.fixedW || !board.fixedH) return null;
+                const fWcm  = toCm(board.fixedW, board.units, board.dpi);
+                const fHcm  = toCm(board.fixedH, board.units, board.dpi);
+                const bPx   = getBoardPx(board);
+                const hangY = entry.hangY ?? 150;
+                const boardL = face==='A' ? entry.offset*scale : (wallLen - entry.offset - fWcm)*scale;
+                const boardT = (ceilH - hangY - fHcm/2) * scale;
+                const boardW = fWcm * scale;
+                const boardH = fHcm * scale;
+                const items  = (wallFrontItems[entry.boardId] || []).filter(i => !i.type||i.type==='photo'||i.type==='text');
+                return (
+                  <div key={entry.boardId} style={{position:'absolute',left:boardL,top:boardT,width:boardW,height:boardH,
+                    background:'#f0ebe4',outline:'1px solid rgba(255,255,255,.35)',overflow:'hidden',boxShadow:'0 2px 10px rgba(0,0,0,.5)'}}>
+                    {bPx && items.map(item => {
+                      const photo = item.photoId ? photoMap_[item.photoId] : null;
+                      const isSwapped = photo && ((item.rot||0)%180 !== 0);
+                      const itemH = item.type==='text' ? (item.h||item.w*0.3)
+                        : photo ? item.w*(isSwapped ? photo.w/photo.h : photo.h/photo.w) : item.w;
+                      const iL = item.x/bPx.w*boardW, iT = item.y/bPx.h*boardH;
+                      const iW = item.w/bPx.w*boardW, iH = itemH/bPx.h*boardH;
+                      if (item.type==='text') return (
+                        <div key={item.id} style={{position:'absolute',left:iL,top:iT,width:iW,height:iH,
+                          fontSize:Math.max(5,iH*.35),color:item.color||'#333',overflow:'hidden',
+                          pointerEvents:'none',lineHeight:1.2}}>{item.label||''}</div>
+                      );
+                      if (!item.photoId) return null;
+                      return <img key={item.id} src={`/photos/${pidRef.current}/${item.photoId}/thumb`}
+                        style={{position:'absolute',left:iL,top:iT,width:iW,height:iH,
+                          objectFit:'cover',pointerEvents:'none',
+                          transform:item.rot?`rotate(${item.rot}deg)`:undefined}}/>;
+                    })}
+                    <div style={{position:'absolute',bottom:0,left:0,right:0,padding:'1px 3px',
+                      fontSize:Math.max(7,boardH*.055),color:'rgba(0,0,0,.4)',
+                      fontFamily:"'IBM Plex Mono',monospace",background:'rgba(255,255,255,.55)',
+                      overflow:'hidden',whiteSpace:'nowrap',textOverflow:'ellipsis',
+                      pointerEvents:'none',lineHeight:1.4}}>{board.name}</div>
+                  </div>
+                );
+              })}
+              <div style={{position:'absolute',top:'100%',left:0,right:0,textAlign:'center',paddingTop:5,
+                fontSize:9,color:'rgba(255,255,255,.3)',fontFamily:"'IBM Plex Mono',monospace",pointerEvents:'none'}}>
+                {cmLabel(wallLen)} × {cmLabel(ceilH)}
               </div>
             </div>
           </div>
