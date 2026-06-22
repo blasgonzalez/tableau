@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.25.5] — 2026-06-22
+
+### Changed
+- **Wall side panel — Phase C: clean list:** each wall collapses to a single row with its name (double-click to rename), length, board count (▣ N, shown only when boards exist), and a `→` button that opens the front view. The A/B buttons, `+`, `▶`, and the inline `⚠` per-face indicator have been removed; all board management now lives in the front view.
+- **Wall context menu in the floor plan (right-click) — multi-board support:** each face section (A / B) now shows "Boards (N) →" to open the front view on that face when boards already exist, and always offers "+ Board" to add another (the cumulative-offset logic already existed in `createRoomBoardSide`). Previously it only showed "Create" for an empty face and "Go to board" for a single board, with no way to add a second.
+
 ## [1.25.4] — 2026-06-22
 
 ### New

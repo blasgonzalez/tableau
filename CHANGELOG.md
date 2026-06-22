@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.25.5] — 2026-06-22
+
+### Cambiado
+- **Panel lateral de paredes — Fase C: lista limpia:** cada pared se reduce a una fila con nombre (doble clic para renombrar), longitud, contador de tableros (▣ N, solo si hay alguno) y un botón `→` que abre la vista frontal. Se retiran los botones A/B, `+`, `▶` y el indicador `⚠` inline por cara; toda la gestión de tableros vive en la vista frontal.
+- **Menú contextual de pared en el plano (clic derecho) — soporte multi-tablero:** cada sección de cara (A / B) ahora muestra «Tableros (N) →» para abrir la vista frontal en esa cara cuando ya hay tableros, y siempre ofrece «+ Tablero» para añadir otro (la lógica de offset acumulado ya existía en `createRoomBoardSide`). Antes solo aparecía «Crear» cuando la cara estaba vacía y «Ver tablero» cuando tenía uno, sin opción de añadir un segundo.
+
 ## [1.25.4] — 2026-06-22
 
 ### Nuevo

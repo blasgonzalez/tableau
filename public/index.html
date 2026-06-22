@@ -9667,36 +9667,7 @@ ${rows}
                         <div className="room-empty">{t('salaNoWalls')}</div>
                       ) : <>{room.walls.filter(wall => !roomFilterBoards || wallBoardIds(wall).length > 0).map(wall => {
                         const len = roomWallLen(wall, room.vertices);
-                        const wallH = wall.height ?? (room.ceilingHeight||280);
-                        const colA = wall.color    || '#d0c8bc';
-                        const colB = wall.colorBack|| '#d0c8bc';
-                        const sideList = (side, list, color) => (
-                          <div style={{display:'flex',flexDirection:'column',gap:1,flexShrink:0,alignItems:'flex-end'}}>
-                            {(list||[]).map(e => {
-                              const board = boards.find(b=>b.id===e.boardId);
-                              if (!board) return null;
-                              const mm = board.fixed && board.units==='cm' && Math.abs((board.fixedH||0)-wallH)>0.5;
-                              return (
-                                <div key={e.boardId} style={{display:'flex',alignItems:'center',gap:1}}>
-                                  {mm && <span className="room-wall-warn" style={{fontSize:9}}>⚠</span>}
-                                  <button className="btn room-wall-unlink" style={{fontSize:9,padding:'0 3px',flexShrink:0,color:'var(--dim)',lineHeight:1}}
-                                    data-tooltip={t('salaDeleteWall')}
-                                    onClick={()=>unlinkBoardFromWall(wall.id,side,e.boardId)}>×</button>
-                                  <button className="btn acc" style={{fontSize:8,padding:'1px 4px',flexShrink:0,borderLeft:`3px solid ${color}`}}
-                                    onMouseEnter={()=>setRoomHovSide({wallId:wall.id,side})}
-                                    onMouseLeave={()=>setRoomHovSide(null)}
-                                    onClick={()=>{setBid(board.id);bidRef.current=board.id;setRoomView('board');}}>
-                                    {board.name} ▶
-                                  </button>
-                                </div>
-                              );
-                            })}
-                            <button className="btn" style={{fontSize:8,padding:'1px 4px',flexShrink:0,borderLeft:`3px solid ${color}`}}
-                              onClick={()=>createRoomBoardSide(wall.id,side)}>
-                              {side} +
-                            </button>
-                          </div>
-                        );
+                        const totalBoards = (wall.boardsA||[]).length + (wall.boardsB||[]).length;
                         return (
                           <div key={wall.id} className={`room-wall-row${roomHovWall===wall.id?' hov':''}`}
                             onMouseEnter={()=>setRoomHovWall(wall.id)}
@@ -9723,8 +9694,12 @@ ${rows}
                               </span>
                             )}
                             <span className="room-wall-len">{cmLabel(len)}</span>
-                            {sideList('A', wall.boardsA, colA)}
-                            {sideList('B', wall.boardsB, colB)}
+                            {totalBoards > 0 && <span style={{fontSize:9,color:'var(--dim)',flexShrink:0}}>▣ {totalBoards}</span>}
+                            <button className="btn" style={{fontSize:9,padding:'1px 6px',flexShrink:0}}
+                              data-tooltip={lang==='es'?'Abrir vista frontal':'Open front view'}
+                              onClick={()=>openWallFrontView(normalizeWall(wall))}>
+                              →
+                            </button>
                           </div>
                         );
                       })}
@@ -11820,11 +11795,6 @@ ${rows}
         const cw = room?.walls.find(w => w.id === roomWallCtx.wallId);
         if (!cw) return null;
         const wLen = roomWallLen(cw, room.vertices);
-        const boardA = wallSideBoard(cw,'A') ? boards.find(b=>b.id===wallSideBoard(cw,'A')) : null;
-        const boardB = wallSideBoard(cw,'B') ? boards.find(b=>b.id===wallSideBoard(cw,'B')) : null;
-        const cwH = cw.height ?? (room.ceilingHeight||280);
-        const mmA = boardA && boardA.fixed && boardA.units==='cm' && (Math.abs(boardA.fixedW-wLen)>0.5 || Math.abs((boardA.fixedH||0)-cwH)>0.5);
-        const mmB = boardB && boardB.fixed && boardB.units==='cm' && (Math.abs(boardB.fixedW-wLen)>0.5 || Math.abs((boardB.fixedH||0)-cwH)>0.5);
         const saveWall = patch => saveRoom({...roomRef.current, walls: roomRef.current.walls.map(w => w.id===cw.id ? {...w,...patch} : w)});
         const saveWallFn = fn => saveRoom({...roomRef.current, walls: roomRef.current.walls.map(w => w.id===cw.id ? fn(w) : w)});
         const ctxNumInput = (val, placeholder, min, max, step, onChange) => (
@@ -11834,34 +11804,31 @@ ${rows}
             onPointerDown={e=>e.stopPropagation()} onChange={onChange}/>
         );
         const sideLabel = s => s==='A' ? (lang==='es'?'Cara A':'Side A') : (lang==='es'?'Cara B':'Side B');
-        const ctxSideSection = (side, board, mismatch, colorKey, colorVal) => (<>
-          <div style={{padding:'3px 10px 2px',fontSize:8,color:'var(--muted)',letterSpacing:1,textTransform:'uppercase',borderTop:'1px solid var(--border)',display:'flex',alignItems:'center',gap:6,userSelect:'none'}}
-            onMouseEnter={()=>setRoomHovSide({wallId:cw.id,side})}
-            onMouseLeave={()=>setRoomHovSide(null)}>
-            <span style={{flex:1,color:side==='A'?'#ff3f3f':'#38b0ff',fontWeight:600}}>{sideLabel(side)}</span>
-            <input type="color" value={colorVal}
-              style={{width:20,height:16,padding:0,border:'1px solid var(--border2)',borderRadius:2,cursor:'pointer',flexShrink:0}}
-              onPointerDown={e=>e.stopPropagation()}
-              onChange={e=>saveWall({[colorKey]:e.target.value})}/>
-          </div>
-          {mismatch && (
-            <button className="ctx-item" style={{color:'#e87528'}}
-              onClick={()=>{syncWallBoard(cw,board);setRoomWallCtx(null);}}>
-              ⚠ {t('salaWallSync')}
-            </button>
-          )}
-          {board ? (
-            <button className="ctx-item"
-              onClick={()=>{setBid(board.id);bidRef.current=board.id;setRoomView('board');setRoomWallCtx(null);}}>
-              {t('salaWallBoard')}
-            </button>
-          ) : (
+        const ctxSideSection = (side, colorKey, colorVal) => {
+          const list = side === 'A' ? (cw.boardsA||[]) : (cw.boardsB||[]);
+          const count = list.length;
+          return (<>
+            <div style={{padding:'3px 10px 2px',fontSize:8,color:'var(--muted)',letterSpacing:1,textTransform:'uppercase',borderTop:'1px solid var(--border)',display:'flex',alignItems:'center',gap:6,userSelect:'none'}}
+              onMouseEnter={()=>setRoomHovSide({wallId:cw.id,side})}
+              onMouseLeave={()=>setRoomHovSide(null)}>
+              <span style={{flex:1,color:side==='A'?'#ff3f3f':'#38b0ff',fontWeight:600}}>{sideLabel(side)}</span>
+              <input type="color" value={colorVal}
+                style={{width:20,height:16,padding:0,border:'1px solid var(--border2)',borderRadius:2,cursor:'pointer',flexShrink:0}}
+                onPointerDown={e=>e.stopPropagation()}
+                onChange={e=>saveWall({[colorKey]:e.target.value})}/>
+            </div>
+            {count > 0 && (
+              <button className="ctx-item"
+                onClick={()=>{openWallFrontView(cw, side);setRoomWallCtx(null);}}>
+                {lang==='es'?`Tableros (${count}) →`:`Boards (${count}) →`}
+              </button>
+            )}
             <button className="ctx-item"
               onClick={()=>{createRoomBoardSide(cw.id,side);setRoomWallCtx(null);}}>
-              {t('salaCreateBoard')}
+              {count === 0 ? t('salaCreateBoard') : (lang==='es'?'+ Tablero':'+ Board')}
             </button>
-          )}
-        </>);
+          </>);
+        };
         return (
           <div className="ctx-menu" style={{left:roomWallCtx.x, top:roomWallCtx.y, minWidth:195}}
             onPointerDown={e=>e.stopPropagation()} onContextMenu={e=>e.preventDefault()}>
@@ -11882,8 +11849,8 @@ ${rows}
               })}
               <span style={{fontSize:9,color:'var(--muted)'}}>cm</span>
             </div>
-            {ctxSideSection('A', boardA, mmA, 'color',     cw.color    ||'#d0c8bc')}
-            {ctxSideSection('B', boardB, mmB, 'colorBack', cw.colorBack||'#d0c8bc')}
+            {ctxSideSection('A', 'color',     cw.color    ||'#d0c8bc')}
+            {ctxSideSection('B', 'colorBack', cw.colorBack||'#d0c8bc')}
           </div>
         );
       })()}

@@ -1,6 +1,6 @@
 {
-  "version": "1.25.4",
+  "version": "1.25.5",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-06-22",
-  "notes": "Vista frontal de pared: menu contextual por tablero, redimensionado de tableros vacios con snap y persistencia dual."
+  "notes": "Panel de paredes simplificado: fila limpia con nombre, longitud, contador de tableros y acceso directo a vista frontal. Creacion multi-tablero desde menu contextual del plano."
 }
