@@ -133,6 +133,7 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .nboard-row{display:flex;align-items:center;padding:5px 8px 5px 22px;cursor:pointer;transition:background .1s;border-left:2px solid transparent}
 .nboard-row:hover{background:var(--panel)}
 .nboard-row.active{border-left-color:var(--acc);background:var(--acc-faint)}
+.nboard-row.hov:not(.active){border-left-color:var(--acc)}
 .nboard-dash{color:var(--dim);font-size:9px;margin-right:6px;flex-shrink:0}
 .nboard-name{font-size:10px;color:var(--dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .nboard-row.active .nboard-name{color:var(--acc)}
@@ -1773,6 +1774,7 @@ function App() {
   const [roomSvgCtx,     setRoomSvgCtx]    = useState(null); // {x, y, svgX, svgY}
   const [roomWallCtx,    setRoomWallCtx]   = useState(null); // {wallId, x, y}
   const [roomHovWall,    setRoomHovWall]   = useState(null); // hovered wall id
+  const [hoveredBoardId, setHoveredBoardId] = useState(null); // cross-surface hover
   const [roomHovSide,    setRoomHovSide]   = useState(null); // {wallId, side:'A'|'B'}
   const [roomHovBlock,   setRoomHovBlock]  = useState(null); // {blockId, face:'n'|'s'|'e'|'w'|'t'}
   const [roomFilterBoards, setRoomFilterBoards] = useState(false);
@@ -1880,6 +1882,13 @@ function App() {
   const [wallFrontView,   setWallFrontView]   = useState(null); // {wall, face:'A'|'B'} — Fase 3b
   const wallFrontViewRef  = useRef(null);
   const [wallFrontItems,  setWallFrontItems]  = useState({}); // {boardId: items[]}
+  const [wfvDrag,   setWfvDrag]   = useState(null); // {boardId,face,fWcm,fHcm,startPx,startOffset,startHangY,curOffset,curHangY} — Fase 3c
+  const wfvDragRef  = useRef(null);
+  const [wfvHovBid,   setWfvHovBid]   = useState(null); // boardId under pointer in front view
+  const [wfvCtxMenu,  setWfvCtxMenu]  = useState(null); // {x, y, boardId} — context menu in front view
+  const [wfvResize,   setWfvResize]   = useState(null); // {boardId,face,mode,startPx,startOffset,startHangY,startFWcm,startFHcm,curOffset,curHangY,curFWcm,curFHcm}
+  const wfvResizeRef  = useRef(null);
+  const [wfvGuides, setWfvGuides] = useState({ h:[], v:[] }); // snap guides — Fase 3c
   const [artwork3D,        setArtwork3D]       = useState(null); // {photo,item,boardId,wallColor,roomPhotos,idx,fromGrid?,fromZone?,zoneMembers?,zoneIdx?}
   const artwork3DRef       = useRef(null);
   const [artwork3DGrid,    setArtwork3DGrid]   = useState(null); // {item,boardId,wallColor,roomPhotos,roomIdx}
@@ -2081,6 +2090,7 @@ function App() {
   const copy3DItemRef        = useRef(null);
   const pendingCameraTweenRef = useRef(null);
   const roomViewRef          = useRef('board');
+  const hoveredBoardIdRef    = useRef(null);
   const undoStack           = useRef([]);
   const redoStack           = useRef([]);
   const textareaRef         = useRef(null);
@@ -2105,6 +2115,7 @@ function App() {
   useEffect(() => { allBoardItemsRef.current = allBoardItems; }, [allBoardItems]);
   useEffect(() => { boardsRef.current        = boards;        }, [boards]);
   useEffect(() => { roomViewRef.current      = roomView;      }, [roomView]);
+  useEffect(() => { hoveredBoardIdRef.current = hoveredBoardId; }, [hoveredBoardId]);
   useEffect(() => { artwork3DRef.current     = artwork3D;     }, [artwork3D]);
   useEffect(() => { artwork3DGridRef.current = artwork3DGrid; }, [artwork3DGrid]);
   useEffect(() => { artwork3DZoneRef.current = artwork3DZone; }, [artwork3DZone]);
@@ -2129,6 +2140,12 @@ function App() {
     document.addEventListener('pointerdown', close);
     return () => document.removeEventListener('pointerdown', close);
   }, [projCtxMenu !== null]);
+  useEffect(() => {
+    if (!wfvCtxMenu) return;
+    const close = () => setWfvCtxMenu(null);
+    document.addEventListener('pointerdown', close);
+    return () => document.removeEventListener('pointerdown', close);
+  }, [wfvCtxMenu !== null]);
 
   useEffect(() => {
     if (!roomVertCtx) return;
@@ -2886,7 +2903,10 @@ function App() {
           const sizeScale = (minH > 0 && ih > 0 && ih < minH) ? minH / ih : 1;
           const finalIw = iw * sizeScale;
           const finalIh = Math.max(ih, minH);
-          const ix = startOffset + offset + (item.x + item.w/2) / bPx.w * fW;
+          const itemFrac = (item.x + item.w/2) / bPx.w;
+          const ix = sideSign === 1
+            ? startOffset + offset + itemFrac * fW
+            : startOffset + wallFaceLen - offset - itemFrac * fW;
           const iy = (hangCenterY - fH/2) + fH * (1 - (item.y + itemH/2) / bPx.h);
           const itemRotRad = -((item.rot || 0) + (item.freeRot || 0)) * Math.PI / 180;
           const pos = { x: x1 + dirX*ix + normX*(wt/2+2), y: iy, z: z1 + dirZ*ix + normZ*(wt/2+2) };
@@ -3586,6 +3606,8 @@ function App() {
             : [hits[0].object];
           if (group.length !== hoveredGroup.length || group[0] !== hoveredGroup[0]) applyHover(group);
           canvas.style.cursor = 'pointer';
+          const newId = ud.boardId || null;
+          if (newId !== hoveredBoardIdRef.current) setHoveredBoardId(newId);
           if (hudEl) {
             if (walkActive || !ud.itemId) {
               hudEl.style.display = 'none';
@@ -3600,6 +3622,7 @@ function App() {
           if (hoveredGroup.length) applyHover([]);
           canvas.style.cursor = clipboardRef.current.length > 0 ? 'crosshair' : '';
           if (hudEl) hudEl.style.display = 'none';
+          if (hoveredBoardIdRef.current !== null) setHoveredBoardId(null);
         }
       };
       canvas.addEventListener('mousemove', onHoverMM);
@@ -3609,6 +3632,7 @@ function App() {
         canvas.style.cursor = '';
         const hudEl = hud3DLabelRef.current;
         if (hudEl) hudEl.style.display = 'none';
+        setHoveredBoardId(null);
       };
 
       // Paste-click: left-click on a board surface while clipboard is non-empty
@@ -3741,8 +3765,15 @@ function App() {
         const my = -((e.clientY - rect.top) / rect.height) * 2 + 1;
         itemRay.setFromCamera(new THREE.Vector2(mx, my), camera);
         const hits = itemRay.intersectObjects(itemMeshes);
-        if (!hits.length) return;
-        openFrom3D(hits[0].object.userData);
+        if (hits.length) { openFrom3D(hits[0].object.userData); return; }
+        if (roomShareModeRef.current) return;
+        const wallHits = itemRay.intersectObjects(wallMeshes);
+        if (!wallHits.length) return;
+        const wud = wallHits[0].object.userData;
+        if (wud.wallType !== 'wall') return;
+        const wall = roomRef.current?.walls?.find(w => w.id === wud.wallId);
+        if (!wall) return;
+        openWallFrontView(normalizeWall(wall), wud.face);
       };
 
       canvas.addEventListener('pointerdown', onMouseDown3DItem);
@@ -6997,10 +7028,10 @@ ${rows}
     api.put(`/api/projects/${pidRef.current}/rooms/${r.id}`, r);
   };
 
-  const openWallFrontView = wall => {
+  const openWallFrontView = (wall, initialFace) => {
     const hasA = (wall.boardsA||[]).length > 0;
     const hasB = (wall.boardsB||[]).length > 0;
-    const face = (!hasA && hasB) ? 'B' : 'A';
+    const face = initialFace || ((!hasA && hasB) ? 'B' : 'A');
     setWallFrontView({wall, face});
     wallFrontViewRef.current = {wall, face};
     setWallFrontItems({});
@@ -7008,7 +7039,7 @@ ${rows}
     Promise.all([...(wall.boardsA||[]), ...(wall.boardsB||[])].map(en => {
       const bid = en.boardId;
       if (allBoardItemsRef.current[bid]) return Promise.resolve([bid, allBoardItemsRef.current[bid]]);
-      return api.get(`/api/projects/${pid_}/boards/${bid}/items`).then(it => [bid, it]).catch(() => [bid, []]);
+      return api.get(`/api/boards/${pid_}/${bid}/items`).then(it => [bid, it]).catch(() => [bid, []]);
     })).then(pairs => setWallFrontItems(Object.fromEntries(pairs)));
   };
 
@@ -7420,7 +7451,7 @@ ${rows}
     document.addEventListener('pointerup', onMU);
   };
 
-  const createRoomBoardSide = async (wallId, side='A') => {
+  const createRoomBoardSide = async (wallId, side='A', { noNav = false } = {}) => {
     const r = roomRef.current; if (!r) return;
     const wall = r.walls.find(w=>w.id===wallId); if (!wall) return;
     const listField = side === 'A' ? 'boardsA' : 'boardsB';
@@ -7442,10 +7473,17 @@ ${rows}
     });
     const fullB = {...b, fixed:true, fixedW:boardW, fixedH:wallH, dpi, units:'cm', defaultW};
     setBoards(bs=>[...bs, fullB]);
-    const updatedRoom = {...r, walls:r.walls.map(w=>w.id===wallId?{...w,[listField]:[...existingList,{boardId:b.id,offset}]}:w)};
+    const newEntry = {boardId: b.id, offset};
+    const updatedWall = {...wall, [listField]: [...existingList, newEntry]};
+    const updatedRoom = {...r, walls: r.walls.map(w => w.id===wallId ? updatedWall : w)};
     saveRoom(updatedRoom);
-    setBid(b.id); bidRef.current = b.id;
-    setRoomView('board');
+    if (noNav) {
+      setWallFrontView(prev => prev ? {...prev, wall: updatedWall} : prev);
+      wallFrontViewRef.current = wallFrontViewRef.current ? {...wallFrontViewRef.current, wall: updatedWall} : null;
+    } else {
+      setBid(b.id); bidRef.current = b.id;
+      setRoomView('board');
+    }
     showToast(lang==='es'?`Tablero "${label}" creado`:`Board "${label}" created`);
   };
   const createRoomBoard = wallId => createRoomBoardSide(wallId, 'A');
@@ -7490,9 +7528,9 @@ ${rows}
       cum += boardsRef.current.find(b => b.id === e.boardId)?.fixedW || 0;
       return entry;
     });
-    saveRoom({...r, walls: r.walls.map(w =>
-      w.id !== wallId ? w : {...w, [listField]: repacked}
-    )});
+    const updatedWall = {...r.walls.find(w => w.id === wallId), [listField]: repacked};
+    saveRoom({...r, walls: r.walls.map(w => w.id !== wallId ? w : updatedWall)});
+    return updatedWall;
   };
 
   const handleDropBoardOnWall = (wall, side, bId) => {
@@ -8997,7 +9035,9 @@ ${rows}
                             });
                             const renderBoard = (b, sub) => (
                               <div key={b.id}
-                                className={`nboard-row${sub?' nboard-sub':''}${b.id===bid&&roomView==='board'&&!tmplEditMode?' active':''}${boardDragOver===b.id?' drag-over':''}`}
+                                className={`nboard-row${sub?' nboard-sub':''}${b.id===bid&&roomView==='board'&&!tmplEditMode?' active':''}${boardDragOver===b.id?' drag-over':''}${b.id===hoveredBoardId?' hov':''}`}
+                                onMouseEnter={() => setHoveredBoardId(b.id)}
+                                onMouseLeave={() => setHoveredBoardId(null)}
                                 onClick={() => { if (tmplEditModeRef.current) exitTmplEdit(); setBid(b.id); setRoomView('board'); }}
                                 draggable
                                 onDragStart={e => {
@@ -9219,14 +9259,17 @@ ${rows}
                         const len=roomWallLen(wall,room.vertices);
                         const linked = wallBoardIds(wall).length > 0;
                         const hov = roomHovWall === wall.id;
-                        const hovSide = roomHovSide?.wallId === wall.id ? roomHovSide.side : null;
+                        const hovSide = roomHovSide?.wallId === wall.id ? roomHovSide.side
+                          : hoveredBoardId && (wall.boardsA||[]).some(e=>e.boardId===hoveredBoardId) ? 'A'
+                          : hoveredBoardId && (wall.boardsB||[]).some(e=>e.boardId===hoveredBoardId) ? 'B'
+                          : null;
                         const isTabique = wall.height && wall.height < (room.ceilingHeight||280);
                         const wt = wall.thickness ?? (room.wallThickness ?? 15);
                         const sw = Math.max(wt, 3);
                         return (
                           <g key={wall.id}
-                            onMouseEnter={()=>!roomDrawing&&setRoomHovWall(wall.id)}
-                            onMouseLeave={()=>setRoomHovWall(null)}
+                            onMouseEnter={()=>{if(!roomDrawing){setRoomHovWall(wall.id);setHoveredBoardId(wallBoardIds(wall)[0]||null);}}} // TODO: con resaltado por tablero individual, afinar cuál se resalta
+                            onMouseLeave={()=>{setRoomHovWall(null);setHoveredBoardId(null);}}
                             onContextMenu={e=>{if(shareRole)return;e.preventDefault();e.stopPropagation();setRoomWallCtx({wallId:wall.id,x:e.clientX,y:e.clientY});}}
                             onDoubleClick={e=>{if(shareRole||roomDrawing)return;e.stopPropagation();openWallFrontView(normalizeWall(wall));}}>
                             {/* Wide invisible hit area for easier hover */}
@@ -11376,14 +11419,71 @@ ${rows}
         const scale = Math.min(vw / Math.max(wallLen, 1), vh / Math.max(ceilH, 1));
         const surfW  = wallLen * scale;
         const surfH  = ceilH  * scale;
-        const wColor = wfvWall.color || wfvWall.colorBack || '#c8bdb0';
+        const wColor = wfvWall.color || wfvWall.colorBack || '#d0c8bc';
         const toCm = (v, u, dpi) => !u||u==='cm' ? v : u==='mm' ? v/10 : u==='in' ? v*2.54 : v/(dpi||300)*2.54;
         const photoMap_ = Object.fromEntries(photos.map(p => [p.id, p]));
-        const closeWfv = () => { setWallFrontView(null); wallFrontViewRef.current = null; setWallFrontItems({}); };
+        const closeWfv = () => { setWallFrontView(null); wallFrontViewRef.current = null; setWallFrontItems({}); wfvDragRef.current = null; setWfvDrag(null); wfvResizeRef.current = null; setWfvResize(null); setWfvGuides({h:[],v:[]}); setWfvHovBid(null); setWfvCtxMenu(null); };
+        const fromCm = (v, u, dpi) => !u||u==='cm' ? v : u==='mm' ? v*10 : u==='in' ? v/2.54 : v*((dpi||300)/2.54);
+        const onWfvResizePD = (e, boardId, mode, curOffset, curHangY, curFWcm, curFHcm) => {
+          e.stopPropagation(); e.preventDefault();
+          setWfvCtxMenu(null);
+          e.currentTarget.setPointerCapture(e.pointerId);
+          const r = { boardId, face, mode, startPx:{x:e.clientX,y:e.clientY},
+            startOffset:curOffset, startHangY:curHangY, startFWcm:curFWcm, startFHcm:curFHcm,
+            curOffset, curHangY, curFWcm, curFHcm };
+          wfvResizeRef.current = r; setWfvResize(r);
+        };
+        const onWfvResizePM = (e) => {
+          const r = wfvResizeRef.current; if (!r) return;
+          const rawDxCm = (e.clientX - r.startPx.x) / scale;
+          const rawDyCm = (e.clientY - r.startPx.y) / scale;
+          const m = r.mode;
+          let nW=r.startFWcm, nH=r.startFHcm, nOff=r.startOffset, nHY=r.startHangY;
+          if (m.includes('e')) { nW=Math.max(5, Math.min(r.startFWcm+rawDxCm, wallLen-r.startOffset)); nOff=r.startOffset; }
+          if (m.includes('w')) { const re=r.startOffset+r.startFWcm; nW=Math.max(5,r.startFWcm-rawDxCm); nOff=Math.max(0,re-nW); nW=re-nOff; }
+          if (m.includes('s')) { const te=r.startHangY+r.startFHcm/2; nH=Math.max(5,Math.min(r.startFHcm+rawDyCm,te)); nHY=te-nH/2; }
+          if (m.includes('n')) { const be=r.startHangY-r.startFHcm/2; nH=Math.max(5,Math.min(r.startFHcm-rawDyCm,ceilH-be)); nHY=be+nH/2; }
+          const thresh=8/scale;
+          const hSnaps=[0,wallLen], vSnaps=[0,ceilH];
+          entries.forEach(en=>{
+            if(en.boardId===r.boardId) return;
+            const ob=boards.find(b=>b.id===en.boardId); if(!ob?.fixed||!ob.fixedW||!ob.fixedH) return;
+            const oW=toCm(ob.fixedW,ob.units,ob.dpi),oH=toCm(ob.fixedH,ob.units,ob.dpi),oOff=en.offset,oHY=en.hangY??150;
+            hSnaps.push(oOff,oOff+oW); vSnaps.push(oHY-oH/2,oHY+oH/2);
+          });
+          let hSL=null, vSL=null;
+          if(m.includes('e')&&!m.includes('w')){const edge=nOff+nW;let best=Infinity;hSnaps.forEach(sp=>{const d=Math.abs(sp-edge);if(d<thresh&&d<best){best=d;hSL=sp;}});if(hSL!==null)nW=Math.max(5,hSL-nOff);}
+          else if(m.includes('w')&&!m.includes('e')){const edge=nOff;let best=Infinity;hSnaps.forEach(sp=>{const d=Math.abs(sp-edge);if(d<thresh&&d<best){best=d;hSL=sp;}});if(hSL!==null){const re=r.startOffset+r.startFWcm;nOff=hSL;nW=Math.max(5,re-nOff);}}
+          if(m.includes('s')&&!m.includes('n')){const edge=nHY-nH/2;let best=Infinity;vSnaps.forEach(sp=>{const d=Math.abs(sp-edge);if(d<thresh&&d<best){best=d;vSL=sp;}});if(vSL!==null){const te=r.startHangY+r.startFHcm/2;nH=Math.max(5,te-vSL);nHY=te-nH/2;}}
+          else if(m.includes('n')&&!m.includes('s')){const edge=nHY+nH/2;let best=Infinity;vSnaps.forEach(sp=>{const d=Math.abs(sp-edge);if(d<thresh&&d<best){best=d;vSL=sp;}});if(vSL!==null){const be=r.startHangY-r.startFHcm/2;nH=Math.max(5,vSL-be);nHY=be+nH/2;}}
+          setWfvGuides({h:vSL!==null?[{pos:(ceilH-vSL)*scale,from:0,to:surfW}]:[],v:hSL!==null?[{pos:hSL*scale,from:0,to:surfH}]:[]});
+          const newR={...r,curOffset:nOff,curHangY:nHY,curFWcm:nW,curFHcm:nH};
+          wfvResizeRef.current=newR; setWfvResize(newR);
+        };
+        const onWfvResizePU = (e) => {
+          const r=wfvResizeRef.current; if(!r) return;
+          e.currentTarget.releasePointerCapture(e.pointerId);
+          const board_=boards.find(b=>b.id===r.boardId);
+          if(board_){
+            const newFixedW=fromCm(r.curFWcm,board_.units,board_.dpi);
+            const newFixedH=fromCm(r.curFHcm,board_.units,board_.dpi);
+            api.patch(`/api/projects/${pidRef.current}/boards/${r.boardId}`,{fixedW:newFixedW,fixedH:newFixedH});
+            setBoards(bs=>bs.map(b=>b.id===r.boardId?{...b,fixedW:newFixedW,fixedH:newFixedH}:b));
+            const faceKey=face==='A'?'boardsA':'boardsB';
+            const updWall={...wfvWall,[faceKey]:(wfvWall[faceKey]||[]).map(en=>
+              en.boardId===r.boardId?{...en,offset:r.curOffset,hangY:r.curHangY}:en
+            )};
+            const newRoom={...roomRef.current,walls:roomRef.current.walls.map(w=>w.id===wfvWall.id?updWall:w)};
+            saveRoom(newRoom);
+            setWallFrontView(prev=>prev?{...prev,wall:updWall}:prev);
+            wallFrontViewRef.current=wallFrontViewRef.current?{...wallFrontViewRef.current,wall:updWall}:null;
+          }
+          wfvResizeRef.current=null; setWfvResize(null); setWfvGuides({h:[],v:[]});
+        };
         return (
-          <div className="fullscreen-overlay" onClick={closeWfv}>
+          <div className="fullscreen-overlay" onClick={closeWfv} onMouseLeave={()=>setWfvHovBid(null)}>
             <button className="fullscreen-close" onClick={e=>{e.stopPropagation();closeWfv();}}>×</button>
-            <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:10,pointerEvents:'auto'}} onClick={e=>e.stopPropagation()}>
+            <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:10,pointerEvents:'auto',position:'relative',zIndex:2}} onClick={e=>e.stopPropagation()}>
               <span style={{color:'rgba(255,255,255,.4)',fontSize:10,fontFamily:"'IBM Plex Mono',monospace"}}>
                 {lang==='es'?'Pared':'Wall'} · {cmLabel(wallLen)}
               </span>
@@ -11401,8 +11501,16 @@ ${rows}
                   </button>
                 ))}
               </div>
+              <button
+                onClick={e=>{e.stopPropagation();createRoomBoardSide(wfvWall.id, face, {noNav:true});}}
+                data-tooltip={lang==='es'?'Añadir tablero a esta cara':'Add board to this face'}
+                style={{padding:'2px 10px',fontSize:12,fontFamily:"'IBM Plex Mono',monospace",cursor:'pointer',
+                  border:'1px solid rgba(255,255,255,.25)',background:'rgba(255,255,255,.1)',
+                  color:'rgba(255,255,255,.7)',lineHeight:1}}>
+                +
+              </button>
             </div>
-            <div style={{position:'relative',width:surfW,height:surfH,background:wColor,flexShrink:0}} onClick={e=>e.stopPropagation()}>
+            <div style={{position:'relative',width:surfW,height:surfH,background:wColor,flexShrink:0,overflow:'hidden'}} onClick={e=>e.stopPropagation()}>
               <div style={{position:'absolute',bottom:0,left:0,right:0,height:2,background:'rgba(0,0,0,.2)'}}/>
               {entries.map(entry => {
                 const board = boards.find(b => b.id === entry.boardId);
@@ -11411,45 +11519,228 @@ ${rows}
                 const fHcm  = toCm(board.fixedH, board.units, board.dpi);
                 const bPx   = getBoardPx(board);
                 const hangY = entry.hangY ?? 150;
-                const boardL = face==='A' ? entry.offset*scale : (wallLen - entry.offset - fWcm)*scale;
-                const boardT = (ceilH - hangY - fHcm/2) * scale;
-                const boardW = fWcm * scale;
-                const boardH = fHcm * scale;
-                const items  = (wallFrontItems[entry.boardId] || []).filter(i => !i.type||i.type==='photo'||i.type==='text');
+                const iDragging = wfvDrag?.boardId === entry.boardId && wfvDrag?.face === face;
+                const iResizing = wfvResize?.boardId === entry.boardId && wfvResize?.face === face;
+                const dispOffset = iDragging ? wfvDrag.curOffset : (iResizing ? wfvResize.curOffset : entry.offset);
+                const dispHangY  = iDragging ? wfvDrag.curHangY  : (iResizing ? wfvResize.curHangY  : hangY);
+                const dispFWcm   = iResizing ? wfvResize.curFWcm : fWcm;
+                const dispFHcm   = iResizing ? wfvResize.curFHcm : fHcm;
+                const boardL = dispOffset * scale;
+                const boardT = (ceilH - dispHangY - dispFHcm/2) * scale;
+                const boardW = dispFWcm * scale;
+                const boardH = dispFHcm * scale;
+                const items  = (wallFrontItems[entry.boardId] || []).filter(i => i.type!=='note' && i.type!=='zone');
+                const isEmpty = items.length === 0;
+                const isHov  = wfvHovBid === entry.boardId;
                 return (
-                  <div key={entry.boardId} style={{position:'absolute',left:boardL,top:boardT,width:boardW,height:boardH,
-                    background:'#f0ebe4',outline:'1px solid rgba(255,255,255,.35)',overflow:'hidden',boxShadow:'0 2px 10px rgba(0,0,0,.5)'}}>
+                  <div key={entry.boardId} style={{position:'absolute',left:boardL,top:boardT,width:boardW,height:boardH}}
+                    onMouseEnter={()=>setWfvHovBid(entry.boardId)}>
+                  <div style={{position:'absolute',left:0,top:0,width:'100%',height:'100%',
+                    background:'#fff',outline:isHov?'2px solid rgba(255,255,255,.75)':'1px solid rgba(255,255,255,.35)',overflow:'hidden',boxShadow:'0 2px 10px rgba(0,0,0,.5)',
+                    cursor:iDragging?'grabbing':'grab',userSelect:'none'}}
+                    onContextMenu={e => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (wfvDragRef.current?.moved) return;
+                      const x = Math.min(e.clientX, window.innerWidth  - 215);
+                      const y = Math.min(e.clientY, window.innerHeight - 100);
+                      setWfvCtxMenu({ x, y, boardId: entry.boardId });
+                    }}
+                    onPointerDown={e => {
+                      setWfvCtxMenu(null);
+                      if (e.button !== 0) return;
+                      e.stopPropagation();
+                      e.currentTarget.setPointerCapture(e.pointerId);
+                      const drag = { boardId:entry.boardId, face, fWcm, fHcm,
+                        startPx:{ x:e.clientX, y:e.clientY }, moved:false,
+                        startOffset:entry.offset, startHangY:hangY,
+                        curOffset:entry.offset, curHangY:hangY };
+                      wfvDragRef.current = drag;
+                      setWfvDrag(drag);
+                    }}
+                    onPointerMove={e => {
+                      const d = wfvDragRef.current;
+                      if (!d || d.boardId !== entry.boardId || d.face !== face) return;
+                      // Ignore micro-movements: until the pointer travels >4px it is a
+                      // click (or the first half of a double-click), not a drag.
+                      if (!d.moved && Math.hypot(e.clientX - d.startPx.x, e.clientY - d.startPx.y) < 4) return;
+                      const dxCm = (e.clientX - d.startPx.x) / scale;
+                      const dyCm = (e.clientY - d.startPx.y) / scale;
+                      const rawOffset = d.startOffset + dxCm;
+                      const rawHangY  = d.startHangY - dyCm;
+                      // snap
+                      const thresh = 8 / scale;
+                      const bL=rawOffset, bCx=rawOffset+d.fWcm/2, bR=rawOffset+d.fWcm;
+                      const bBot=rawHangY-d.fHcm/2, bCy=rawHangY, bTop=rawHangY+d.fHcm/2;
+                      const hLines=[0, wallLen/2, wallLen];
+                      const vLines=[150, ceilH/2];
+                      entries.forEach(en => {
+                        if (en.boardId===d.boardId) return;
+                        const ob=boards.find(b=>b.id===en.boardId);
+                        if (!ob?.fixed||!ob.fixedW||!ob.fixedH) return;
+                        const ofW=toCm(ob.fixedW,ob.units,ob.dpi), ofH=toCm(ob.fixedH,ob.units,ob.dpi);
+                        const oOff=en.offset, oHY=en.hangY??150;
+                        hLines.push(oOff, oOff+ofW/2, oOff+ofW);
+                        vLines.push(oHY, oHY-ofH/2, oHY+ofH/2);
+                      });
+                      let bestHcorr=null, bestHabs=Infinity, hSnapX=null;
+                      hLines.forEach(line => {
+                        [bL,bCx,bR].forEach(bRef => {
+                          const corr=line-bRef;
+                          if (Math.abs(corr)<thresh && Math.abs(corr)<bestHabs) { bestHabs=Math.abs(corr); bestHcorr=corr; hSnapX=line; }
+                        });
+                      });
+                      let bestVcorr=null, bestVabs=Infinity, vSnapY=null;
+                      vLines.forEach(line => {
+                        [bBot,bCy,bTop].forEach(bRef => {
+                          const corr=line-bRef;
+                          if (Math.abs(corr)<thresh && Math.abs(corr)<bestVabs) { bestVabs=Math.abs(corr); bestVcorr=corr; vSnapY=line; }
+                        });
+                      });
+                      const clampHY  = hy  => Math.max(d.fHcm/2, Math.min(ceilH-d.fHcm/2, hy));
+                      const clampOff = off => Math.max(0, Math.min(wallLen-d.fWcm, off));
+                      const newOffset = clampOff(rawOffset + (bestHcorr??0));
+                      const newHangY  = clampHY(rawHangY + (bestVcorr??0));
+
+                      const newDrag = {...d, moved:true, curOffset:newOffset, curHangY:newHangY};
+                      wfvDragRef.current = newDrag;
+                      setWfvDrag(newDrag);
+                      setWfvGuides({
+                        h: vSnapY!==null ? [{pos:(ceilH-vSnapY)*scale, from:0, to:surfW}] : [],
+                        v: hSnapX!==null ? [{pos:hSnapX*scale, from:0, to:surfH}] : [],
+                      });
+                    }}
+                    onPointerUp={e => {
+                      const d = wfvDragRef.current;
+                      if (!d || d.boardId !== entry.boardId || d.face !== face) return;
+                      e.currentTarget.releasePointerCapture(e.pointerId);
+                      // Only persist when the board was actually dragged. A bare click (or
+                      // either half of a double-click) leaves position untouched — no saveRoom.
+                      if (d.moved) {
+                        const faceKey = face==='A' ? 'boardsA' : 'boardsB';
+                        const updWall = {...wfvWall, [faceKey]:(wfvWall[faceKey]||[]).map(en =>
+                          en.boardId===d.boardId ? {...en, offset:d.curOffset, hangY:d.curHangY} : en
+                        )};
+                        const newRoom = {...roomRef.current, walls:roomRef.current.walls.map(w =>
+                          w.id===wfvWall.id ? updWall : w
+                        )};
+                        saveRoom(newRoom);
+                        setWallFrontView(prev => ({...prev, wall:updWall}));
+                        wallFrontViewRef.current = {...wallFrontViewRef.current, wall:updWall};
+                      }
+                      wfvDragRef.current = null;
+                      setWfvDrag(null);
+                      setWfvGuides({h:[],v:[]});
+                    }}
+                    onDoubleClick={e => {
+                      e.stopPropagation();
+                      // Open this board's editing canvas directly from the front view.
+                      wfvDragRef.current = null; setWfvDrag(null); setWfvGuides({h:[],v:[]});
+                      setBid(entry.boardId); bidRef.current = entry.boardId;
+                      setRoomView('board');
+                      closeWfv();
+                    }}>
                     {bPx && items.map(item => {
-                      const photo = item.photoId ? photoMap_[item.photoId] : null;
-                      const isSwapped = photo && ((item.rot||0)%180 !== 0);
-                      const itemH = item.type==='text' ? (item.h||item.w*0.3)
-                        : photo ? item.w*(isSwapped ? photo.w/photo.h : photo.h/photo.w) : item.w;
-                      const iL = item.x/bPx.w*boardW, iT = item.y/bPx.h*boardH;
-                      const iW = item.w/bPx.w*boardW, iH = itemH/bPx.h*boardH;
-                      if (item.type==='text') return (
-                        <div key={item.id} style={{position:'absolute',left:iL,top:iT,width:iW,height:iH,
-                          fontSize:Math.max(5,iH*.35),color:item.color||'#333',overflow:'hidden',
-                          pointerEvents:'none',lineHeight:1.2}}>{item.label||''}</div>
-                      );
+                      const scX = boardW / bPx.w, scY = boardH / bPx.h;
+                      if (item.type === 'grid') {
+                        const layout = calcGridLayout(item, photos, board.dpi, board.units);
+                        const cells = [];
+                        let rowYpx = item.y;
+                        layout.rows.forEach(row => {
+                          row.ids.forEach((photoId, ci) => {
+                            if (!photoId) return;
+                            cells.push({ key: item.id+'_'+photoId+'_'+ci, photoId,
+                              cL:(item.x+ci*(layout.cellW+layout.gapPx))*scX, cT:rowYpx*scY,
+                              cW:layout.cellW*scX, cH:row.h*scY });
+                          });
+                          rowYpx += row.h + layout.gapPx;
+                        });
+                        return <React.Fragment key={item.id}>{cells.map(c =>
+                          <img key={c.key} src={`/photos/${pidRef.current}/${c.photoId}/thumb`}
+                            style={{position:'absolute',left:c.cL,top:c.cT,width:c.cW,height:c.cH,
+                              objectFit:'cover',pointerEvents:'none'}} />
+                        )}</React.Fragment>;
+                      }
+                      if (item.type === 'text') {
+                        const tFont = TEXT_FONTS.find(f => f.id===(item.fontFamily||'serif')) || TEXT_FONTS[0];
+                        const scaledFs = Math.max(4, (item.fontSize||40) * scX);
+                        const iL=item.x*scX, iT=item.y*scY, iW=item.w*scX, iH=(item.h||item.w*0.3)*scY;
+                        return (
+                          <div key={item.id} style={{position:'absolute',left:iL,top:iT,width:iW,height:iH,
+                            fontSize:scaledFs,fontFamily:tFont.family,
+                            fontWeight:item.fontWeight==='bold'?'bold':'normal',
+                            fontStyle:item.fontStyle==='italic'?'italic':'normal',
+                            textAlign:item.textAlign||'left',color:item.textColor||'#111',
+                            overflow:'hidden',pointerEvents:'none',lineHeight:1.3,
+                            whiteSpace:'pre-wrap',wordBreak:'break-word',
+                            boxSizing:'border-box',padding:`${Math.max(1,scaledFs*.1)}px`}}>{item.text||''}</div>
+                        );
+                      }
                       if (!item.photoId) return null;
+                      const photo = photoMap_[item.photoId];
+                      const isSwapped = photo && ((item.rot||0)%180 !== 0);
+                      const itemH = photo ? item.w*(isSwapped ? photo.w/photo.h : photo.h/photo.w) : item.w;
+                      const iL=item.x*scX, iT=item.y*scY, iW=item.w*scX, iH=itemH*scY;
                       return <img key={item.id} src={`/photos/${pidRef.current}/${item.photoId}/thumb`}
                         style={{position:'absolute',left:iL,top:iT,width:iW,height:iH,
                           objectFit:'cover',pointerEvents:'none',
                           transform:item.rot?`rotate(${item.rot}deg)`:undefined}}/>;
                     })}
                     <div style={{position:'absolute',bottom:0,left:0,right:0,padding:'1px 3px',
-                      fontSize:Math.max(7,boardH*.055),color:'rgba(0,0,0,.4)',
+                      fontSize:9,color:'rgba(0,0,0,.4)',
                       fontFamily:"'IBM Plex Mono',monospace",background:'rgba(255,255,255,.55)',
                       overflow:'hidden',whiteSpace:'nowrap',textOverflow:'ellipsis',
                       pointerEvents:'none',lineHeight:1.4}}>{board.name}</div>
                   </div>
+                  {isEmpty && !iDragging && [
+                    {m:'nw',s:{top:2,left:2,width:10,height:10,cursor:'nw-resize',background:'rgba(255,255,255,.85)',outline:'1px solid rgba(0,0,0,.3)'}},
+                    {m:'ne',s:{top:2,right:2,width:10,height:10,cursor:'ne-resize',background:'rgba(255,255,255,.85)',outline:'1px solid rgba(0,0,0,.3)'}},
+                    {m:'sw',s:{bottom:2,left:2,width:10,height:10,cursor:'sw-resize',background:'rgba(255,255,255,.85)',outline:'1px solid rgba(0,0,0,.3)'}},
+                    {m:'se',s:{bottom:2,right:2,width:10,height:10,cursor:'se-resize',background:'rgba(255,255,255,.85)',outline:'1px solid rgba(0,0,0,.3)'}},
+                    {m:'n',s:{top:0,left:12,right:12,height:10,cursor:'n-resize',borderTop:'2px solid rgba(255,255,255,.65)'}},
+                    {m:'s',s:{bottom:0,left:12,right:12,height:10,cursor:'s-resize',borderBottom:'2px solid rgba(255,255,255,.65)'}},
+                    {m:'w',s:{top:12,bottom:12,left:0,width:10,cursor:'w-resize',borderLeft:'2px solid rgba(255,255,255,.65)'}},
+                    {m:'e',s:{top:12,bottom:12,right:0,width:10,cursor:'e-resize',borderRight:'2px solid rgba(255,255,255,.65)'}},
+                  ].map(({m,s})=>(
+                    <div key={m} style={{position:'absolute',zIndex:30,opacity:(isHov||iResizing)?1:0,transition:'opacity .12s',...s}}
+                      onPointerDown={e=>onWfvResizePD(e,entry.boardId,m,dispOffset,dispHangY,dispFWcm,dispFHcm)}
+                      onPointerMove={onWfvResizePM}
+                      onPointerUp={onWfvResizePU}
+                    />
+                  ))}
+                  </div>
                 );
               })}
+              {wfvGuides.v.map((g,i) => <div key={`wgv${i}`} style={{position:'absolute',left:g.pos,top:g.from,width:1,height:g.to-g.from,background:'var(--acc)',opacity:.85,pointerEvents:'none',zIndex:10}}/>)}
+              {wfvGuides.h.map((g,i) => <div key={`wgh${i}`} style={{position:'absolute',left:g.from,top:g.pos,width:g.to-g.from,height:1,background:'var(--acc)',opacity:.85,pointerEvents:'none',zIndex:10}}/>)}
               <div style={{position:'absolute',top:'100%',left:0,right:0,textAlign:'center',paddingTop:5,
                 fontSize:9,color:'rgba(255,255,255,.3)',fontFamily:"'IBM Plex Mono',monospace",pointerEvents:'none'}}>
                 {cmLabel(wallLen)} × {cmLabel(ceilH)}
               </div>
             </div>
+            {wfvCtxMenu && (() => {
+              const cmBoard = boards.find(b => b.id === wfvCtxMenu.boardId);
+              if (!cmBoard) return null;
+              return (
+                <div className="ctx-menu" style={{left:wfvCtxMenu.x, top:wfvCtxMenu.y}}
+                  onPointerDown={e=>e.stopPropagation()} onClick={e=>e.stopPropagation()} onContextMenu={e=>e.preventDefault()}>
+                  <button className="ctx-item" onClick={()=>{
+                    wfvDragRef.current=null; setWfvDrag(null); setWfvGuides({h:[],v:[]});
+                    setBid(wfvCtxMenu.boardId); bidRef.current=wfvCtxMenu.boardId;
+                    setRoomView('board');
+                    closeWfv();
+                  }}>{lang==='es'?'Editar en tablero':'Edit in board'}</button>
+                  <button className="ctx-item ctx-danger" onClick={()=>{
+                    const updWall = unlinkBoardFromWall(wfvWall.id, face, wfvCtxMenu.boardId);
+                    if (updWall) {
+                      setWallFrontView(prev => prev ? {...prev, wall:updWall} : prev);
+                      wallFrontViewRef.current = wallFrontViewRef.current ? {...wallFrontViewRef.current, wall:updWall} : null;
+                    }
+                    setWfvCtxMenu(null);
+                  }}>{lang==='es'?'Desvincular de la pared':'Unlink from wall'}</button>
+                </div>
+              );
+            })()}
           </div>
         );
       })()}

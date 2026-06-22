@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.25.4] — 2026-06-22
+
+### New
+- **Front view — resize empty boards:** boards without content (no photos, text, or grids) show 8 resize handles on hover: white squares at the corners and transparent strips at the edges. Dragging a handle changes `fixedW`/`fixedH` in real time with correct anchor logic (the opposite edge stays fixed) and respects wall bounds (minimum 5 cm, cannot exceed wall edges, floor, or ceiling). On release, a single save step persists the change: a patch to the board's `fixedW`/`fixedH` plus `saveRoom` with the updated `offset`/`hangY` if the anchor moved them. Snap with orange guide lines to wall edges, floor, ceiling, and other boards' edges on the same face. Boards with content do not show resize handles; the body drag (move) continues working unchanged.
+
+## [1.25.3] — 2026-06-22
+
+### Changed
+- **Front view — per-board context menu (right-click):** board actions (previously the floating `×` button, then the header action bar) have moved to a right-click context menu. Right-clicking any board opens the menu with two options: "Edit in board" (same as double-click) and "Unlink from wall" (removes the link without deleting the board). The menu clamps to the viewport and closes on click-outside or drag start. Left-click drag and double-click continue to work as before. The board under the cursor gets a brighter outline as a visual indicator.
+- **Front view — mismatch warning removed:** the `⚠` indicator and orange outline that flagged boards whose `fixedH` didn't match the wall height have been removed from the front view. With multiple boards of different sizes per wall this condition is the norm rather than an error, so the warning was misleading. (The warning in the side panel remains unchanged until Phase C.)
+
+## [1.25.2] — 2026-06-22
+
+### New
+- **Front view — Phase B: board management:** the wall front view gains management capabilities previously only available in the side panel.
+  - **"+" button:** adds a new board to the active face (A or B, per the toggle) directly from the front view. The board is created with the wall's dimensions and appears on the surface without closing the modal.
+  - **Unlink (×):** hovering over a board reveals a `×` button in the top-right corner. Clicking it unlinks the board from that face (returns it to the main tree without deleting it) and removes it from the surface immediately.
+  - **Mismatch warning:** boards whose height (`fixedH`) doesn't match the wall height get an orange outline and a `⚠` icon with an explanatory tooltip.
+
+## [1.25.1] — 2026-06-22
+
+### New
+- **Wall front view — double-click to edit:** double-clicking a board in the front view opens its editing canvas directly (`setBid` + `setRoomView('board')` + closing the modal), instead of having to close the view and navigate through the tree.
+
+### Fixed
+- **Front view — accidental clicks no longer move or persist:** board dragging now requires real movement (>4 px) to count as a drag. A single click or a double-click without moving no longer triggers a needless `saveRoom` or repositions the board. The Phase 3c drag (move + snap + persist) keeps working unchanged.
+
 ## [1.25.0] — 2026-06-21
 
 ### New

@@ -1,6 +1,6 @@
 {
-  "version": "1.25.0",
+  "version": "1.25.4",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-06-21",
-  "notes": "Hover bidireccional entre arbol lateral, plano 2D y vista 3D mediante un unico estado compartido."
+  "releaseDate": "2026-06-22",
+  "notes": "Vista frontal de pared: menu contextual por tablero, redimensionado de tableros vacios con snap y persistencia dual."
 }

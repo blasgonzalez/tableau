@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.25.4] — 2026-06-22
+
+### Nuevo
+- **Vista frontal — redimensionar tableros vacíos:** los tableros sin contenido (sin fotos, textos ni grids) muestran 8 handles de redimensionado al pasar el cursor: cuadrados blancos en las esquinas y tiras transparentes en los bordes. Arrastrar un handle cambia `fixedW`/`fixedH` en tiempo real con las reglas de ancla correctas (el borde opuesto permanece fijo) y respeta los límites de la pared (mínimo 5 cm, sin salir de los bordes, sin sobrepasar suelo/techo). Al soltar se persiste en un único paso: patch a `fixedW`/`fixedH` del tablero + `saveRoom` con el nuevo `offset`/`hangY` si el ancla los modificó. Snap con guías naranjas a bordes de pared, suelo, techo y bordes de otros tableros de la misma cara. Los tableros con contenido no muestran handles de redimensionado; el arrastre de cuerpo (mover) sigue funcionando igual.
+
+## [1.25.3] — 2026-06-22
+
+### Cambiado
+- **Vista frontal — menú contextual por tablero (clic derecho):** las acciones sobre cada tablero (antes el botón `×` flotante, luego la barra en cabecera) se han movido a un menú contextual de clic derecho. Clic derecho sobre cualquier tablero abre el menú con dos opciones: «Editar en tablero» (equivalente al doble clic) y «Desvincular de la pared» (elimina el vínculo sin borrar el tablero). El menú se clamp al viewport y se cierra al hacer clic fuera o iniciar un arrastre. El arrastre (botón izquierdo) y el doble clic siguen funcionando igual. El tablero bajo el cursor recibe un outline más brillante como indicador visual.
+- **Vista frontal — eliminado aviso de desincronía:** el indicador `⚠` y el borde naranja que marcaban tableros cuyo `fixedH` no coincidía con el alto de la pared han sido eliminados de la vista frontal. Con varios tableros de tamaños distintos por pared esta condición es la norma y no un error, así que el aviso resultaba confuso. (El aviso en el panel lateral permanece sin cambios hasta la Fase C.)
+
+## [1.25.2] — 2026-06-22
+
+### Nuevo
+- **Vista frontal — Fase B: gestión de tableros:** la vista frontal de pared gana capacidades de gestión que antes solo tenía el panel lateral.
+  - **Botón "+":** añade un tablero nuevo a la cara activa (A o B, según el toggle) directamente desde la vista frontal. El tablero se crea con las dimensiones de la pared y aparece en la superficie sin cerrar el modal.
+  - **Desvincular (×):** al pasar el cursor sobre un tablero aparece un botón `×` en la esquina superior derecha. Al pulsarlo, el tablero se desvincula de esa cara (vuelve al árbol principal) sin borrarlo, y desaparece de la superficie en el mismo acto.
+  - **Aviso de desincronía:** los tableros cuya altura (`fixedH`) no coincide con el alto de la pared muestran un borde naranja y un icono `⚠` con tooltip explicativo.
+
+## [1.25.1] — 2026-06-22
+
+### Nuevo
+- **Vista frontal de pared — doble clic para editar:** doble clic sobre un tablero en la vista frontal abre directamente su canvas de edición (`setBid` + `setRoomView('board')` + cierre del modal), sin tener que cerrar la vista e ir al árbol.
+
+### Corregido
+- **Vista frontal — clic accidental ya no descoloca ni persiste:** el arrastre de tableros ahora exige un movimiento real (>4 px) para considerarse arrastre. Un clic simple o un doble clic sin mover ya no dispara un `saveRoom` innecesario ni reposiciona el tablero. El arrastre de Fase 3c (mover + snap + persistir) se mantiene igual.
+
 ## [1.25.0] — 2026-06-21
 
 ### Nuevo

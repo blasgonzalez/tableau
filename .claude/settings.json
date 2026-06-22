@@ -55,7 +55,9 @@
       "Bash(git filter-branch *)",
       "Bash(git stash *)",
       "Bash(FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch --force --index-filter \"git rm -rf --cached --ignore-unmatch backups/\" --prune-empty --tag-name-filter cat -- --all)",
-      "Bash(git update-ref *)"
+      "Bash(git update-ref *)",
+      "Bash(ls \"d:\\\\blasg\\\\Pictures\\\\Proyectos\\\\tableau\\\\\" | grep -i fase)",
+      "Read(//d/blasg/Pictures/Proyectos/**)"
     ],
     "additionalDirectories": [
       "d:\\blasg\\Pictures\\Proyectos\\tableau\\fonts"
