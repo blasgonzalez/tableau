@@ -7,8 +7,9 @@ const path    = require('path');
 const fs      = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const AdmZip  = require('adm-zip');
-const session = require('express-session');
-const bcrypt  = require('bcryptjs');
+const session   = require('express-session');
+const FileStore = require('session-file-store')(session);
+const bcrypt    = require('bcryptjs');
 const { version: APP_VERSION } = require('./package.json');
 
 const app  = express();
@@ -674,6 +675,12 @@ if (AUTH_ENABLED) {
     saveUninitialized: false,
     rolling: true,
     cookie: { httpOnly: true, sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 },
+    store: new FileStore({
+      path:   path.join(DATA_DIR, 'sessions'),
+      ttl:    7 * 24 * 60 * 60,
+      retries: 1,
+      logFn:  () => {},
+    }),
   }));
 }
 

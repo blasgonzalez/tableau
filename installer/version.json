@@ -1,6 +1,6 @@
 {
-  "version": "1.25.6",
+  "version": "1.25.7",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-06-21",
-  "notes": "Sesion renovada automaticamente con cada peticion. Redireccion al login cuando la sesion expira, sin estado zombie."
+  "releaseDate": "2026-06-24",
+  "notes": "Sesiones persistidas en disco (session-file-store): sobreviven reinicios del proceso y no se pierden por inactividad de Passenger."
 }

@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.25.7] — 2026-06-24
+
+### Corregido
+- **Sesión expirada tras inactividad del servidor (causa raíz):** en modo servidor, Passenger reinicia el proceso Node tras 3-4 horas de inactividad, destruyendo el `MemoryStore` en memoria. El navegador conservaba una cookie válida pero el servidor ya no reconocía la sesión, forzando login al retomar el trabajo. Las sesiones ahora se persisten en disco mediante `session-file-store` (directorio `DATA_DIR/sessions/`): sobreviven a cualquier reinicio del proceso y se limpian automáticamente al expirar (7 días de inactividad).
+
 ## [1.25.6] — 2026-06-21
 
 ### Corregido

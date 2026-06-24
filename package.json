@@ -1,6 +1,6 @@
 {
   "name": "tableau",
-  "version": "1.25.6",
+  "version": "1.25.7",
   "description": "Gestión visual de proyectos fotográficos",
   "main": "server.js",
   "scripts": {
@@ -22,6 +22,7 @@
     "nodemailer": "^6.9.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
+    "session-file-store": "^1.5.0",
     "sharp": "^0.33.0",
     "sucrase": "^3.35.1",
     "uuid": "^9.0.0"
