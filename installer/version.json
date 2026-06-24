@@ -1,6 +1,6 @@
 {
-  "version": "1.25.10",
+  "version": "1.25.11",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-06-24",
-  "notes": "Fase 3d: mejoras UX — arrastrar tablero sobre nombre de sala la abre automaticamente; eliminar tablero desde menu contextual de vista frontal; fixes cursor prohibido y tembleques en drag-to-expand."
+  "notes": "Fase 3e: mover tablero vinculado a otra pared (drag desde arbol o menu contextual de vista frontal), con politica mover/reposicionar/copiar."
 }

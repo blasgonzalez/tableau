@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.25.11] — 2026-06-24
+
+### New
+- **Phase 3e — Move a linked board to another wall:** two entry points to relocate an already-linked board, both sharing the same ghost + click + ESC mechanism.
+  - **PATH 1 — Drag from the sidebar tree:** linked boards no longer block the drag when in room view. Dropping one onto a different wall opens the front view with a ghost ready to place.
+  - **PATH 2 — Front-view context menu:** right-click a board in the front view → "Move to another wall". The board enters transit mode: semi-transparent (opacity 0.4) with a dashed border in the origin front view. Opening any other front view while a move is pending automatically shows the ghost.
+  - **Move / reposition / copy policy:** same room + same wall/face → REPOSITION (only offset/hangY updated, no unlink); same room + different wall → MOVE (unlink from origin + link to destination in one operation); different room → COPY (Phase 2 flow, original stays intact).
+  - ESC cancels at any point (with or without an open front view) and restores the board to its original state.
+
 ## [1.25.10] — 2026-06-24
 
 ### New

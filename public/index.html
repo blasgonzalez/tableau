@@ -1383,6 +1383,7 @@ const I18N = {
     backupRestoreOk:'Restauración completada. Recargando…', backupRestoreErr:'Error al restaurar',
     backupEmpty:'No hay backups todavía.', backupSaved:'Configuración guardada',
     projNotes:'Notas', projNotesPh:'Descripción, referencias, ideas…',
+    wfvMoveToWall:'Mover a otra pared', wfvMoveHint:'Selecciona otra pared · ESC cancela', wfvMoved:'Tablero movido.', wfvRepos:'Posición actualizada.',
     boardDefaults:'Tableros nuevos', defFrame:'Marco por defecto', projSaved:'Guardado',
     obLibTitle:'Tu biblioteca está vacía', obLibSub:'Empieza añadiendo algunas fotos.',
     obLibUpload:'↑ Subir fotos', obLibDrag:'o arrastra archivos aquí',
@@ -1617,6 +1618,7 @@ const I18N = {
     backupRestoreOk:'Restore completed. Reloading…', backupRestoreErr:'Restore failed',
     backupEmpty:'No backups yet.', backupSaved:'Settings saved',
     projNotes:'Notes', projNotesPh:'Description, references, ideas…',
+    wfvMoveToWall:'Move to another wall', wfvMoveHint:'Select another wall · ESC cancels', wfvMoved:'Board moved.', wfvRepos:'Position updated.',
     boardDefaults:'New boards', defFrame:'Default frame', projSaved:'Saved',
     obLibTitle:'Your library is empty', obLibSub:'Start by adding some photos.',
     obLibUpload:'↑ Upload photos', obLibDrag:'or drag files here',
@@ -1899,6 +1901,9 @@ function App() {
   const [wfvGhost,  setWfvGhost]  = useState(null); // {boardId,fWcm,fHcm,curOffset,curHangY} — Fase 3d
   const wfvGhostRef = useRef(null);
   const wfvGhostItemsRef = useRef(null); // items of the variable ghost board, for seeding wallFrontItems after confirm
+  const [wfvMoveOrigin, setWfvMoveOrigin] = useState(null); // {boardId,wallId,face,roomId} — Fase 3e VÍA 2
+  const wfvMoveOriginRef = useRef(null);
+  const boardDragOriginRef = useRef(null); // {boardId,wallId,face,roomId} set in onDragStart for linked boards — Fase 3e VÍA 1
   const [artwork3D,        setArtwork3D]       = useState(null); // {photo,item,boardId,wallColor,roomPhotos,idx,fromGrid?,fromZone?,zoneMembers?,zoneIdx?}
   const artwork3DRef       = useRef(null);
   const [artwork3DGrid,    setArtwork3DGrid]   = useState(null); // {item,boardId,wallColor,roomPhotos,roomIdx}
@@ -5596,9 +5601,15 @@ ${rows}
     const handler = async e => {
       if (wallFrontViewRef.current) {
         if (e.key === 'Escape') {
-          wfvGhostRef.current = null; setWfvGhost(null);
+          wfvGhostRef.current = null; setWfvGhost(null); wfvGhostItemsRef.current = null;
+          wfvMoveOriginRef.current = null; setWfvMoveOrigin(null);
           setWallFrontView(null); wallFrontViewRef.current = null; setWallFrontItems({});
         }
+        return;
+      }
+      // Fase 3e: ESC sin VF abierta cancela un movimiento pendiente
+      if (e.key === 'Escape' && wfvMoveOriginRef.current) {
+        wfvMoveOriginRef.current = null; setWfvMoveOrigin(null);
         return;
       }
       if (fullscreenPhoto) {
@@ -7053,9 +7064,15 @@ ${rows}
   };
 
   const openWallFrontView = (wall, initialFace) => {
+    // Fase 3e VÍA 2: si hay un tablero en tránsito, abrir con ghost automático en destino
+    const mo = wfvMoveOriginRef.current;
     const hasA = (wall.boardsA||[]).length > 0;
     const hasB = (wall.boardsB||[]).length > 0;
     const face = initialFace || ((!hasA && hasB) ? 'B' : 'A');
+    if (mo && (wall.id !== mo.wallId || face !== mo.face)) {
+      openWfvWithGhost(wall, face, mo.boardId, mo);
+      return;
+    }
     setWallFrontView({wall, face});
     wallFrontViewRef.current = {wall, face};
     setWallFrontItems({});
@@ -7716,7 +7733,7 @@ ${rows}
 
   // Fase 3d: open wall front view with a ghost board to position before linking.
   // Fixed boards use stored dimensions. Variable boards load items first to compute bounding box.
-  const openWfvWithGhost = async (wall, face, bId) => {
+  const openWfvWithGhost = async (wall, face, bId, origin = null) => {
     const b = boardsRef.current.find(x => x.id === bId);
     if (!b) return;
     const r = roomRef.current; if (!r) return;
@@ -7775,7 +7792,7 @@ ${rows}
     const ceilH   = wall.height ?? (r.ceilingHeight || 280);
     const initOffset = Math.max(0, Math.min(wallLen - fWcm, (wallLen - fWcm) / 2));
     const initHangY  = Math.min(150, Math.max(fHcm / 2, ceilH / 2));
-    const ghost = { boardId: bId, fWcm, fHcm, curOffset: initOffset, curHangY: initHangY, ...ghostExtra };
+    const ghost = { boardId: bId, fWcm, fHcm, curOffset: initOffset, curHangY: initHangY, ...ghostExtra, origin };
     wfvGhostRef.current = ghost;
     setWfvGhost(ghost);
     const norm = normalizeWall(wall);
@@ -9154,7 +9171,22 @@ ${rows}
                                   setBoardDragId(b.id);
                                   e.dataTransfer.setData('board-row', b.id);
                                   if (roomView === 'room' && room) {
-                                    if (!unassigned.includes(b)) { e.preventDefault(); setBoardDragId(null); return; }
+                                    // Fase 3e: tableros vinculados también pueden arrastrarse a otra pared
+                                    const isLinked = !unassigned.includes(b);
+                                    if (isLinked) {
+                                      // Buscar pared/cara de origen para la política mover/copiar
+                                      let dragOrigin = null;
+                                      for (const r2 of roomsRef.current) {
+                                        for (const w of (r2.walls || [])) {
+                                          if ((w.boardsA||[]).some(en=>en.boardId===b.id)) { dragOrigin={boardId:b.id,wallId:w.id,face:'A',roomId:r2.id}; break; }
+                                          if ((w.boardsB||[]).some(en=>en.boardId===b.id)) { dragOrigin={boardId:b.id,wallId:w.id,face:'B',roomId:r2.id}; break; }
+                                        }
+                                        if (dragOrigin) break;
+                                      }
+                                      boardDragOriginRef.current = dragOrigin;
+                                    } else {
+                                      boardDragOriginRef.current = null;
+                                    }
                                     e.dataTransfer.effectAllowed='copy';
                                     e.dataTransfer.setData('board-id', b.id);
                                     const dims = b.fixed && b.fixedW && b.fixedH ? ` · ${Math.round(b.fixedW)}×${Math.round(b.fixedH)} ${b.units||'cm'}` : '';
@@ -9167,6 +9199,7 @@ ${rows}
                                     const canvas = document.createElement('canvas'); canvas.width=1; canvas.height=1;
                                     e.dataTransfer.setDragImage(canvas, 0, 0);
                                   } else {
+                                    boardDragOriginRef.current = null;
                                     if (unassigned.includes(b) && rooms.length > 0) {
                                       e.dataTransfer.effectAllowed='copyMove';
                                       e.dataTransfer.setData('board-id', b.id);
@@ -9185,6 +9218,7 @@ ${rows}
                                 onDrop={e => { e.preventDefault(); setBoardDragOver(null); if (boardDragId && roomView !== 'room') reorderBoards(boardDragId, b.id); setBoardDragId(null); }}
                                 onDragEnd={() => {
                                   setBoardDragId(null); setBoardDragOver(null);
+                                  boardDragOriginRef.current = null;
                                   document.getElementById('board-drag-ghost')?.remove();
                                   if (dragToRoomTimerRef.current) { clearTimeout(dragToRoomTimerRef.current); dragToRoomTimerRef.current = null; }
                                 }}
@@ -9469,8 +9503,10 @@ ${rows}
                                   const ddx=v2.x-v1.x, ddy=v2.y-v1.y;
                                   const side=(sp.x-mx)*(-ddy)+(sp.y-my)*ddx>0?'A':'B';
                                   setRoomHovSide(null);
+                                  const dragOrigin = boardDragOriginRef.current;
+                                  boardDragOriginRef.current = null;
                                   setBoardDragId(null); setBoardDragOver(null);
-                                  openWfvWithGhost(wall,side,bId);
+                                  openWfvWithGhost(wall,side,bId,dragOrigin);
                                 }}
                               />
                             )}
@@ -11539,7 +11575,16 @@ ${rows}
         const wColor = wfvWall.color || wfvWall.colorBack || '#d0c8bc';
         const toCm = (v, u, dpi) => !u||u==='cm' ? v : u==='mm' ? v/10 : u==='in' ? v*2.54 : v/(dpi||300)*2.54;
         const photoMap_ = Object.fromEntries(photos.map(p => [p.id, p]));
-        const closeWfv = () => { setWallFrontView(null); wallFrontViewRef.current = null; setWallFrontItems({}); wfvDragRef.current = null; setWfvDrag(null); wfvResizeRef.current = null; setWfvResize(null); setWfvGuides({h:[],v:[]}); setWfvHovBid(null); setWfvCtxMenu(null); wfvGhostRef.current = null; setWfvGhost(null); wfvGhostItemsRef.current = null; };
+        const closeWfv = () => {
+          // Fase 3e: si esta VF es la de ORIGEN del movimiento, conservar wfvMoveOrigin para auto-ghost en la siguiente VF
+          const mo = wfvMoveOriginRef.current;
+          const isOriginWfv = mo && wallFrontViewRef.current?.wall?.id === mo.wallId && wallFrontViewRef.current?.face === mo.face;
+          setWallFrontView(null); wallFrontViewRef.current = null; setWallFrontItems({});
+          wfvDragRef.current = null; setWfvDrag(null); wfvResizeRef.current = null; setWfvResize(null);
+          setWfvGuides({h:[],v:[]}); setWfvHovBid(null); setWfvCtxMenu(null);
+          wfvGhostRef.current = null; setWfvGhost(null); wfvGhostItemsRef.current = null;
+          if (!isOriginWfv) { wfvMoveOriginRef.current = null; setWfvMoveOrigin(null); }
+        };
         const fromCm = (v, u, dpi) => !u||u==='cm' ? v : u==='mm' ? v*10 : u==='in' ? v/2.54 : v*((dpi||300)/2.54);
         const onWfvResizePD = (e, boardId, mode, curOffset, curHangY, curFWcm, curFHcm) => {
           e.stopPropagation(); e.preventDefault();
@@ -11609,6 +11654,12 @@ ${rows}
                   {lang==='es'?'Clic para colocar · ESC cancela':'Click to place · ESC cancels'}
                 </span>
               )}
+              {!wfvGhost && wfvMoveOrigin && wfvMoveOrigin.wallId === wfvWall.id && wfvMoveOrigin.face === face && (
+                <button onClick={e=>{e.stopPropagation(); closeWfv(); setRoomView('room');}}
+                  style={{color:'var(--acc)',fontSize:10,fontFamily:"'IBM Plex Mono',monospace",background:'none',border:'none',cursor:'pointer',padding:0,textDecoration:'underline dotted'}}>
+                  {t('wfvMoveHint')}
+                </button>
+              )}
               <div style={{display:'flex',gap:2}}>
                 {['A','B'].map(f => (
                   <button key={f}
@@ -11636,18 +11687,69 @@ ${rows}
               onClick={e => {
                 e.stopPropagation();
                 const g = wfvGhostRef.current; if (!g) return;
-                // Confirm ghost placement: run Phase-2 validations then link at ghost position
+                // Confirm ghost placement
                 const wall_ = wallFrontViewRef.current?.wall;
                 const face_ = wallFrontViewRef.current?.face;
                 if (!wall_ || !face_) return;
                 const listField = face_==='A' ? 'boardsA' : 'boardsB';
                 const existingList = (wall_[listField]||[]);
-                if (existingList.some(en => en.boardId === g.boardId)) {
-                  wfvGhostRef.current = null; setWfvGhost(null); return;
-                }
                 const b_ = boardsRef.current.find(x => x.id === g.boardId);
                 if (!b_) return;
                 const rr = roomRef.current; if (!rr) return;
+                const clearGhost = () => { wfvGhostRef.current = null; setWfvGhost(null); wfvGhostItemsRef.current = null; };
+                const clearMoveOrigin = () => { wfvMoveOriginRef.current = null; setWfvMoveOrigin(null); };
+
+                // — Fase 3e: política mover / reposicionar / copiar —
+                if (g.origin) {
+                  const sameRoom = g.origin.roomId === rr.id;
+                  const sameWall = g.origin.wallId === wall_.id;
+                  const sameFace = g.origin.face === face_;
+
+                  if (sameWall && sameFace) {
+                    // REPOSICIONAR: actualizar offset/hangY de la entrada existente
+                    const origField = g.origin.face === 'A' ? 'boardsA' : 'boardsB';
+                    const updWall = {...wall_, [origField]: (wall_[origField]||[]).map(en =>
+                      en.boardId === g.boardId ? {...en, offset:g.curOffset, hangY:g.curHangY} : en
+                    )};
+                    const newRoom = {...rr, walls: rr.walls.map(w => w.id===wall_.id ? updWall : w)};
+                    saveRoom(newRoom);
+                    setWallFrontView(prev => ({...prev, wall:updWall}));
+                    wallFrontViewRef.current = {...wallFrontViewRef.current, wall:updWall};
+                    showToast(t('wfvRepos'));
+                    clearGhost(); clearMoveOrigin();
+                    return;
+                  }
+
+                  if (sameRoom) {
+                    // MOVER: desvincular del origen + vincular en destino (misma sala)
+                    const origField = g.origin.face === 'A' ? 'boardsA' : 'boardsB';
+                    const originWall = rr.walls.find(w => w.id === g.origin.wallId);
+                    if (!originWall) return;
+                    const unlinkedOrigin = {...originWall, [origField]: (originWall[origField]||[]).filter(en => en.boardId !== g.boardId)};
+                    // Si origen y destino son la misma pared (distinta cara), partir del wall post-unlink
+                    const destBase = wall_.id === g.origin.wallId ? unlinkedOrigin : wall_;
+                    const updDest = {...destBase, [listField]: [...(destBase[listField]||[]), {boardId:g.boardId, offset:g.curOffset, hangY:g.curHangY}]};
+                    const newRoom = {...rr, walls: rr.walls.map(w => {
+                      if (w.id === g.origin.wallId && w.id === wall_.id) return updDest;
+                      if (w.id === g.origin.wallId) return unlinkedOrigin;
+                      if (w.id === wall_.id) return updDest;
+                      return w;
+                    })};
+                    saveRoom(newRoom);
+                    setWallFrontView(prev => ({...prev, wall:updDest}));
+                    wallFrontViewRef.current = {...wallFrontViewRef.current, wall:updDest};
+                    showToast(t('wfvMoved'));
+                    clearGhost(); clearMoveOrigin();
+                    return;
+                  }
+                  // sameRoom = false → sala distinta → COPIAR (flujo Fase 2 abajo, isLinkedElsewhere activo)
+                  // clearMoveOrigin se llama dentro de doLink
+                }
+
+                // — Fase 3d / Fase 2: vincular tablero libre o copiar si ya vinculado —
+                if (existingList.some(en => en.boardId === g.boardId)) {
+                  clearGhost(); return;
+                }
                 const isLinkedElsewhere = roomsRef.current.some(r2 =>
                   r2.walls?.some(w => (w.boardsA||[]).some(en=>en.boardId===g.boardId)||(w.boardsB||[]).some(en=>en.boardId===g.boardId)) ||
                   r2.blocks?.some(bl => bl.faces && Object.values(bl.faces).some(f=>f?.boardId===g.boardId))
@@ -11659,7 +11761,7 @@ ${rows}
                   setWallFrontView(prev => ({...prev, wall:updWall}));
                   wallFrontViewRef.current = {...wallFrontViewRef.current, wall:updWall};
                   showToast(lang==='es' ? 'Tablero colocado.' : 'Board placed.');
-                  wfvGhostRef.current = null; setWfvGhost(null);
+                  clearGhost(); clearMoveOrigin();
                 };
                 if (g.isVariable) {
                   // Variable board: duplicate with bounding-box crop, patch to fixed, then link
@@ -11686,7 +11788,6 @@ ${rows}
                     const { offsetX, offsetY } = newFixed;
                     const shiftedItems = origItems.map(it => ({...it, x:(it.x||0)-offsetX, y:(it.y||0)-offsetY}));
                     setWallFrontItems(prev => ({...prev, [copy.id]: shiftedItems}));
-                    wfvGhostItemsRef.current = null;
                     doLink(copy.id, g.curOffset, g.curHangY);
                   })();
                 } else if (isLinkedElsewhere) {
@@ -11778,11 +11879,12 @@ ${rows}
                 const items  = (wallFrontItems[entry.boardId] || []).filter(i => i.type!=='note' && i.type!=='zone');
                 const isEmpty = items.length === 0;
                 const isHov  = wfvHovBid === entry.boardId;
+                const isInTransit = wfvMoveOrigin?.boardId === entry.boardId && wfvMoveOrigin?.wallId === wfvWall.id && wfvMoveOrigin?.face === face;
                 return (
-                  <div key={entry.boardId} style={{position:'absolute',left:boardL,top:boardT,width:boardW,height:boardH}}
+                  <div key={entry.boardId} style={{position:'absolute',left:boardL,top:boardT,width:boardW,height:boardH,opacity:isInTransit?0.4:1}}
                     onMouseEnter={()=>setWfvHovBid(entry.boardId)}>
                   <div style={{position:'absolute',left:0,top:0,width:'100%',height:'100%',
-                    background:'#fff',outline:isHov?'2px solid rgba(255,255,255,.75)':'1px solid rgba(255,255,255,.35)',overflow:'hidden',boxShadow:'0 2px 10px rgba(0,0,0,.5)',
+                    background:'#fff',outline:isInTransit?'2px dashed var(--acc)':isHov?'2px solid rgba(255,255,255,.75)':'1px solid rgba(255,255,255,.35)',overflow:'hidden',boxShadow:'0 2px 10px rgba(0,0,0,.5)',
                     cursor:iDragging?'grabbing':'grab',userSelect:'none'}}
                     onContextMenu={e => {
                       e.preventDefault();
@@ -12028,6 +12130,11 @@ ${rows}
                     setRoomView('board');
                     closeWfv();
                   }}>{lang==='es'?'Editar en tablero':'Edit in board'}</button>
+                  <button className="ctx-item" onClick={()=>{
+                    const mo = {boardId:wfvCtxMenu.boardId, wallId:wfvWall.id, face, roomId:roomRef.current?.id};
+                    wfvMoveOriginRef.current = mo; setWfvMoveOrigin(mo);
+                    setWfvCtxMenu(null);
+                  }}>{t('wfvMoveToWall')}</button>
                   <button className="ctx-item ctx-danger" onClick={()=>{
                     const updWall = unlinkBoardFromWall(wfvWall.id, face, wfvCtxMenu.boardId);
                     if (updWall) {

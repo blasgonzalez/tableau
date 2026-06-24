@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.25.11] — 2026-06-24
+
+### Nuevo
+- **Fase 3e — Mover tablero vinculado a otra pared:** dos vías para reubicar un tablero ya vinculado, ambas con el mismo mecanismo de ghost + clic + ESC.
+  - **VÍA 1 — Arrastre desde el árbol:** los tableros vinculados ya no bloquean el drag cuando se está en la vista de sala. Al soltarlos sobre otra pared se abre la vista frontal con el ghost listo para colocar.
+  - **VÍA 2 — Menú contextual de la vista frontal:** clic derecho sobre un tablero en la VF → «Mover a otra pared». El tablero entra en modo tránsito: semitransparente (opacity 0,4) con borde punteado en la VF origen. Al abrir cualquier otra VF con el movimiento pendiente, el ghost aparece automáticamente.
+  - **Política mover / reposicionar / copiar:** misma sala + misma pared/cara → REPOSICIONAR (solo actualiza offset/hangY sin desvincular); misma sala + distinta pared → MOVER (desvincular origen + vincular destino en una sola operación); sala distinta → COPIAR (flujo Fase 2, el original queda intacto).
+  - ESC cancela en cualquier punto (con VF abierta o sin ella) y restaura el tablero a su estado original.
+
 ## [1.25.10] — 2026-06-24
 
 ### Nuevo
