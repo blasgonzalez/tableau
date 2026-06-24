@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.25.6] — 2026-06-21
+
+### Fixed
+- **Expired session — zombie state:** when a session expired while the app was open, API calls silently failed (401) and the UI was left in an inconsistent state (empty library, stale data) without redirecting to login. Any 401/403 detected by the `chk` helper now fires a centralised interceptor that shows a notice ("Your session has expired. Please sign in again.") and automatically redirects to the login screen. Only active in server mode (`authMode`).
+- **Session — expiry for active users:** the session cookie was not renewed on use (`rolling:false` by default), causing active users to expire 7 days after their initial login. With `rolling:true`, the session is renewed on every authenticated request; it only expires after 7 days of inactivity.
+
 ## [1.25.5] — 2026-06-22
 
 ### Changed

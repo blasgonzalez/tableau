@@ -1,6 +1,6 @@
 {
-  "version": "1.25.5",
+  "version": "1.25.6",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-06-22",
-  "notes": "Panel de paredes simplificado: fila limpia con nombre, longitud, contador de tableros y acceso directo a vista frontal. Creacion multi-tablero desde menu contextual del plano."
+  "releaseDate": "2026-06-21",
+  "notes": "Sesion renovada automaticamente con cada peticion. Redireccion al login cuando la sesion expira, sin estado zombie."
 }

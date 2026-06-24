@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.25.6] — 2026-06-21
+
+### Corregido
+- **Sesión expirada — estado zombie:** cuando la sesión expiraba mientras la app estaba abierta, las llamadas a la API fallaban en silencio (401) y la UI quedaba en un estado inconsistente (biblioteca vacía, datos incorrectos) sin redirigir al login. Ahora cualquier respuesta 401/403 detectada por el helper `chk` dispara un interceptor centralizado que muestra un aviso ("Tu sesión ha expirado. Inicia sesión de nuevo.") y redirige automáticamente a la pantalla de login. Solo activo en modo servidor (`authMode`).
+- **Sesión — expiración con usuario activo:** la cookie de sesión no se renovaba con el uso (`rolling:false` por defecto), lo que hacía expirar a usuarios activos 7 días después del login. Con `rolling:true`, la sesión se renueva en cada petición autenticada; solo expira si el usuario lleva 7 días inactivo.
+
 ## [1.25.5] — 2026-06-22
 
 ### Cambiado

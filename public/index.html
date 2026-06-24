@@ -1119,7 +1119,14 @@ const getBoardPx = board => {
   return { w: Math.max(1, toPx(board.fixedW)), h: Math.max(1, toPx(board.fixedH)) };
 };
 
-const chk = r => { if (!r.ok) throw Object.assign(new Error(r.statusText), {status: r.status}); return r; };
+let _onAuthError = null; // registered by App on mount; fired on 401/403 in auth mode
+const chk = r => {
+  if (!r.ok) {
+    if ((r.status === 401 || r.status === 403) && _onAuthError) _onAuthError(r.status);
+    throw Object.assign(new Error(r.statusText), {status: r.status});
+  }
+  return r;
+};
 let _shareToken = null; // set on share-link entry
 const apiH = extra => { const h = { ...extra }; if (_shareToken) h['X-Share-Token'] = _shareToken; return h; };
 const api = {
@@ -2002,6 +2009,7 @@ function App() {
   // Auth state (solo activo cuando el servidor tiene TABLEAU_AUTH=true)
   const [authMode,      setAuthMode]      = useState(false);
   const [authUser,      setAuthUser]      = useState(null);    // {username, quota, used, role, mustChangePassword}
+  const [sessionExpiredMsg, setSessionExpiredMsg] = useState(null);
   const [loginForm,     setLoginForm]     = useState({ username: '', password: '', error: '', ok: '' });
   const [changePwForm,  setChangePwForm]  = useState({ current: '', next: '', next2: '', error: '' });
   const [resetForm,     setResetForm]     = useState({ step: 'login', email: '', token: '', next: '', next2: '', msg: '', error: '' });
@@ -2089,6 +2097,7 @@ function App() {
   const toggle3DWalkRef      = useRef(null);
   const copy3DItemRef        = useRef(null);
   const pendingCameraTweenRef = useRef(null);
+  const authModeRef          = useRef(false);
   const roomViewRef          = useRef('board');
   const hoveredBoardIdRef    = useRef(null);
   const undoStack           = useRef([]);
@@ -2114,6 +2123,7 @@ function App() {
   useEffect(() => { showLibPreviewRef.current = showLibPreview; }, [showLibPreview]);
   useEffect(() => { allBoardItemsRef.current = allBoardItems; }, [allBoardItems]);
   useEffect(() => { boardsRef.current        = boards;        }, [boards]);
+  useEffect(() => { authModeRef.current      = authMode;      }, [authMode]);
   useEffect(() => { roomViewRef.current      = roomView;      }, [roomView]);
   useEffect(() => { hoveredBoardIdRef.current = hoveredBoardId; }, [hoveredBoardId]);
   useEffect(() => { artwork3DRef.current     = artwork3D;     }, [artwork3D]);
@@ -2374,6 +2384,13 @@ function App() {
 
   // ── init ──────────────────────────────────────────────────────────────────
   useEffect(() => {
+    _onAuthError = status => {
+      if (!authModeRef.current) return;
+      setSessionExpiredMsg(status === 403
+        ? (lang === 'es' ? 'Tu cuenta ha expirado.' : 'Your account has expired.')
+        : (lang === 'es' ? 'Tu sesión ha expirado. Inicia sesión de nuevo.' : 'Your session has expired. Please sign in again.'));
+      setAuthUser(null);
+    };
     // 204 = modo local (servidor necesita latidos para auto-apagarse).
     // Cualquier otro status = modo servidor: el host gestiona el ciclo de vida,
     // no necesitamos seguir enviando. Se cancela el intervalo y el listener.
@@ -2476,7 +2493,7 @@ function App() {
     };
     document.addEventListener('mouseover', showTT);
     document.addEventListener('mouseout', hideTT);
-    return () => { clearInterval(hbInterval); clearInterval(updateInterval); document.removeEventListener('visibilitychange', onVisible); document.removeEventListener('mouseover', showTT); document.removeEventListener('mouseout', hideTT); };
+    return () => { _onAuthError = null; clearInterval(hbInterval); clearInterval(updateInterval); document.removeEventListener('visibilitychange', onVisible); document.removeEventListener('mouseover', showTT); document.removeEventListener('mouseout', hideTT); };
   }, []);
 
   useEffect(() => {
@@ -8476,6 +8493,7 @@ ${rows}
     try {
       const d = await api.post('/api/login', { username: loginForm.username, password: loginForm.password });
       if (d.ok) {
+        setSessionExpiredMsg(null);
         setAuthUser({ username: d.username, quota: d.quota, used: d.used, role: d.role, mustChangePassword: d.mustChangePassword });
         if (!d.mustChangePassword) {
           api.get('/api/templates').then(ts => { if (Array.isArray(ts)) setTemplates(ts); }).catch(() => {});
@@ -8591,6 +8609,11 @@ ${rows}
     return (
       <div style={authScreenStyle}>
         <div style={{fontFamily:"'Playfair Display',serif",fontSize:28,color:'var(--acc)',letterSpacing:1}}>Tableau</div>
+        {sessionExpiredMsg && (
+          <div style={{background:'var(--surf)',border:'1px solid var(--acc-dim)',color:'var(--muted)',fontSize:11,padding:'8px 12px',width:280,boxSizing:'border-box',textAlign:'center'}}>
+            {sessionExpiredMsg}
+          </div>
+        )}
         {resetForm.step === 'login' ? (
           <form onSubmit={doLogin} style={{display:'flex',flexDirection:'column',gap:12,width:280}}>
             <input style={authInputStyle} placeholder={lang==='es'?'Usuario':'Username'} value={loginForm.username} onChange={e => setLoginForm(f => ({...f, username: e.target.value}))} autoFocus/>
