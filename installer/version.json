@@ -1,6 +1,6 @@
 {
-  "version": "1.25.7",
+  "version": "1.25.10",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-06-24",
-  "notes": "Sesiones persistidas en disco (session-file-store): sobreviven reinicios del proceso y no se pierden por inactividad de Passenger."
+  "notes": "Fase 3d: mejoras UX — arrastrar tablero sobre nombre de sala la abre automaticamente; eliminar tablero desde menu contextual de vista frontal; fixes cursor prohibido y tembleques en drag-to-expand."
 }

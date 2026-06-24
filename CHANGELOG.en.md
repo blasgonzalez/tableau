@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.25.10] — 2026-06-24
+
+### New
+- **Phase 3d — Visual board placement:** dragging a free board from the left sidebar tree onto a wall in the 2D floor plan opens the front view with a semi-transparent ghost that follows the cursor. The ghost snaps to the same reference points as the Phase 3c drag (wall edges, 150 cm height, centres/edges of other boards). A click confirms the position and links the board to that face with the computed offset/hangY; Phase 2 validations apply (copy if the board is already linked to another wall). ESC cancels without linking and closes the front view. Boards already linked to a wall are not draggable onto the floor plan in this mode. Variable boards are automatically converted to a fixed size using their items' bounding box.
+
+### Improved
+- **Phase 3d — dragging a board over a room name opens that room:** when dragging a board from the sidebar tree, hovering the cursor over a room name for ~700 ms automatically navigates to that room (equivalent to clicking it) without dropping the board. This lets the drag continue onto a wall in the newly opened floor plan. Moving the cursor away before 700 ms cancels the timer. Follow-up fix: the SVG floor plan accepts drops even when the room was opened mid-drag (added `onDragOver` on the floor plan container); the room row's `onDragLeave` uses `relatedTarget` to avoid cancelling the timer when moving over child elements (prevents jitter).
+- **Front view — delete board from the context menu:** right-clicking a board in the front view now includes a "Delete board" option alongside the existing "Edit in board" and "Unlink from wall". The standard confirmation dialog is shown before deleting; on confirm, the board is moved to trash, unlinked from the wall, and the front view closes.
+
+### Fixed
+- **Phase 3d — existing boards shown empty in ghost mode:** when opening the front view from a drag, boards already linked to the wall appeared empty (no thumbnails). Items are now loaded for all boards on the wall (existing + ghost), consistent with the double-click open path.
+- **Phase 3d — ghost with no thumbnail:** the ghost only showed the board name. It now renders the board's photos and text items at scale, matching the appearance of positioned boards.
+- **Phase 3d — unwanted resize handles:** boards with no loaded items displayed resize handles. An explicit guard now excludes the ghost board from that condition.
+- **Phase 3d — invisible drag image (definitive fix):** the browser's native `setDragImage` is suppressed with a transparent 1×1 canvas. A custom floating `<div id="board-drag-ghost">` (z-index 99999, `pointer-events:none`) is created in `onDragStart` and positioned via the `onDrag` event — which reliably receives correct coordinates. The div is removed in `onDragEnd`.
+- **Phase 3d — variable board blank after confirming placement:** when confirming a variable-board ghost, the newly linked board appeared blank (with resize handles) until the front view was closed and reopened. The fix locally computes the offset-shifted items and seeds `wallFrontItems[copy.id]` before linking, so the board renders its photos immediately.
+
+## [1.25.8] — 2026-06-24
+
+### Improved
+- **Wall highlight in floor plan (panel side-hover):** when hovering over a wall row in the room's side panel, the highlight in the SVG is now clearly visible: a contrast halo (`var(--text)`, strokeWidth 5px) is drawn behind the line, and the line itself uses a 3px stroke in `var(--acc)`. The face-specific highlight A/B (red/blue) remains unchanged and takes visual priority.
+
 ## [1.25.7] — 2026-06-24
 
 ### Fixed

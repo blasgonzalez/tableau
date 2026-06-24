@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.25.10] — 2026-06-24
+
+### Nuevo
+- **Fase 3d — Colocación visual de tableros:** arrastrar un tablero libre desde el árbol lateral hacia una pared en el plano 2D abre la vista frontal con un fantasma semitransparente que sigue al cursor. El fantasma muestra snap a los mismos puntos de referencia que el arrastre de la Fase 3c (bordes de pared, 150 cm, centros/bordes de otros tableros). Un clic confirma la posición y vincula el tablero a esa cara con el offset/hangY calculados; aplican las validaciones de Fase 2 (copia si el tablero ya está en otra pared). ESC cancela sin vincular y cierra la vista frontal. Los tableros ya vinculados a alguna pared no son arrastrables hacia el plano en este modo. Los tableros variables se convierten automáticamente a tamaño fijo usando el bounding box de sus ítems.
+
+### Mejorado
+- **Fase 3d — arrastrar tablero sobre nombre de sala abre la sala:** al arrastrar un tablero desde el árbol lateral, mantener el cursor sobre el nombre de una sala en el árbol durante ~700 ms navega automáticamente a esa sala (equivalente a hacer clic en ella) sin soltar el tablero. Permite continuar el arrastre hacia una pared en el plano recién abierto. Si el cursor sale antes de 700 ms, el timer se cancela. Fix posterior: el plano SVG acepta drop aunque la sala se haya abierto mid-drag (se añade `onDragOver` en el contenedor del plano); el `onDragLeave` de la fila de sala usa `relatedTarget` para no cancelar el timer al pasar por elementos hijos (evita tembleques).
+- **Vista frontal — eliminar tablero desde el menú contextual:** el clic derecho sobre un tablero en la vista frontal ahora incluye la opción «Eliminar tablero» además de las existentes («Editar en tablero» y «Desvincular de la pared»). Muestra el diálogo de confirmación estándar antes de borrar; al confirmar, el tablero va a la papelera, se desvincula de la pared y la vista frontal se cierra.
+
+### Corregido
+- **Fase 3d — tableros existentes vacíos en modo ghost:** al abrir la vista frontal desde un arrastre, los tableros ya vinculados a la pared se mostraban vacíos (sin miniaturas). Ahora se cargan los ítems de todos los tableros de la pared (existentes + ghost), igual que al abrir con doble clic.
+- **Fase 3d — ghost sin miniatura:** el fantasma solo mostraba el nombre del tablero. Ahora renderiza las fotos y textos del tablero a escala, igual que los tableros posicionados.
+- **Fase 3d — handles de redimensionado no deseados:** los tableros sin ítems cargados mostraban handles de resize. Se añade guardia explícita para excluir el tablero ghost de esa condición.
+- **Fase 3d — drag image invisible (fix definitivo):** el `setDragImage` nativo del navegador se suprime con un canvas 1×1 transparente. Se crea un `<div id="board-drag-ghost">` flotante propio (z-index 99999, `pointer-events:none`) que se posiciona vía el evento `onDrag` — el cual sí recibe coordenadas correctas. El div se crea en `onDragStart` y se elimina en `onDragEnd`.
+- **Fase 3d — tablero variable en blanco tras confirmar colocación:** al confirmar el ghost de un tablero variable, el tablero recién vinculado aparecía en blanco (con handles de redimensionado) hasta cerrar y reabrir la vista frontal. El fix calcula localmente los ítems desplazados (offset aplicado) y los inyecta en `wallFrontItems[copy.id]` antes de vincular, de forma que el tablero muestra sus fotos inmediatamente.
+
+## [1.25.8] — 2026-06-24
+
+### Mejorado
+- **Highlight de pared en el plano (hover en panel lateral):** cuando se pasa el ratón sobre una fila de pared en el panel derecho de sala, el resaltado en el SVG es ahora claramente visible: se añade un halo de contraste (`var(--text)`, strokeWidth 5px) detrás de la línea, y la línea misma usa un stroke de 3px en `var(--acc)`. El resaltado de cara específica A/B (rojo/azul) permanece sin cambios y tiene prioridad visual.
+
 ## [1.25.7] — 2026-06-24
 
 ### Corregido
