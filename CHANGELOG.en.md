@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.25.12] — 2026-06-24
+
+### New
+- **Decouple grid:** the grid item (`type:'grid'`) context menu and toolbar now expose three decoupling variants, all reversible with Ctrl+Z and offering an "Undo" toast:
+  - **Into photos:** each cell becomes an independent photo item at the exact position and size it had in the grid. The grid disappears.
+  - **Into columns:** each column becomes a zone that wraps it as a draggable block. Photos keep their exact absolute positions.
+  - **Into rows:** same as columns but for horizontal rows.
+  - The grid toolbar adds a ⤢▾ button with a dropdown showing all three options annotated with the actual column/row count. The context menu shows the same options under a "Decouple" header. The visual result before and after decoupling is identical — no photo moves on decouple.
+
 ## [1.25.11] — 2026-06-24
 
 ### New

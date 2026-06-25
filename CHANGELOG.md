@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.25.12] — 2026-06-24
+
+### Nuevo
+- **Desacoplar mosaico:** el menú contextual y la toolbar del mosaico (`type:'grid'`) exponen tres variantes de desacople, todas reversibles con Ctrl+Z y con toast "Deshacer":
+  - **En fotos sueltas:** cada celda se convierte en un item de foto independiente en la posición y tamaño exactos que tenía en el mosaico. El mosaico desaparece.
+  - **En columnas:** cada columna se convierte en una zona que la contiene como bloque arrastrable. Las fotos conservan su posición absoluta exacta.
+  - **En filas:** igual que columnas pero por filas horizontales.
+  - La toolbar del mosaico añade el botón ⤢▾ con un desplegable que muestra las tres opciones anotadas con el número real de columnas/filas. El menú contextual muestra las mismas opciones bajo la cabecera "Desacoplar". El resultado visual antes y después es idéntico (ninguna foto se mueve al desacoplar).
+
 ## [1.25.11] — 2026-06-24
 
 ### Nuevo

@@ -826,6 +826,8 @@ select.inp{cursor:pointer;appearance:none;padding-right:28px;background-image:ur
 /* ── TOAST ── */
 .toast{position:fixed;bottom:136px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--border2);padding:9px 20px;font-size:11px;letter-spacing:.5px;color:var(--sub);z-index:900;pointer-events:none}
 .toast.err{color:var(--danger);border-color:var(--danger)}
+.toast.act{pointer-events:auto;cursor:default}
+.toast.act button{background:none;border:1px solid currentColor;border-radius:2px;padding:1px 8px;margin-left:10px;cursor:pointer;color:inherit;font:inherit;font-size:10px;letter-spacing:.5px}
 /* ── FREE ROTATION: cursor hint on the rotate button while dragging ── */
 .ibc.rot{cursor:crosshair}
 /* ── NOTE COLORS ── */
@@ -1244,6 +1246,7 @@ const I18N = {
     orientFilterHint: o => o === 'L' ? 'Formato horizontal' : o === 'P' ? 'Formato vertical' : o === 'S' ? 'Formato cuadrado' : 'Sin filtro formato',
     setDefaultSize:'Usar como tamaño de referencia', duplicateItem:'Duplicar', defaultSizeSet:'Tamaño de referencia guardado', defaultSizeActive: w => `Tamaño de referencia: ${w} px`, clear:'Limpiar', swapPos:'Intercambiar posición', flipH:'Voltear horizontal', flipV:'Voltear vertical',
     gridItemBtn:'Mosaico', gridPendingHd:'Nuevo mosaico', gridPendingPlace:'Colocar en tablero', gridPendingWidth:'Ancho', gridItemCols:'Col', gridItemGap:'Sep', gridItemUngroup:'Separar en fotos', gridItemAddSel:'Añadir selección', gridItemRemove:'Quitar del mosaico', gridItemAddHint:'Arrastra fotos aquí para añadir',
+    gridDecoupleBtn:'Desacoplar', gridDecoupleDone:'Mosaico desacoplado', gridDecouplePhotos:'En fotos sueltas', gridDecoupleCols: n => `En columnas (${n})`, gridDecoupleRows: n => `En filas (${n})`,
     gridLayoutBtn:'Cuadrícula', gridTitle:'Colocar en cuadrícula', gridColsLabel:'Columnas', gridGapLabel:'Separación', gridScaleLabel:'Escala', gridFits:(n,tot)=>n>=tot?'Todas las fotos caben':`Caben ${n} de ${tot}`, gridPlace:'Colocar',
     pairsLayoutBtn:'Parejas', pairsLabel: n => `Pareja ${n}`, tripleLabel: n => `Trío ${n}`,
     presViewZones:'Ver zonas', presZoneOf:(i,n)=>`${i} / ${n}`,
@@ -1479,6 +1482,7 @@ const I18N = {
     orientFilterHint: o => o === 'L' ? 'Horizontal format' : o === 'P' ? 'Vertical format' : o === 'S' ? 'Square format' : 'No format filter',
     setDefaultSize:'Set as default size', duplicateItem:'Duplicate', defaultSizeSet:'Default size saved', defaultSizeActive: w => `Default size: ${w} px`, clear:'Clear', swapPos:'Swap positions', flipH:'Flip horizontal', flipV:'Flip vertical',
     gridItemBtn:'Grid', gridPendingHd:'New grid', gridPendingPlace:'Place on board', gridPendingWidth:'Width', gridItemCols:'Col', gridItemGap:'Gap', gridItemUngroup:'Ungroup to photos', gridItemAddSel:'Add selection', gridItemRemove:'Remove from grid', gridItemAddHint:'Drop photos here to add',
+    gridDecoupleBtn:'Decouple', gridDecoupleDone:'Grid decoupled', gridDecouplePhotos:'Into photos', gridDecoupleCols: n => `Into columns (${n})`, gridDecoupleRows: n => `Into rows (${n})`,
     gridLayoutBtn:'Grid', gridTitle:'Place as grid', gridColsLabel:'Columns', gridGapLabel:'Gap', gridScaleLabel:'Scale', gridFits:(n,tot)=>n>=tot?'All photos fit':`${n} of ${tot} fit`, gridPlace:'Place',
     pairsLayoutBtn:'Pairs', pairsLabel: n => `Pair ${n}`, tripleLabel: n => `Triple ${n}`,
     presViewZones:'View zones', presZoneOf:(i,n)=>`${i} / ${n}`,
@@ -1769,6 +1773,7 @@ function App() {
   const [gridDropTarget,   setGridDropTarget]   = useState(null); // gridId hovered during lib drag
   const [zoneDropTarget,   setZoneDropTarget]   = useState(null); // zoneId hovered during lib drag
   const [gridCellDragOver, setGridCellDragOver] = useState(null); // {gridId, index} cell being hovered during reorder
+  const [gridDecoupleOpen, setGridDecoupleOpen] = useState(null); // itemId of grid with decouple dropdown open
   const [gridPending,      setGridPending]      = useState(null); // {photoIds, cols, gap, w, x, y}
   const gridPendingRef = useRef(null);
   const [roomDrawing,    setRoomDrawing]   = useState(false);
@@ -2535,7 +2540,7 @@ function App() {
   useEffect(() => { setLibSearch(''); setLibSelection([]); libSelAnchorRef.current = null; setTagFilter([]); setTagPopover(null); setBatchTagPop(null); setSectBatchPop(null); setRatingFilter(0); setOrientFilter(null); setSectCtxMenu(null); setLibMuted(false); setUploadDropOpen(false); setExportDropOpen(false); }, [pid]);
   useEffect(() => { gridPendingRef.current = gridPending; }, [gridPending]);
   useEffect(() => { gridCellSelRef.current = gridCellSel; }, [gridCellSel]);
-  useEffect(() => { setGridDropTarget(null); setGridCellDragOver(null); setGridCellCtx(null); setGridCellSel(null); setZoneDropTarget(null); }, [bid]);
+  useEffect(() => { setGridDropTarget(null); setGridCellDragOver(null); setGridCellCtx(null); setGridCellSel(null); setZoneDropTarget(null); setGridDecoupleOpen(null); }, [bid]);
 
   // Board lock for edit-mode guests
   useEffect(() => {
@@ -3972,9 +3977,9 @@ function App() {
 
   const showConfirm = (message, onConfirm, danger = true) => setConfirmModal({ message, onConfirm, danger });
 
-  const showToast = (msg, err = false) => {
-    setToast({ msg, err });
-    setTimeout(() => setToast(null), 3200);
+  const showToast = (msg, err = false, action = null) => {
+    setToast({ msg, err, action });
+    setTimeout(() => setToast(null), action ? 5000 : 3200);
   };
 
   const langRef = useRef('es');
@@ -6761,35 +6766,80 @@ ${rows}
     window.addEventListener('pointerup', onUp);
   };
 
-  const ungroupGrid = (itemId) => {
+  const decoupleGrid = (itemId, mode) => {
     const grid = itemsRef.current.find(i => i.id === itemId);
     if (!grid || grid.type !== 'grid') return;
     pushUndo();
     const board = boardsRef.current.find(b => b.id === bidRef.current);
     const dpi   = board?.dpi  || 150;
     const units = board?.units || 'px';
-    const { gapPx, cellW, rows } = calcGridLayout(grid, photosRef.current, dpi, units);
-    const newItems = [];
+    const layout = calcGridLayout(grid, photosRef.current, dpi, units);
+    const { gapPx, cols, cellW, rows, totalH } = layout;
+    const maxZ  = itemsRef.current.length ? Math.max(...itemsRef.current.map(i => i.z || 0)) : 0;
+    const nonZ  = itemsRef.current.filter(i => i.type !== 'zone');
+    const baseZ = nonZ.length ? Math.min(...nonZ.map(i => i.z || 0)) - 1 : -1;
+    const PAD   = 8;
+    const totalW = cols * cellW + gapPx * (cols - 1);
+    const cells = [];
     let rowY = 0;
     rows.forEach((row, ri) => {
       if (ri > 0) rowY += rows[ri - 1].h + gapPx;
       row.ids.forEach((photoId, ci) => {
         const p = photosRef.current.find(x => x.id === photoId);
         if (!p) return;
-        newItems.push({
-          id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5) + newItems.length,
+        cells.push({ ri, ci,
+          id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5) + cells.length,
           photoId,
           x: Math.round(grid.x + ci * (cellW + gapPx)),
           y: Math.round(grid.y + rowY),
           w: Math.round(cellW),
-          z: (grid.z || 1) + newItems.length,
+          z: maxZ + cells.length + 1,
+          label: '', rot: 0, frame: 0,
         });
       });
     });
-    const nit = [...itemsRef.current.filter(i => i.id !== itemId), ...newItems];
-    itemsRef.current = nit; setItems(nit); saveItemsNow(nit);
-    selRef.current = newItems.map(i => i.id); setSel(selRef.current);
+    let newItems, selIds;
+    if (mode === 'photos') {
+      newItems = cells.map(({ ri: _r, ci: _c, ...p }) => p);
+      selIds   = newItems.map(i => i.id);
+    } else if (mode === 'cols') {
+      const photos = [], zones = [];
+      for (let c = 0; c < cols; c++) {
+        const colCells = cells.filter(p => p.ci === c);
+        if (!colCells.length) continue;
+        const zid = `z${Date.now().toString(36)}${Math.random().toString(36).slice(2, 4)}c${c}`;
+        zones.push({ id: zid, type: 'zone', label: '', color: 'blue', scaleContent: true,
+          x: Math.max(0, grid.x + c * (cellW + gapPx) - PAD),
+          y: Math.max(0, grid.y - PAD),
+          w: cellW + 2 * PAD, h: totalH + 2 * PAD, z: baseZ - c });
+        colCells.forEach(({ ri: _r, ci: _c, ...p }) => photos.push({ ...p, zoneId: zid }));
+      }
+      newItems = [...photos, ...zones];
+      selIds   = zones.map(z => z.id);
+    } else {
+      const photos = [], zones = [];
+      let rY = 0;
+      rows.forEach((row, ri) => {
+        if (ri > 0) rY += rows[ri - 1].h + gapPx;
+        const rowCells = cells.filter(p => p.ri === ri);
+        if (!rowCells.length) return;
+        const zid = `z${Date.now().toString(36)}${Math.random().toString(36).slice(2, 4)}r${ri}`;
+        zones.push({ id: zid, type: 'zone', label: '', color: 'blue', scaleContent: true,
+          x: Math.max(0, grid.x - PAD),
+          y: Math.max(0, grid.y + rY - PAD),
+          w: totalW + 2 * PAD, h: row.h + 2 * PAD, z: baseZ - ri });
+        rowCells.forEach(({ ri: _r, ci: _c, ...p }) => photos.push({ ...p, zoneId: zid }));
+      });
+      newItems = [...photos, ...zones];
+      selIds   = zones.map(z => z.id);
+    }
+    const nit = applyNormalized([...itemsRef.current.filter(i => i.id !== itemId), ...newItems]);
+    selRef.current = selIds; setSel(selIds);
+    saveItemsNow(nit);
+    showToast(lang === 'es' ? 'Mosaico desacoplado' : 'Grid decoupled', false,
+      { label: lang === 'es' ? 'Deshacer' : 'Undo', fn: undo });
   };
+  const ungroupGrid = (itemId) => decoupleGrid(itemId, 'photos');
 
   const deleteItem = id => {
     pushUndo();
@@ -10554,6 +10604,18 @@ ${rows}
                           <span className="gitem-bar-lbl" style={{minWidth:28}}>{parseFloat((item.gap ?? 5).toFixed(2))}</span>
                           <button className="ibc" onClick={e => { e.stopPropagation(); const dec = gapStep < 1 ? 2 : 1; updGrid({gap: parseFloat(((item.gap ?? 5) + gapStep).toFixed(dec))}); }}>+</button>
                           <div className="gitem-sep"/>
+                          <div style={{position:'relative'}}>
+                            <button className="ibc" data-tooltip={t('gridDecoupleBtn')} onClick={e=>{e.stopPropagation();setGridDecoupleOpen(o=>o===item.id?null:item.id);}}>⤢▾</button>
+                            {gridDecoupleOpen===item.id&&<>
+                              <div style={{position:'fixed',inset:0,zIndex:499}} onPointerDown={e=>{e.stopPropagation();setGridDecoupleOpen(null);}}/>
+                              <div style={{position:'absolute',bottom:'calc(100% + 6px)',left:0,background:'var(--panel)',border:'1px solid var(--border2)',borderRadius:3,boxShadow:'0 4px 16px rgba(0,0,0,.5)',zIndex:500,minWidth:170}} onPointerDown={e=>e.stopPropagation()}>
+                                <button className="ctx-item" onClick={e=>{e.stopPropagation();decoupleGrid(item.id,'photos');setGridDecoupleOpen(null);}}>{t('gridDecouplePhotos')}</button>
+                                <button className="ctx-item" onClick={e=>{e.stopPropagation();decoupleGrid(item.id,'cols');setGridDecoupleOpen(null);}}>{t('gridDecoupleCols',gCols)}</button>
+                                <button className="ctx-item" onClick={e=>{e.stopPropagation();decoupleGrid(item.id,'rows');setGridDecoupleOpen(null);}}>{t('gridDecoupleRows',gRows.length)}</button>
+                              </div>
+                            </>}
+                          </div>
+                          <div className="gitem-sep"/>
                           <button className="ibc del" data-tooltip={t('deleteBtn')} onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
                         </div>
                         <div className="gitem-rh" onPointerDown={e => { e.stopPropagation(); onGridResizePD(e, item.id); }}/>
@@ -11213,7 +11275,7 @@ ${rows}
           </div>
         </div>
       )}
-      {toast && <div className={`toast${toast.err?' err':''}`} style={{bottom: (libOpen ? libHeight : 30) + 8}}>{toast.msg}</div>}
+      {toast && <div className={`toast${toast.err?' err':''}${toast.action?' act':''}`} style={{bottom: (libOpen ? libHeight : 30) + 8}}>{toast.msg}{toast.action&&<button onClick={()=>{toast.action.fn();setToast(null);}}>{toast.action.label}</button>}</div>}
 
 
       {presentation && (() => {
@@ -12386,7 +12448,7 @@ ${rows}
                   : i);
                 itemsRef.current = u; setItems(u); saveItemsNow(u); setCtxMenu(null); setLibSelection([]); libSelAnchorRef.current = null;
               }}>+ {t('gridItemAddSel')}</button>
-              <button className="ctx-item" onClick={() => { ungroupGrid(ctxMenu.itemId); setCtxMenu(null); }}>⊞ {t('gridItemUngroup')}</button>
+              {(() => { const board = boards.find(b => b.id === bid); const lay = calcGridLayout(ctxItem, photos, board?.dpi||150, board?.units||'px'); return (<><div style={{padding:'3px 12px 1px',fontSize:9,color:'var(--dim)',letterSpacing:1.2,textTransform:'uppercase'}}>{t('gridDecoupleBtn')}</div><button className="ctx-item" onClick={()=>{decoupleGrid(ctxMenu.itemId,'photos');setCtxMenu(null);}}>⊟ {t('gridDecouplePhotos')}</button><button className="ctx-item" onClick={()=>{decoupleGrid(ctxMenu.itemId,'cols');setCtxMenu(null);}}>⊟ {t('gridDecoupleCols',lay.cols)}</button><button className="ctx-item" onClick={()=>{decoupleGrid(ctxMenu.itemId,'rows');setCtxMenu(null);}}>⊟ {t('gridDecoupleRows',lay.rows.length)}</button></>); })()}
               {!roomShareMode && <><div className="ctx-sep"/>
                 <button className="ctx-item" onClick={() => { openCommentPanel('grid', ctxMenu.itemId, bid); setCtxMenu(null); }}>💬 {t('commentsBtn')}</button>
               </>}

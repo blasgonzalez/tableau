@@ -1,6 +1,6 @@
 {
-  "version": "1.25.11",
+  "version": "1.25.12",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-06-24",
-  "notes": "Fase 3e: mover tablero vinculado a otra pared (drag desde arbol o menu contextual de vista frontal), con politica mover/reposicionar/copiar."
+  "notes": "Desacoplar mosaico: tres variantes (fotos sueltas, columnas, filas), todas reversibles con Ctrl+Z."
 }
