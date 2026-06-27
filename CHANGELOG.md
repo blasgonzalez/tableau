@@ -1,5 +1,71 @@
 # Changelog
 
+## [1.25.13] — 2026-06-27
+
+### Corregido
+- **Fantasma en posición correcta:** el branch del grid en el renderer del fantasma ahora usa `item.x/item.y` y la escala común del tablero (`scX/scY`), igual que las fotos sueltas. Antes usaba una escala propia y offsets centrados que ignoraban la posición real del grid en el tablero.
+- **Altura correcta en tableros variables con grid:** `getItemH` ahora maneja `type:'grid'` usando `calcGridLayout(...).totalH` en lugar de caer al fallback `item.h` (que es `undefined` en grids). Esto corrige `bboxH`, `fHcm` y `gH` del fantasma, que antes eran demasiado pequeños y cortaban las filas inferiores del grid.
+- **Logs de diagnóstico eliminados:** se quitan los `console.log` temporales añadidos para depurar el renderer del fantasma del grid.
+- **Menú contextual del grid unificado:** el clic derecho sobre cualquier parte del grid (celda ocupada, celda vacía o espacio entre celdas) abre siempre un menú. Celda ocupada: "× Quitar" + separador + opciones del grid. Celda vacía o espacio: solo opciones del grid. Antes, el clic derecho sobre celdas vacías no abría ningún menú, y el de celdas ocupadas mostraba solo "Quitar" sin acceso a Propiedades, Desacoplar ni Eliminar. Se elimina el estado separado `gridCellCtx`.
+- **Desacople en columnas/filas: fotos bloqueadas:** las fotos creadas al desacoplar en "columnas" o "filas" se crean con `locked: true`, permitiendo arrastrar la zona como bloque sin que las fotos intercepten el arrastre. El desacople en "fotos sueltas" (opción A) no bloquea.
+
+## [grid-fixes-2] — 2026-06-27
+
+### Corregido
+- **Fantasma sin huecos:** el ghost de vista frontal ya no muestra espacios vacíos donde había celdas null en el mosaico. Las filas vacías se omiten y las celdas válidas se re-indexan desde 0, produciendo un fantasma compacto y representativo.
+- **Literal "Modo compactado":** el checkbox del modal de creación y propiedades del mosaico cambia de "Compactar al eliminar fotos" a "Modo compactado" (ES) y de "Compact on remove" a "Compact mode" (EN).
+
+## [grid-fixes-1] — 2026-06-27
+
+### Corregido
+- **Botón × alineado a la derecha:** la toolbar del grid (`.gitem-bar`) usaba `left:0` en lugar de `right:0`; el `×` aparecía a la izquierda en lugar de a la derecha como el resto de elementos del canvas.
+- **Bloqueo del mosaico:** añadida opción de bloquear/desbloquear al grid, con el mismo comportamiento que fotos y zonas: botón de candado en la toolbar, badge 🔒 visible cuando está bloqueado, `cursor:default` sobre el elemento, y bloqueo del arrastre y del resize handle.
+- **Grid visible en el fantasma de vista frontal:** al arrastrar un tablero a una pared (fantasma de posicionamiento), los mosaicos del tablero ahora se renderizan como miniaturas de foto en el ghost, igual que lo hacen en los tableros ya colocados en la pared.
+
+## [grid-fase3] — 2026-06-27
+
+### Nuevo
+- **Crear mosaico desde el canvas:** clic derecho en zona vacía del canvas → "Añadir mosaico" → modal de creación con Columnas, Filas (opcional; vacío = modo libre), Sep. columnas, Sep. filas y checkbox "Compactar al eliminar fotos" (visible solo cuando hay Filas). El grid se coloca directamente en el punto del clic.
+- **Modal de propiedades del mosaico:** clic derecho sobre un grid → "Propiedades del mosaico" (nueva primera opción del menú contextual). Precarga los valores actuales; permite cambiar columnas, filas, separaciones y modo compact. Si la reducción de cols/rows haría perder fotos reales, muestra aviso de confirmación antes de aplicar.
+- **Toolbar simplificada:** la toolbar del grid (visible en hover/selección) queda con un único botón `×`. Los controles de Col y Sep, y el botón Desacoplar, se eliminan de la toolbar; el Desacoplar sigue disponible en el menú contextual del grid.
+- **Modelo de datos normalizado:** los grids creados desde el canvas y desde la biblioteca emiten `gapCol`/`gapRow` separados en lugar del campo unificado `gap`. Los grids existentes con `gap` siguen funcionando sin migración (fallback en `calcGridLayout`).
+
+## [trash-boards-rooms] — 2026-06-27
+
+### Nuevo
+- **Papelera extendida — tableros y salas:**
+  - Borrar un tablero ya no es permanente: el tablero pasa a la papelera con 30 días de retención. Todos los puntos de entrada (árbol lateral, vista frontal de pared, borrado de vértice con paredes vinculadas) usan ahora la papelera.
+  - El servidor captura los vínculos del tablero a paredes y caras de bloque/columna (`roomLinks`) antes de moverlo; al restaurar, los vínculos se reconstruyen si la pared/bloque sigue existiendo. Si la pared fue borrada, el tablero se restaura libre.
+  - Borrar una sala mueve la sala **y todos sus tableros vinculados** a la papelera juntos. Restaurar la sala devuelve la geometría y todos sus tableros con sus vínculos intactos.
+  - Panel de papelera ampliado con dos nuevas pestañas: **Tableros** y **Salas**. Por cada item: nombre, proyecto, fecha de eliminación y días hasta purga automática. Botones Restaurar y Borrar definitivamente.
+  - El badge de papelera en el panel lateral incluye tableros y salas en el conteo total.
+  - "Vaciar papelera" limpia también tableros y salas.
+  - Purga automática al arranque (`runStartupPurge`) barre `trash/boards/` y `trash/rooms/` con la misma política de 30 días que fotos y proyectos.
+
+### Estructura en disco
+```
+{dd}/{pid}/trash/boards/{bid}/
+  board.json, items.json, _meta.json, versions/
+{dd}/{pid}/trash/rooms/{rid}/
+  room.json, _meta.json
+  boards/{bid}/  ← tableros vinculados a la sala
+    board.json, items.json, _meta.json, versions/
+```
+
+### Corrección
+- Borrar un tablero desde el árbol lateral ya actualizaba `boards.json` pero no desvinculaba `rooms.json` (referencias huérfanas). El nuevo endpoint lo corrige: desvincula antes de mover a la papelera.
+
+## [grid-fase1] — 2026-06-27
+
+### Nuevo
+- **Modelo de mosaico extendido — celdas vacías y modo fijo:**
+  - **Separación por eje:** `gapCol` y `gapRow` sustituyen al antiguo `gap` único (migración perezosa: si no existen se usa `gap` como fallback). `calcGridLayout` ahora calcula separaciones horizontales y verticales de forma independiente.
+  - **Modo fijo (`rows`):** si el item tiene el campo `rows` (entero positivo), el mosaico adopta una cuadrícula fija de `cols × rows` celdas. Las posiciones por encima de los elementos reales de `photoIds[]` se rellenan con `null` automáticamente.
+  - **`compact` (booleano, default `false`):** en modo fijo, "Quitar del mosaico" deja un hueco (`null`) en la celda en lugar de compactar el array. Si `compact:true` se comporta como antes (splice). En modo libre siempre se compacta.
+  - **Celdas vacías (`null` en `photoIds[]`):** se renderizan como un placeholder con borde punteado y opacidad reducida. No aparecen en la exportación JPEG. Participan en el intercambio por clic como cualquier celda ocupada.
+  - **Drop por celda desde la biblioteca:** soltar una foto sobre una celda concreta (vacía u ocupada) rellena o reemplaza esa celda específica, en lugar de añadir la foto al final del mosaico. El drop sobre los huecos entre celdas sigue añadiendo al final (comportamiento anterior como fallback).
+  - **Retrocompatibilidad total:** los mosaicos existentes (sin `rows`, sin `gapCol`/`gapRow`, sin `null` en `photoIds[]`) funcionan de forma idéntica al modelo anterior.
+
 ## [1.25.12] — 2026-06-24
 
 ### Nuevo

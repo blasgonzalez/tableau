@@ -459,6 +459,7 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 /* ── GRID ITEMS ── */
 .gitem{position:absolute;cursor:grab;user-select:none}
 .gitem:active{cursor:grabbing}
+.gitem.locked{cursor:default}
 .gitem-cell{position:absolute;overflow:hidden;background:var(--deep)}
 .gitem-cell img{display:block;width:100%;height:100%;pointer-events:none}
 .gitem-cell{cursor:grab}
@@ -468,7 +469,7 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .gitem-outline{position:absolute;inset:0;pointer-events:none;z-index:5}
 .gitem.sel .gitem-outline{outline:2px dashed var(--acc-dim);outline-offset:3px}
 .gitem.sel.anchor .gitem-outline{outline:2px solid var(--acc);outline-offset:3px}
-.gitem-bar{position:absolute;bottom:100%;left:0;display:flex;gap:1px;align-items:center;opacity:0;transition:opacity .12s;zoom:calc(1/var(--canvas-zoom,1));z-index:250;background:var(--panel);border:1px solid var(--border2);padding:2px 3px;white-space:nowrap}
+.gitem-bar{position:absolute;bottom:100%;right:0;display:flex;gap:1px;align-items:center;opacity:0;transition:opacity .12s;zoom:calc(1/var(--canvas-zoom,1));z-index:250;background:var(--panel);border:1px solid var(--border2);padding:2px 3px;white-space:nowrap}
 .gitem:hover .gitem-bar,.gitem.sel .gitem-bar{opacity:1}
 .gitem-bar-lbl{font-size:9px;color:var(--sub);padding:0 3px;font-family:'IBM Plex Mono',monospace;letter-spacing:.3px;min-width:16px;text-align:center}
 .gitem-sep{width:1px;height:14px;background:var(--border2);margin:0 3px;flex-shrink:0}
@@ -487,6 +488,10 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .grid-ghost-bar{position:absolute;top:100%;left:0;margin-top:8px;display:flex;align-items:center;gap:2px;background:var(--panel);border:1px solid var(--border2);padding:3px 4px;border-radius:3px;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.5);zoom:calc(1/var(--canvas-zoom,1))}
 .gitem-cell.drag-over{outline:2px solid var(--acc);outline-offset:-2px;opacity:.7}
 .gitem-cell.dragging{opacity:.35}
+.gitem-empty{background:var(--panel) !important;border:2px dashed var(--border2) !important;opacity:.4;cursor:default !important;overflow:visible}
+.gitem-empty.swap-sel{outline:3px solid var(--acc);outline-offset:-3px;cursor:crosshair !important}
+.gitem-empty.swap-target:hover{outline:3px dashed var(--acc);outline-offset:-3px;cursor:crosshair !important}
+.gitem-empty.drag-over{outline:2px solid var(--acc);outline-offset:-2px;opacity:.7 !important}
 .lbl-badge{position:absolute;bottom:0;left:0;font-size:6px;color:var(--sub);padding:1px 4px;pointer-events:none;zoom:calc(1/var(--canvas-zoom,1));background:var(--panel2);letter-spacing:.5px;border-radius:0 3px 0 0;opacity:.85}
 /* ── LABEL POPUP ── */
 .lbl-popup-ov{position:fixed;inset:0;z-index:800;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55)}
@@ -1176,23 +1181,32 @@ const physToPx = (phys, dpi, units) => {
 };
 
 const calcGridLayout = (item, photosArr, dpi, units) => {
-  const gapPx  = physToPx(item.gap ?? 5, dpi, units);
+  const gapColPx = physToPx(item.gapCol ?? item.gap ?? 5, dpi, units);
+  const gapRowPx = physToPx(item.gapRow ?? item.gap ?? 5, dpi, units);
   const cols   = Math.max(1, item.cols || 3);
-  const cellW  = Math.max(10, (item.w - gapPx * (cols - 1)) / cols);
-  const pIds   = item.photoIds || [];
+  const cellW  = Math.max(10, (item.w - gapColPx * (cols - 1)) / cols);
+  const fixedRows = item.rows ? Math.max(1, item.rows) : null;
+  let pIds = item.photoIds || [];
+  if (fixedRows !== null) {
+    const totalCells = cols * fixedRows;
+    pIds = pIds.slice(0, totalCells);
+    while (pIds.length < totalCells) pIds.push(null);
+  }
   const rows   = [];
   for (let r = 0; r * cols < pIds.length; r++) {
     const rowIds = pIds.slice(r * cols, (r + 1) * cols);
-    const rowH = Math.max(...rowIds.map(id => {
+    const rawH = Math.max(...rowIds.map(id => {
+      if (id === null) return 0;
       const p = photosArr.find(x => x.id === id);
       return (p && p.w > 0) ? Math.round(cellW * p.h / p.w) : Math.round(cellW);
-    }), 10);
+    }), 0);
+    const rowH = Math.max(rawH > 0 ? rawH : (rows.length > 0 ? rows[rows.length - 1].h : Math.round(cellW)), 10);
     rows.push({ ids: rowIds, h: rowH });
   }
   const totalH = rows.length > 0
-    ? rows.reduce((s, r) => s + r.h, 0) + gapPx * Math.max(0, rows.length - 1)
+    ? rows.reduce((s, r) => s + r.h, 0) + gapRowPx * Math.max(0, rows.length - 1)
     : 80;
-  return { gapPx, cols, cellW, rows, totalH };
+  return { gapColPx, gapRowPx, cols, cellW, rows, totalH };
 };
 
 const dimLabel = (w, h, dpi, units, frame = 0) => {
@@ -1248,6 +1262,7 @@ const I18N = {
     gridItemBtn:'Mosaico', gridPendingHd:'Nuevo mosaico', gridPendingPlace:'Colocar en tablero', gridPendingWidth:'Ancho', gridItemCols:'Col', gridItemGap:'Sep', gridItemUngroup:'Separar en fotos', gridItemAddSel:'Añadir selección', gridItemRemove:'Quitar del mosaico', gridItemAddHint:'Arrastra fotos aquí para añadir',
     gridDecoupleBtn:'Desacoplar', gridDecoupleDone:'Mosaico desacoplado', gridDecouplePhotos:'En fotos sueltas', gridDecoupleCols: n => `En columnas (${n})`, gridDecoupleRows: n => `En filas (${n})`,
     gridLayoutBtn:'Cuadrícula', gridTitle:'Colocar en cuadrícula', gridColsLabel:'Columnas', gridGapLabel:'Separación', gridScaleLabel:'Escala', gridFits:(n,tot)=>n>=tot?'Todas las fotos caben':`Caben ${n} de ${tot}`, gridPlace:'Colocar',
+    addGrid:'Añadir mosaico', gridProps:'Propiedades del mosaico', gridRows:'Filas', gridGapCol:'Sep. columnas', gridGapRow:'Sep. filas', gridCompact:'Modo compactado', gridCreate:'Crear mosaico', gridRowsAuto:'automático',
     pairsLayoutBtn:'Parejas', pairsLabel: n => `Pareja ${n}`, tripleLabel: n => `Trío ${n}`,
     presViewZones:'Ver zonas', presZoneOf:(i,n)=>`${i} / ${n}`,
     libSnapExpand:'Ampliar librería', libSnapCollapse:'Reducir librería',
@@ -1286,14 +1301,17 @@ const I18N = {
     importError:'Error al importar', configSaved:'Configuración guardada',
     allowPopups:'Permite ventanas emergentes para imprimir',
     confirmDeleteProject:'¿Mover este proyecto a la papelera?',
-    confirmDeleteBoard:'¿Eliminar este tablero?',
+    confirmDeleteBoard:'¿Mover este tablero a la papelera?',
     trashTitle:'Papelera', trashTabPhotos:'Fotos', trashTabProjects:'Proyectos',
+    trashTabBoards:'Tableros', trashTabRooms:'Salas',
     trashNoPhotos:'No hay fotos en la papelera', trashNoProjects:'No hay proyectos en la papelera',
+    trashNoBoards:'No hay tableros en la papelera', trashNoRooms:'No hay salas en la papelera',
     trashRestore:'Restaurar', trashDeletePerm:'Borrar definitivamente',
     trashEmptyAll:'Vaciar papelera', trashConfirmEmpty:'¿Vaciar la papelera? Esta acción no se puede deshacer.',
     trashRestored:'Restaurado', trashDeletedPerm:'Eliminado definitivamente',
     trashPurge: d => `Purga automática en ${d} día${d!==1?'s':''}`,
     trashDeletedPhoto: n => `Foto movida a la papelera${n>0?` (en ${n} tablero${n!==1?'s':''})`: ''}`,
+    trashBoardMoved:'Tablero movido a la papelera', trashRoomMoved: n => `Sala movida a la papelera${n>0?` (${n} tablero${n!==1?'s':''})`: ''}`,
     confirmDeleteWallBoards: names => `Al eliminar la pared se borrarán también los tableros vinculados: ${names}. ¿Continuar?`,
     duplicateBoard:'Duplicar tablero',
     confirmDeletePhoto:'¿Eliminar esta foto del proyecto?',
@@ -1484,6 +1502,7 @@ const I18N = {
     gridItemBtn:'Grid', gridPendingHd:'New grid', gridPendingPlace:'Place on board', gridPendingWidth:'Width', gridItemCols:'Col', gridItemGap:'Gap', gridItemUngroup:'Ungroup to photos', gridItemAddSel:'Add selection', gridItemRemove:'Remove from grid', gridItemAddHint:'Drop photos here to add',
     gridDecoupleBtn:'Decouple', gridDecoupleDone:'Grid decoupled', gridDecouplePhotos:'Into photos', gridDecoupleCols: n => `Into columns (${n})`, gridDecoupleRows: n => `Into rows (${n})`,
     gridLayoutBtn:'Grid', gridTitle:'Place as grid', gridColsLabel:'Columns', gridGapLabel:'Gap', gridScaleLabel:'Scale', gridFits:(n,tot)=>n>=tot?'All photos fit':`${n} of ${tot} fit`, gridPlace:'Place',
+    addGrid:'Add mosaic', gridProps:'Mosaic properties', gridRows:'Rows', gridGapCol:'Col. gap', gridGapRow:'Row gap', gridCompact:'Compact mode', gridCreate:'Create mosaic', gridRowsAuto:'automatic',
     pairsLayoutBtn:'Pairs', pairsLabel: n => `Pair ${n}`, tripleLabel: n => `Triple ${n}`,
     presViewZones:'View zones', presZoneOf:(i,n)=>`${i} / ${n}`,
     libSnapExpand:'Expand library', libSnapCollapse:'Collapse library',
@@ -1522,14 +1541,17 @@ const I18N = {
     importError:'Import error', configSaved:'Settings saved',
     allowPopups:'Allow pop-ups to print',
     confirmDeleteProject:'Move this project to the trash?',
-    confirmDeleteBoard:'Delete this board?',
+    confirmDeleteBoard:'Move this board to the trash?',
     trashTitle:'Trash', trashTabPhotos:'Photos', trashTabProjects:'Projects',
+    trashTabBoards:'Boards', trashTabRooms:'Rooms',
     trashNoPhotos:'No photos in trash', trashNoProjects:'No projects in trash',
+    trashNoBoards:'No boards in trash', trashNoRooms:'No rooms in trash',
     trashRestore:'Restore', trashDeletePerm:'Delete permanently',
     trashEmptyAll:'Empty trash', trashConfirmEmpty:'Empty the trash? This cannot be undone.',
     trashRestored:'Restored', trashDeletedPerm:'Permanently deleted',
     trashPurge: d => `Auto-purge in ${d} day${d!==1?'s':''}`,
     trashDeletedPhoto: n => `Photo moved to trash${n>0?` (on ${n} board${n!==1?'s':''})`: ''}`,
+    trashBoardMoved:'Board moved to trash', trashRoomMoved: n => `Room moved to trash${n>0?` (${n} board${n!==1?'s':''})`: ''}`,
     confirmDeleteWallBoards: names => `Deleting the wall will also delete its linked boards: ${names}. Continue?`,
     duplicateBoard:'Duplicate board',
     confirmDeletePhoto:'Delete this photo from the project?',
@@ -1767,7 +1789,6 @@ function App() {
   const [room,           setRoom]          = useState(null);     // active room object | null
   const [roomView,       setRoomView]      = useState('board');  // 'board' | 'room'
   const [boardBeforeRoom, setBoardBeforeRoom] = useState(null); // bid to return to from room/3D view
-  const [gridCellCtx,      setGridCellCtx]      = useState(null); // {gridId, photoId, x, y}
   const [gridCellSel,      setGridCellSel]      = useState(null); // {gridId, index} — first click for swap
   const gridCellSelRef = useRef(null);
   const [gridDropTarget,   setGridDropTarget]   = useState(null); // gridId hovered during lib drag
@@ -1872,11 +1893,13 @@ function App() {
   const [exportDropOpen, setExportDropOpen] = useState(false);
   const [exportFmt,      setExportFmt]      = useState(() => localStorage.getItem('tb-exportfmt') || 'jpg');
   const [gridDropOpen,   setGridDropOpen]   = useState(false);
-  const [trashCount,     setTrashCount]     = useState({ photos: 0, projects: 0, total: 0 });
+  const [trashCount,     setTrashCount]     = useState({ photos: 0, projects: 0, boards: 0, rooms: 0, total: 0 });
   const [trashModal,     setTrashModal]     = useState(false);
   const [trashTab,       setTrashTab]       = useState('photos');
   const [trashPhotos,    setTrashPhotos]    = useState([]);
   const [trashProjects,  setTrashProjects]  = useState([]);
+  const [trashBoards,    setTrashBoards]    = useState([]);
+  const [trashRooms,     setTrashRooms]     = useState([]);
   const [trashLoading,   setTrashLoading]   = useState(false);
   const [gridDropPos,    setGridDropPos]    = useState({right:0,top:0});
   const [versions,       setVersions]       = useState([]); // [{ts, itemCount}]
@@ -1889,6 +1912,18 @@ function App() {
   const [gridGap,    setGridGap]    = useState(20);
   const [gridScale,  setGridScale]  = useState(100);
   const [gridWrapZone, setGridWrapZone] = useState(false);
+  const [gridCreateModal, setGridCreateModal] = useState(null); // {cx, cy}
+  const [gcCols,    setGcCols]    = useState(3);
+  const [gcRows,    setGcRows]    = useState('');
+  const [gcGapCol,  setGcGapCol]  = useState(0.5);
+  const [gcGapRow,  setGcGapRow]  = useState(0.5);
+  const [gcCompact, setGcCompact] = useState(false);
+  const [gridPropsModal, setGridPropsModal] = useState(null); // {itemId}
+  const [gpCols,    setGpCols]    = useState(3);
+  const [gpRows,    setGpRows]    = useState('');
+  const [gpGapCol,  setGpGapCol]  = useState(0.5);
+  const [gpGapRow,  setGpGapRow]  = useState(0.5);
+  const [gpCompact, setGpCompact] = useState(false);
   const showLibPreviewRef = useRef(localStorage.getItem('tb-lib-preview') !== 'false');
   const [libPreview,      setLibPreview]      = useState(null); // {photo, x, y}
   const [pinnedPreview,   setPinnedPreview]   = useState(null); // {photo, x, y} — click-pinned
@@ -2426,7 +2461,7 @@ function App() {
     const updateInterval = setInterval(pollUpdate, 5 * 60 * 1000);
     const loadData = () => {
       api.get('/api/templates').then(ts => { if (Array.isArray(ts)) setTemplates(ts); }).catch(() => {});
-      api.get('/api/trash/count').then(c => setTrashCount(c || { photos:0, projects:0, total:0 })).catch(() => {});
+      api.get('/api/trash/count').then(c => setTrashCount(c || { photos:0, projects:0, boards:0, rooms:0, total:0 })).catch(() => {});
       api.get('/api/projects').then(ps => {
         if (Array.isArray(ps)) {
           setProjects(ps);
@@ -2540,7 +2575,7 @@ function App() {
   useEffect(() => { setLibSearch(''); setLibSelection([]); libSelAnchorRef.current = null; setTagFilter([]); setTagPopover(null); setBatchTagPop(null); setSectBatchPop(null); setRatingFilter(0); setOrientFilter(null); setSectCtxMenu(null); setLibMuted(false); setUploadDropOpen(false); setExportDropOpen(false); }, [pid]);
   useEffect(() => { gridPendingRef.current = gridPending; }, [gridPending]);
   useEffect(() => { gridCellSelRef.current = gridCellSel; }, [gridCellSel]);
-  useEffect(() => { setGridDropTarget(null); setGridCellDragOver(null); setGridCellCtx(null); setGridCellSel(null); setZoneDropTarget(null); setGridDecoupleOpen(null); }, [bid]);
+  useEffect(() => { setGridDropTarget(null); setGridCellDragOver(null); setGridCellSel(null); setZoneDropTarget(null); setGridDecoupleOpen(null); }, [bid]);
 
   // Board lock for edit-mode guests
   useEffect(() => {
@@ -2913,9 +2948,9 @@ function App() {
             let rowY = it.y;
             layout.rows.forEach(row => {
               row.ids.forEach((photoId, c) => {
-                if (photoId) renderItems.push({ photoId, x: it.x + c*(layout.cellW+layout.gapPx), y: rowY, w: layout.cellW, gridItemId: it.id });
+                if (photoId) renderItems.push({ photoId, x: it.x + c*(layout.cellW+layout.gapColPx), y: rowY, w: layout.cellW, gridItemId: it.id });
               });
-              rowY += row.h + layout.gapPx;
+              rowY += row.h + layout.gapRowPx;
             });
           } else {
             renderItems.push(it);
@@ -4512,9 +4547,9 @@ function App() {
           let rowY = item.y;
           layout.rows.forEach(row => {
             row.ids.forEach((photoId, ci) => {
-              if (photoId) expandedForPreview.push({ ...item, id: item.id + '_' + photoId, photoId, x: item.x + ci * (layout.cellW + layout.gapPx), y: rowY, w: layout.cellW, rot: 0, freeRot: 0 });
+              if (photoId) expandedForPreview.push({ ...item, id: item.id + '_' + photoId, photoId, x: item.x + ci * (layout.cellW + layout.gapColPx), y: rowY, w: layout.cellW, rot: 0, freeRot: 0 });
             });
-            rowY += row.h + layout.gapPx;
+            rowY += row.h + layout.gapRowPx;
           });
         } else {
           expandedForPreview.push(item);
@@ -5028,19 +5063,23 @@ ${rows}
   };
 
   const refreshTrashCount = () =>
-    api.get('/api/trash/count').then(c => setTrashCount(c || { photos:0, projects:0, total:0 })).catch(() => {});
+    api.get('/api/trash/count').then(c => setTrashCount(c || { photos:0, projects:0, boards:0, rooms:0, total:0 })).catch(() => {});
 
   const openTrash = async (tab) => {
     setTrashTab(tab || 'photos');
     setTrashModal(true);
     setTrashLoading(true);
     try {
-      const [ph, pr] = await Promise.all([
+      const [ph, pr, bo, ro] = await Promise.all([
         api.get('/api/trash/photos'),
         api.get('/api/trash/projects'),
+        api.get('/api/trash/boards'),
+        api.get('/api/trash/rooms'),
       ]);
       setTrashPhotos(Array.isArray(ph) ? ph : []);
       setTrashProjects(Array.isArray(pr) ? pr : []);
+      setTrashBoards(Array.isArray(bo) ? bo : []);
+      setTrashRooms(Array.isArray(ro) ? ro : []);
     } catch {} finally { setTrashLoading(false); }
   };
 
@@ -5084,11 +5123,71 @@ ${rows}
     }, true);
   };
 
+  const restoreTrashBoard = async (pid, bid) => {
+    try {
+      const board = await api.post(`/api/projects/${pid}/trash/boards/${bid}/restore`, {});
+      setTrashBoards(bs => bs.filter(b => !(b.pid === pid && b.bid === bid)));
+      refreshTrashCount();
+      if (pid === pidRef.current) {
+        setBoards(bs => bs.some(b => b.id === bid) ? bs : [...bs, board]);
+        boardsRef.current = boardsRef.current.some(b => b.id === bid) ? boardsRef.current : [...boardsRef.current, board];
+        // Refresh rooms to reflect restored links
+        const updRooms = await api.get(`/api/projects/${pid}/rooms`);
+        if (Array.isArray(updRooms)) {
+          setRooms(updRooms); roomsRef.current = updRooms;
+          const updRoom = updRooms.find(r => r.id === activeRoomIdRef.current);
+          if (updRoom) { setRoom(updRoom); roomRef.current = updRoom; }
+        }
+      }
+      showToast(t('trashRestored'));
+    } catch (e) { showToast('Error: ' + e.message, true); }
+  };
+
+  const permDeleteTrashBoard = (pid, bid) => {
+    showConfirm(t('trashDeletePerm') + '?', async () => {
+      await api.del(`/api/projects/${pid}/trash/boards/${bid}`);
+      setTrashBoards(bs => bs.filter(b => !(b.pid === pid && b.bid === bid)));
+      refreshTrashCount();
+      showToast(t('trashDeletedPerm'));
+    }, true);
+  };
+
+  const restoreTrashRoom = async (pid, rid) => {
+    try {
+      await api.post(`/api/projects/${pid}/trash/rooms/${rid}/restore`, {});
+      setTrashRooms(rs => rs.filter(r => !(r.pid === pid && r.rid === rid)));
+      refreshTrashCount();
+      if (pid === pidRef.current) {
+        const [newRooms, newBoards] = await Promise.all([
+          api.get(`/api/projects/${pid}/rooms`),
+          api.get(`/api/projects/${pid}/boards`),
+        ]);
+        if (Array.isArray(newRooms)) { setRooms(newRooms); roomsRef.current = newRooms; }
+        if (Array.isArray(newBoards)) { setBoards(newBoards); boardsRef.current = newBoards; }
+      }
+      showToast(t('trashRestored'));
+    } catch (e) { showToast('Error: ' + e.message, true); }
+  };
+
+  const permDeleteTrashRoom = (pid, rid) => {
+    showConfirm(t('trashDeletePerm') + '?', async () => {
+      await api.del(`/api/projects/${pid}/trash/rooms/${rid}`);
+      setTrashRooms(rs => rs.filter(r => !(r.pid === pid && r.rid === rid)));
+      refreshTrashCount();
+      showToast(t('trashDeletedPerm'));
+    }, true);
+  };
+
   const emptyTrash = () => {
     showConfirm(t('trashConfirmEmpty'), async () => {
-      await Promise.all([api.del('/api/trash/photos'), api.del('/api/trash/projects')]);
-      setTrashPhotos([]); setTrashProjects([]);
-      setTrashCount({ photos:0, projects:0, total:0 });
+      await Promise.all([
+        api.del('/api/trash/photos'),
+        api.del('/api/trash/projects'),
+        api.del('/api/trash/boards'),
+        api.del('/api/trash/rooms'),
+      ]);
+      setTrashPhotos([]); setTrashProjects([]); setTrashBoards([]); setTrashRooms([]);
+      setTrashCount({ photos:0, projects:0, boards:0, rooms:0, total:0 });
       showToast(lang === 'es' ? 'Papelera vaciada' : 'Trash emptied');
     }, true);
   };
@@ -5179,11 +5278,21 @@ ${rows}
   const deleteBoard = (id, e) => {
     e?.stopPropagation();
     showConfirm(t('confirmDeleteBoard'), async () => {
-      await api.del(`/api/projects/${pidRef.current}/boards/${id}`);
+      const result = await api.del(`/api/projects/${pidRef.current}/boards/${id}`);
       const nbs = boards.filter(b => b.id !== id);
-      setBoards(nbs);
+      setBoards(nbs); boardsRef.current = nbs;
       setAllBoardItems(prev => { const n = {...prev}; delete n[id]; return n; });
       if (bidRef.current === id) setBid(nbs[0]?.id || null);
+      refreshTrashCount();
+      // Reload rooms if this board had room links (server already unlinked them)
+      if (result?.roomLinks?.length) {
+        const updRooms = await api.get(`/api/projects/${pidRef.current}/rooms`);
+        if (Array.isArray(updRooms)) {
+          setRooms(updRooms); roomsRef.current = updRooms;
+          const updRoom = updRooms.find(r => r.id === activeRoomIdRef.current);
+          if (updRoom) { setRoom(updRoom); roomRef.current = updRoom; }
+        }
+      }
     });
   };
 
@@ -6738,7 +6847,7 @@ ${rows}
     const item = {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
       type: 'grid', x: Math.max(0, Math.round(gp.x || 0)), y: Math.max(0, Math.round(gp.y || 0)),
-      w: gp.w, cols: gp.cols, gap: gp.gap,
+      w: gp.w, cols: gp.cols, gapCol: gp.gapCol ?? gp.gap, gapRow: gp.gapRow ?? gp.gap,
       photoIds: [...gp.photoIds], z: maxZ + 1,
     };
     const nit = [...itemsRef.current, item];
@@ -6747,11 +6856,95 @@ ${rows}
     setGridPending(null);
   };
 
+  const createGridFromCanvas = () => {
+    if (!bidRef.current || !gridCreateModal) return;
+    const { cx, cy } = gridCreateModal;
+    const bpx = boardPxRef.current;
+    const z = zoomRef.current;
+    const wrap = wrapRef.current;
+    const cols = Math.max(1, gcCols || 1);
+    const rowsInt = parseInt(gcRows) || null;
+    const maxWBoard = bpx ? Math.round(bpx.w * 0.85) : Infinity;
+    const maxWView  = wrap ? Math.round(wrap.clientWidth * 0.80 / z) : Infinity;
+    let w = Math.min(maxWBoard, maxWView, cols * 220);
+    w = Math.max(80, w);
+    const maxZ = itemsRef.current.length ? Math.max(...itemsRef.current.map(i => i.z || 0)) : 0;
+    const photoIds = rowsInt ? Array(cols * rowsInt).fill(null) : [];
+    const item = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      type: 'grid',
+      x: Math.max(0, Math.round(cx)),
+      y: Math.max(0, Math.round(cy)),
+      w, cols,
+      gapCol: gcGapCol, gapRow: gcGapRow,
+      ...(rowsInt ? { rows: rowsInt, compact: gcCompact } : {}),
+      photoIds,
+      z: maxZ + 1,
+    };
+    pushUndo();
+    const nit = [...itemsRef.current, item];
+    itemsRef.current = nit; setItems(nit); saveItemsNow(nit);
+    setGridCreateModal(null);
+  };
+
+  const openGridProps = (itemId) => {
+    const it = itemsRef.current.find(i => i.id === itemId);
+    if (!it) return;
+    setGpCols(it.cols || 3);
+    setGpRows(it.rows ? String(it.rows) : '');
+    setGpGapCol(it.gapCol ?? it.gap ?? 5);
+    setGpGapRow(it.gapRow ?? it.gap ?? 5);
+    setGpCompact(it.compact ?? false);
+    setGridPropsModal({ itemId });
+  };
+
+  const applyGridProps = () => {
+    if (!gridPropsModal) return;
+    const { itemId } = gridPropsModal;
+    const it = itemsRef.current.find(i => i.id === itemId);
+    if (!it) return;
+    const cols = Math.max(1, gpCols || 1);
+    const rowsInt = parseInt(gpRows) || null;
+    const newTotal = rowsInt ? cols * rowsInt : null;
+    const realPhotos = (it.photoIds || []).filter(id => id !== null);
+    const doApply = () => {
+      let arr;
+      if (newTotal !== null) {
+        arr = [...(it.photoIds || [])].slice(0, newTotal);
+        while (arr.length < newTotal) arr.push(null);
+      } else {
+        arr = (it.photoIds || []).filter(id => id !== null);
+      }
+      const updated = {
+        ...it, cols, gapCol: gpGapCol, gapRow: gpGapRow,
+        ...(rowsInt ? { rows: rowsInt, compact: gpCompact } : { rows: undefined, compact: undefined }),
+        photoIds: arr,
+      };
+      pushUndo();
+      const nit = itemsRef.current.map(i => i.id === itemId ? updated : i);
+      itemsRef.current = nit; setItems(nit); saveItemsNow(nit);
+      setGridPropsModal(null);
+    };
+    if (newTotal !== null && realPhotos.length > newTotal) {
+      const lost = realPhotos.length - newTotal;
+      setConfirmModal({
+        message: lang === 'es'
+          ? `Se perderán ${lost} foto${lost > 1 ? 's' : ''}. ¿Continuar?`
+          : `${lost} photo${lost > 1 ? 's' : ''} will be lost. Continue?`,
+        danger: true,
+        onConfirm: doApply,
+      });
+      return;
+    }
+    doApply();
+  };
+
   const onGridResizePD = (e, itemId) => {
     if (presentationRef.current) return;
     e.stopPropagation(); e.preventDefault();
     const it = itemsRef.current.find(i => i.id === itemId);
     if (!it) return;
+    if (it.locked) return;
     pushUndo();
     let rawW = it.w;
     const onMM = e => {
@@ -6774,23 +6967,23 @@ ${rows}
     const dpi   = board?.dpi  || 150;
     const units = board?.units || 'px';
     const layout = calcGridLayout(grid, photosRef.current, dpi, units);
-    const { gapPx, cols, cellW, rows, totalH } = layout;
+    const { gapColPx, gapRowPx, cols, cellW, rows, totalH } = layout;
     const maxZ  = itemsRef.current.length ? Math.max(...itemsRef.current.map(i => i.z || 0)) : 0;
     const nonZ  = itemsRef.current.filter(i => i.type !== 'zone');
     const baseZ = nonZ.length ? Math.min(...nonZ.map(i => i.z || 0)) - 1 : -1;
     const PAD   = 8;
-    const totalW = cols * cellW + gapPx * (cols - 1);
+    const totalW = cols * cellW + gapColPx * (cols - 1);
     const cells = [];
     let rowY = 0;
     rows.forEach((row, ri) => {
-      if (ri > 0) rowY += rows[ri - 1].h + gapPx;
+      if (ri > 0) rowY += rows[ri - 1].h + gapRowPx;
       row.ids.forEach((photoId, ci) => {
         const p = photosRef.current.find(x => x.id === photoId);
         if (!p) return;
         cells.push({ ri, ci,
           id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5) + cells.length,
           photoId,
-          x: Math.round(grid.x + ci * (cellW + gapPx)),
+          x: Math.round(grid.x + ci * (cellW + gapColPx)),
           y: Math.round(grid.y + rowY),
           w: Math.round(cellW),
           z: maxZ + cells.length + 1,
@@ -6809,10 +7002,10 @@ ${rows}
         if (!colCells.length) continue;
         const zid = `z${Date.now().toString(36)}${Math.random().toString(36).slice(2, 4)}c${c}`;
         zones.push({ id: zid, type: 'zone', label: '', color: 'blue', scaleContent: true,
-          x: Math.max(0, grid.x + c * (cellW + gapPx) - PAD),
+          x: Math.max(0, grid.x + c * (cellW + gapColPx) - PAD),
           y: Math.max(0, grid.y - PAD),
           w: cellW + 2 * PAD, h: totalH + 2 * PAD, z: baseZ - c });
-        colCells.forEach(({ ri: _r, ci: _c, ...p }) => photos.push({ ...p, zoneId: zid }));
+        colCells.forEach(({ ri: _r, ci: _c, ...p }) => photos.push({ ...p, zoneId: zid, locked: true }));
       }
       newItems = [...photos, ...zones];
       selIds   = zones.map(z => z.id);
@@ -6820,7 +7013,7 @@ ${rows}
       const photos = [], zones = [];
       let rY = 0;
       rows.forEach((row, ri) => {
-        if (ri > 0) rY += rows[ri - 1].h + gapPx;
+        if (ri > 0) rY += rows[ri - 1].h + gapRowPx;
         const rowCells = cells.filter(p => p.ri === ri);
         if (!rowCells.length) return;
         const zid = `z${Date.now().toString(36)}${Math.random().toString(36).slice(2, 4)}r${ri}`;
@@ -6828,7 +7021,7 @@ ${rows}
           x: Math.max(0, grid.x - PAD),
           y: Math.max(0, grid.y + rY - PAD),
           w: totalW + 2 * PAD, h: row.h + 2 * PAD, z: baseZ - ri });
-        rowCells.forEach(({ ri: _r, ci: _c, ...p }) => photos.push({ ...p, zoneId: zid }));
+        rowCells.forEach(({ ri: _r, ci: _c, ...p }) => photos.push({ ...p, zoneId: zid, locked: true }));
       });
       newItems = [...photos, ...zones];
       selIds   = zones.map(z => z.id);
@@ -7470,12 +7663,13 @@ ${rows}
         saveRoom({...r, vertices:r.vertices.filter(v=>v.id!==vid), walls:newWalls});
         if (linkedIds.length) {
           Promise.all(linkedIds.map(id => api.del(`/api/projects/${pidRef.current}/boards/${id}`))).then(() => {
-            setBoards(bs => bs.filter(b => !linkedIds.includes(b.id)));
+            const nbs = boardsRef.current.filter(b => !linkedIds.includes(b.id));
+            setBoards(nbs); boardsRef.current = nbs;
             setAllBoardItems(prev => { const n = {...prev}; linkedIds.forEach(id => delete n[id]); return n; });
             if (linkedIds.includes(bidRef.current)) {
-              const rem = boardsRef.current.filter(b => !linkedIds.includes(b.id));
-              setBid(rem[0]?.id || null); bidRef.current = rem[0]?.id || null;
+              setBid(nbs[0]?.id || null); bidRef.current = nbs[0]?.id || null;
             }
+            refreshTrashCount();
           });
         }
         setRoomVertCtx(null);
@@ -7819,6 +8013,7 @@ ${rows}
         return Math.round(px * 10) / 10;
       };
       const getItemH = item => {
+        if (item.type === 'grid') return calcGridLayout(item, photosRef.current, dpi, units).totalH;
         if (item.type === 'text') return item.h || item.w * 0.3;
         const photo = photosRef.current.find(p => p.id === item.photoId);
         if (photo && photo.w) {
@@ -7905,24 +8100,24 @@ ${rows}
     ])];
     const msg = linkedIds.length
       ? (lang==='es'
-          ? `¿Eliminar la sala? Se eliminarán también ${linkedIds.length} tablero${linkedIds.length!==1?'s':''} vinculado${linkedIds.length!==1?'s':''}. Esta acción no se puede deshacer.`
-          : `Delete the room? ${linkedIds.length} linked board${linkedIds.length!==1?'s':''} will also be deleted. This cannot be undone.`)
-      : (lang==='es'?'¿Eliminar la sala? Se perderá la geometría de la planta.':'Delete the room? The floor plan geometry will be lost.');
+          ? `¿Mover la sala a la papelera? Se moverán también ${linkedIds.length} tablero${linkedIds.length!==1?'s':''} vinculado${linkedIds.length!==1?'s':''}.`
+          : `Move the room to trash? ${linkedIds.length} linked board${linkedIds.length!==1?'s':''} will also be moved.`)
+      : (lang==='es'?'¿Mover la sala a la papelera?':'Move the room to the trash?');
     setConfirmModal({
       message: msg,
       danger: true,
       onConfirm: async () => {
         await api.del(`/api/projects/${pidRef.current}/rooms/${r.id}`);
         if (linkedIds.length) {
-          setBoards(bs => bs.filter(b => !linkedIds.includes(b.id)));
+          const nbs = boardsRef.current.filter(b => !linkedIds.includes(b.id));
+          setBoards(nbs); boardsRef.current = nbs;
           setAllBoardItems(prev => {
             const next = {...prev};
             linkedIds.forEach(id => delete next[id]);
             return next;
           });
           if (linkedIds.includes(bidRef.current)) {
-            const remaining = boardsRef.current.filter(b => !linkedIds.includes(b.id));
-            const nb = remaining[0]?.id || null;
+            const nb = nbs[0]?.id || null;
             setBid(nb); bidRef.current = nb;
           }
         }
@@ -7933,6 +8128,7 @@ ${rows}
         setActiveRoomId(fallback?.id || null); activeRoomIdRef.current = fallback?.id || null;
         if (fallback) { setRoomCeilH(fallback.ceilingHeight || 280); setRoomWallThick(fallback.wallThickness ?? 15); setRoomName(fallback.name || ''); }
         else setRoomView('board');
+        refreshTrashCount();
       }
     });
   };
@@ -10509,7 +10705,7 @@ ${rows}
                   if (item.type === 'grid') {
                     const board = boards.find(b => b.id === bid);
                     const layout = calcGridLayout(item, photos, board?.dpi || boardDpi, board?.units || boardUnits);
-                    const { gapPx, cols: gCols, cellW, rows: gRows, totalH } = layout;
+                    const { gapColPx, gapRowPx, cols: gCols, cellW, rows: gRows, totalH } = layout;
                     const gapStep = (!board || board.units === 'px') ? 1 : board.units === 'mm' ? 1 : board.units === 'cm' ? 0.1 : 0.05;
                     const updGrid = (changes) => {
                       pushUndo();
@@ -10518,7 +10714,7 @@ ${rows}
                     };
                     return (
                       <div key={item.id}
-                        className={`gitem${sel.includes(item.id) ? ' sel' : ''}${sel[0] === item.id ? ' anchor' : ''}`}
+                        className={`gitem${sel.includes(item.id) ? ' sel' : ''}${sel[0] === item.id ? ' anchor' : ''}${item.locked ? ' locked' : ''}`}
                         style={{ left: item.x, top: item.y, width: item.w, height: totalH, zIndex: item.z || 1 }}
                         onPointerDown={e => onItemPD(e, item.id)}
                         onClick={e => handleItemClick(e, item)}
@@ -10539,18 +10735,19 @@ ${rows}
                         }}
                       >
                         {gRows.map((row, ri) => {
-                          const rowY = gRows.slice(0, ri).reduce((s, r) => s + r.h + gapPx, 0);
+                          const rowY = gRows.slice(0, ri).reduce((s, r) => s + r.h + gapRowPx, 0);
                           return row.ids.map((photoId, ci) => {
                             const flatIdx = ri * gCols + ci;
-                            const p = photos.find(x => x.id === photoId);
+                            const isEmpty = photoId === null;
+                            const p = isEmpty ? null : photos.find(x => x.id === photoId);
                             const cH = (p && p.w > 0) ? Math.round(cellW * p.h / p.w) : row.h;
                             const isDragOver = gridCellDragOver?.gridId === item.id && gridCellDragOver?.index === flatIdx;
                             const isSel = gridCellSel?.gridId === item.id && gridCellSel?.index === flatIdx;
                             const isSwapTarget = gridCellSel?.gridId === item.id && !isSel;
                             return (
-                              <div key={`${photoId}-${flatIdx}`}
-                                className={`gitem-cell${isDragOver ? ' drag-over' : ''}${isSel ? ' swap-sel' : ''}${isSwapTarget ? ' swap-target' : ''}`}
-                                style={{ left: Math.round(ci * (cellW + gapPx)), top: Math.round(rowY), width: Math.round(cellW), height: cH }}
+                              <div key={isEmpty ? `empty-${flatIdx}` : `${photoId}-${flatIdx}`}
+                                className={`gitem-cell${isEmpty ? ' gitem-empty' : ''}${isDragOver ? ' drag-over' : ''}${isSel ? ' swap-sel' : ''}${isSwapTarget ? ' swap-target' : ''}`}
+                                style={{ left: Math.round(ci * (cellW + gapColPx)), top: Math.round(rowY), width: Math.round(cellW), height: cH }}
                                 onClick={e => {
                                   e.stopPropagation();
                                   if (wasDragged.current) { wasDragged.current = false; return; }
@@ -10575,47 +10772,52 @@ ${rows}
                                     setGridCellSel({gridId: item.id, index: flatIdx});
                                   }
                                 }}
-                                onDragOver={e => { e.preventDefault(); if (e.dataTransfer.types.includes('tb-grid-cell')) { e.stopPropagation(); e.dataTransfer.dropEffect = 'move'; setGridCellDragOver({gridId: item.id, index: flatIdx}); } }}
+                                onDragOver={e => {
+                                  e.preventDefault();
+                                  const isCellDrag = e.dataTransfer.types.includes('tb-grid-cell');
+                                  const isLibDrag = e.dataTransfer.types.includes('tb-photos') || e.dataTransfer.types.includes('tb-photo');
+                                  if (isCellDrag || isLibDrag) { e.stopPropagation(); e.dataTransfer.dropEffect = isCellDrag ? 'move' : 'copy'; setGridCellDragOver({gridId: item.id, index: flatIdx}); }
+                                }}
                                 onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget)) setGridCellDragOver(null); }}
                                 onDrop={e => {
                                   setGridCellDragOver(null);
-                                  // library drop — bubbles to grid's onDrop
+                                  if (e.dataTransfer.getData('tb-grid-cell')) return;
+                                  const rawP = e.dataTransfer.getData('tb-photos');
+                                  const singP = e.dataTransfer.getData('tb-photo');
+                                  const ids = rawP ? JSON.parse(rawP) : singP ? [singP] : [];
+                                  if (!ids.length) return;
+                                  e.preventDefault(); e.stopPropagation();
+                                  pushUndo();
+                                  const u = itemsRef.current.map(i => {
+                                    if (i.id !== item.id) return i;
+                                    const arr = [...(i.photoIds || [])];
+                                    while (arr.length <= flatIdx) arr.push(null);
+                                    arr[flatIdx] = ids[0];
+                                    return {...i, photoIds: arr};
+                                  });
+                                  itemsRef.current = u; setItems(u); saveItemsNow(u);
+                                  setLibSelection([]); libSelAnchorRef.current = null;
                                 }}
-                                onContextMenu={e => { e.stopPropagation(); e.preventDefault(); gridCellSelRef.current = null; setGridCellSel(null); setGridCellCtx({gridId: item.id, photoId, index: flatIdx, x: e.clientX, y: e.clientY}); }}>
-                                <img src={`/photos/${pid}/${photoId}`} alt={p?.name || ''} draggable={false}
-                                  onError={ev => ev.target.style.opacity = '.3'}/>
+                                onContextMenu={e => {
+                                  e.preventDefault(); e.stopPropagation();
+                                  gridCellSelRef.current = null; setGridCellSel(null);
+                                  if (isEmpty) { openCtxMenu(e, item.id); return; }
+                                  const cx = Math.min(e.clientX, window.innerWidth - 185);
+                                  const cy = Math.min(e.clientY, window.innerHeight - 160);
+                                  setCtxMenu({ x: cx, y: cy, itemId: item.id, cellPhotoId: photoId, cellIndex: flatIdx });
+                                }}>
+                                {!isEmpty && <img src={`/photos/${pid}/${photoId}`} alt={p?.name || ''} draggable={false}
+                                  onError={ev => ev.target.style.opacity = '.3'}/>}
                               </div>
                             );
                           });
                         })}
                         {gridDropTarget === item.id && <div className="gitem-drop-hint">+ {t('gridItemAddHint')}</div>}
+                        {item.locked && <div className="lock-badge"><SvgLock/></div>}
                         <div className="gitem-outline"/>
                         {(() => { const _ck = `grid:${item.id}`; const _cs = commentSummary[_ck]; if (!_cs || _cs.total === 0) return null; const _hp = !shareRole && _cs.pending > 0; return <div className={`comment-badge${_hp?' has-pending':''}`} onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); openCommentPanel('grid', item.id, bid, item.label||'grid'); }}>💬 {_cs.total}</div>; })()}
                         <div className="gitem-bar" style={item.y * zoom < 32 ? {bottom:'auto',top:'100%',marginTop:2} : {marginBottom:2}} onPointerDown={e => e.stopPropagation()}>
-                          <button className="ibc fwd" data-tooltip={t('bringFwdBtn')} onClick={e => { e.stopPropagation(); bringFwd(item.id); }}>↑</button>
-                          <div className="gitem-sep"/>
-                          <span className="gitem-bar-lbl">{t('gridItemCols')}</span>
-                          <button className="ibc" onClick={e => { e.stopPropagation(); updGrid({cols: Math.max(1, gCols - 1)}); }}>−</button>
-                          <span className="gitem-bar-lbl">{gCols}</span>
-                          <button className="ibc" onClick={e => { e.stopPropagation(); updGrid({cols: Math.min((item.photoIds||[]).length || 1, gCols + 1)}); }}>+</button>
-                          <div className="gitem-sep"/>
-                          <span className="gitem-bar-lbl">{t('gridItemGap')}</span>
-                          <button className="ibc" onClick={e => { e.stopPropagation(); const dec = gapStep < 1 ? 2 : 1; updGrid({gap: parseFloat(Math.max(0, (item.gap ?? 5) - gapStep).toFixed(dec))}); }}>−</button>
-                          <span className="gitem-bar-lbl" style={{minWidth:28}}>{parseFloat((item.gap ?? 5).toFixed(2))}</span>
-                          <button className="ibc" onClick={e => { e.stopPropagation(); const dec = gapStep < 1 ? 2 : 1; updGrid({gap: parseFloat(((item.gap ?? 5) + gapStep).toFixed(dec))}); }}>+</button>
-                          <div className="gitem-sep"/>
-                          <div style={{position:'relative'}}>
-                            <button className="ibc" data-tooltip={t('gridDecoupleBtn')} onClick={e=>{e.stopPropagation();setGridDecoupleOpen(o=>o===item.id?null:item.id);}}>⤢▾</button>
-                            {gridDecoupleOpen===item.id&&<>
-                              <div style={{position:'fixed',inset:0,zIndex:499}} onPointerDown={e=>{e.stopPropagation();setGridDecoupleOpen(null);}}/>
-                              <div style={{position:'absolute',bottom:'calc(100% + 6px)',left:0,background:'var(--panel)',border:'1px solid var(--border2)',borderRadius:3,boxShadow:'0 4px 16px rgba(0,0,0,.5)',zIndex:500,minWidth:170}} onPointerDown={e=>e.stopPropagation()}>
-                                <button className="ctx-item" onClick={e=>{e.stopPropagation();decoupleGrid(item.id,'photos');setGridDecoupleOpen(null);}}>{t('gridDecouplePhotos')}</button>
-                                <button className="ctx-item" onClick={e=>{e.stopPropagation();decoupleGrid(item.id,'cols');setGridDecoupleOpen(null);}}>{t('gridDecoupleCols',gCols)}</button>
-                                <button className="ctx-item" onClick={e=>{e.stopPropagation();decoupleGrid(item.id,'rows');setGridDecoupleOpen(null);}}>{t('gridDecoupleRows',gRows.length)}</button>
-                              </div>
-                            </>}
-                          </div>
-                          <div className="gitem-sep"/>
+                          <button className="ibc" data-tooltip={t(item.locked ? 'unlockBtn' : 'lockBtn')} style={{color: item.locked ? 'var(--acc)' : undefined}} onClick={e => { e.stopPropagation(); updateItemLocked(item.id, !item.locked); }}>{item.locked ? <SvgUnlock/> : <SvgLock/>}</button>
                           <button className="ibc del" data-tooltip={t('deleteBtn')} onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>×</button>
                         </div>
                         <div className="gitem-rh" onPointerDown={e => { e.stopPropagation(); onGridResizePD(e, item.id); }}/>
@@ -10850,13 +11052,13 @@ ${rows}
                       style={{left: Math.round(gridPending.x||0), top: Math.round(gridPending.y||0), width: gridPending.w, height: gL.totalH, opacity: 0.6}}
                       onPointerDown={onGhostDrag}>
                       {gL.rows.map((row, ri) => {
-                        const rowY = gL.rows.slice(0, ri).reduce((s, r) => s + r.h + gL.gapPx, 0);
+                        const rowY = gL.rows.slice(0, ri).reduce((s, r) => s + r.h + gL.gapRowPx, 0);
                         return row.ids.map((photoId, ci) => {
                           const p = photos.find(x => x.id === photoId);
                           const cH = (p && p.w > 0) ? Math.round(gL.cellW * p.h / p.w) : row.h;
                           return (
                             <div key={photoId} className="grid-ghost-cell"
-                              style={{left: Math.round(ci*(gL.cellW+gL.gapPx)), top: Math.round(rowY), width: Math.round(gL.cellW), height: cH}}>
+                              style={{left: Math.round(ci*(gL.cellW+gL.gapColPx)), top: Math.round(rowY), width: Math.round(gL.cellW), height: cH}}>
                               <img src={`/photos/${pid}/${photoId}/thumb`} draggable={false} style={{width:'100%',height:'100%',display:'block'}} onError={ev=>ev.target.style.opacity='.2'}/>
                             </div>
                           );
@@ -11417,9 +11619,9 @@ ${rows}
             {gridRP && gridRP.length > 1 && <div className="fullscreen-counter" style={{color:tcMuted}}>{t('artwork3DOf', (gridRoomIdx||0)+1, gridRP.length)}</div>}
             {!room3DReady
               ? <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8}}><div className="splash-dots"><span style={{background:tc}}></span><span style={{background:tc}}></span><span style={{background:tc}}></span></div><div style={{fontSize:11,color:tcMuted,letterSpacing:.5}}>{t('room3DLoading')}</div></div>
-              : <div style={{display:'flex',flexDirection:'column',gap:layout.gapPx*scale}} onClick={e => e.stopPropagation()}>
+              : <div style={{display:'flex',flexDirection:'column',gap:layout.gapRowPx*scale}} onClick={e => e.stopPropagation()}>
                   {layout.rows.map((row, ri) => (
-                    <div key={ri} style={{display:'flex',gap:layout.gapPx*scale}}>
+                    <div key={ri} style={{display:'flex',gap:layout.gapColPx*scale}}>
                       {row.ids.map((photoId, ci) => {
                         const p = photoId ? photoMap_[photoId] : null;
                         const cw = Math.round(layout.cellW * scale);
@@ -12060,10 +12262,10 @@ ${rows}
                           row.ids.forEach((photoId, ci) => {
                             if (!photoId) return;
                             cells.push({ key: item.id+'_'+photoId+'_'+ci, photoId,
-                              cL:(item.x+ci*(layout.cellW+layout.gapPx))*scX, cT:rowYpx*scY,
+                              cL:(item.x+ci*(layout.cellW+layout.gapColPx))*scX, cT:rowYpx*scY,
                               cW:layout.cellW*scX, cH:row.h*scY });
                           });
-                          rowYpx += row.h + layout.gapPx;
+                          rowYpx += row.h + layout.gapRowPx;
                         });
                         return <React.Fragment key={item.id}>{cells.map(c =>
                           <img key={c.key} src={`/photos/${pidRef.current}/${c.photoId}/thumb`}
@@ -12155,6 +12357,28 @@ ${rows}
                           color:item.textColor||'#111',overflow:'hidden',pointerEvents:'none',lineHeight:1.3,
                           whiteSpace:'pre-wrap',wordBreak:'break-word',boxSizing:'border-box'}}>{item.text||''}</div>;
                       }
+                      if (item.type === 'grid') {
+                        const gboard = boards.find(b => b.id === wfvGhost.boardId);
+                        const glayout = calcGridLayout(item, photos, gboard?.dpi, gboard?.units);
+                        const gcells = [];
+                        let rowYpx = item.y;
+                        glayout.rows.forEach(row => {
+                          row.ids.forEach((photoId, ci) => {
+                            if (!photoId) return;
+                            gcells.push({ key: item.id+'_'+photoId+'_'+ci, photoId,
+                              cL: (item.x - offX + ci * (glayout.cellW + glayout.gapColPx)) * scX,
+                              cT: (rowYpx - offY) * scY,
+                              cW: glayout.cellW * scX, cH: row.h * scY });
+                          });
+                          rowYpx += row.h + glayout.gapRowPx;
+                        });
+                        if (gcells.length === 0) return null;
+                        return <React.Fragment key={item.id}>{gcells.map(c =>
+                          <img key={c.key} src={`/photos/${pidRef.current}/${c.photoId}/thumb`}
+                            style={{position:'absolute',left:c.cL,top:c.cT,width:c.cW,height:c.cH,
+                              objectFit:'cover',pointerEvents:'none'}} />
+                        )}</React.Fragment>;
+                      }
                       if (!item.photoId) return null;
                       const photo = photoMap_[item.photoId];
                       const isSwapped = photo && ((item.rot||0)%180 !== 0);
@@ -12213,10 +12437,11 @@ ${rows}
                     showConfirm(t('confirmDeleteBoard'), async () => {
                       await api.del(`/api/projects/${pidRef.current}/boards/${boardId}`);
                       const nbs = boards.filter(b => b.id !== boardId);
-                      setBoards(nbs);
+                      setBoards(nbs); boardsRef.current = nbs;
                       setAllBoardItems(prev => { const n = {...prev}; delete n[boardId]; return n; });
                       if (bidRef.current === boardId) setBid(nbs[0]?.id || null);
                       unlinkBoardFromWall(wallId, wallFace, boardId);
+                      refreshTrashCount();
                       closeWfv();
                     });
                   }}>{lang==='es'?'Eliminar tablero':'Delete board'}</button>
@@ -12395,24 +12620,6 @@ ${rows}
         );
       })()}
 
-      {gridCellCtx && (
-        <>
-          <div style={{position:'fixed',inset:0,zIndex:949}} onClick={() => setGridCellCtx(null)}/>
-          <div className="ctx-menu" style={{left: gridCellCtx.x, top: gridCellCtx.y}}
-            onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()} onContextMenu={e => e.preventDefault()}>
-            <button className="ctx-item ctx-danger" onClick={() => {
-              pushUndo();
-              const u = itemsRef.current.map(i => {
-                if (i.id !== gridCellCtx.gridId) return i;
-                const arr = [...(i.photoIds || [])];
-                arr.splice(gridCellCtx.index, 1);
-                return {...i, photoIds: arr};
-              });
-              itemsRef.current = u; setItems(u); saveItemsNow(u); setGridCellCtx(null);
-            }}>× {t('gridItemRemove')}</button>
-          </div>
-        </>
-      )}
 
       {canvasCtx && (
         <>
@@ -12421,6 +12628,13 @@ ${rows}
             <button className="ctx-item" onClick={() => { setCanvasCtx(null); addNote(canvasCtx); }}>{t('addNote')}</button>
             <button className="ctx-item" onClick={() => { setCanvasCtx(null); addText(canvasCtx); }}>{t('addText')}</button>
             <button className="ctx-item" onClick={() => { setCanvasCtx(null); addZone(canvasCtx); }}>{t('addZone')}</button>
+            <button className="ctx-item" onClick={() => {
+              const _b = boardsRef.current.find(b => b.id === bidRef.current);
+              const _u = _b?.units || 'px';
+              const _g = !_b || _u === 'px' ? 10 : _u === 'mm' ? 5 : _u === 'cm' ? 0.5 : 0.2;
+              setGcCols(3); setGcRows(''); setGcGapCol(_g); setGcGapRow(_g); setGcCompact(false);
+              setCanvasCtx(null); setGridCreateModal({cx: canvasCtx.cx, cy: canvasCtx.cy});
+            }}>{t('addGrid')}</button>
             {clipboardRef.current?.length > 0 && <>
               <div className="ctx-sep"/>
               <button className="ctx-item" onClick={() => { setCanvasCtx(null); triggerPasteGhost(canvasCtx.cx, canvasCtx.cy); }}>{lang==='es'?'Pegar':'Paste'} <span style={{opacity:.5,fontSize:9}}>Ctrl+V</span></button>
@@ -12436,6 +12650,22 @@ ${rows}
           return (
             <div ref={ctxMenuRef} className="ctx-menu" style={{left: ctxMenu.x, top: ctxMenu.y}}
               onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()} onContextMenu={e => e.preventDefault()}>
+              {ctxMenu.cellPhotoId && <>
+                <button className="ctx-item ctx-danger" onClick={() => {
+                  const useNull = !!ctxItem.rows && !ctxItem.compact;
+                  pushUndo();
+                  const u = itemsRef.current.map(i => {
+                    if (i.id !== ctxMenu.itemId) return i;
+                    const arr = [...(i.photoIds || [])];
+                    if (useNull) { arr[ctxMenu.cellIndex] = null; } else { arr.splice(ctxMenu.cellIndex, 1); }
+                    return {...i, photoIds: arr};
+                  });
+                  itemsRef.current = u; setItems(u); saveItemsNow(u); setCtxMenu(null);
+                }}>× {t('gridItemRemove')}</button>
+                <div className="ctx-sep"/>
+              </>}
+              <button className="ctx-item" onClick={() => { openGridProps(ctxMenu.itemId); setCtxMenu(null); }}>{t('gridProps')}</button>
+              <div className="ctx-sep"/>
               <button className="ctx-item" onClick={() => { bringFwd(ctxMenu.itemId); setCtxMenu(null); }}>↑ {t('bringFwdBtn')}</button>
               <button className="ctx-item" onClick={() => { sendBack(ctxMenu.itemId); setCtxMenu(null); }}>↓ {t('sendBackBtn')}</button>
               <div className="ctx-sep"/>
@@ -12867,6 +13097,115 @@ ${rows}
         );
       })()}
 
+      {gridCreateModal && bid && (() => {
+        const _board = boards.find(b => b.id === bid);
+        const _units = _board?.units || 'px';
+        const _step = _units === 'px' ? 1 : _units === 'mm' ? 0.5 : _units === 'in' ? 0.05 : 0.1;
+        const _rowsInt = parseInt(gcRows) || null;
+        return (
+          <div className="overlay" onClick={() => setGridCreateModal(null)}>
+            <div className="modal" onClick={e => e.stopPropagation()} style={{minWidth:260}}>
+              <div className="modal-h">{t('addGrid')}</div>
+              <div className="cfg-row">
+                <div>
+                  <div className="cfg-label">{t('gridColsLabel')}</div>
+                  <input type="number" className="inp" value={gcCols} min={1} step={1} autoFocus
+                    onChange={e => setGcCols(Math.max(1, parseInt(e.target.value) || 1))} />
+                </div>
+                <div>
+                  <div className="cfg-label">{t('gridRows')} <span style={{color:'var(--muted)',fontWeight:400,fontSize:9}}>({t('gridRowsAuto')})</span></div>
+                  <input type="number" className="inp" value={gcRows} min={1} step={1}
+                    placeholder={t('gridRowsAuto')}
+                    onChange={e => setGcRows(e.target.value)} />
+                </div>
+              </div>
+              <div className="cfg-row">
+                <div>
+                  <div className="cfg-label">{t('gridGapCol')} ({_units})</div>
+                  <input type="number" className="inp" value={gcGapCol} min={0} step={_step}
+                    onChange={e => setGcGapCol(parseFloat(e.target.value) || 0)} />
+                </div>
+                <div>
+                  <div className="cfg-label">{t('gridGapRow')} ({_units})</div>
+                  <input type="number" className="inp" value={gcGapRow} min={0} step={_step}
+                    onChange={e => setGcGapRow(parseFloat(e.target.value) || 0)} />
+                </div>
+              </div>
+              {_rowsInt && (
+                <div style={{marginTop:10,display:'flex',gap:7,alignItems:'center'}}>
+                  <input type="checkbox" id="gc-compact" checked={gcCompact}
+                    onChange={e => setGcCompact(e.target.checked)}
+                    style={{accentColor:'var(--acc)',cursor:'pointer'}}/>
+                  <label htmlFor="gc-compact" style={{fontSize:10,color:'var(--text)',cursor:'pointer',userSelect:'none'}}>
+                    {t('gridCompact')}
+                  </label>
+                </div>
+              )}
+              <div className="modal-row" style={{marginTop:12}}>
+                <button className="btn" onClick={() => setGridCreateModal(null)}>{t('cancel')}</button>
+                <button className="btn acc" onClick={createGridFromCanvas}>{t('gridCreate')}</button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {gridPropsModal && bid && (() => {
+        const _it = items.find(i => i.id === gridPropsModal.itemId);
+        if (!_it) return null;
+        const _board = boards.find(b => b.id === bid);
+        const _units = _board?.units || 'px';
+        const _step = _units === 'px' ? 1 : _units === 'mm' ? 0.5 : _units === 'in' ? 0.05 : 0.1;
+        const _rowsInt = parseInt(gpRows) || null;
+        return (
+          <div className="overlay" onClick={() => setGridPropsModal(null)}>
+            <div className="modal" onClick={e => e.stopPropagation()} style={{minWidth:260}}>
+              <div className="modal-h">{t('gridProps')}</div>
+              <div className="modal-sub">{_it.label || ''}</div>
+              <div className="cfg-row">
+                <div>
+                  <div className="cfg-label">{t('gridColsLabel')}</div>
+                  <input type="number" className="inp" value={gpCols} min={1} step={1} autoFocus
+                    onChange={e => setGpCols(Math.max(1, parseInt(e.target.value) || 1))} />
+                </div>
+                <div>
+                  <div className="cfg-label">{t('gridRows')} <span style={{color:'var(--muted)',fontWeight:400,fontSize:9}}>({t('gridRowsAuto')})</span></div>
+                  <input type="number" className="inp" value={gpRows} min={1} step={1}
+                    placeholder={t('gridRowsAuto')}
+                    onChange={e => setGpRows(e.target.value)} />
+                </div>
+              </div>
+              <div className="cfg-row">
+                <div>
+                  <div className="cfg-label">{t('gridGapCol')} ({_units})</div>
+                  <input type="number" className="inp" value={gpGapCol} min={0} step={_step}
+                    onChange={e => setGpGapCol(parseFloat(e.target.value) || 0)} />
+                </div>
+                <div>
+                  <div className="cfg-label">{t('gridGapRow')} ({_units})</div>
+                  <input type="number" className="inp" value={gpGapRow} min={0} step={_step}
+                    onChange={e => setGpGapRow(parseFloat(e.target.value) || 0)} />
+                </div>
+              </div>
+              {_rowsInt && (
+                <div style={{marginTop:10,display:'flex',gap:7,alignItems:'center'}}>
+                  <input type="checkbox" id="gp-compact" checked={gpCompact}
+                    onChange={e => setGpCompact(e.target.checked)}
+                    style={{accentColor:'var(--acc)',cursor:'pointer'}}/>
+                  <label htmlFor="gp-compact" style={{fontSize:10,color:'var(--text)',cursor:'pointer',userSelect:'none'}}>
+                    {t('gridCompact')}
+                  </label>
+                </div>
+              )}
+              <div className="modal-row" style={{marginTop:12}}>
+                <button className="btn" onClick={() => setGridPropsModal(null)}>{t('cancel')}</button>
+                <button className="btn acc" onClick={applyGridProps}>{t('propsApply')}</button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {modal === 'project' && (
         <div className="overlay" onClick={() => setModal(null)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
@@ -13093,9 +13432,9 @@ ${rows}
                         let rowY = item.y;
                         layout.rows.forEach(row => {
                           row.ids.forEach((photoId, ci) => {
-                            if (photoId) expanded.push({ ...item, id: item.id+'_'+photoId, photoId, x: item.x+ci*(layout.cellW+layout.gapPx), y: rowY, w: layout.cellW, rot:0, freeRot:0 });
+                            if (photoId) expanded.push({ ...item, id: item.id+'_'+photoId, photoId, x: item.x+ci*(layout.cellW+layout.gapColPx), y: rowY, w: layout.cellW, rot:0, freeRot:0 });
                           });
-                          rowY += row.h + layout.gapPx;
+                          rowY += row.h + layout.gapRowPx;
                         });
                       } else { expanded.push(item); }
                     });
@@ -13164,7 +13503,7 @@ ${rows}
               <button className="btn" style={{fontSize:10}} onClick={() => setTrashModal(false)}>×</button>
             </div>
             <div className="trash-tabs">
-              {[['photos', t('trashTabPhotos'), trashCount.photos], ['projects', t('trashTabProjects'), trashCount.projects]].map(([tab, label, cnt]) => (
+              {[['photos', t('trashTabPhotos'), trashCount.photos], ['projects', t('trashTabProjects'), trashCount.projects], ['boards', t('trashTabBoards'), trashCount.boards], ['rooms', t('trashTabRooms'), trashCount.rooms]].map(([tab, label, cnt]) => (
                 <div key={tab} className={`trash-tab${trashTab === tab ? ' active' : ''}`} onClick={() => setTrashTab(tab)}>
                   {label}
                   <span className="trash-tab-badge">{cnt}</span>
@@ -13200,7 +13539,7 @@ ${rows}
                   })}
                 </div>
               )
-            ) : (
+            ) : trashTab === 'projects' ? (
               trashProjects.length === 0 ? (
                 <div className="trash-empty-msg">{t('trashNoProjects')}</div>
               ) : (
@@ -13218,6 +13557,54 @@ ${rows}
                         </div>
                         <button className="btn" style={{fontSize:9,padding:'3px 8px'}} onClick={() => restoreTrashProject(p.pid)}>{t('trashRestore')}</button>
                         <button className="btn" style={{fontSize:9,padding:'3px 7px',color:'var(--danger,#e05)'}} onClick={() => permDeleteTrashProject(p.pid)}>×</button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )
+            ) : trashTab === 'boards' ? (
+              trashBoards.length === 0 ? (
+                <div className="trash-empty-msg">{t('trashNoBoards')}</div>
+              ) : (
+                <div className="trash-list">
+                  {trashBoards.map(b => {
+                    const daysLeft = Math.max(0, Math.ceil(30 - (Date.now() - b.deletedAt) / 86400000));
+                    return (
+                      <div key={b.pid + b.bid} className="trash-item">
+                        <div style={{width:44,height:44,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,flexShrink:0}}>🖼</div>
+                        <div className="trash-item-info">
+                          <div className="trash-item-name">{b.name}</div>
+                          <div className="trash-item-proj">📁 {b.projectName}</div>
+                          <div className="trash-item-meta">
+                            {new Date(b.deletedAt).toLocaleDateString()} · {t('trashPurge', daysLeft)}
+                          </div>
+                        </div>
+                        <button className="btn" style={{fontSize:9,padding:'3px 8px'}} onClick={() => restoreTrashBoard(b.pid, b.bid)}>{t('trashRestore')}</button>
+                        <button className="btn" style={{fontSize:9,padding:'3px 7px',color:'var(--danger,#e05)'}} onClick={() => permDeleteTrashBoard(b.pid, b.bid)}>×</button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )
+            ) : (
+              trashRooms.length === 0 ? (
+                <div className="trash-empty-msg">{t('trashNoRooms')}</div>
+              ) : (
+                <div className="trash-list">
+                  {trashRooms.map(r => {
+                    const daysLeft = Math.max(0, Math.ceil(30 - (Date.now() - r.deletedAt) / 86400000));
+                    return (
+                      <div key={r.pid + r.rid} className="trash-item">
+                        <div style={{width:44,height:44,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,flexShrink:0}}>🏠</div>
+                        <div className="trash-item-info">
+                          <div className="trash-item-name">{r.name}</div>
+                          <div className="trash-item-proj">📁 {r.projectName}{r.boardCount > 0 ? ` · ${r.boardCount} tablero${r.boardCount!==1?'s':''}` : ''}</div>
+                          <div className="trash-item-meta">
+                            {new Date(r.deletedAt).toLocaleDateString()} · {t('trashPurge', daysLeft)}
+                          </div>
+                        </div>
+                        <button className="btn" style={{fontSize:9,padding:'3px 8px'}} onClick={() => restoreTrashRoom(r.pid, r.rid)}>{t('trashRestore')}</button>
+                        <button className="btn" style={{fontSize:9,padding:'3px 7px',color:'var(--danger,#e05)'}} onClick={() => permDeleteTrashRoom(r.pid, r.rid)}>×</button>
                       </div>
                     );
                   })}
@@ -13307,9 +13694,9 @@ ${rows}
                           let rowY = item.y;
                           layout.rows.forEach(row => {
                             row.ids.forEach((photoId, ci) => {
-                              if (photoId) expandedM.push({ ...item, id: item.id + '_' + photoId, photoId, x: item.x + ci * (layout.cellW + layout.gapPx), y: rowY, w: layout.cellW, rot: 0, freeRot: 0 });
+                              if (photoId) expandedM.push({ ...item, id: item.id + '_' + photoId, photoId, x: item.x + ci * (layout.cellW + layout.gapColPx), y: rowY, w: layout.cellW, rot: 0, freeRot: 0 });
                             });
-                            rowY += row.h + layout.gapPx;
+                            rowY += row.h + layout.gapRowPx;
                           });
                         } else {
                           expandedM.push(item);

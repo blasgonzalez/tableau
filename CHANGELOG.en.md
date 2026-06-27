@@ -1,5 +1,71 @@
 # Changelog
 
+## [1.25.13] — 2026-06-27
+
+### Fixed
+- **Ghost at correct position:** the grid branch in the ghost renderer now uses `item.x/item.y` and the board's common scale (`scX/scY`), matching how loose photos are rendered. Previously it used its own scale and centered offsets that ignored the grid's actual position on the board.
+- **Correct height for variable boards with grid:** `getItemH` now handles `type:'grid'` using `calcGridLayout(...).totalH` instead of falling back to `item.h` (which is `undefined` for grids). This fixes `bboxH`, `fHcm`, and `gH` of the ghost, which were previously too small and clipped the lower rows of the grid.
+- **Diagnostic logs removed:** temporary `console.log` statements added to debug the grid ghost renderer have been removed.
+- **Unified grid context menu:** right-clicking anywhere on a grid (occupied cell, empty cell, or gap between cells) now always opens a menu. Occupied cell: "× Remove" + separator + grid options. Empty cell or gap: grid options only. Previously, right-clicking empty cells opened no menu at all, and occupied cells showed only "Remove" with no access to Properties, Decouple, or Delete. Removed the separate `gridCellCtx` state.
+- **Decouple to columns/rows: photos locked:** photos created when decoupling into "columns" or "rows" are created with `locked: true`, allowing the zone to be dragged as a block without photos intercepting the drag. Decoupling into "loose photos" (option A) does not lock.
+
+## [grid-fixes-2] — 2026-06-27
+
+### Fixed
+- **Ghost without gaps:** the wall front-view ghost no longer shows empty spaces where null cells existed in the mosaic. Empty rows are skipped and valid cells are re-indexed from 0, producing a compact and representative ghost.
+- **Label "Compact mode":** the checkbox in the create and properties modal changes from "Compact on remove" to "Compact mode" (EN) and from "Compactar al eliminar fotos" to "Modo compactado" (ES).
+
+## [grid-fixes-1] — 2026-06-27
+
+### Fixed
+- **× button aligned to the right:** the grid toolbar (`.gitem-bar`) used `left:0` instead of `right:0`; the `×` appeared on the left side instead of the right like all other canvas elements.
+- **Grid locking:** added lock/unlock support to the grid item, matching the behavior of photos and zones: lock button in the toolbar, 🔒 badge when locked, `cursor:default` on the element, and blocked drag and resize handle.
+- **Grid visible in wall front-view ghost:** when dragging a board to a wall (positioning ghost), grid items inside the board are now rendered as photo thumbnails in the ghost, matching how they appear in already-placed boards on the wall.
+
+## [grid-fase3] — 2026-06-27
+
+### New
+- **Create mosaic from canvas:** right-click on empty canvas area → "Add mosaic" → creation modal with Columns, Rows (optional; empty = free mode), Col. gap, Row gap, and "Compact on remove" checkbox (visible only when Rows has a value). The grid is placed directly at the click position.
+- **Mosaic properties modal:** right-click on a grid → "Mosaic properties" (new first option in the context menu). Preloads current values; allows changing columns, rows, gaps, and compact mode. If reducing cols/rows would lose real photos, shows a confirmation warning before applying.
+- **Simplified toolbar:** the grid toolbar (shown on hover/selection) is reduced to a single `×` button. The Col and Gap controls, and the Decouple button, are removed from the toolbar; Decouple remains available in the grid's context menu.
+- **Normalized data model:** grids created from canvas and from the library now emit separate `gapCol`/`gapRow` fields instead of the unified `gap` field. Existing grids with `gap` continue to work without migration (fallback in `calcGridLayout`).
+
+## [trash-boards-rooms] — 2026-06-27
+
+### New
+- **Extended trash — boards and rooms:**
+  - Deleting a board is no longer permanent: the board goes to the trash with a 30-day retention period. All deletion entry points (sidebar, wall front view, vertex deletion with linked walls) now use the trash.
+  - The server captures the board's room links (`roomLinks` — walls and block/column faces) before moving it; on restore, the links are re-established if the wall/block still exists. If the wall was deleted, the board is restored without a link.
+  - Deleting a room moves the room **and all its linked boards** to the trash together. Restoring the room returns the geometry and all its boards with their links intact.
+  - Trash panel expanded with two new tabs: **Boards** and **Rooms**. Each item shows: name, project, deletion date, and days until auto-purge. Restore and Delete permanently buttons.
+  - The trash badge in the sidebar includes boards and rooms in the total count.
+  - "Empty trash" also clears boards and rooms.
+  - Startup auto-purge (`runStartupPurge`) now sweeps `trash/boards/` and `trash/rooms/` with the same 30-day policy as photos and projects.
+
+### On-disk structure
+```
+{dd}/{pid}/trash/boards/{bid}/
+  board.json, items.json, _meta.json, versions/
+{dd}/{pid}/trash/rooms/{rid}/
+  room.json, _meta.json
+  boards/{bid}/  ← boards linked to the room
+    board.json, items.json, _meta.json, versions/
+```
+
+### Fix
+- Deleting a board from the sidebar already updated `boards.json` but did not unlink `rooms.json` (stale references). The new endpoint fixes this: it unlinks before moving to trash.
+
+## [grid-fase1] — 2026-06-27
+
+### New
+- **Extended grid model — empty cells and fixed mode:**
+  - **Per-axis gap:** `gapCol` and `gapRow` replace the single `gap` field (lazy migration: if absent, `gap` is used as fallback). `calcGridLayout` now computes horizontal and vertical spacing independently.
+  - **Fixed mode (`rows`):** if the item has a `rows` field (positive integer), the grid adopts a fixed `cols × rows` layout. Positions beyond the actual `photoIds[]` entries are padded with `null` automatically.
+  - **`compact` (boolean, default `false`):** in fixed mode, "Remove from grid" leaves a gap (`null`) in the cell instead of compacting the array. If `compact:true`, the previous splice behaviour applies. In free mode the array is always compacted.
+  - **Empty cells (`null` in `photoIds[]`):** rendered as a dashed-border placeholder at reduced opacity. Not included in JPEG export. Participate in click-swap like any occupied cell.
+  - **Per-cell drop from library:** dropping a photo onto a specific cell (empty or occupied) fills or replaces that cell, instead of appending to the end. Dropping on the gaps between cells still appends (previous behaviour as fallback).
+  - **Full backward compatibility:** existing grids (no `rows`, no `gapCol`/`gapRow`, no `null` in `photoIds[]`) behave identically to the previous model.
+
 ## [1.25.12] — 2026-06-24
 
 ### New

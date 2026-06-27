@@ -1,6 +1,6 @@
 {
-  "version": "1.25.12",
+  "version": "1.25.13",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-06-24",
-  "notes": "Desacoplar mosaico: tres variantes (fotos sueltas, columnas, filas), todas reversibles con Ctrl+Z."
+  "releaseDate": "2026-06-27",
+  "notes": "Mosaico: fantasma de vista frontal corregido (posición y altura), menú contextual unificado, fotos bloqueadas al desacoplar en columnas/filas."
 }

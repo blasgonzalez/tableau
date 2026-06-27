@@ -128,6 +128,10 @@ const roomFile       = (pid, dd = DATA_DIR)     => path.join(projDir(pid, dd), '
 const roomsFile      = (pid, dd = DATA_DIR)     => path.join(projDir(pid, dd), 'rooms.json');
 const photoTrashDir  = (pid, dd = DATA_DIR)     => path.join(dd, pid, 'trash', 'photos');
 const photoTrashMeta = (pid, dd = DATA_DIR)     => path.join(dd, pid, 'trash', 'photos.json');
+const boardTrashDir     = (pid, dd = DATA_DIR)  => path.join(dd, pid, 'trash', 'boards');
+const boardTrashItemDir = (pid, bid, dd = DATA_DIR) => path.join(dd, pid, 'trash', 'boards', bid);
+const roomTrashDir      = (pid, dd = DATA_DIR)  => path.join(dd, pid, 'trash', 'rooms');
+const roomTrashItemDir  = (pid, rid, dd = DATA_DIR) => path.join(dd, pid, 'trash', 'rooms', rid);
 const projTrashDir   = (dd = DATA_DIR)          => path.join(dd, '.trash');
 const commentsFile   = (pid, dd = DATA_DIR)     => path.join(dd, pid, 'comments.json');
 
@@ -174,16 +178,41 @@ function purgeOldTrash(dd) {
   for (const entry of fs.readdirSync(dd, { withFileTypes: true })) {
     if (!entry.isDirectory() || entry.name.startsWith('.')) continue;
     const pid = entry.name;
+    // Photo trash
     const tmf = photoTrashMeta(pid, dd);
-    if (!fs.existsSync(tmf)) continue;
-    const trashed = readJSON(tmf, []);
-    const surviving = trashed.filter(p => {
-      if (now - p.deletedAt <= TRASH_MAX_AGE_MS) return true;
-      [`${p.id}.jpg`, `${p.id}_thumb.jpg`].forEach(f => { try { fs.unlinkSync(path.join(photoTrashDir(pid, dd), f)); } catch {} });
-      return false;
-    });
-    if (surviving.length !== trashed.length) writeJSON(tmf, surviving);
+    if (fs.existsSync(tmf)) {
+      const trashed = readJSON(tmf, []);
+      const surviving = trashed.filter(p => {
+        if (now - p.deletedAt <= TRASH_MAX_AGE_MS) return true;
+        [`${p.id}.jpg`, `${p.id}_thumb.jpg`].forEach(f => { try { fs.unlinkSync(path.join(photoTrashDir(pid, dd), f)); } catch {} });
+        return false;
+      });
+      if (surviving.length !== trashed.length) writeJSON(tmf, surviving);
+    }
+    // Board trash
+    const btd = boardTrashDir(pid, dd);
+    if (fs.existsSync(btd)) {
+      for (const e of fs.readdirSync(btd, { withFileTypes: true })) {
+        if (!e.isDirectory()) continue;
+        const mf = path.join(btd, e.name, '_meta.json');
+        const meta = readJSON(mf, null);
+        if (meta && now - meta.deletedAt > TRASH_MAX_AGE_MS)
+          fs.rmSync(path.join(btd, e.name), { recursive: true, force: true });
+      }
+    }
+    // Room trash
+    const rtd = roomTrashDir(pid, dd);
+    if (fs.existsSync(rtd)) {
+      for (const e of fs.readdirSync(rtd, { withFileTypes: true })) {
+        if (!e.isDirectory()) continue;
+        const mf = path.join(rtd, e.name, '_meta.json');
+        const meta = readJSON(mf, null);
+        if (meta && now - meta.deletedAt > TRASH_MAX_AGE_MS)
+          fs.rmSync(path.join(rtd, e.name), { recursive: true, force: true });
+      }
+    }
   }
+  // Project trash
   const ptd = projTrashDir(dd);
   if (!fs.existsSync(ptd)) return;
   for (const e of fs.readdirSync(ptd, { withFileTypes: true })) {
@@ -193,6 +222,78 @@ function purgeOldTrash(dd) {
     if (meta && now - meta.deletedAt > TRASH_MAX_AGE_MS)
       fs.rmSync(path.join(ptd, e.name), { recursive: true, force: true });
   }
+}
+
+// ── Board-room link helpers ───────────────────────────────────────────────────
+function getBoardRoomLinks(pid, bid, dd) {
+  const links = [];
+  const rooms = readJSON(roomsFile(pid, dd), []);
+  for (const room of rooms) {
+    for (const wall of (room.walls || [])) {
+      if ((wall.boardsA || []).some(e => e.boardId === bid))
+        links.push({ roomId: room.id, wallId: wall.id, side: 'A' });
+      if ((wall.boardsB || []).some(e => e.boardId === bid))
+        links.push({ roomId: room.id, wallId: wall.id, side: 'B' });
+    }
+    for (const block of (room.blocks || [])) {
+      for (const [face, fd] of Object.entries(block.faces || {})) {
+        if (fd?.boardId === bid)
+          links.push({ roomId: room.id, blockId: block.id, blockFace: face });
+      }
+    }
+    for (const col of (room.columns || [])) {
+      for (const [face, fd] of Object.entries(col.faces || {})) {
+        if (fd?.boardId === bid)
+          links.push({ roomId: room.id, columnId: col.id, columnFace: face });
+      }
+    }
+  }
+  return links;
+}
+
+function unlinkBoardFromRoomsFile(pid, bid, dd) {
+  const rf = roomsFile(pid, dd);
+  if (!fs.existsSync(rf)) return;
+  const rooms = readJSON(rf, []);
+  let changed = false;
+  const updated = rooms.map(room => {
+    let r = room;
+    if ((r.walls || []).some(w =>
+      (w.boardsA || []).some(e => e.boardId === bid) ||
+      (w.boardsB || []).some(e => e.boardId === bid)
+    )) {
+      r = { ...r, walls: r.walls.map(w => ({
+        ...w,
+        boardsA: (w.boardsA || []).filter(e => e.boardId !== bid),
+        boardsB: (w.boardsB || []).filter(e => e.boardId !== bid),
+      }))};
+      changed = true;
+    }
+    if ((r.blocks || []).some(b => Object.values(b.faces || {}).some(f => f?.boardId === bid))) {
+      r = { ...r, blocks: r.blocks.map(b => ({
+        ...b,
+        faces: Object.fromEntries(
+          Object.entries(b.faces || {}).map(([k, v]) =>
+            [k, v?.boardId === bid ? { ...v, boardId: undefined } : v]
+          )
+        ),
+      }))};
+      changed = true;
+    }
+    if ((r.columns || []).some(c => Object.values(c.faces || {}).some(f => f?.boardId === bid))) {
+      r = { ...r, columns: r.columns.map(c => ({
+        ...c,
+        faces: Object.fromEntries(
+          Object.entries(c.faces || {}).map(([k, v]) =>
+            [k, v?.boardId === bid ? { ...v, boardId: undefined } : v]
+          )
+        ),
+      }))};
+      changed = true;
+    }
+    return r;
+  });
+  if (changed) writeJSON(rf, updated);
 }
 
 // Remove comments whose zone/text/grid item no longer exists in its board file
@@ -1369,20 +1470,36 @@ app.patch('/api/projects/:pid/boards/:bid', requireAuth, (req, res) => {
 
 app.delete('/api/projects/:pid/boards/:bid', requireAuth, (req, res) => {
   const { pid, bid } = req.params;
-  const boards = readJSON(boardsMeta(pid, req.dd)).filter(b => b.id !== bid);
-  writeJSON(boardsMeta(pid, req.dd), boards);
-  const bf = boardFile(pid, bid, req.dd);
-  if (fs.existsSync(bf)) fs.unlinkSync(bf);
-  const vdir = boardVersionsDir(pid, bid, req.dd);
-  if (fs.existsSync(vdir)) fs.rmSync(vdir, { recursive: true, force: true });
+  const dd = req.dd;
+  const allBoards = readJSON(boardsMeta(pid, dd));
+  const board = allBoards.find(b => b.id === bid);
+  if (!board) return res.json({ ok: true });
+
+  // Capture room links then unlink from rooms.json
+  const roomLinks = getBoardRoomLinks(pid, bid, dd);
+  unlinkBoardFromRoomsFile(pid, bid, dd);
+
+  // Move board to trash
+  const tDir = boardTrashItemDir(pid, bid, dd);
+  ensureDir(tDir);
+  writeJSON(path.join(tDir, 'board.json'), board);
+  writeJSON(path.join(tDir, '_meta.json'), { name: board.name, deletedAt: Date.now(), roomLinks });
+  const itemsSrc = boardFile(pid, bid, dd);
+  if (fs.existsSync(itemsSrc)) fs.renameSync(itemsSrc, path.join(tDir, 'items.json'));
+  const versSrc = boardVersionsDir(pid, bid, dd);
+  if (fs.existsSync(versSrc)) fs.renameSync(versSrc, path.join(tDir, 'versions'));
+
+  // Remove from boards.json
+  writeJSON(boardsMeta(pid, dd), allBoards.filter(b => b.id !== bid));
+
   // Delete comments for this board and all its items
-  const cmf = commentsFile(pid, req.dd);
+  const cmf = commentsFile(pid, dd);
   if (fs.existsSync(cmf)) {
     const before = readJSON(cmf, []);
     const after  = before.filter(c => !(c.entityType === 'board' && c.entityId === bid) && !(c.boardId === bid));
     if (after.length !== before.length) writeJSON(cmf, after);
   }
-  res.json({ ok: true });
+  res.json({ ok: true, roomLinks });
 });
 
 app.post('/api/projects/:pid/boards/:bid/duplicate', requireAuth, (req, res) => {
@@ -1412,6 +1529,93 @@ app.put('/api/projects/:pid/boards/order', requireAuth, (req, res) => {
   const sorted = order.map(id => map[id]).filter(Boolean);
   boards.forEach(b => { if (!order.includes(b.id)) sorted.push(b); });
   writeJSON(boardsMeta(pid, req.dd), sorted);
+  res.json({ ok: true });
+});
+
+// ── Board trash (per-project) ─────────────────────────────────────────────────
+app.get('/api/projects/:pid/trash/boards', requireAuth, (req, res) => {
+  const { pid } = req.params;
+  const dd = req.dd;
+  const btd = boardTrashDir(pid, dd);
+  if (!fs.existsSync(btd)) return res.json([]);
+  const proj = readJSON(projsFile(dd)).find(p => p.id === pid);
+  const result = [];
+  for (const e of fs.readdirSync(btd, { withFileTypes: true })) {
+    if (!e.isDirectory()) continue;
+    const meta = readJSON(path.join(btd, e.name, '_meta.json'), null);
+    if (!meta) continue;
+    result.push({ bid: e.name, pid, projectName: proj?.name || pid, name: meta.name, deletedAt: meta.deletedAt, roomLinks: meta.roomLinks || [] });
+  }
+  result.sort((a, b) => b.deletedAt - a.deletedAt);
+  res.json(result);
+});
+
+app.post('/api/projects/:pid/trash/boards/:bid/restore', requireAuth, (req, res) => {
+  const { pid, bid } = req.params;
+  const dd = req.dd;
+  const tDir = boardTrashItemDir(pid, bid, dd);
+  if (!fs.existsSync(tDir)) return res.status(404).json({ error: 'not found' });
+  const meta = readJSON(path.join(tDir, '_meta.json'), null);
+  const board = readJSON(path.join(tDir, 'board.json'), null);
+  if (!meta || !board) return res.status(400).json({ error: 'invalid' });
+
+  // Restore items file
+  ensureDir(boardDir(pid, dd));
+  const itemsSrc = path.join(tDir, 'items.json');
+  if (fs.existsSync(itemsSrc)) fs.renameSync(itemsSrc, boardFile(pid, bid, dd));
+  else writeJSON(boardFile(pid, bid, dd), []);
+
+  // Restore versions dir
+  const versSrc = path.join(tDir, 'versions');
+  if (fs.existsSync(versSrc)) fs.renameSync(versSrc, boardVersionsDir(pid, bid, dd));
+
+  // Add to boards.json (if not already present)
+  const boards = readJSON(boardsMeta(pid, dd));
+  if (!boards.find(b => b.id === bid)) boards.push(board);
+  writeJSON(boardsMeta(pid, dd), boards);
+
+  // Relink in rooms.json (skip silently if wall/block no longer exists)
+  const roomLinks = meta.roomLinks || [];
+  if (roomLinks.length) {
+    const rf = roomsFile(pid, dd);
+    const rooms = readJSON(rf, []);
+    let changed = false;
+    for (const link of roomLinks) {
+      const room = rooms.find(r => r.id === link.roomId);
+      if (!room) continue;
+      if (link.wallId) {
+        const wall = (room.walls || []).find(w => w.id === link.wallId);
+        if (wall) {
+          const key = link.side === 'B' ? 'boardsB' : 'boardsA';
+          if (!(wall[key] || []).some(e => e.boardId === bid)) {
+            wall[key] = [...(wall[key] || []), { boardId: bid }];
+            changed = true;
+          }
+        }
+      } else if (link.blockId) {
+        const block = (room.blocks || []).find(b => b.id === link.blockId);
+        if (block && link.blockFace && !block.faces?.[link.blockFace]?.boardId) {
+          block.faces = { ...(block.faces || {}), [link.blockFace]: { ...(block.faces?.[link.blockFace] || {}), boardId: bid } };
+          changed = true;
+        }
+      } else if (link.columnId) {
+        const col = (room.columns || []).find(c => c.id === link.columnId);
+        if (col && link.columnFace && !col.faces?.[link.columnFace]?.boardId) {
+          col.faces = { ...(col.faces || {}), [link.columnFace]: { ...(col.faces?.[link.columnFace] || {}), boardId: bid } };
+          changed = true;
+        }
+      }
+    }
+    if (changed) writeJSON(rf, rooms);
+  }
+
+  fs.rmSync(tDir, { recursive: true, force: true });
+  res.json({ ...board, pid });
+});
+
+app.delete('/api/projects/:pid/trash/boards/:bid', requireAuth, (req, res) => {
+  const tDir = boardTrashItemDir(req.params.pid, req.params.bid, req.dd);
+  if (fs.existsSync(tDir)) fs.rmSync(tDir, { recursive: true, force: true });
   res.json({ ok: true });
 });
 
@@ -1446,37 +1650,52 @@ app.put('/api/projects/:pid/rooms/:rid', requireAuth, (req, res) => {
 app.delete('/api/projects/:pid/rooms/:rid', requireAuth, (req, res) => {
   const { pid, rid } = req.params;
   const dd = req.dd;
-  const f = roomsFile(pid, dd);
   const rooms = loadRooms(pid, dd);
   const room = rooms.find(r => r.id === rid);
-  if (room) {
-    const boardIds = new Set([
-      ...(room.walls  || []).flatMap(wallBoardIds),
-      ...(room.blocks || []).flatMap(b => Object.values(b.faces || {}).map(f => f?.boardId).filter(Boolean)),
-      ...(room.columns|| []).flatMap(c => Object.values(c.faces || {}).map(f => f?.boardId).filter(Boolean)),
-    ]);
-    if (boardIds.size > 0) {
-      writeJSON(boardsMeta(pid, dd), readJSON(boardsMeta(pid, dd)).filter(b => !boardIds.has(b.id)));
-      for (const bid of boardIds) {
-        const bf = boardFile(pid, bid, dd);
-        if (fs.existsSync(bf)) fs.unlinkSync(bf);
-        const vdir = boardVersionsDir(pid, bid, dd);
-        if (fs.existsSync(vdir)) fs.rmSync(vdir, { recursive: true, force: true });
-      }
-    }
-    writeJSON(f, rooms.filter(r => r.id !== rid));
-    // Delete room comment and all comments for boards/items linked to this room
-    const cmf = commentsFile(pid, dd);
-    if (fs.existsSync(cmf)) {
-      const before = readJSON(cmf, []);
-      const after  = before.filter(c => {
-        if (c.entityType === 'room' && c.entityId === rid) return false;
-        if (boardIds.has(c.entityId) && c.entityType === 'board') return false;
-        if (c.boardId && boardIds.has(c.boardId)) return false;
-        return true;
-      });
-      if (after.length !== before.length) writeJSON(cmf, after);
-    }
+  if (!room) { res.json({ ok: true }); return; }
+
+  const boardIds = new Set([
+    ...(room.walls  || []).flatMap(wallBoardIds),
+    ...(room.blocks || []).flatMap(b => Object.values(b.faces || {}).map(f => f?.boardId).filter(Boolean)),
+    ...(room.columns|| []).flatMap(c => Object.values(c.faces || {}).map(f => f?.boardId).filter(Boolean)),
+  ]);
+
+  // Move sala to trash
+  const tDir = roomTrashItemDir(pid, rid, dd);
+  ensureDir(tDir);
+
+  // Move each linked board into trash/rooms/{rid}/boards/{bid}/
+  const allBoards = readJSON(boardsMeta(pid, dd));
+  for (const bid of boardIds) {
+    const board = allBoards.find(b => b.id === bid);
+    if (!board) continue;
+    const bTDir = path.join(tDir, 'boards', bid);
+    ensureDir(bTDir);
+    const itemsSrc = boardFile(pid, bid, dd);
+    if (fs.existsSync(itemsSrc)) fs.renameSync(itemsSrc, path.join(bTDir, 'items.json'));
+    const versSrc = boardVersionsDir(pid, bid, dd);
+    if (fs.existsSync(versSrc)) fs.renameSync(versSrc, path.join(bTDir, 'versions'));
+    writeJSON(path.join(bTDir, 'board.json'), board);
+    writeJSON(path.join(bTDir, '_meta.json'), { name: board.name });
+  }
+  if (boardIds.size > 0)
+    writeJSON(boardsMeta(pid, dd), allBoards.filter(b => !boardIds.has(b.id)));
+
+  writeJSON(path.join(tDir, 'room.json'), room);
+  writeJSON(path.join(tDir, '_meta.json'), { name: room.name, deletedAt: Date.now(), boardCount: boardIds.size });
+  writeJSON(roomsFile(pid, dd), rooms.filter(r => r.id !== rid));
+
+  // Delete comments for room, its boards and board items
+  const cmf = commentsFile(pid, dd);
+  if (fs.existsSync(cmf)) {
+    const before = readJSON(cmf, []);
+    const after  = before.filter(c => {
+      if (c.entityType === 'room' && c.entityId === rid) return false;
+      if (boardIds.has(c.entityId) && c.entityType === 'board') return false;
+      if (c.boardId && boardIds.has(c.boardId)) return false;
+      return true;
+    });
+    if (after.length !== before.length) writeJSON(cmf, after);
   }
   res.json({ ok: true });
 });
@@ -1502,6 +1721,69 @@ app.post('/api/projects/:pid/rooms/:rid/duplicate', requireAuth, (req, res) => {
   rooms.splice(idx + 1, 0, copy);
   writeJSON(roomsFile(pid, req.dd), rooms);
   res.json(copy);
+});
+
+// ── Room trash (per-project) ──────────────────────────────────────────────────
+app.get('/api/projects/:pid/trash/rooms', requireAuth, (req, res) => {
+  const { pid } = req.params;
+  const dd = req.dd;
+  const rtd = roomTrashDir(pid, dd);
+  if (!fs.existsSync(rtd)) return res.json([]);
+  const proj = readJSON(projsFile(dd)).find(p => p.id === pid);
+  const result = [];
+  for (const e of fs.readdirSync(rtd, { withFileTypes: true })) {
+    if (!e.isDirectory()) continue;
+    const meta = readJSON(path.join(rtd, e.name, '_meta.json'), null);
+    if (!meta) continue;
+    result.push({ rid: e.name, pid, projectName: proj?.name || pid, name: meta.name, deletedAt: meta.deletedAt, boardCount: meta.boardCount || 0 });
+  }
+  result.sort((a, b) => b.deletedAt - a.deletedAt);
+  res.json(result);
+});
+
+app.post('/api/projects/:pid/trash/rooms/:rid/restore', requireAuth, (req, res) => {
+  const { pid, rid } = req.params;
+  const dd = req.dd;
+  const tDir = roomTrashItemDir(pid, rid, dd);
+  if (!fs.existsSync(tDir)) return res.status(404).json({ error: 'not found' });
+  const meta = readJSON(path.join(tDir, '_meta.json'), null);
+  const room = readJSON(path.join(tDir, 'room.json'), null);
+  if (!meta || !room) return res.status(400).json({ error: 'invalid' });
+
+  // Restore boards
+  const boardsTDir = path.join(tDir, 'boards');
+  const allBoards = readJSON(boardsMeta(pid, dd));
+  if (fs.existsSync(boardsTDir)) {
+    ensureDir(boardDir(pid, dd));
+    for (const e of fs.readdirSync(boardsTDir, { withFileTypes: true })) {
+      if (!e.isDirectory()) continue;
+      const bid = e.name;
+      const bTDir = path.join(boardsTDir, bid);
+      const bBoard = readJSON(path.join(bTDir, 'board.json'), null);
+      if (!bBoard) continue;
+      const itemsSrc = path.join(bTDir, 'items.json');
+      if (fs.existsSync(itemsSrc)) fs.renameSync(itemsSrc, boardFile(pid, bid, dd));
+      else writeJSON(boardFile(pid, bid, dd), []);
+      const versSrc = path.join(bTDir, 'versions');
+      if (fs.existsSync(versSrc)) fs.renameSync(versSrc, boardVersionsDir(pid, bid, dd));
+      if (!allBoards.find(b => b.id === bid)) allBoards.push(bBoard);
+    }
+    writeJSON(boardsMeta(pid, dd), allBoards);
+  }
+
+  // Restore room
+  const rooms = readJSON(roomsFile(pid, dd), []);
+  if (!rooms.find(r => r.id === rid)) rooms.push(room);
+  writeJSON(roomsFile(pid, dd), rooms);
+
+  fs.rmSync(tDir, { recursive: true, force: true });
+  res.json({ ...room, pid });
+});
+
+app.delete('/api/projects/:pid/trash/rooms/:rid', requireAuth, (req, res) => {
+  const tDir = roomTrashItemDir(req.params.pid, req.params.rid, req.dd);
+  if (fs.existsSync(tDir)) fs.rmSync(tDir, { recursive: true, force: true });
+  res.json({ ok: true });
 });
 
 // ── Room share management (AUTH_ENABLED only) ─────────────────────────────────
@@ -1816,18 +2098,22 @@ app.delete('/api/templates/:tid', requireAuth, (req, res) => {
 // ── Trash ─────────────────────────────────────────────────────────────────────
 app.get('/api/trash/count', requireAuth, (req, res) => {
   const dd = req.dd;
-  let photos = 0, projects = 0;
+  let photos = 0, projects = 0, boards = 0, rooms = 0;
   if (fs.existsSync(dd)) {
     for (const e of fs.readdirSync(dd, { withFileTypes: true })) {
       if (!e.isDirectory() || e.name.startsWith('.')) continue;
       const tmf = photoTrashMeta(e.name, dd);
       if (fs.existsSync(tmf)) photos += readJSON(tmf, []).length;
+      const btd = boardTrashDir(e.name, dd);
+      if (fs.existsSync(btd)) boards += fs.readdirSync(btd, { withFileTypes: true }).filter(x => x.isDirectory()).length;
+      const rtd = roomTrashDir(e.name, dd);
+      if (fs.existsSync(rtd)) rooms += fs.readdirSync(rtd, { withFileTypes: true }).filter(x => x.isDirectory()).length;
     }
   }
   const ptd = projTrashDir(dd);
   if (fs.existsSync(ptd))
     projects = fs.readdirSync(ptd, { withFileTypes: true }).filter(e => e.isDirectory()).length;
-  res.json({ photos, projects, total: photos + projects });
+  res.json({ photos, projects, boards, rooms, total: photos + projects + boards + rooms });
 });
 
 app.get('/api/trash/photos', requireAuth, (req, res) => {
@@ -1946,6 +2232,75 @@ app.delete('/api/trash/projects/:pid', requireAuth, (req, res) => {
 app.delete('/api/trash/projects', requireAuth, (req, res) => {
   const ptd = projTrashDir(req.dd);
   if (fs.existsSync(ptd)) fs.rmSync(ptd, { recursive: true, force: true });
+  res.json({ ok: true });
+});
+
+// ── Global board/room trash listing and empty ─────────────────────────────────
+app.get('/api/trash/boards', requireAuth, (req, res) => {
+  const dd = req.dd;
+  const projectMap = Object.fromEntries(readJSON(projsFile(dd)).map(p => [p.id, p.name]));
+  const result = [];
+  if (fs.existsSync(dd)) {
+    for (const e of fs.readdirSync(dd, { withFileTypes: true })) {
+      if (!e.isDirectory() || e.name.startsWith('.')) continue;
+      const pid = e.name;
+      const btd = boardTrashDir(pid, dd);
+      if (!fs.existsSync(btd)) continue;
+      for (const be of fs.readdirSync(btd, { withFileTypes: true })) {
+        if (!be.isDirectory()) continue;
+        const meta = readJSON(path.join(btd, be.name, '_meta.json'), null);
+        if (!meta) continue;
+        result.push({ bid: be.name, pid, projectName: projectMap[pid] || pid, name: meta.name, deletedAt: meta.deletedAt, roomLinks: meta.roomLinks || [] });
+      }
+    }
+  }
+  result.sort((a, b) => b.deletedAt - a.deletedAt);
+  res.json(result);
+});
+
+app.delete('/api/trash/boards', requireAuth, (req, res) => {
+  const dd = req.dd;
+  if (fs.existsSync(dd)) {
+    for (const e of fs.readdirSync(dd, { withFileTypes: true })) {
+      if (!e.isDirectory() || e.name.startsWith('.')) continue;
+      const btd = boardTrashDir(e.name, dd);
+      if (fs.existsSync(btd)) fs.rmSync(btd, { recursive: true, force: true });
+    }
+  }
+  res.json({ ok: true });
+});
+
+app.get('/api/trash/rooms', requireAuth, (req, res) => {
+  const dd = req.dd;
+  const projectMap = Object.fromEntries(readJSON(projsFile(dd)).map(p => [p.id, p.name]));
+  const result = [];
+  if (fs.existsSync(dd)) {
+    for (const e of fs.readdirSync(dd, { withFileTypes: true })) {
+      if (!e.isDirectory() || e.name.startsWith('.')) continue;
+      const pid = e.name;
+      const rtd = roomTrashDir(pid, dd);
+      if (!fs.existsSync(rtd)) continue;
+      for (const re of fs.readdirSync(rtd, { withFileTypes: true })) {
+        if (!re.isDirectory()) continue;
+        const meta = readJSON(path.join(rtd, re.name, '_meta.json'), null);
+        if (!meta) continue;
+        result.push({ rid: re.name, pid, projectName: projectMap[pid] || pid, name: meta.name, deletedAt: meta.deletedAt, boardCount: meta.boardCount || 0 });
+      }
+    }
+  }
+  result.sort((a, b) => b.deletedAt - a.deletedAt);
+  res.json(result);
+});
+
+app.delete('/api/trash/rooms', requireAuth, (req, res) => {
+  const dd = req.dd;
+  if (fs.existsSync(dd)) {
+    for (const e of fs.readdirSync(dd, { withFileTypes: true })) {
+      if (!e.isDirectory() || e.name.startsWith('.')) continue;
+      const rtd = roomTrashDir(e.name, dd);
+      if (fs.existsSync(rtd)) fs.rmSync(rtd, { recursive: true, force: true });
+    }
+  }
   res.json({ ok: true });
 });
 
@@ -2143,15 +2498,26 @@ app.get('/api/boards/:pid/:bid/export', requireAuth, async (req, res) => {
   for (const item of sorted) {
     if (item.type !== 'grid') { expanded.push(item); continue; }
     const cols = Math.max(1, item.cols || 3);
-    const gapPx = gPhysToPx(item.gap ?? 5);
-    const cellW = Math.max(10, (item.w * exportScale - gapPx * (cols - 1)) / cols);
-    const pIds = item.photoIds || [];
+    const gapColPx = gPhysToPx(item.gapCol ?? item.gap ?? 5);
+    const gapRowPx = gPhysToPx(item.gapRow ?? item.gap ?? 5);
+    const fixedRows = item.rows ? Math.max(1, item.rows) : null;
+    let pIds = item.photoIds || [];
+    if (fixedRows !== null) {
+      const totalCells = cols * fixedRows;
+      pIds = pIds.slice(0, totalCells);
+      while (pIds.length < totalCells) pIds.push(null);
+    }
+    const cellW = Math.max(10, (item.w * exportScale - gapColPx * (cols - 1)) / cols);
     let rowY = Math.round(item.y * exportScale);
     for (let r = 0; r * cols < pIds.length; r++) {
       const rowIds = pIds.slice(r * cols, (r + 1) * cols);
-      const rowH = Math.max(...rowIds.map(id => { const p = photosData.find(x => x.id === id); return (p && p.w > 0) ? Math.round(cellW * p.h / p.w) : Math.round(cellW); }), 10);
-      rowIds.forEach((photoId, ci) => { if (photoId) expanded.push({ photoId, x: Math.round(item.x * exportScale + ci * (cellW + gapPx)), y: rowY, w: Math.round(cellW), z: item.z }); });
-      rowY += rowH + gapPx;
+      const rowH = Math.max(...rowIds.map(id => {
+        if (!id) return 0;
+        const p = photosData.find(x => x.id === id);
+        return (p && p.w > 0) ? Math.round(cellW * p.h / p.w) : Math.round(cellW);
+      }), 10);
+      rowIds.forEach((photoId, ci) => { if (photoId) expanded.push({ photoId, x: Math.round(item.x * exportScale + ci * (cellW + gapColPx)), y: rowY, w: Math.round(cellW), z: item.z }); });
+      rowY += rowH + gapRowPx;
     }
   }
 
