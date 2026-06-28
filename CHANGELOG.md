@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.25.14] — 2026-06-28
+
+### Añadido
+- **Eliminar segmento de pared:** clic derecho sobre un segmento en el plano de sala → opción "Eliminar pared". Elimina el segmento conservando sus vértices, salvo que queden huérfanos (sin otros segmentos conectados), en cuyo caso se eliminan también. Si el segmento tiene tableros vinculados, muestra aviso de confirmación con sus nombres antes de proceder.
+
 ## [1.25.13] — 2026-06-27
 
 ### Corregido

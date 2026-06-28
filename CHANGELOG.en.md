@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.25.14] — 2026-06-28
+
+### Added
+- **Delete wall segment:** right-click on a segment in the room floor plan → "Delete wall" option. Removes the segment while preserving its vertices, unless they become orphaned (no other connected segments), in which case they are removed too. If the segment has linked boards, a confirmation prompt listing their names is shown before proceeding.
+
 ## [1.25.13] — 2026-06-27
 
 ### Fixed

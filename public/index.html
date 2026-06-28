@@ -7683,6 +7683,36 @@ ${rows}
     }
   };
 
+  const deleteRoomWall = wallId => {
+    const r = roomRef.current; if (!r) return;
+    const wall = r.walls.find(w => w.id === wallId); if (!wall) return;
+    const linkedIds = [...new Set(wallBoardIds(wall))];
+    const doDelete = () => {
+      const remainingWalls = r.walls.filter(w => w.id !== wallId);
+      const isOrphan = vid => !remainingWalls.some(w => w.v1 === vid || w.v2 === vid);
+      const newVertices = r.vertices.filter(v => !isOrphan(v.id));
+      saveRoom({...r, walls: remainingWalls, vertices: newVertices});
+      if (linkedIds.length) {
+        Promise.all(linkedIds.map(id => api.del(`/api/projects/${pidRef.current}/boards/${id}`))).then(() => {
+          const nbs = boardsRef.current.filter(b => !linkedIds.includes(b.id));
+          setBoards(nbs); boardsRef.current = nbs;
+          setAllBoardItems(prev => { const n = {...prev}; linkedIds.forEach(id => delete n[id]); return n; });
+          if (linkedIds.includes(bidRef.current)) {
+            setBid(nbs[0]?.id || null); bidRef.current = nbs[0]?.id || null;
+          }
+          refreshTrashCount();
+        });
+      }
+      setRoomWallCtx(null);
+    };
+    if (linkedIds.length) {
+      const names = linkedIds.map(id => boardsRef.current.find(b=>b.id===id)?.name || id).join(', ');
+      showConfirm(t('confirmDeleteWallBoards', names), doDelete);
+    } else {
+      doDelete();
+    }
+  };
+
   const onRoomVertexPD = (e, vid) => {
     e.stopPropagation();
     const r0 = roomRef.current; if (!r0) return;
@@ -12583,6 +12613,10 @@ ${rows}
             </div>
             {ctxSideSection('A', 'color',     cw.color    ||'#d0c8bc')}
             {ctxSideSection('B', 'colorBack', cw.colorBack||'#d0c8bc')}
+            <div style={{borderTop:'1px solid var(--border)',marginTop:2}}/>
+            <button className="ctx-item ctx-danger" onClick={()=>deleteRoomWall(cw.id)}>
+              × {lang==='es'?'Eliminar pared':'Delete wall'}
+            </button>
           </div>
         );
       })()}

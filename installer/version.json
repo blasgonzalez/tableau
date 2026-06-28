@@ -1,6 +1,6 @@
 {
-  "version": "1.25.13",
+  "version": "1.25.14",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-06-27",
-  "notes": "Mosaico: fantasma de vista frontal corregido (posición y altura), menú contextual unificado, fotos bloqueadas al desacoplar en columnas/filas."
+  "releaseDate": "2026-06-28",
+  "notes": "Plano de sala: eliminar segmento de pared conservando sus vértices (con eliminación de vértices huérfanos y aviso si hay tableros vinculados)."
 }
