@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.25.15] — 2026-06-29
+
+### Added
+- **Cell info on mosaic hover:** hovering over a grid shows cell size (px and physical units), column and row count, plus total dimensions in the info panel.
+- **Editable cell width in Mosaic properties:** the properties modal displays the current cell size as a reference and allows entering a desired cell width; on apply, it automatically recalculates the grid's total width.
+
+### Fixed
+- **Mosaic ghost visible (Ctrl+V):** when pasting a grid, the ghost now shows real photo thumbnails, correctly converts the gap to pixels, and has a semi-transparent background visible over the canvas.
+- **Mosaic ghost: full rows:** the mosaic ghost was showing only 3 rows regardless of the grid's actual row count. Rows are now derived from `it.rows` or the length of `photoIds`.
+- **Align/Distribute with zones:** when aligning or distributing a group of zones, locked items inside them (photos with `locked: true`) now move with the zone, matching the behavior of manual zone dragging.
+
 ## [1.25.14] — 2026-06-28
 
 ### Added

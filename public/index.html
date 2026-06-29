@@ -1262,7 +1262,7 @@ const I18N = {
     gridItemBtn:'Mosaico', gridPendingHd:'Nuevo mosaico', gridPendingPlace:'Colocar en tablero', gridPendingWidth:'Ancho', gridItemCols:'Col', gridItemGap:'Sep', gridItemUngroup:'Separar en fotos', gridItemAddSel:'Añadir selección', gridItemRemove:'Quitar del mosaico', gridItemAddHint:'Arrastra fotos aquí para añadir',
     gridDecoupleBtn:'Desacoplar', gridDecoupleDone:'Mosaico desacoplado', gridDecouplePhotos:'En fotos sueltas', gridDecoupleCols: n => `En columnas (${n})`, gridDecoupleRows: n => `En filas (${n})`,
     gridLayoutBtn:'Cuadrícula', gridTitle:'Colocar en cuadrícula', gridColsLabel:'Columnas', gridGapLabel:'Separación', gridScaleLabel:'Escala', gridFits:(n,tot)=>n>=tot?'Todas las fotos caben':`Caben ${n} de ${tot}`, gridPlace:'Colocar',
-    addGrid:'Añadir mosaico', gridProps:'Propiedades del mosaico', gridRows:'Filas', gridGapCol:'Sep. columnas', gridGapRow:'Sep. filas', gridCompact:'Modo compactado', gridCreate:'Crear mosaico', gridRowsAuto:'automático',
+    addGrid:'Añadir mosaico', gridProps:'Propiedades del mosaico', gridRows:'Filas', gridGapCol:'Sep. columnas', gridGapRow:'Sep. filas', gridCompact:'Modo compactado', gridCreate:'Crear mosaico', gridRowsAuto:'automático', gridCellSize:'Tamaño de celda', gridCellWLabel:'Ancho de celda',
     pairsLayoutBtn:'Parejas', pairsLabel: n => `Pareja ${n}`, tripleLabel: n => `Trío ${n}`,
     presViewZones:'Ver zonas', presZoneOf:(i,n)=>`${i} / ${n}`,
     libSnapExpand:'Ampliar librería', libSnapCollapse:'Reducir librería',
@@ -1502,7 +1502,7 @@ const I18N = {
     gridItemBtn:'Grid', gridPendingHd:'New grid', gridPendingPlace:'Place on board', gridPendingWidth:'Width', gridItemCols:'Col', gridItemGap:'Gap', gridItemUngroup:'Ungroup to photos', gridItemAddSel:'Add selection', gridItemRemove:'Remove from grid', gridItemAddHint:'Drop photos here to add',
     gridDecoupleBtn:'Decouple', gridDecoupleDone:'Grid decoupled', gridDecouplePhotos:'Into photos', gridDecoupleCols: n => `Into columns (${n})`, gridDecoupleRows: n => `Into rows (${n})`,
     gridLayoutBtn:'Grid', gridTitle:'Place as grid', gridColsLabel:'Columns', gridGapLabel:'Gap', gridScaleLabel:'Scale', gridFits:(n,tot)=>n>=tot?'All photos fit':`${n} of ${tot} fit`, gridPlace:'Place',
-    addGrid:'Add mosaic', gridProps:'Mosaic properties', gridRows:'Rows', gridGapCol:'Col. gap', gridGapRow:'Row gap', gridCompact:'Compact mode', gridCreate:'Create mosaic', gridRowsAuto:'automatic',
+    addGrid:'Add mosaic', gridProps:'Mosaic properties', gridRows:'Rows', gridGapCol:'Col. gap', gridGapRow:'Row gap', gridCompact:'Compact mode', gridCreate:'Create mosaic', gridRowsAuto:'automatic', gridCellSize:'Cell size', gridCellWLabel:'Cell width',
     pairsLayoutBtn:'Pairs', pairsLabel: n => `Pair ${n}`, tripleLabel: n => `Triple ${n}`,
     presViewZones:'View zones', presZoneOf:(i,n)=>`${i} / ${n}`,
     libSnapExpand:'Expand library', libSnapCollapse:'Collapse library',
@@ -1924,6 +1924,7 @@ function App() {
   const [gpGapCol,  setGpGapCol]  = useState(0.5);
   const [gpGapRow,  setGpGapRow]  = useState(0.5);
   const [gpCompact, setGpCompact] = useState(false);
+  const [gpCellW,   setGpCellW]   = useState('');
   const showLibPreviewRef = useRef(localStorage.getItem('tb-lib-preview') !== 'false');
   const [libPreview,      setLibPreview]      = useState(null); // {photo, x, y}
   const [pinnedPreview,   setPinnedPreview]   = useState(null); // {photo, x, y} — click-pinned
@@ -4297,7 +4298,8 @@ function App() {
     if (!clipboardRef.current.length || !bidRef.current) return;
     const visItems = clipboardRef.current.filter(it =>
       it.type === 'note' || it.type === 'zone' || it.type === 'text' ||
-      it.type === 'placeholder' || photosRef.current.some(p => p.id === it.photoId)
+      it.type === 'placeholder' || it.type === 'grid' ||
+      photosRef.current.some(p => p.id === it.photoId)
     );
     if (!visItems.length) return;
     // Clear selection so the align-bar doesn't float over the canvas and intercept clicks
@@ -6895,6 +6897,11 @@ ${rows}
     setGpGapCol(it.gapCol ?? it.gap ?? 5);
     setGpGapRow(it.gapRow ?? it.gap ?? 5);
     setGpCompact(it.compact ?? false);
+    const _brd0 = boardsRef.current.find(b => b.id === bidRef.current);
+    const _lay0 = calcGridLayout(it, photosRef.current, _brd0?.dpi || 150, _brd0?.units || 'px');
+    const _u0 = _brd0?.units || 'px'; const _d0 = _brd0?.dpi || 150;
+    if (_u0 === 'px') { setGpCellW(String(Math.round(_lay0.cellW))); }
+    else { const f0 = _u0==='cm'?2.54:_u0==='mm'?25.4:1; const dec0 = _u0==='mm'?0:_u0==='in'?2:1; setGpCellW((_lay0.cellW/_d0*f0).toFixed(dec0)); }
     setGridPropsModal({ itemId });
   };
 
@@ -6907,6 +6914,12 @@ ${rows}
     const rowsInt = parseInt(gpRows) || null;
     const newTotal = rowsInt ? cols * rowsInt : null;
     const realPhotos = (it.photoIds || []).filter(id => id !== null);
+    const _brd2 = boardsRef.current.find(b => b.id === bidRef.current);
+    const _dpi2 = _brd2?.dpi || 150; const _units2 = _brd2?.units || 'px';
+    const _gapColPx2 = physToPx(gpGapCol, _dpi2, _units2);
+    const _cwVal = parseFloat(gpCellW);
+    const _cellWPx = !isNaN(_cwVal) && _cwVal > 0 ? physToPx(_cwVal, _dpi2, _units2) : null;
+    const _newW = _cellWPx ? Math.max(cols * 10, _cellWPx * cols + _gapColPx2 * Math.max(0, cols - 1)) : it.w;
     const doApply = () => {
       let arr;
       if (newTotal !== null) {
@@ -6916,7 +6929,7 @@ ${rows}
         arr = (it.photoIds || []).filter(id => id !== null);
       }
       const updated = {
-        ...it, cols, gapCol: gpGapCol, gapRow: gpGapRow,
+        ...it, cols, gapCol: gpGapCol, gapRow: gpGapRow, w: _newW,
         ...(rowsInt ? { rows: rowsInt, compact: gpCompact } : { rows: undefined, compact: undefined }),
         photoIds: arr,
       };
@@ -8517,6 +8530,13 @@ ${rows}
         break;
       }
     }
+    selIt.filter(i => i.type === 'zone').forEach(orig => {
+      const moved = nit.find(i => i.id === orig.id);
+      if (!moved) return;
+      const dx = (moved.x || 0) - (orig.x || 0), dy = (moved.y || 0) - (orig.y || 0);
+      if (!dx && !dy) return;
+      nit = nit.map(c => c.zoneId === orig.id ? {...c, x: c.x + dx, y: c.y + dy} : c);
+    });
     const norm = applyNormalized(nit);
     saveItemsNow(norm);
   };
@@ -8636,6 +8656,18 @@ ${rows}
                   {physDims && <div className="info-phys">{physDims}</div>}
                   <div className="info-row">{pxDims}</div>
                   {scaleContent && <div className="info-row">↔ {lang === 'es' ? 'Escala contenido' : 'Scales content'}</div>}
+                  {type === 'grid' && hoverInfo.cellW > 0 && (() => {
+                    const { cellW: cW, cellH: cH, cols: cCols, totalRows: cRows } = hoverInfo;
+                    const cellPhys = boardDpi && boardUnits && boardUnits !== 'px'
+                      ? `${pxToPhys(cW, boardDpi, boardUnits)} × ${pxToPhys(cH, boardDpi, boardUnits)}`
+                      : null;
+                    return (<>
+                      <div className="info-row" style={{marginTop:4,color:'var(--muted)',fontSize:8,letterSpacing:1,textTransform:'uppercase'}}>{lang==='es'?'celda':'cell'}</div>
+                      {cellPhys && <div className="info-phys">{cellPhys}</div>}
+                      <div className="info-row">{cW} × {cH} px</div>
+                      <div className="info-row">{cCols} × {cRows}</div>
+                    </>);
+                  })()}
                 </div>
               </div>
             );
@@ -10524,6 +10556,27 @@ ${rows}
                         if (it.type === 'placeholder') {
                           return <div key={it.id} style={{...base,background:'rgba(196,137,74,.08)',border:'2px dashed rgba(196,137,74,.4)'}}/>;
                         }
+                        if (it.type === 'grid') {
+                          const gCols = it.cols || 1;
+                          const gBoard = boards.find(b => b.id === bid);
+                          const gGapPx = physToPx(it.gapCol ?? it.gapRow ?? 4, gBoard?.dpi || 150, gBoard?.units || 'px');
+                          const gCellW = Math.round(Math.max(1, (it.w - gGapPx * (gCols - 1)) / gCols));
+                          const gRows = it.rows || Math.ceil((it.photoIds || []).length / gCols) || 3;
+                          const gCells = (it.photoIds || []).slice(0, gCols * gRows);
+                          const gPlaceholders = gCells.length === 0 ? [...Array(gCols)] : [];
+                          return (
+                            <div key={it.id} style={{...base,display:'grid',gridTemplateColumns:`repeat(${gCols},${gCellW}px)`,gridTemplateRows:`repeat(${gRows},1fr)`,gap:gGapPx,alignItems:'start',background:'rgba(0,0,0,.2)',overflow:'hidden'}}>
+                              {gCells.map((photoId, i) => {
+                                const gP = photos.find(x => x.id === photoId);
+                                const gCH = gP && gP.w > 0 ? Math.round(gCellW * gP.h / gP.w) : gCellW;
+                                return photoId
+                                  ? <img key={i} src={`/photos/${pid}/${photoId}/thumb`} style={{width:gCellW,height:gCH,objectFit:'cover',display:'block'}} alt=""/>
+                                  : <div key={i} style={{width:gCellW,height:gCellW,background:'rgba(255,255,255,.08)',border:'1px solid rgba(255,255,255,.15)'}}/>;
+                              })}
+                              {gPlaceholders.map((_, i) => <div key={i} style={{width:gCellW,height:gCellW,background:'rgba(255,255,255,.08)',border:'1px solid rgba(255,255,255,.15)'}}/>)}
+                            </div>
+                          );
+                        }
                         return (
                           <div key={it.id} style={{...base,background:'#111'}}>
                             <img src={`/photos/${pid}/${it.photoId}/thumb`} style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}} alt=""/>
@@ -10752,6 +10805,8 @@ ${rows}
                         onDragOver={e => { e.preventDefault(); if (!e.dataTransfer.types.includes('tb-grid-cell')) setGridDropTarget(item.id); }}
                         onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget)) setGridDropTarget(null); }}
                         onDragEnd={() => { setGridDropTarget(null); setGridCellDragOver(null); }}
+                        onMouseEnter={() => showItemInfo('grid', item.label, item.w, totalH, { cellW: Math.round(cellW), cellH: gRows[0]?.h || 0, cols: gCols, totalRows: gRows.length })}
+                        onMouseLeave={clearHoverInfo}
                         onDrop={e => {
                           e.preventDefault(); e.stopPropagation(); setGridDropTarget(null); setGridCellDragOver(null); setDragOver(false);
                           if (e.dataTransfer.getData('tb-grid-cell')) return; // handled by cell
@@ -13191,6 +13246,13 @@ ${rows}
         const _units = _board?.units || 'px';
         const _step = _units === 'px' ? 1 : _units === 'mm' ? 0.5 : _units === 'in' ? 0.05 : 0.1;
         const _rowsInt = parseInt(gpRows) || null;
+        const _dpi = _board?.dpi || 150;
+        const _lay = calcGridLayout(_it, photos, _dpi, _units);
+        const _cellPhys = pxToPhys(_lay.cellW, _dpi, _units);
+        const _cellHPhys = _lay.rows[0] ? pxToPhys(_lay.rows[0].h, _dpi, _units) : null;
+        const _cellLabel = _cellPhys
+          ? `${_cellPhys} × ${_cellHPhys || '—'}`
+          : `${Math.round(_lay.cellW)} × ${_lay.rows[0]?.h || '—'} px`;
         return (
           <div className="overlay" onClick={() => setGridPropsModal(null)}>
             <div className="modal" onClick={e => e.stopPropagation()} style={{minWidth:260}}>
@@ -13231,6 +13293,13 @@ ${rows}
                   </label>
                 </div>
               )}
+              <div style={{borderTop:'1px solid var(--border)',marginTop:10,paddingTop:8}}>
+                <div className="cfg-label" style={{marginBottom:2}}>{t('gridCellSize')}: <span style={{color:'var(--muted)',fontWeight:400}}>{_cellLabel}</span></div>
+                <div style={{height:8}}/>
+                <div className="cfg-label">{t('gridCellWLabel')} ({_units})</div>
+                <input type="number" className="inp" value={gpCellW} min={1} step={_step}
+                  onChange={e => setGpCellW(e.target.value)} />
+              </div>
               <div className="modal-row" style={{marginTop:12}}>
                 <button className="btn" onClick={() => setGridPropsModal(null)}>{t('cancel')}</button>
                 <button className="btn acc" onClick={applyGridProps}>{t('propsApply')}</button>

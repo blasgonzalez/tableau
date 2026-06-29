@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.25.15] — 2026-06-29
+
+### Añadido
+- **Información de celda en el mosaico:** al pasar el cursor sobre un grid, el panel de información muestra el tamaño de celda (px y unidades físicas), número de columnas y filas, además de las dimensiones totales.
+- **Ancho de celda editable en Propiedades del mosaico:** el modal de propiedades muestra el tamaño actual de celda como referencia y permite introducir un ancho de celda deseado; al aplicar, recalcula automáticamente el ancho total del grid.
+
+### Corregido
+- **Ghost del mosaico visible (Ctrl+V):** al pegar un grid, el fantasma ahora muestra miniaturas reales de las fotos, usa el gap convertido a píxeles correctamente y tiene fondo semitransparente visible sobre el canvas.
+- **Ghost del mosaico: filas completas:** el fantasma del mosaico mostraba solo 3 filas independientemente del número real de filas del grid. Ahora se calculan las filas reales a partir de `it.rows` o de la longitud de `photoIds`.
+- **Alinear/Distribuir con zonas:** al alinear o distribuir un grupo de zonas, los ítems bloqueados en su interior (fotos con `locked: true`) ahora se mueven con la zona, igual que al arrastrarla manualmente.
+
 ## [1.25.14] — 2026-06-28
 
 ### Añadido

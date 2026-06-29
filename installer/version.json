@@ -1,6 +1,6 @@
 {
-  "version": "1.25.14",
+  "version": "1.25.15",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-06-28",
-  "notes": "Plano de sala: eliminar segmento de pared conservando sus vértices (con eliminación de vértices huérfanos y aviso si hay tableros vinculados)."
+  "releaseDate": "2026-06-29",
+  "notes": "Información de celda en mosaico al hover, ancho de celda editable en propiedades, correcciones del fantasma de mosaico (visible, filas completas) y alinear/distribuir arrastra ítems bloqueados de las zonas."
 }
