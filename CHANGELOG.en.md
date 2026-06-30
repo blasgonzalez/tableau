@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.25.16] — 2026-06-30
+
+### Fixed
+- **Frame and mat depth in 3D view:** the frame and mat now render correctly behind the photo on walls (both sides, interior and exterior) and on vertical block faces. The fix uses the `sideSign` sign for walls and a local dot product for block faces, eliminating the bug where the frame was obscuring the photo.
+
 ## [1.25.15] — 2026-06-29
 
 ### Added

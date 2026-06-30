@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.25.16] — 2026-06-30
+
+### Corregido
+- **Profundidad de marco y paspartú en vista 3D:** el marco y el paspartú ahora se renderizan correctamente detrás de la foto en paredes (ambos lados, interior y exterior) y en caras verticales de bloques. La corrección se aplica usando el signo de `sideSign` para paredes y el producto escalar local para caras de bloque, eliminando el bug donde la moldura tapaba la foto.
+
 ## [1.25.15] — 2026-06-29
 
 ### Añadido

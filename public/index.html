@@ -2131,6 +2131,8 @@ function App() {
   const ghostPosRef     = useRef({x:0, y:0}); // cursor canvas position while ghost is active
   const ghostScaleRef   = useRef(1);
   const clipCutRef      = useRef(null); // {isCut:true, srcBid} | null
+  const clipSrcDpiRef   = useRef(null); // DPI of the board where items were copied from
+  const pasteClickTimerRef = useRef(null); // setTimeout id for single-click paste-click discrimination
   const roomSvgRef      = useRef(null);
   const roomRef         = useRef(null);
   const roomsRef        = useRef([]);
@@ -2990,7 +2992,7 @@ function App() {
                 const fw = (item.w + 2*px) / bPx.w * fW;
                 const fh = (itemH + 2*px) / bPx.h * fH;
                 const fm = new THREE.Mesh(new THREE.PlaneGeometry(isSwapped ? fh : fw, isSwapped ? fw : fh), new THREE.MeshLambertMaterial({color:col,side:THREE.DoubleSide}));
-                fm.position.set(0, 0, -back); fm.rotation.z = itemRotRad; faceGroup.add(fm);
+                fm.position.set(0, 0, -back * sideSign); fm.rotation.z = itemRotRad; faceGroup.add(fm);
               });
           }
           const pMesh = new THREE.Mesh(
@@ -3206,7 +3208,8 @@ function App() {
                   const fw = (item.w + 2*px) / bPx.w * fW;
                   const fh = (itemH + 2*px) / bPx.h * bh;
                   const fm = new THREE.Mesh(new THREE.PlaneGeometry(isSwapped ? fh : fw, isSwapped ? fw : fh), new THREE.MeshLambertMaterial({color:col,side:THREE.DoubleSide}));
-                  fm.position.set(0, 0, -back); fm.rotation.z = itemRotRad; faceGroup.add(fm);
+                  const faceSign = (-dirZ * normX + dirX * normZ) >= 0 ? 1 : -1;
+                  fm.position.set(0, 0, -back * faceSign); fm.rotation.z = itemRotRad; faceGroup.add(fm);
                 });
             }
             const pMesh = new THREE.Mesh(
@@ -3512,6 +3515,7 @@ function App() {
           expanded.sort((a, b) => (a.z || 0) - (b.z || 0));
         }
         clipboardRef.current = expanded.map(i => ({ ...i }));
+        clipSrcDpiRef.current = boardDpiRef.current;
         clipCutRef.current = isCut ? { isCut: true, srcBid: boardId } : null;
         setClipBanner({ count: 1, isCut });
         if (isCut) {
@@ -3709,6 +3713,7 @@ function App() {
         if (walkActive) return; // walk mode has its own click handler
         if (roomShareModeRef.current) return;
         if (!clipboardRef.current.length) return;
+        clearTimeout(pasteClickTimerRef.current);
         const rect = canvas.getBoundingClientRect();
         const mx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
         const my = -((e.clientY - rect.top) / rect.height) * 2 + 1;
@@ -3718,10 +3723,13 @@ function App() {
         if (hits.length > 0) {
           const ud = hits[0].object.userData;
           if (ud.boardId) {
-            setBid(ud.boardId); bidRef.current = ud.boardId;
-            setRoomView('board');
-            // triggerPasteGhost runs after React re-renders with the new bid
-            requestAnimationFrame(() => triggerPasteGhost());
+            const boardId = ud.boardId;
+            pasteClickTimerRef.current = setTimeout(() => {
+              setBid(boardId); bidRef.current = boardId;
+              setRoomView('board');
+              // triggerPasteGhost runs after React re-renders with the new bid
+              requestAnimationFrame(() => triggerPasteGhost());
+            }, 250);
           }
         }
       };
@@ -3826,7 +3834,7 @@ function App() {
 
       // Double-click in any mode → open artwork/grid view (walk mode: bypasses snap behaviour)
       const onDblClick3D = e => {
-        if (clipboardRef.current.length) return;
+        clearTimeout(pasteClickTimerRef.current);
         const rect = canvas.getBoundingClientRect();
         const mx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
         const my = -((e.clientY - rect.top) / rect.height) * 2 + 1;
@@ -4335,7 +4343,10 @@ function App() {
     pushUndo();
     const {items, minX, minY, bboxW, bboxH} = pg;
     const {x, y} = ghostPosRef.current;
-    const scale = ghostScaleRef.current;
+    const srcDpi = clipSrcDpiRef.current;
+    const destDpi = boardDpiRef.current;
+    const dpiScale = (srcDpi && destDpi && srcDpi !== destDpi) ? destDpi / srcDpi : 1;
+    const scale = ghostScaleRef.current * dpiScale;
     const gx = x - bboxW * scale / 2;
     const gy = y - bboxH * scale / 2;
     const pfx = Date.now().toString(36);
@@ -5607,6 +5618,7 @@ ${rows}
     // Sort by z so zones (lower z) come before their children in the clipboard
     expanded.sort((a, b) => (a.z || 0) - (b.z || 0));
     clipboardRef.current = expanded.map(i => ({...i}));
+    clipSrcDpiRef.current = boardDpiRef.current;
     if (isCut) {
       clipCutRef.current = {isCut: true, srcBid: bidRef.current};
       pushUndo();
@@ -5809,7 +5821,7 @@ ${rows}
       if (pasteGhostRef.current) { pasteGhostRef.current = null; setPasteGhost(null); setClipBanner(null); return; }
       // In 3D paste mode: ESC exits crosshair/banner but keeps clipboard for later Ctrl+V in 2D
       if (roomViewRef.current === '3d' && clipboardRef.current.length > 0) { setClipBanner(null); return; }
-      if (clipBanner) { setClipBanner(null); clipboardRef.current = []; clipCutRef.current = null; return; }
+      if (clipBanner) { setClipBanner(null); clipboardRef.current = []; clipCutRef.current = null; clipSrcDpiRef.current = null; return; }
       if (sectCtxMenu) { setSectCtxMenu(null); return; }
       if (presZoneIdxRef.current >= 0) { presZoneIdxRef.current = -1; setPresZoneIdx(-1); setPresSwapSel(null); return; }
       if (presentation) { setPresentation(false); return; }
@@ -10403,7 +10415,7 @@ ${rows}
               <div className="clip-banner">
                 <span className="clip-banner-icon">{clipBanner.isCut ? '✂' : '⎘'}</span>
                 <span className="clip-banner-msg">{t(clipBanner.isCut ? 'clipBannerCut' : 'clipBannerCopy', clipBanner.count)}</span>
-                <button className="clip-banner-cancel" onClick={() => { setClipBanner(null); clipboardRef.current = []; clipCutRef.current = null; }}>{t('clipBannerCancel')}</button>
+                <button className="clip-banner-cancel" onClick={() => { setClipBanner(null); clipboardRef.current = []; clipCutRef.current = null; clipSrcDpiRef.current = null; }}>{t('clipBannerCancel')}</button>
               </div>
             )}
 

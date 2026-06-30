@@ -1,6 +1,6 @@
 {
-  "version": "1.25.15",
+  "version": "1.25.16",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-06-29",
-  "notes": "Información de celda en mosaico al hover, ancho de celda editable en propiedades, correcciones del fantasma de mosaico (visible, filas completas) y alinear/distribuir arrastra ítems bloqueados de las zonas."
+  "releaseDate": "2026-06-30",
+  "notes": "Corrección de profundidad en el render 3D: marco y paspartú aparecen ahora correctamente detrás de la foto en paredes y caras de bloques."
 }
