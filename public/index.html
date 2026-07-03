@@ -3048,11 +3048,14 @@ function App() {
             const startY = (cvH - totalH) / 2 + fs * 0.82;
             lines.forEach((ln, i) => ctx2.fillText(ln, tx, startY + i * lineH));
             const tex = new THREE.CanvasTexture(cvs);
+            if (sideSign === -1) { tex.repeat.x = -1; tex.offset.x = 1; tex.needsUpdate = true; }
             pMesh.material = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, transparent: true, alphaTest: 0.01 });
           } else if (item.photoId) {
+            const needsFlip = (sideSign === -1) !== !!(item.flipH);
             loader.load(`/photos/${pid}/${item.photoId}/thumb`, tex => {
               if (cancelled) return;
               tex.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
+              if (needsFlip) { tex.repeat.x = -1; tex.offset.x = 1; tex.needsUpdate = true; }
               pMesh.material = new THREE.MeshLambertMaterial({ map: tex, side: THREE.DoubleSide });
             });
           }
@@ -3101,7 +3104,7 @@ function App() {
 
       // Block face photos — items on linked boards rendered onto block faces
       const BFOFF = 2;
-      const applyBlockItemMat = (pMesh, item, itemH, bgHex) => {
+      const applyBlockItemMat = (pMesh, item, itemH, bgHex, needsFlip) => {
         const isText = item.type === 'text';
         if (isText) {
           const SCALE = 2;
@@ -3147,6 +3150,7 @@ function App() {
           loader.load(`/photos/${pid}/${item.photoId}/thumb`, tex => {
             if (cancelled) return;
             tex.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
+            if (needsFlip) { tex.repeat.x = -1; tex.offset.x = 1; tex.needsUpdate = true; }
             pMesh.material = new THREE.MeshLambertMaterial({ map: tex, side: THREE.DoubleSide });
           });
         }
@@ -3223,7 +3227,8 @@ function App() {
             pMesh.userData.zoneId  = item.zoneId || null;
             faceGroup.add(pMesh);
             itemMeshes.push(pMesh);
-            applyBlockItemMat(pMesh, item, itemH, hexBlock(face));
+            const needsFlip = ((-dirZ * normX + dirX * normZ) < 0) !== !!(item.flipH);
+            applyBlockItemMat(pMesh, item, itemH, hexBlock(face), needsFlip);
           });
         });
         // Top face
@@ -3281,7 +3286,7 @@ function App() {
                 pMesh.userData.zoneId  = item.zoneId || null;
                 mkFlat(pMesh, 0);
                 itemMeshes.push(pMesh);
-                applyBlockItemMat(pMesh, item, itemH, hexBlock('t'));
+                applyBlockItemMat(pMesh, item, itemH, hexBlock('t'), !!(item.flipH));
               });
             }
           }

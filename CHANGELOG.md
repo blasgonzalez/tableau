@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.25.17] — 2026-07-03
+
+### Corregido
+- **Espejo horizontal en vista 3D:** fotos y textos en la cara exterior de las paredes (cara B) y en caras de bloques con normal apuntando hacia la cámara ya no aparecen invertidos horizontalmente. El fix aplica `tex.repeat.x = -1` cuando la cámara ve la cara trasera del plano. El volteo horizontal manual (`flipH`) del usuario se respeta ahora también en la vista 3D mediante XOR con el giro estructural.
+
 ## [1.25.16] — 2026-06-30
 
 ### Corregido

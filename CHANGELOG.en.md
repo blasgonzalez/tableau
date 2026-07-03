@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.25.17] — 2026-07-03
+
+### Fixed
+- **Horizontal mirror in 3D view:** photos and text on the exterior face of walls (face B) and on block faces whose normal points toward the camera no longer appear horizontally mirrored. The fix applies `tex.repeat.x = -1` when the camera sees the back face of the plane. The user's manual horizontal flip (`flipH`) is now also respected in the 3D view via XOR with the structural flip.
+
 ## [1.25.16] — 2026-06-30
 
 ### Fixed

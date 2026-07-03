@@ -45,7 +45,7 @@ Abre **Ajustes** desde el botón ⚙ de la barra superior → sección **Proyect
 
 ### Papelera
 
-Los proyectos y fotos eliminados se conservan durante 30 días antes de borrarse definitivamente. Accede a la papelera desde el botón en el panel izquierdo (muestra un badge con el número de elementos). Puedes restaurar proyectos completos o vaciar la papelera manualmente.
+Los proyectos, tableros, salas y fotos eliminados se conservan durante 30 días antes de borrarse definitivamente. Accede a la papelera desde el botón en el panel izquierdo (muestra un badge con el número de elementos). Puedes restaurar elementos completos o vaciar la papelera manualmente.
 
 ---
 
@@ -207,7 +207,7 @@ Selecciona varios elementos y pulsa el botón de agrupar (**⊓**). Un clic sobr
 
 Al pegar, aparece un fantasma semitransparente que sigue el cursor. Haz clic para colocarlo. Usa la **rueda del ratón** para escalar el conjunto antes de colocar. Pulsa **ESC** para cancelar.
 
-El portapapeles persiste al cambiar de tablero: puedes copiar en un tablero y pegar en otro.
+El portapapeles persiste al cambiar de tablero: puedes copiar en un tablero y pegar en otro. Funciona con todos los tipos de elemento: fotos, textos, notas, zonas, mosaicos y placeholders.
 
 ### Zoom y navegación
 
@@ -240,9 +240,43 @@ Configura un marco por defecto en **⚙ Config** del tablero para que se aplique
 
 ## Mosaicos
 
-Selecciona varias fotos y pulsa **⊞ Cuadrícula** en la barra de selección. Elige el número de columnas y la separación. En tableros fijos calcula automáticamente el tamaño de celda.
+Los mosaicos son cuadrículas de fotos que puedes crear, editar y reordenar directamente en el canvas.
 
-Dentro del mosaico, arrastra entre celdas para reordenar. Haz clic derecho sobre una celda para reemplazar la foto o quitarla del mosaico.
+### Crear un mosaico
+
+Clic derecho en el canvas → **+ Mosaico**. Se abre un diálogo con las opciones:
+
+- **Columnas** — número de columnas
+- **Filas** — opcional. Si lo dejas vacío el mosaico crece automáticamente al añadir fotos (**modo libre**); si introduces un número crea una estructura fija C×F con celdas vacías (**modo fijo**)
+- **Separación entre columnas** y **separación entre filas** — independientes
+- **Compactar** — (solo modo fijo) al quitar una foto, las restantes se desplazan para ocupar el hueco; si está desactivado el hueco queda visible
+
+### Dos modos de funcionamiento
+
+**Modo libre:** el mosaico crece al añadir fotos. No hay celdas vacías.
+
+**Modo fijo:** estructura C×F predefinida. Las celdas vacías aparecen como rectángulos punteados en el canvas (invisibles en la exportación). Útil para reservar huecos o planificar una composición antes de tener todas las fotos.
+
+### Añadir y gestionar fotos
+
+- **Arrastra una foto desde la biblioteca** sobre una celda vacía para llenarla, o sobre una celda ocupada para reemplazarla.
+- **Arrastra entre celdas** para reordenar (intercambia las dos fotos).
+- **Clic derecho sobre una celda ocupada** → opciones de celda (reemplazar, quitar) y opciones del mosaico (propiedades, desacoplar, eliminar).
+- **Clic derecho sobre una celda vacía o espacio entre celdas** → opciones del mosaico.
+
+### Dimensiones de celda
+
+Al pasar el ratón sobre un mosaico, el panel de información lateral muestra el tamaño de celda en píxeles y en unidades físicas (cm, mm…) según el DPI del tablero. Es el dato que necesitas para producción.
+
+Para ajustar el tamaño de celda con precisión: clic derecho → **Propiedades del mosaico** → campo **Ancho de celda**. Introduce el valor deseado y el sistema recalcula el ancho total del mosaico automáticamente.
+
+### Desacoplar un mosaico
+
+Clic derecho → **Desacoplar**. Tres opciones:
+
+- **En fotos sueltas** — cada celda se convierte en una foto independiente en su posición exacta
+- **En columnas** — cada columna se convierte en una zona con sus fotos bloqueadas (puedes arrastrar la columna entera como bloque)
+- **En filas** — cada fila se convierte en una zona con sus fotos bloqueadas
 
 ---
 
@@ -362,10 +396,14 @@ Haz clic en **+ Nueva sala** en el panel lateral. Un proyecto puede tener varias
 
 1. Haz clic en **Editar planta** para entrar en modo edición.
 2. Haz clic en el canvas para ir colocando vértices. Mantén **Shift** para forzar ángulos de 45°/90°.
-3. Cierra el polígono haciendo clic sobre el primer vértice.
+3. Cierra el polígono haciendo clic sobre el primer vértice, o deja los segmentos abiertos si la sala no es un polígono cerrado.
 4. **⌫** deshace el último vértice. **ESC** cancela.
 
 Una vez dibujada, arrastra los vértices para modificar la planta.
+
+**Eliminar un segmento de pared:** clic derecho sobre el segmento (la línea entre dos vértices) → **Eliminar pared**. El segmento desaparece pero los vértices se conservan, salvo que queden sin ningún otro segmento conectado, en cuyo caso se eliminan también. Si el segmento tiene tableros vinculados, el programa pide confirmación antes de eliminarlo.
+
+Esto es útil para representar paredes con vanos (ventanas, puertas): dibuja todos los segmentos incluyendo los huecos, y luego elimina los segmentos que corresponden a la abertura.
 
 **Configuración de la sala** (panel derecho):
 - **Altura del techo** — en cm, determina la altura de las paredes en 3D
@@ -378,9 +416,23 @@ Cada pared tiene dos caras independientes:
 - **Cara A** — interior (según el sentido de dibujo)
 - **Cara B** — exterior
 
-En el panel derecho, cada pared muestra los botones **A ▶** y **B +** con una franja de color. Al pasar el ratón sobre un botón, esa cara se ilumina en el plano. Haz clic en **+** para crear el tablero de esa cara, o en **▶** para ir al tablero existente.
+En el panel lateral, cada pared muestra su nombre, longitud y número de tableros vinculados, con un botón para abrir la **vista frontal**.
 
-Si la longitud real de la pared difiere del ancho del tablero vinculado, aparece un badge **⚠** y el botón **Sincronizar**.
+#### Vista frontal de pared
+
+La vista frontal es el espacio donde gestionas los tableros de una cara. Abre la vista frontal desde el panel lateral y usa el toggle **A / B** para cambiar de cara.
+
+Desde la vista frontal puedes:
+
+- **Crear un tablero** con el botón **+** — crea un tablero fijo vacío vinculado a esa cara
+- **Mover un tablero** dentro de la vista frontal arrastrándolo (con snap a 150 cm, bordes de pared y otros tableros)
+- **Redimensionar un tablero vacío** desde sus bordes o esquinas
+- **Editar en canvas** con doble clic sobre el tablero
+- **Clic derecho sobre un tablero** → menú con opciones: editar, mover a otra pared, desvincular, eliminar
+
+Una cara de pared puede tener varios tableros con posiciones independientes.
+
+Si la longitud real de la pared difiere del ancho de un tablero vinculado, aparece un badge **⚠** y el botón **Sincronizar**.
 
 ### Bloques sólidos
 

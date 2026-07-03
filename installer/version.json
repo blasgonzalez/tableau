@@ -1,6 +1,6 @@
 {
-  "version": "1.25.16",
+  "version": "1.25.17",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-06-30",
-  "notes": "Corrección de profundidad en el render 3D: marco y paspartú aparecen ahora correctamente detrás de la foto en paredes y caras de bloques."
+  "releaseDate": "2026-07-03",
+  "notes": "Corrección de espejo horizontal en vista 3D: fotos y textos en cara exterior de paredes y caras de bloques ya no aparecen invertidos. El volteo horizontal (flipH) del usuario se respeta ahora también en la vista 3D."
 }
