@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.25.19] — 2026-07-04
+
+### Added
+- **Undo (Ctrl+Z) in the room floor plan editor:** moving a vertex, adding a vertex/wall, and deleting a vertex/wall without linked boards can now be undone with Ctrl+Z (up to 20 steps). Deletions that remove linked boards are not reversible and are excluded from the history.
+
+### Fixed
+- **Room view fit respects the panel's aspect ratio:** `fitRoomView` now expands the viewBox's width or height (keeping content centered) to match the SVG container's ratio, preventing tall, narrow rooms from appearing tiny due to excessive scaling.
+
 ## [1.25.18] — 2026-07-04
 
 ### Added

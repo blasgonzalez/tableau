@@ -2135,6 +2135,7 @@ function App() {
   const pasteClickTimerRef = useRef(null); // setTimeout id for single-click paste-click discrimination
   const roomSvgRef      = useRef(null);
   const roomRef         = useRef(null);
+  const roomHistoryRef  = useRef([]); // undo stack of room snapshots (Ctrl+Z, board-affecting deletes excluded)
   const roomsRef        = useRef([]);
   const activeRoomIdRef = useRef(null);
   const dragToRoomTimerRef = useRef(null); // Fase 3d: drag-to-expand room in tree
@@ -2646,6 +2647,7 @@ function App() {
     if (!pid) {
       setRooms([]); roomsRef.current = [];
       setRoom(null); roomRef.current = null;
+      roomHistoryRef.current = [];
       setActiveRoomId(null); activeRoomIdRef.current = null;
       setRoomView('board'); return;
     }
@@ -4095,6 +4097,12 @@ function App() {
       const tag = document.activeElement?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
       if (e.ctrlKey || e.metaKey) {
+        if (e.key === 'z' && !e.shiftKey && roomViewRef.current === 'room') {
+          e.preventDefault();
+          const prev = roomHistoryRef.current.pop();
+          if (prev) saveRoom(prev);
+          return;
+        }
         if (e.key === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); }
         if (e.key === 'y') { e.preventDefault(); redo(); }
         if (e.key === 'a') { e.preventDefault(); const ids = itemsRef.current.map(i => i.id); selRef.current = ids; setSel(ids); }
@@ -7336,6 +7344,10 @@ ${rows}
     api.put(`/api/projects/${pidRef.current}/rooms/${r.id}`, r);
   };
 
+  const pushRoomHistory = r => {
+    roomHistoryRef.current = [...roomHistoryRef.current.slice(-19), JSON.parse(JSON.stringify(r))];
+  };
+
   const openWallFrontView = (wall, initialFace) => {
     // Fase 3e VÍA 2: si hay un tablero en tránsito, abrir con ghost automático en destino
     const mo = wfvMoveOriginRef.current;
@@ -7360,6 +7372,7 @@ ${rows}
   const switchRoom = rid => {
     const r = roomsRef.current.find(x => x.id === rid) || null;
     setRoom(r); roomRef.current = r;
+    roomHistoryRef.current = [];
     setActiveRoomId(rid); activeRoomIdRef.current = rid;
     if (r) { setRoomCeilH(r.ceilingHeight || 280); setRoomWallThick(r.wallThickness ?? 15); setRoomName(r.name || ''); }
     setRoomDrawing(false); setRoomTempVerts([]); setRoomCursor(null);
@@ -7403,7 +7416,22 @@ ${rows}
     const minY = Math.min(...ys), maxY = Math.max(...ys);
     const pw = Math.max(50, maxX - minX), ph = Math.max(50, maxY - minY);
     const pad = Math.max(pw, ph) * 0.15 + 30;
-    const nv = {x: minX-pad, y: minY-pad, w: pw+pad*2, h: ph+pad*2};
+    let x = minX-pad, y = minY-pad, w = pw+pad*2, h = ph+pad*2;
+    const svgEl = roomSvgRef.current;
+    if (svgEl && svgEl.clientWidth && svgEl.clientHeight) {
+      const svgRatio = svgEl.clientWidth / svgEl.clientHeight;
+      const contentRatio = w / h;
+      if (contentRatio < svgRatio) {
+        const newW = h * svgRatio;
+        x -= (newW - w) / 2;
+        w = newW;
+      } else {
+        const newH = w / svgRatio;
+        y -= (newH - h) / 2;
+        h = newH;
+      }
+    }
+    const nv = {x, y, w, h};
     roomVboxRef.current = nv; setRoomVbox(nv);
   };
 
@@ -7564,6 +7592,7 @@ ${rows}
           id:`w${pfx}${i}`, v1:v.id, v2:verts[i+1].id,
           name:lang==='es'?`Pared ${maxN+i+1}`:`Wall ${maxN+i+1}`, boardsA:[], boardsB:[],
         }));
+    if (r) pushRoomHistory(r);
     saveRoom({
       ...r,
       name:          r?.name,
@@ -7691,11 +7720,13 @@ ${rows}
         boardsB: [...(w1.boardsB||[]), ...(w2.boardsB||[]).map(e=>({...e,offset:(e.offset||0)+w1len}))],
       };
       const newWalls = r.walls.filter(w=>w.id!==w1.id&&w.id!==w2.id).concat(merged);
+      pushRoomHistory(r);
       saveRoom({...r, vertices:r.vertices.filter(v=>v.id!==vid), walls:newWalls});
       setRoomVertCtx(null);
     } else {
       const linkedIds = [...new Set(conn.flatMap(wallBoardIds))];
       const doDelete = () => {
+        if (!linkedIds.length) pushRoomHistory(r);
         const newWalls = r.walls.filter(w=>w.v1!==vid&&w.v2!==vid);
         saveRoom({...r, vertices:r.vertices.filter(v=>v.id!==vid), walls:newWalls});
         if (linkedIds.length) {
@@ -7725,6 +7756,7 @@ ${rows}
     const wall = r.walls.find(w => w.id === wallId); if (!wall) return;
     const linkedIds = [...new Set(wallBoardIds(wall))];
     const doDelete = () => {
+      if (!linkedIds.length) pushRoomHistory(r);
       const remainingWalls = r.walls.filter(w => w.id !== wallId);
       const isOrphan = vid => !remainingWalls.some(w => w.v1 === vid || w.v2 === vid);
       const newVertices = r.vertices.filter(v => !isOrphan(v.id));
@@ -7754,6 +7786,7 @@ ${rows}
     e.stopPropagation();
     const r0 = roomRef.current; if (!r0) return;
     const v0 = r0.vertices.find(v => v.id === vid); if (!v0) return;
+    pushRoomHistory(r0);
     const svgEl = roomSvgRef.current;
     const toSvg = (cx, cy) => {
       const p = svgEl.createSVGPoint(); p.x = cx; p.y = cy;

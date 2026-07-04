@@ -1,6 +1,6 @@
 {
-  "version": "1.25.18",
+  "version": "1.25.19",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-07-04",
-  "notes": "Ajustar vista en modo sala: nuevo botón y Ctrl+0 reencuadran el plano considerando también bloques y columnas, no solo las paredes."
+  "notes": "Deshacer (Ctrl+Z) en el editor de planta de sala y ajuste de vista al aspect ratio del panel."
 }

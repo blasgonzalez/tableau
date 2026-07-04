@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.25.19] — 2026-07-04
+
+### Añadido
+- **Deshacer (Ctrl+Z) en el editor de planta de sala:** mover vértice, añadir vértice/pared y eliminar vértice/pared sin tableros vinculados ahora se pueden deshacer con Ctrl+Z (stack de hasta 20 pasos). Las eliminaciones que borran tableros vinculados no son reversibles y no entran en el historial.
+
+### Corregido
+- **Ajuste de vista de sala respeta el aspect ratio del panel:** `fitRoomView` ahora amplía el ancho o el alto del viewBox (manteniendo el contenido centrado) para igualar la proporción del contenedor SVG, evitando que salas muy altas y estrechas se vean minúsculas por el escalado excesivo.
+
 ## [1.25.18] — 2026-07-04
 
 ### Añadido
