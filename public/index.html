@@ -1429,6 +1429,7 @@ const I18N = {
     shareRoomGenerate:'Generar enlace', shareRoomRevoke:'Revocar', shareRoomCopy:'Copiar enlace',
     shareRoomCopied:'Enlace copiado', shareRoomRegenerate:'Regenerar (revoca el actual)',
     shareRoomBadge:'Vista 3D compartida',
+    shareExpoBadge:'Exposición',
     shareRoomInfo:'El link abre la sala directamente en 3D. El visitante solo ve el contenido enlazado a esta sala.',
     shareRoomInvalidLink:'El enlace de sala no es válido o ha sido revocado.',
     shareRoomExpiredTitle:'Este enlace ya no está disponible',
@@ -1697,6 +1698,7 @@ const I18N = {
     shareRoomGenerate:'Generate link', shareRoomRevoke:'Revoke', shareRoomCopy:'Copy link',
     shareRoomCopied:'Link copied', shareRoomRegenerate:'Regenerate (revokes current)',
     shareRoomBadge:'Shared 3D view',
+    shareExpoBadge:'Exhibition',
     shareRoomInfo:'The link opens the room in 3D. Visitors only see content linked to this room.',
     shareRoomInvalidLink:'The room link is invalid or has been revoked.',
     shareRoomExpiredTitle:'This link is no longer available',
@@ -2048,6 +2050,9 @@ function App() {
   const [lockState,     setLockState]     = useState({});     // {[bid]: 'pending'|'locked'|'conflict'}
   const shareRoleRef = useRef(null);
   useEffect(() => { shareRoleRef.current = shareRole; }, [shareRole]);
+  const [shareRoomsOnly, setShareRoomsOnly] = useState(false); // project share guest restricted to rooms-only expo view
+  const shareRoomsOnlyRef = useRef(false);
+  useEffect(() => { shareRoomsOnlyRef.current = shareRoomsOnly; }, [shareRoomsOnly]);
   const [roomShareInviteEmail, setRoomShareInviteEmail] = useState('');
 
   // Room share mode (invitado a sala — ?room=TOKEN)
@@ -2056,6 +2061,11 @@ function App() {
   const [roomShareInfo, setRoomShareInfo] = useState(null);  // {projectId, roomId, roomName}
   const [roomShareModal, setRoomShareModal] = useState(null); // null | {rid, token, url} | {rid, loading}
   const [roomShareError, setRoomShareError] = useState(false); // token inválido o revocado
+
+  // Expo guest: single-room token OR project token with roomsOnly — read-only 3D-only navigation
+  const isExpoGuest = roomShareMode || shareRoomsOnly;
+  const isExpoGuestRef = useRef(false);
+  useEffect(() => { isExpoGuestRef.current = isExpoGuest; }, [isExpoGuest]);
 
   // Auth state (solo activo cuando el servidor tiene TABLEAU_AUTH=true)
   const [authMode,      setAuthMode]      = useState(false);
@@ -2513,6 +2523,8 @@ function App() {
           setShareRole(d.role);
           shareRoleRef.current = d.role;
           setShareAllowComments(d.allowComments || false);
+          setShareRoomsOnly(d.roomsOnly || false);
+          shareRoomsOnlyRef.current = d.roomsOnly || false;
           setProjects([d.project]);
           setPid(d.project.id);
           setReady(true);
@@ -2554,7 +2566,7 @@ function App() {
   useEffect(() => {
     setHoverInfo(null);
     if (!pid) { setBoards([]); setBid(null); setPhotos([]); setItems([]); setAllBoardItems({}); return; }
-    if (roomShareModeRef.current) return; // boards list not available in room share scope
+    if (isExpoGuestRef.current) return; // boards list not available in room share / rooms-only expo scope
     Promise.all([
       api.get(`/api/projects/${pid}/boards`),
       api.get(`/api/projects/${pid}/photos`),
@@ -2669,6 +2681,21 @@ function App() {
         setBoards(bs || []);
         setPhotos(ps || []);
         setRoomView('3d');
+      });
+      return;
+    }
+    if (shareRoomsOnlyRef.current) {
+      // Rooms-only project guest: load the full room list and jump straight into
+      // the 3D view of the first room. Boards/photos are not preloaded here — the
+      // 3D scene effect fetches board items and photos on demand, already scoped
+      // server-side to room-linked content for this share.
+      api.get(`/api/projects/${pid}/rooms`).then(rs => {
+        const arr = (rs || []).map(normalizeRoom);
+        const r = arr[0] || null;
+        setRooms(arr); roomsRef.current = arr;
+        setRoom(r); roomRef.current = r;
+        if (r) { setActiveRoomId(r.id); activeRoomIdRef.current = r.id; setRoomCeilH(r.ceilingHeight||280); setRoomWallThick(r.wallThickness??15); setRoomName(r.name||''); }
+        load3DLibs().then(() => setRoomView('3d'));
       });
       return;
     }
@@ -3633,7 +3660,7 @@ function App() {
       const ctxRay = new THREE.Raycaster();
       const onCtxMenu = e => {
         e.preventDefault();
-        if (roomShareModeRef.current || walkActive) return;
+        if (isExpoGuestRef.current || walkActive) return;
         const rect = canvas.getBoundingClientRect();
         const mx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
         const my = -((e.clientY - rect.top) / rect.height) * 2 + 1;
@@ -3736,7 +3763,7 @@ function App() {
       const pasteRay = new THREE.Raycaster();
       const onPasteClick = e => {
         if (walkActive) return; // walk mode has its own click handler
-        if (roomShareModeRef.current) return;
+        if (isExpoGuestRef.current) return;
         if (!clipboardRef.current.length) return;
         clearTimeout(pasteClickTimerRef.current);
         const rect = canvas.getBoundingClientRect();
@@ -3866,7 +3893,7 @@ function App() {
         itemRay.setFromCamera(new THREE.Vector2(mx, my), camera);
         const hits = filterHitsBySide(itemRay.intersectObjects(itemMeshes));
         if (hits.length) { openFrom3D(hits[0].object.userData); return; }
-        if (roomShareModeRef.current) return;
+        if (isExpoGuestRef.current) return;
         const wallHits = itemRay.intersectObjects(wallMeshes);
         if (!wallHits.length) return;
         const wud = wallHits[0].object.userData;
@@ -9125,7 +9152,7 @@ ${rows}
   }
 
   return (
-    <div className={`app${presentation ? ' presentation' : ''}${roomShareMode ? ' room-share-mode' : ''}`} onClick={() => { selRef.current = []; setSel([]); setTextEditing(false); renaming && setRenaming(null); setThemeOpen(false); setAvatarOpen(false); setPropsPanelId(null); setFramePainter(null); setCtx3DMenu(null); setCtx3DWallMenu(null); }}>
+    <div className={`app${presentation ? ' presentation' : ''}${isExpoGuest ? ' room-share-mode' : ''}`} onClick={() => { selRef.current = []; setSel([]); setTextEditing(false); renaming && setRenaming(null); setThemeOpen(false); setAvatarOpen(false); setPropsPanelId(null); setFramePainter(null); setCtx3DMenu(null); setCtx3DWallMenu(null); }}>
 
       {/* ── Minimal header for room share mode ── */}
       {roomShareMode && roomShareInfo && (
@@ -9141,6 +9168,21 @@ ${rows}
           })()}
         </div>
       )}
+
+      {/* ── Minimal header for rooms-only project expo guest ── */}
+      {shareRoomsOnly && (() => {
+        const projName = projects.find(p => p.id === pid)?.name || projects[0]?.name || '';
+        const curIdx = rooms.findIndex(r => r.id === activeRoomId);
+        const pos = (curIdx >= 0 && rooms.length > 0) ? ` (${curIdx + 1} / ${rooms.length})` : '';
+        return (
+          <div className="room-share-hd">
+            <span className="room-share-logo">Tableau</span>
+            <span className="room-share-sep">›</span>
+            <span className="room-share-name">{projName ? `${projName} — ` : ''}{(room?.name || (lang==='es'?'Sala':'Room'))}{pos}</span>
+            <span className="room-share-badge">{t('shareExpoBadge')}</span>
+          </div>
+        );
+      })()}
 
       {updateInfo && !updateDismissed && (
         <div className="update-banner">
@@ -9461,7 +9503,7 @@ ${rows}
       </div>
 
       {/* ── MAIN ── */}
-      {!pid && !projects.length && trashCount.total === 0 && !roomShareMode ? (
+      {!pid && !projects.length && trashCount.total === 0 && !isExpoGuest ? (
         <div className="start">
           <div className="start-logo">Tableau</div>
           <div className="start-sub">
@@ -10345,6 +10387,28 @@ ${rows}
                 <div className="room-svg-wrap" style={{background:'#1e1e1e', position:'relative'}}>
                   <canvas ref={room3DCanvasRef} style={{display:'block', width:'100%', height:'100%'}}/>
                   <div ref={hud3DLabelRef} style={{position:'absolute',bottom:16,left:'50%',transform:'translateX(-50%)',background:'rgba(0,0,0,0.65)',color:'#fff',padding:'4px 12px',borderRadius:4,fontSize:12,pointerEvents:'none',display:'none',maxWidth:'60%',textAlign:'center',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',zIndex:5}}/>
+                  {isExpoGuest && rooms.length > 1 && (
+                    <>
+                      <button
+                        style={{position:'absolute',top:'50%',left:12,transform:'translateY(-50%)',zIndex:20,width:36,height:52,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(0,0,0,.45)',border:'1px solid rgba(255,255,255,.15)',color:'rgba(255,255,255,.75)',cursor:'pointer',fontSize:20,backdropFilter:'blur(4px)'}}
+                        onClick={() => {
+                          const idx = rooms.findIndex(r => r.id === activeRoomId);
+                          const prevRoom = rooms[(idx - 1 + rooms.length) % rooms.length];
+                          if (!prevRoom) return;
+                          switchRoom(prevRoom.id);
+                          load3DLibs().then(() => setRoomView('3d'));
+                        }}>‹</button>
+                      <button
+                        style={{position:'absolute',top:'50%',right:12,transform:'translateY(-50%)',zIndex:20,width:36,height:52,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(0,0,0,.45)',border:'1px solid rgba(255,255,255,.15)',color:'rgba(255,255,255,.75)',cursor:'pointer',fontSize:20,backdropFilter:'blur(4px)'}}
+                        onClick={() => {
+                          const idx = rooms.findIndex(r => r.id === activeRoomId);
+                          const nextRoom = rooms[(idx + 1) % rooms.length];
+                          if (!nextRoom) return;
+                          switchRoom(nextRoom.id);
+                          load3DLibs().then(() => setRoomView('3d'));
+                        }}>›</button>
+                    </>
+                  )}
                   {walkMode3D && !walkStarted && !isMobile && (
                     <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(0,0,0,.55)',zIndex:5,cursor:'pointer'}}
                       onClick={() => { setWalkStarted(true); const c = room3DCanvasRef.current; if (c) c.requestPointerLock(); }}>
@@ -10417,9 +10481,9 @@ ${rows}
                     </div>
                   )}
                   <div className="room-toolbar room-toolbar-3d">
-                    {!roomShareMode && !isMobile && <button className="btn" onClick={() => setRoomView('room')}>← {lang==='es'?'Planta':'Floor plan'}</button>}
+                    {!isExpoGuest && !isMobile && <button className="btn" onClick={() => setRoomView('room')}>← {lang==='es'?'Planta':'Floor plan'}</button>}
                     <button className="btn" style={isMobile?{minHeight:44,minWidth:44}:undefined} onClick={() => reset3DViewRef.current?.()}>{lang==='es'?'Centrar':'Reset view'}</button>
-                    {!roomShareMode && !isMobile && <button className="btn" onClick={() => snapshot3DRef.current?.()}>{lang==='es'?'Capturar':'Snapshot'}</button>}
+                    {!isExpoGuest && !isMobile && <button className="btn" onClick={() => snapshot3DRef.current?.()}>{lang==='es'?'Capturar':'Snapshot'}</button>}
                     <button className={`btn${show3DPerson?' active':''}`} style={isMobile?{minHeight:44,minWidth:44}:undefined} data-tooltip={lang==='es'?'Mostrar escala humana (175 cm)':'Show human scale (175 cm)'} onClick={() => { if (show3DPerson && personMoveMode) togglePersonMoveRef.current?.(); toggle3DPersonRef.current?.(); setShow3DPerson(v => !v); }}>{lang==='es'?'👤 Persona':'👤 Person'}</button>
                     {!isMobile && show3DPerson && <button className={`btn${personMoveMode?' active':''}`} style={isMobile?{minHeight:44,minWidth:44}:undefined} data-tooltip={lang==='es'?'Arrastra la figura por el suelo de la sala':'Drag figure across the room floor'} onClick={() => togglePersonMoveRef.current?.()}>{lang==='es'?(personMoveMode?'✓ Listo':'↔ Mover'):(personMoveMode?'✓ Done':'↔ Move')}</button>}
                     {!isMobile && <button className={`btn${walkMode3D?' active':''}`} data-tooltip={lang==='es'?'Pasear por la sala — flechas para moverse y girar, clic para capturar ratón':'Walk through the room — arrows to move and turn, click to capture mouse'} onClick={() => toggle3DWalkRef.current?.()}>{lang==='es'?(walkMode3D?'✕ Salir paseo':'◉ Pasear'):(walkMode3D?'✕ Exit walk':'◉ Walk')}</button>}
@@ -11946,7 +12010,7 @@ ${rows}
         };
         // Physical dimensions (owner only)
         let physDims = null;
-        if (!roomShareMode && board && item && photo?.w > 0 && photo?.h > 0) {
+        if (!isExpoGuest && board && item && photo?.w > 0 && photo?.h > 0) {
           const iw = pxToPhys(item.w, board.dpi, board.units);
           const ih = pxToPhys(Math.round(item.w * photo.h / photo.w), board.dpi, board.units);
           if (iw && ih) physDims = `${iw} × ${ih} ${board.units||'px'} · ${board.dpi||150} dpi`;
@@ -12009,7 +12073,7 @@ ${rows}
               <div className="fullscreen-info-left">
                 {item?.label && <div className="artwork3d-label" style={{color:tc}}>{item.label}</div>}
                 {physDims && <div className="artwork3d-dims" style={{color:tcMuted}}>{physDims}</div>}
-                {!roomShareMode && board && <div className="artwork3d-dims" style={{color:tcMuted}}>{board.name}</div>}
+                {!isExpoGuest && board && <div className="artwork3d-dims" style={{color:tcMuted}}>{board.name}</div>}
                 {artwork3DComments.length > 0 && (
                   <div className="artwork3d-comments">
                     {artwork3DComments.map(c => (
@@ -12020,7 +12084,7 @@ ${rows}
                     ))}
                   </div>
                 )}
-                {!roomShareMode && photo && <button className="artwork3d-dims" style={{marginTop:6,cursor:'pointer',background:'none',border:'1px solid '+tcMuted,color:tcMuted,padding:'2px 8px',borderRadius:2,fontFamily:'IBM Plex Mono,monospace',fontSize:9,letterSpacing:.5}}
+                {!isExpoGuest && photo && <button className="artwork3d-dims" style={{marginTop:6,cursor:'pointer',background:'none',border:'1px solid '+tcMuted,color:tcMuted,padding:'2px 8px',borderRadius:2,fontFamily:'IBM Plex Mono,monospace',fontSize:9,letterSpacing:.5}}
                   onClick={() => { closeArtwork3D(); setBid(awBid); bidRef.current = awBid; }}>{lang==='es'?'Editar en tablero →':'Edit in board →'}</button>}
               </div>
             </div>
@@ -12887,7 +12951,7 @@ ${rows}
                 itemsRef.current = u; setItems(u); saveItemsNow(u); setCtxMenu(null); setLibSelection([]); libSelAnchorRef.current = null;
               }}>+ {t('gridItemAddSel')}</button>
               {(() => { const board = boards.find(b => b.id === bid); const lay = calcGridLayout(ctxItem, photos, board?.dpi||150, board?.units||'px'); return (<><div style={{padding:'3px 12px 1px',fontSize:9,color:'var(--dim)',letterSpacing:1.2,textTransform:'uppercase'}}>{t('gridDecoupleBtn')}</div><button className="ctx-item" onClick={()=>{decoupleGrid(ctxMenu.itemId,'photos');setCtxMenu(null);}}>⊟ {t('gridDecouplePhotos')}</button><button className="ctx-item" onClick={()=>{decoupleGrid(ctxMenu.itemId,'cols');setCtxMenu(null);}}>⊟ {t('gridDecoupleCols',lay.cols)}</button><button className="ctx-item" onClick={()=>{decoupleGrid(ctxMenu.itemId,'rows');setCtxMenu(null);}}>⊟ {t('gridDecoupleRows',lay.rows.length)}</button></>); })()}
-              {!roomShareMode && <><div className="ctx-sep"/>
+              {!isExpoGuest && <><div className="ctx-sep"/>
                 <button className="ctx-item" onClick={() => { openCommentPanel('grid', ctxMenu.itemId, bid); setCtxMenu(null); }}>💬 {t('commentsBtn')}</button>
               </>}
               <div className="ctx-sep"/>
@@ -12913,7 +12977,7 @@ ${rows}
                 const nit = itemsRef.current.map(i => i.id === ctxItem.id ? {...i, scaleContent: !ctxItem.scaleContent} : i);
                 setItems(nit); itemsRef.current = nit; saveItemsNow(nit); setCtxMenu(null);
               }}>{ctxItem.scaleContent ? '☑' : '☐'} {t('zoneScaleContent')}</button>
-              {!roomShareMode && <>
+              {!isExpoGuest && <>
                 <div className="ctx-sep"/>
                 <button className="ctx-item" onClick={() => { openCommentPanel('zone', ctxItem.id, bid, ctxItem.label); setCtxMenu(null); }}>💬 {t('commentsBtn')}</button>
               </>}
@@ -12962,7 +13026,7 @@ ${rows}
                 {ctxItem.inMemory ? '★' : '☆'} {t(ctxItem.inMemory ? 'noteExcludeMemBtn' : 'noteInMemoryBtn')}
               </button>
             </>}
-            {!isNote && !roomShareMode && <><div className="ctx-sep"/>
+            {!isNote && !isExpoGuest && <><div className="ctx-sep"/>
               <button className="ctx-item" onClick={() => {
                 const et = ctxItem.type === 'text' ? 'text' : 'photo';
                 const ei = ctxItem.type === 'text' ? ctxItem.id : ctxItem.photoId;
