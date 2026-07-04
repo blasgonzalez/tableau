@@ -494,6 +494,7 @@ function resolveAccess(req, res, next) {
           req.shareToken       = tok;
           req.shareScope       = share.type === 'room' ? 'room' : 'project';
           req.shareAllowComments = share.allowComments || false;
+          req.shareRoomsOnly    = share.roomsOnly || false;
           if (share.type === 'room') req.shareRoomId = share.roomId;
           return next();
         }
@@ -509,6 +510,7 @@ function resolveAccess(req, res, next) {
           req.shareToken       = req.session.shareInfo.token;
           req.shareScope       = share.type === 'room' ? 'room' : 'project';
           req.shareAllowComments = share.allowComments || false;
+          req.shareRoomsOnly    = share.roomsOnly || false;
           if (share.type === 'room') req.shareRoomId = share.roomId;
           return next();
         }
@@ -531,6 +533,7 @@ function resolveAccess(req, res, next) {
       req.shareToken       = req.session.shareInfo.token;
       req.shareScope       = share.type === 'room' ? 'room' : 'project';
       req.shareAllowComments = share.allowComments || false;
+      req.shareRoomsOnly    = share.roomsOnly || false;
       if (share.type === 'room') req.shareRoomId = share.roomId;
       return next();
     }
@@ -548,6 +551,7 @@ function resolveAccess(req, res, next) {
       req.shareToken       = token;
       req.shareScope       = share.type === 'room' ? 'room' : 'project';
       req.shareAllowComments = share.allowComments || false;
+      req.shareRoomsOnly    = share.roomsOnly || false;
       if (share.type === 'room') req.shareRoomId = share.roomId;
       return next();
     }
@@ -1017,7 +1021,7 @@ app.get('/api/share/:token', (req, res) => {
   const dd = path.join(DATA_DIR, share.ownerId);
   const proj = readJSON(projsFile(dd)).find(p => p.id === share.projectId);
   if (!proj) return res.status(404).json({ error: 'Proyecto no encontrado' });
-  res.json({ role: share.role, project: { id: proj.id, name: proj.name }, allowComments: share.allowComments || false });
+  res.json({ role: share.role, project: { id: proj.id, name: proj.name }, allowComments: share.allowComments || false, roomsOnly: !!share.roomsOnly });
 });
 
 // Todas las invitaciones activas del usuario autenticado (para panel de gestión)
@@ -1062,7 +1066,7 @@ app.get('/api/projects/:pid/share', requireAuth, (req, res) => {
 app.post('/api/projects/:pid/share', requireAuth, (req, res) => {
   if (!AUTH_ENABLED) return res.status(400).json({ error: 'Solo disponible en modo servidor' });
   const { pid } = req.params;
-  const { role, allowComments } = req.body;
+  const { role, allowComments, roomsOnly } = req.body;
   if (role !== 'view' && role !== 'edit') return res.status(400).json({ error: 'role debe ser view o edit' });
   const projects = readJSON(projsFile(req.dd));
   if (!projects.find(p => p.id === pid)) return res.status(404).json({ error: 'Proyecto no encontrado' });
@@ -1072,9 +1076,9 @@ app.post('/api/projects/:pid/share', requireAuth, (req, res) => {
     if (s.ownerId === ownerId && s.projectId === pid && s.role === role && !s.type) delete shares[tok];
   }
   const token = uuidv4().replace(/-/g, '');
-  shares[token] = { ownerId, projectId: pid, role, allowComments: !!allowComments, created: Date.now() };
+  shares[token] = { ownerId, projectId: pid, role, allowComments: !!allowComments, roomsOnly: !!roomsOnly, created: Date.now() };
   saveShares(shares);
-  res.json({ token, url: `${APP_URL}/?share=${token}`, role, allowComments: !!allowComments });
+  res.json({ token, url: `${APP_URL}/?share=${token}`, role, allowComments: !!allowComments, roomsOnly: !!roomsOnly });
 });
 
 app.patch('/api/projects/:pid/share/:role', requireAuth, (req, res) => {
@@ -1086,6 +1090,7 @@ app.patch('/api/projects/:pid/share/:role', requireAuth, (req, res) => {
   for (const s of Object.values(shares)) {
     if (s.ownerId === ownerId && s.projectId === pid && s.role === role && !s.type) {
       if (req.body.allowComments !== undefined) s.allowComments = !!req.body.allowComments;
+      if (req.body.roomsOnly !== undefined) s.roomsOnly = !!req.body.roomsOnly;
       found = true;
     }
   }
@@ -1423,6 +1428,12 @@ app.get('/api/projects/:pid/boards', resolveAccess, (req, res) => {
     const room = loadRooms(req.params.pid, req.dd).find(r => r.id === req.shareRoomId);
     if (!room) return res.json([]);
     const bids = roomBoardIds(room);
+    return res.json(readJSON(boardsMeta(req.params.pid, req.dd)).filter(b => bids.has(b.id) && !b.private));
+  }
+  if (req.shareScope === 'project' && req.shareRoomsOnly) {
+    const rooms = loadRooms(req.params.pid, req.dd);
+    const bids  = new Set();
+    rooms.forEach(r => roomBoardIds(r).forEach(id => bids.add(id)));
     return res.json(readJSON(boardsMeta(req.params.pid, req.dd)).filter(b => bids.has(b.id) && !b.private));
   }
   const boards = readJSON(boardsMeta(req.params.pid, req.dd));
@@ -1920,6 +1931,12 @@ app.get('/api/projects/:pid/photos', resolveAccess, (req, res) => {
     const room  = rooms.find(r => r.id === req.shareRoomId);
     if (!room) return res.json([]);
     const allowed = roomPhotoIds(req.dd, pid, room);
+    return res.json(readJSON(photosMeta(pid, req.dd)).filter(p => allowed.has(p.id)));
+  }
+  if (req.shareScope === 'project' && req.shareRoomsOnly) {
+    const rooms   = loadRooms(pid, req.dd);
+    const allowed = new Set();
+    rooms.forEach(r => roomPhotoIds(req.dd, pid, r).forEach(id => allowed.add(id)));
     return res.json(readJSON(photosMeta(pid, req.dd)).filter(p => allowed.has(p.id)));
   }
   res.json(readJSON(photosMeta(pid, req.dd)));
