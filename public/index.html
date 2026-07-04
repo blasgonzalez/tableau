@@ -1450,6 +1450,7 @@ const I18N = {
     commentAuthorOwner: u => u || 'owner',
     commentAuthorVisitor: n => n || 'visitante',
     allowCommentsLabel:'Permitir comentarios de visitantes',
+    roomsOnlyLabel:'Solo salas',
     modTitle:'Moderación de comentarios', modPendingCount: n => `${n} pendiente${n!==1?'s':''}`,
     modProject:'Proyecto', modEntity:'Entidad', modAuthor:'Autor', modDate:'Fecha',
     modApprove:'Aprobar', modReject:'Rechazar', modEmpty:'No hay comentarios pendientes',
@@ -1679,6 +1680,7 @@ const I18N = {
     commentAuthorOwner: u => u || 'owner',
     commentAuthorVisitor: n => n || 'visitor',
     allowCommentsLabel:'Allow visitor comments',
+    roomsOnlyLabel:'Rooms only',
     modTitle:'Comment moderation', modPendingCount: n => `${n} pending`,
     modProject:'Project', modEntity:'Entity', modAuthor:'Author', modDate:'Date',
     modApprove:'Approve', modReject:'Reject', modEmpty:'No pending comments',
@@ -14254,8 +14256,8 @@ ${rows}
                     </div>
                   ) : (
                     <button className="btn acc" style={{padding:'4px 12px',fontSize:12}}
-                      onClick={() => api.post(`/api/projects/${shareModal.pid}/share`, { role: 'view' })
-                        .then(d => setShareModal(m => ({ ...m, view: { token: d.token, url: d.url, created: Date.now(), allowComments: false } })))
+                      onClick={() => api.post(`/api/projects/${shareModal.pid}/share`, { role: 'view', roomsOnly: !!shareModal.roomsOnly })
+                        .then(d => setShareModal(m => ({ ...m, view: { token: d.token, url: d.url, created: Date.now(), allowComments: false, roomsOnly: !!shareModal.roomsOnly } })))
                         .catch(() => {})}>
                       {t('shareGenerate')}
                     </button>
@@ -14263,6 +14265,19 @@ ${rows}
                 </div>
               );
             })()}
+            {shareModal.view && (
+              <div style={{marginTop:10,display:'flex',alignItems:'center',gap:6}}>
+                <label style={{display:'flex',alignItems:'center',gap:5,fontSize:10,color:'var(--sub)',cursor:'pointer',userSelect:'none'}}>
+                  <input type="checkbox" checked={!!shareModal.view.roomsOnly}
+                    onChange={e => {
+                      const val = e.target.checked;
+                      setShareModal(m => ({ ...m, view: { ...m.view, roomsOnly: val } }));
+                      api.patch(`/api/projects/${shareModal.pid}/share/view`, { roomsOnly: val }).catch(() => {});
+                    }}/>
+                  {t('roomsOnlyLabel')}
+                </label>
+              </div>
+            )}
             {shareModal.view && (
               <div style={{marginTop:10,display:'flex',alignItems:'center',gap:6}}>
                 <label style={{display:'flex',alignItems:'center',gap:5,fontSize:10,color:'var(--sub)',cursor:'pointer',userSelect:'none'}}>

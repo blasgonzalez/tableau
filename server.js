@@ -1057,7 +1057,7 @@ app.get('/api/projects/:pid/share', requireAuth, (req, res) => {
   const result  = { view: null, edit: null };
   for (const [tok, s] of Object.entries(loadShares())) {
     if (s.ownerId === ownerId && s.projectId === pid && !s.type) {
-      result[s.role] = { token: tok, url: `${APP_URL}/?share=${tok}`, allowComments: s.allowComments || false, created: s.created };
+      result[s.role] = { token: tok, url: `${APP_URL}/?share=${tok}`, allowComments: s.allowComments || false, roomsOnly: s.roomsOnly || false, created: s.created };
     }
   }
   res.json(result);
