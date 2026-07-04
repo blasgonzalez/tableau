@@ -3008,6 +3008,8 @@ function App() {
           pMesh.userData.photoId = item.photoId;
           pMesh.userData.zoneId     = item.zoneId || null;
           pMesh.userData.gridItemId = item.gridItemId || null;
+          pMesh.userData.wallNormX = normX;
+          pMesh.userData.wallNormZ = normZ;
           faceGroup.add(pMesh);
           walkTargets.push(pMesh);
           itemMeshes.push(pMesh);
@@ -3227,6 +3229,8 @@ function App() {
             pMesh.userData.boardId = faceLink.boardId;
             pMesh.userData.photoId = item.photoId;
             pMesh.userData.zoneId  = item.zoneId || null;
+            pMesh.userData.wallNormX = normX;
+            pMesh.userData.wallNormZ = normZ;
             faceGroup.add(pMesh);
             itemMeshes.push(pMesh);
             const needsFlip = ((-dirZ * normX + dirX * normZ) < 0) !== !!(item.flipH);
@@ -3611,6 +3615,18 @@ function App() {
         releaseLock();
       };
 
+      // pMesh planes are DoubleSide, so a wall/block face with no board would
+      // otherwise let the ray pass through and hit the opposite face's photo.
+      // Reject hits whose precomputed face normal (wallNormX/Z) points away
+      // from the camera; hits without that userData (e.g. top faces) pass through.
+      const filterHitsBySide = hits => hits.filter(hit => {
+        const ud = hit.object.userData;
+        if (ud.wallNormX === undefined) return true;
+        const dx = camera.position.x - hit.point.x;
+        const dz = camera.position.z - hit.point.z;
+        return (dx * ud.wallNormX + dz * ud.wallNormZ) > 0;
+      });
+
       // Right-click on 3D canvas: raycast itemMeshes and show copy/cut menu
       const ctxRay = new THREE.Raycaster();
       const onCtxMenu = e => {
@@ -3620,7 +3636,7 @@ function App() {
         const mx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
         const my = -((e.clientY - rect.top) / rect.height) * 2 + 1;
         ctxRay.setFromCamera(new THREE.Vector2(mx, my), camera);
-        const hits = ctxRay.intersectObjects(itemMeshes);
+        const hits = filterHitsBySide(ctxRay.intersectObjects(itemMeshes));
         if (hits.length > 0) {
           const ud = hits[0].object.userData;
           if (ud.photoId || ud.itemId) {
@@ -3675,7 +3691,7 @@ function App() {
         const mx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
         const my = -((e.clientY - rect.top) / rect.height) * 2 + 1;
         hoverRay.setFromCamera(new THREE.Vector2(mx, my), camera);
-        const hits = hoverRay.intersectObjects(itemMeshes);
+        const hits = filterHitsBySide(hoverRay.intersectObjects(itemMeshes));
         const hudEl = hud3DLabelRef.current;
         if (hits.length > 0) {
           const ud = hits[0].object.userData;
@@ -3726,7 +3742,7 @@ function App() {
         const my = -((e.clientY - rect.top) / rect.height) * 2 + 1;
         pasteRay.setFromCamera(new THREE.Vector2(mx, my), camera);
         const allTargets = [...walkTargets, ...itemMeshes];
-        const hits = pasteRay.intersectObjects(allTargets);
+        const hits = filterHitsBySide(pasteRay.intersectObjects(allTargets));
         if (hits.length > 0) {
           const ud = hits[0].object.userData;
           if (ud.boardId) {
@@ -3834,7 +3850,7 @@ function App() {
         const mx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
         const my = -((e.clientY - rect.top) / rect.height) * 2 + 1;
         itemRay.setFromCamera(new THREE.Vector2(mx, my), camera);
-        const hits = itemRay.intersectObjects(itemMeshes);
+        const hits = filterHitsBySide(itemRay.intersectObjects(itemMeshes));
         if (hits.length === 0) return;
         openFrom3D(hits[0].object.userData);
       };
@@ -3846,7 +3862,7 @@ function App() {
         const mx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
         const my = -((e.clientY - rect.top) / rect.height) * 2 + 1;
         itemRay.setFromCamera(new THREE.Vector2(mx, my), camera);
-        const hits = itemRay.intersectObjects(itemMeshes);
+        const hits = filterHitsBySide(itemRay.intersectObjects(itemMeshes));
         if (hits.length) { openFrom3D(hits[0].object.userData); return; }
         if (roomShareModeRef.current) return;
         const wallHits = itemRay.intersectObjects(wallMeshes);
@@ -9114,7 +9130,7 @@ ${rows}
         <div className="room-share-hd">
           <span className="room-share-logo">Tableau</span>
           <span className="room-share-sep">›</span>
-          <span className="room-share-name">{roomShareInfo.roomName || (lang==='es'?'Sala':'Room')}</span>
+          <span className="room-share-name">{roomShareInfo.projectName ? `${roomShareInfo.projectName} — ` : ''}{roomShareInfo.roomName || (lang==='es'?'Sala':'Room')}</span>
           <span className="room-share-badge">{t('shareRoomBadge')}</span>
           {roomShareAllowComments && (() => {
             const _cs = commentSummary[`room:${roomShareInfo.roomId}`];
@@ -10403,7 +10419,7 @@ ${rows}
                     <button className="btn" style={isMobile?{minHeight:44,minWidth:44}:undefined} onClick={() => reset3DViewRef.current?.()}>{lang==='es'?'Centrar':'Reset view'}</button>
                     {!roomShareMode && !isMobile && <button className="btn" onClick={() => snapshot3DRef.current?.()}>{lang==='es'?'Capturar':'Snapshot'}</button>}
                     <button className={`btn${show3DPerson?' active':''}`} style={isMobile?{minHeight:44,minWidth:44}:undefined} data-tooltip={lang==='es'?'Mostrar escala humana (175 cm)':'Show human scale (175 cm)'} onClick={() => { if (show3DPerson && personMoveMode) togglePersonMoveRef.current?.(); toggle3DPersonRef.current?.(); setShow3DPerson(v => !v); }}>{lang==='es'?'👤 Persona':'👤 Person'}</button>
-                    {show3DPerson && <button className={`btn${personMoveMode?' active':''}`} style={isMobile?{minHeight:44,minWidth:44}:undefined} data-tooltip={lang==='es'?'Arrastra la figura por el suelo de la sala':'Drag figure across the room floor'} onClick={() => togglePersonMoveRef.current?.()}>{lang==='es'?(personMoveMode?'✓ Listo':'↔ Mover'):(personMoveMode?'✓ Done':'↔ Move')}</button>}
+                    {!isMobile && show3DPerson && <button className={`btn${personMoveMode?' active':''}`} style={isMobile?{minHeight:44,minWidth:44}:undefined} data-tooltip={lang==='es'?'Arrastra la figura por el suelo de la sala':'Drag figure across the room floor'} onClick={() => togglePersonMoveRef.current?.()}>{lang==='es'?(personMoveMode?'✓ Listo':'↔ Mover'):(personMoveMode?'✓ Done':'↔ Move')}</button>}
                     {!isMobile && <button className={`btn${walkMode3D?' active':''}`} data-tooltip={lang==='es'?'Pasear por la sala — flechas para moverse y girar, clic para capturar ratón':'Walk through the room — arrows to move and turn, click to capture mouse'} onClick={() => toggle3DWalkRef.current?.()}>{lang==='es'?(walkMode3D?'✕ Salir paseo':'◉ Pasear'):(walkMode3D?'✕ Exit walk':'◉ Walk')}</button>}
                     {isMobile && roomShareMode && roomShareAllowComments && (() => {
                       const _cs = commentSummary[`room:${roomShareInfo?.roomId}`];
@@ -11805,7 +11821,23 @@ ${rows}
         // Scale zone members to viewport using real member bounding box
         const vpW = window.innerWidth  - 100;
         const vpH = window.innerHeight - 100;
-        const memberH = m => { const ph = zpm?.[m.photoId]; return m.h ?? (ph ? Math.round(m.w * ph.h / ph.w) : m.w); };
+        const board = boards.find(b => b.id === zoneBid);
+        // Mirror getItemH(): stored m.h is stale for photo items, always derive
+        // from the real photo aspect ratio. Grids use their real layout height.
+        const memberH = m => {
+          if (m.type === 'grid') {
+            const gl = calcGridLayout(m, photos, board?.dpi || 150, board?.units || 'cm');
+            return gl.totalH;
+          }
+          const ph = zpm?.[m.photoId];
+          if (ph) {
+            const rot = m.rot || 0;
+            return (rot === 90 || rot === 270)
+              ? Math.round(m.w * ph.w / ph.h)
+              : Math.round(m.w * ph.h / ph.w);
+          }
+          return m.h ?? m.w;
+        };
         const minX = members.length ? Math.min(...members.map(m => m.x - zone.x)) : 0;
         const minY = members.length ? Math.min(...members.map(m => m.y - zone.y)) : 0;
         const maxX = members.length ? Math.max(...members.map(m => m.x - zone.x + m.w)) : zone.w;
@@ -11813,7 +11845,6 @@ ${rows}
         const bbW  = Math.max(1, maxX - minX);
         const bbH  = Math.max(1, maxY - minY);
         const scale = Math.min(vpW / bbW, vpH / bbH, 1);
-        const board = boards.find(b => b.id === zoneBid);
         return (
           <div className="fullscreen-overlay" style={{background:wc,cursor:'default'}} onClick={closeArtwork3D}>
             <button className="artwork3d-back" style={{color:tcMuted}} onClick={e => { e.stopPropagation(); closeArtwork3D(); }}>{t('artwork3DBack')}</button>
@@ -11828,18 +11859,46 @@ ${rows}
                     const mW = Math.round(member.w * scale);
                     const mH = Math.round((member.type === 'text' ? (member.h || member.w * 0.5) : memberH(member)) * scale);
                     const isText = member.type === 'text';
-                    const mp = !isText ? zpm?.[member.photoId] : null;
-                    if (!isText && !mp) return null;
+                    const isGrid = member.type === 'grid';
+                    const mp = (!isText && !isGrid) ? zpm?.[member.photoId] : null;
+                    if (!isText && !isGrid && !mp) return null;
+                    const openMember = e => { e.stopPropagation();
+                      const zIdx = members.indexOf(member);
+                      const val = { photo: mp||null, item: member, boardId: zoneBid, wallColor: wc, roomPhotos: zoneRP, idx: zoneRoomIdx||0, fromZone: true, zoneMembers: members, zoneIdx: zIdx, zpm };
+                      setArtwork3D(val); artwork3DRef.current = val;
+                    };
                     return (
-                      <div key={member.id} style={{position:'absolute',left:relX,top:relY,width:mW,height:mH,cursor:'pointer',overflow:'hidden'}}
-                        onClick={e => { e.stopPropagation();
-                          const zIdx = members.indexOf(member);
-                          const val = { photo: mp||null, item: member, boardId: zoneBid, wallColor: wc, roomPhotos: zoneRP, idx: zoneRoomIdx||0, fromZone: true, zoneMembers: members, zoneIdx: zIdx, zpm };
-                          setArtwork3D(val); artwork3DRef.current = val;
-                        }}>
-                        {isText
+                      <div key={member.id} style={{position:'absolute',left:relX,top:relY,width:mW,height:mH,cursor:isGrid?'default':'pointer',overflow:'hidden'}}
+                        onClick={isGrid ? undefined : openMember}>
+                        {isGrid
+                          ? (() => {
+                              const gl = calcGridLayout(member, photos, board?.dpi || 150, board?.units || 'cm');
+                              return (
+                                <div style={{display:'flex',flexDirection:'column',gap:gl.gapRowPx*scale}}>
+                                  {gl.rows.map((row, ri) => (
+                                    <div key={ri} style={{display:'flex',gap:gl.gapColPx*scale}}>
+                                      {row.ids.map((photoId, ci) => {
+                                        const p = photoId ? zpm?.[photoId] : null;
+                                        const cw = Math.round(gl.cellW * scale), ch = Math.round(row.h * scale);
+                                        return (
+                                          <div key={ci} style={{width:cw,height:ch,overflow:'hidden',cursor:p?'pointer':'default'}}
+                                            onClick={p ? e => { e.stopPropagation();
+                                              const zIdx = members.indexOf(member);
+                                              const val = { photo: p, item: member, boardId: zoneBid, wallColor: wc, roomPhotos: zoneRP, idx: zoneRoomIdx||0, fromZone: true, zoneMembers: members, zoneIdx: zIdx, zpm };
+                                              setArtwork3D(val); artwork3DRef.current = val;
+                                            } : undefined}>
+                                            {p && <img src={`/photos/${pid}/${p.id}/thumb`} style={{width:'100%',height:'100%',objectFit:'contain',display:'block'}} />}
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  ))}
+                                </div>
+                              );
+                            })()
+                          : isText
                           ? (() => { const tFont = TEXT_FONTS.find(f => f.id === (member.fontFamily||'serif'))||TEXT_FONTS[0]; return <div style={{width:'100%',height:'100%',fontSize:(member.fontSize||64)*scale,fontFamily:tFont.family,fontWeight:member.fontWeight||'normal',fontStyle:member.fontStyle||'normal',textAlign:member.textAlign||'center',color:member.textColor||tc,overflow:'hidden',display:'flex',alignItems:'center',justifyContent:member.textAlign==='right'?'flex-end':member.textAlign==='center'?'center':'flex-start',padding:4*scale}}>{member.text}</div>; })()
-                          : <img src={`/photos/${pid}/${mp.id}/thumb`} style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}} />
+                          : <img src={`/photos/${pid}/${mp.id}/thumb`} style={{width:'100%',height:'100%',objectFit:'contain',display:'block'}} />
                         }
                       </div>
                     );
@@ -12861,8 +12920,8 @@ ${rows}
                 setCtxMenu(null);
                 if (hasMembers) {
                   const msg = lang === 'es'
-                    ? `La zona contiene ${zoneMembers.length} elemento${zoneMembers.length === 1 ? '' : 's'}. ¿Eliminar la zona?`
-                    : `The zone contains ${zoneMembers.length} item${zoneMembers.length === 1 ? '' : 's'}. Delete the zone?`;
+                    ? `La zona contiene ${zoneMembers.length} elemento${zoneMembers.length === 1 ? '' : 's'}. Al eliminarla, los elementos quedarán sueltos en el tablero.`
+                    : `The zone contains ${zoneMembers.length} item${zoneMembers.length === 1 ? '' : 's'}. Deleting it will keep the elements loose on the board.`;
                   showConfirm(msg, () => deleteItem(ctxItem.id));
                 } else {
                   deleteItem(ctxItem.id);

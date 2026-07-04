@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.25.20] — 2026-07-04
+
+### Añadido
+- **Nombre de proyecto en sala compartida:** la cabecera del visitante de una sala compartida (`?room=TOKEN`) ahora muestra "Proyecto — Sala" en lugar de solo el nombre de la sala.
+
+### Corregido
+- **Clics a través de paredes en vista 3D:** hacer clic en la cara vacía de una pared o bloque ya no abre por error una foto de la cara opuesta — el raycast descarta los hits cuya normal de cara no mira hacia la cámara.
+- **Viewer de zona en 3D — grids:** las zonas que contienen un grid ya no lo descartan silenciosamente; el grid se renderiza expandido (filas/celdas), con navegación a cada foto individual.
+- **Viewer de zona en 3D — fotos verticales:** ya no se estiran ni recortan; la altura de cada miembro se calcula siempre desde el aspect ratio real de la foto (ignorando un `h` guardado obsoleto) y el recorte por `objectFit:cover` se sustituyó por `contain`.
+- **Botón "↔ Mover" figura humana:** oculto en dispositivos táctiles, donde no es operable.
+- **Confirmación al eliminar una zona:** el mensaje ahora aclara que los elementos de la zona quedan sueltos en el tablero en vez de borrarse.
+
 ## [1.25.19] — 2026-07-04
 
 ### Añadido

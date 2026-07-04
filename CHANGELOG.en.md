@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.25.20] — 2026-07-04
+
+### Added
+- **Project name in shared room:** the visitor header for a shared room (`?room=TOKEN`) now shows "Project — Room" instead of just the room name.
+
+### Fixed
+- **Clicks through walls in 3D view:** clicking the empty face of a wall or block no longer mistakenly opens a photo from the opposite face — the raycast now rejects hits whose face normal doesn't face the camera.
+- **3D zone viewer — grids:** zones containing a grid no longer silently drop it; the grid now renders expanded (rows/cells), with navigation to each individual photo.
+- **3D zone viewer — vertical photos:** no longer stretched or cropped; each member's height is always derived from the photo's real aspect ratio (ignoring a stale stored `h`), and the `objectFit:cover` crop was replaced with `contain`.
+- **"↔ Move" human figure button:** hidden on touch devices, where it isn't operable.
+- **Zone deletion confirmation:** the message now clarifies that the zone's items are kept loose on the board instead of being deleted.
+
 ## [1.25.19] — 2026-07-04
 
 ### Added

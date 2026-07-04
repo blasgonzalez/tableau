@@ -1,6 +1,6 @@
 {
-  "version": "1.25.19",
+  "version": "1.25.20",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-07-04",
-  "notes": "Deshacer (Ctrl+Z) en el editor de planta de sala y ajuste de vista al aspect ratio del panel."
+  "notes": "Corrección de clics a través de paredes en vista 3D, viewer de zona con grids y fotos verticales sin recortar, y nombre de proyecto en salas compartidas."
 }

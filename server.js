@@ -1123,7 +1123,8 @@ app.get('/api/rooms/share/:token', (req, res) => {
   const rooms = loadRooms(share.projectId, dd);
   const room  = rooms.find(r => r.id === share.roomId);
   if (!room) return res.status(404).json({ error: 'Sala no encontrada' });
-  res.json({ projectId: share.projectId, roomId: share.roomId, roomName: room.name || '', allowComments: share.allowComments || false });
+  const project = readJSON(projsFile(dd)).find(p => p.id === share.projectId);
+  res.json({ projectId: share.projectId, roomId: share.roomId, roomName: room.name || '', projectName: project?.name || '', allowComments: share.allowComments || false });
 });
 
 app.post('/api/rooms/share/:token/activate', (req, res) => {
