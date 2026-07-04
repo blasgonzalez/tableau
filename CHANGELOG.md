@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.25.18] — 2026-07-04
+
+### Añadido
+- **Botón "Ajustar vista" en modo sala:** nuevo botón ⇔ junto a Vista 3D para reencuadrar el plano de sala en cualquier momento.
+
+### Corregido
+- **Ctrl+0 en vista de sala:** el atajo, que antes solo ajustaba el tablero, ahora también reencuadra la vista de planta cuando se está en modo sala.
+- **Ajuste de vista de sala con bloques/columnas:** el auto-ajuste al entrar en modo sala ahora considera también las esquinas de bloques y columnas, no solo los vértices de las paredes, evitando que queden fuera de encuadre.
+
 ## [1.25.17] — 2026-07-03
 
 ### Corregido

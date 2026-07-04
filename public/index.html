@@ -4090,7 +4090,7 @@ function App() {
       if (e.ctrlKey || e.metaKey) {
         if (e.key === '+' || e.key === '=') { e.preventDefault(); zoomStep(1); }
         if (e.key === '-') { e.preventDefault(); zoomStep(-1); }
-        if (e.key === '0') { e.preventDefault(); boardPxRef.current ? fitBoard() : fitWidth(); }
+        if (e.key === '0') { e.preventDefault(); if (roomViewRef.current === 'room') fitRoomView(); else boardPxRef.current ? fitBoard() : fitWidth(); }
       }
       const tag = document.activeElement?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
@@ -7392,18 +7392,25 @@ ${rows}
     switchRoom(copy.id);
   };
 
-  // Auto-fit viewbox whenever switching to room view
-  useEffect(() => {
-    if (roomView !== 'room') return;
+  const fitRoomView = () => {
     const r = roomRef.current;
     if (!r || !r.vertices.length) return;
-    const xs = r.vertices.map(v => v.x), ys = r.vertices.map(v => v.y);
+    const pts = [...r.vertices,
+      ...(r.blocks||[]).flatMap(b => [{x:b.x,y:b.y},{x:b.x+b.w,y:b.y+b.d}]),
+      ...(r.columns||[]).flatMap(c => [{x:c.x,y:c.y},{x:c.x+c.w,y:c.y+c.d}])];
+    const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
     const minX = Math.min(...xs), maxX = Math.max(...xs);
     const minY = Math.min(...ys), maxY = Math.max(...ys);
     const pw = Math.max(50, maxX - minX), ph = Math.max(50, maxY - minY);
     const pad = Math.max(pw, ph) * 0.15 + 30;
     const nv = {x: minX-pad, y: minY-pad, w: pw+pad*2, h: ph+pad*2};
     roomVboxRef.current = nv; setRoomVbox(nv);
+  };
+
+  // Auto-fit viewbox whenever switching to room view
+  useEffect(() => {
+    if (roomView !== 'room') return;
+    fitRoomView();
   }, [roomView]);
 
   const addColumn = (svgX, svgY) => {
@@ -9988,6 +9995,7 @@ ${rows}
                           {t('salaFinish')}
                         </button>
                       )}
+                      {room && <button className="btn" onClick={fitRoomView} data-tooltip={lang==='es'?'Ajustar vista (Ctrl+0)':'Fit view (Ctrl+0)'} style={{fontSize:13}}>⇔</button>}
                       {room && !roomDrawing && <button className="btn" onClick={openRoom3D}>{lang==='es'?'Vista 3D':'3D View'}</button>}
                       {!shareRole && room && !roomDrawing && <button className="btn" onClick={exportRoom} data-tooltip={lang==='es'?'Exportar sala':'Export room'}><SvgExport size={11}/></button>}
                       {!shareRole && !roomDrawing && <button className="btn" onClick={()=>importRoomRef.current?.click()} data-tooltip={lang==='es'?'Importar sala':'Import room'}><SvgImport size={11}/></button>}

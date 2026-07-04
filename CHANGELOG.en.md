@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.25.18] — 2026-07-04
+
+### Added
+- **"Fit view" button in room mode:** new ⇔ button next to 3D View to reframe the room floor plan at any time.
+
+### Fixed
+- **Ctrl+0 in room view:** the shortcut, which previously only fit the board, now also reframes the floor plan view while in room mode.
+- **Room view fit with blocks/columns:** auto-fit when entering room mode now also considers block and column corners, not just wall vertices, preventing them from being left out of frame.
+
 ## [1.25.17] — 2026-07-03
 
 ### Fixed
