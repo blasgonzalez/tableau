@@ -59,7 +59,8 @@
       "Bash(ls \"d:\\\\blasg\\\\Pictures\\\\Proyectos\\\\tableau\\\\\" | grep -i fase)",
       "Read(//d/blasg/Pictures/Proyectos/**)",
       "Bash(installer\\\\build.bat)",
-      "Bash(git -C \"d:/blasg/Pictures/Proyectos/tableau\" log --oneline -15)"
+      "Bash(git -C \"d:/blasg/Pictures/Proyectos/tableau\" log --oneline -15)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ],
     "additionalDirectories": [
       "d:\\blasg\\Pictures\\Proyectos\\tableau\\fonts"

@@ -1,6 +1,6 @@
 {
-  "version": "1.25.20",
+  "version": "1.26.0",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-07-04",
-  "notes": "Corrección de clics a través de paredes en vista 3D, viewer de zona con grids y fotos verticales sin recortar, y nombre de proyecto en salas compartidas."
+  "releaseDate": "2026-07-05",
+  "notes": "Superficies de color y vanos (con huecos reales en 3D) en la vista frontal de pared, cotas en tiempo real, posición de cámara guardable, modo exposición de solo salas, y corrección de drag/resize de tableros en vista frontal."
 }

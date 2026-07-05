@@ -1,5 +1,62 @@
 # Changelog
 
+## [1.26.0] — 2026-07-05
+
+### Añadido
+- **Superficies de color en vista frontal de pared:** dibuja rectángulos
+  de color sobre una cara de la pared (clic derecho → Superficie).
+  Soporta mover, redimensionar y cambiar color. Se renderizan en la
+  vista 3D como una capa de color sobre el muro.
+- **Vanos en vista frontal de pared:** dibuja huecos físicos sobre una
+  cara de la pared (clic derecho → Vano). Los vanos afectan a ambas
+  caras simultáneamente y se muestran espejados en cara B. Soporta
+  mover y redimensionar.
+- **Vanos en vista 3D:** los vanos generan huecos reales en la geometría
+  del muro usando ExtrudeGeometry con Shape + holes.
+- **Cotas en vista frontal:** al mover o redimensionar un tablero,
+  superficie o vano, se muestran sus dimensiones y distancias a los
+  bordes de la pared en tiempo real.
+- **Posición inicial de cámara guardable:** botón "Guardar posición"
+  en la vista 3D para establecer el punto de entrada por defecto.
+  Usado también como destino del botón "Centrar" y como posición
+  inicial para visitantes en modo exposición.
+- **Modo exposición (Solo salas):** al compartir un proyecto, un checkbox
+  "Solo salas" permite que el visitante acceda directamente a la vista
+  3D de las salas con navegación ‹ › entre ellas, sin acceso a tableros
+  sueltos ni interfaz de edición.
+- **Ajustar vista en plano de sala:** botón ⇔ y Ctrl+0 para centrar
+  y ajustar el zoom al contenido del plano, compensando el aspect ratio
+  del contenedor.
+- **Ctrl+Z en editor de planta:** deshacer operaciones sin efectos
+  secundarios (mover vértice, añadir vértice, eliminar vértice/segmento
+  sin tableros vinculados).
+
+### Corregido
+- **Fotos espejadas en vista 3D:** las texturas aparecían reflejadas
+  horizontalmente en paredes con sideSign=-1. Corregido aplicando flip
+  de UV según sideSign, tanto para fotos como para textos. El flipH
+  del canvas 2D se aplica ahora también en 3D.
+- **Marco y paspartú invisibles en vista 3D:** la moldura tapaba la foto
+  por un signo incorrecto en el eje Z. Corregido con fórmula dependiente
+  de sideSign en paredes y de la cara en bloques.
+- **Clic en cara B vacía abría foto de cara A en vista 3D:** el raycasting
+  no filtraba por cara. Corregido usando la normal de cada plano para
+  descartar hits desde el lado incorrecto.
+- **Doble clic en pared 3D con portapapeles activo:** ya no navega al
+  tablero por error ni genera ghost residual.
+- **Distribución de zonas con contenido bloqueado:** las fotos ya se
+  desplazan junto con la zona al usar herramientas de alineación.
+- **Copiar/pegar grids:** Ctrl+C/V ya funciona con elementos tipo grid.
+- **Ghost del grid al pegar:** mostraba siempre 3 filas; ahora refleja
+  el número correcto.
+- **Drag y resize de tableros en vista frontal:** bloqueados por
+  auto-colisión en openingCollides y por pointer capture no liberado.
+  Ambos corregidos.
+- **Eliminar segmento de pared:** clic derecho sobre un segmento →
+  "Eliminar pared", conservando vértices salvo que queden huérfanos.
+- **Token de invitación por correo incorrecto:** el endpoint de invitación
+  podía reutilizar un token de sala en lugar del token de proyecto.
+
 ## [1.25.20] — 2026-07-04
 
 ### Añadido

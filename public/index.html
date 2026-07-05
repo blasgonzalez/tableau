@@ -2950,10 +2950,41 @@ function App() {
         const wh = wall.height ?? ch;
         const wt = wall.thickness ?? (room.wallThickness ?? 15);
 
+        const v1p = vertexPosts.get(wall.v1);
+        const v2p = vertexPosts.get(wall.v2);
+        const startOffset = (v1p && v1p.n >= 2) ? v1p.wt / 2 : 0;
+        const endOffset   = (v2p && v2p.n >= 2) ? v2p.wt / 2 : 0;
+        const wallFaceLen = Math.max(0, len - startOffset - endOffset);
+
         const wColor = wall.color || wall.colorBack || '#d0c8bc';
+        const hasOpenings = wall.openings && wall.openings.length > 0;
+        let wGeo;
+        if (hasOpenings) {
+          const wallShape = new THREE.Shape();
+          wallShape.moveTo(0, 0);
+          wallShape.lineTo(len, 0);
+          wallShape.lineTo(len, wh);
+          wallShape.lineTo(0, wh);
+          wallShape.closePath();
+          wall.openings.forEach(o => {
+            const holeX = startOffset + o.offset;
+            const holeY = o.yBottom;
+            const hole = new THREE.Path();
+            hole.moveTo(holeX, holeY);
+            hole.lineTo(holeX + o.width, holeY);
+            hole.lineTo(holeX + o.width, holeY + o.height);
+            hole.lineTo(holeX, holeY + o.height);
+            hole.closePath();
+            wallShape.holes.push(hole);
+          });
+          wGeo = new THREE.ExtrudeGeometry(wallShape, { depth: wt, bevelEnabled: false });
+          wGeo.translate(-len/2, -wh/2, -wt/2);
+        } else {
+          wGeo = new THREE.BoxGeometry(len, wh, wt);
+        }
         const wMesh = new THREE.Mesh(
-          new THREE.BoxGeometry(len, wh, wt),
-          new THREE.MeshLambertMaterial({color: wColor})
+          wGeo,
+          new THREE.MeshLambertMaterial({color: wColor, side: hasOpenings ? THREE.DoubleSide : THREE.FrontSide})
         );
         wMesh.position.set((x1+x2)/2, wh/2, (z1+z2)/2);
         wMesh.rotation.y = rotY;
@@ -2984,12 +3015,6 @@ function App() {
             wallMeshes.push(wp);
           });
         }
-
-        const v1p = vertexPosts.get(wall.v1);
-        const v2p = vertexPosts.get(wall.v2);
-        const startOffset = (v1p && v1p.n >= 2) ? v1p.wt / 2 : 0;
-        const endOffset   = (v2p && v2p.n >= 2) ? v2p.wt / 2 : 0;
-        const wallFaceLen = Math.max(0, len - startOffset - endOffset);
 
         const wallSides = [];
         (wall.boardsA || []).forEach(e => wallSides.push({boardId: e.boardId, sideSign:  1, offset: e.offset || 0, hangY: e.hangY ?? 150}));
@@ -12239,9 +12264,10 @@ ${rows}
 
         // ── Openings (vanos) — Fase 1a. Physical to the wall: no A/B split, shown on both faces ──
         const openingEntries = wfvWall.openings || [];
-        const openingCollides = (offset, width, yBottom, height, excludeId) => {
+        const openingCollides = (offset, width, yBottom, height, excludeId = null, excludeBoardId = null) => {
           const boardsBoth = [...(wfvWall.boardsA || []), ...(wfvWall.boardsB || [])];
           const hitsBoard = boardsBoth.some(en => {
+            if (excludeBoardId && en.boardId === excludeBoardId) return false;
             const ob = boards.find(b => b.id === en.boardId);
             if (!ob?.fixed || !ob.fixedW || !ob.fixedH) return false;
             const ofW = toCm(ob.fixedW, ob.units, ob.dpi), ofH = toCm(ob.fixedH, ob.units, ob.dpi);
@@ -12251,9 +12277,13 @@ ${rows}
             return nL < bR && nR > bL && nB < bT && nT > bB;
           });
           if (hitsBoard) return true;
-          const surfacesBoth = [...(wfvWall.surfacesA || []), ...(wfvWall.surfacesB || [])];
+          const surfacesBoth = [
+            ...(wfvWall.surfacesA || []).map(su => ({...su, _face:'A'})),
+            ...(wfvWall.surfacesB || []).map(su => ({...su, _face:'B'})),
+          ];
           const hitsSurface = surfacesBoth.some(su => {
-            const sL = su.offset, sR = su.offset + su.width, sB = su.yBottom, sT = su.yBottom + su.height;
+            const sL = su._face === 'B' ? wallLen - su.offset - su.width : su.offset;
+            const sR = sL + su.width, sB = su.yBottom, sT = su.yBottom + su.height;
             const nL = offset, nR = offset + width, nB = yBottom, nT = yBottom + height;
             return nL < sR && nR > sL && nB < sT && nT > sB;
           });
@@ -12315,8 +12345,8 @@ ${rows}
           wfvOpeningDragRef.current = newDrag; setWfvOpeningDrag(newDrag);
         };
         const onWfvOpeningDragPU = (e, o) => {
-          const d = wfvOpeningDragRef.current; if (!d || d.id !== o.id) return;
           e.currentTarget.releasePointerCapture(e.pointerId);
+          const d = wfvOpeningDragRef.current; if (!d || d.id !== o.id) return;
           if (d.moved && !d.collides) {
             const canonOffset = mirrorOpeningOffset(d.curOffset, d.width);
             saveWallOpenings(openingEntries.map(en => en.id === o.id ? {...en, offset: canonOffset, yBottom: d.curYBottom} : en));
@@ -12350,8 +12380,8 @@ ${rows}
           wfvOpeningResizeRef.current = newR; setWfvOpeningResize(newR);
         };
         const onWfvOpeningResizePU = (e) => {
-          const r = wfvOpeningResizeRef.current; if (!r) return;
           e.currentTarget.releasePointerCapture(e.pointerId);
+          const r = wfvOpeningResizeRef.current; if (!r) return;
           if (!r.collides) {
             const canonOff = mirrorOpeningOffset(r.curOffset, r.curWidth);
             saveWallOpenings(openingEntries.map(en => en.id === r.id
@@ -12387,6 +12417,7 @@ ${rows}
           }
           wfvSurfaceDrawRef.current = null; setWfvSurfaceDraw(null);
           setWfvSurfacePopover(null);
+          setWfvSurfaceMode(false);
         };
         // ── Surface drag (move) — mirrors board wfvDrag but simpler (cm-native, no unit conversion) ──
         const onWfvSurfaceDragPD = (e, s) => {
@@ -12411,8 +12442,8 @@ ${rows}
           wfvSurfaceDragRef.current = newDrag; setWfvSurfaceDrag(newDrag);
         };
         const onWfvSurfaceDragPU = (e, s) => {
-          const d = wfvSurfaceDragRef.current; if (!d || d.id !== s.id) return;
           e.currentTarget.releasePointerCapture(e.pointerId);
+          const d = wfvSurfaceDragRef.current; if (!d || d.id !== s.id) return;
           if (d.moved) {
             if (!d.collides) {
               saveWallSurfaces(surfaceEntries.map(en => en.id === s.id ? {...en, offset: d.curOffset, yBottom: d.curYBottom} : en));
@@ -12449,8 +12480,8 @@ ${rows}
           wfvSurfaceResizeRef.current = newR; setWfvSurfaceResize(newR);
         };
         const onWfvSurfaceResizePU = (e) => {
-          const r = wfvSurfaceResizeRef.current; if (!r) return;
           e.currentTarget.releasePointerCapture(e.pointerId);
+          const r = wfvSurfaceResizeRef.current; if (!r) return;
           if (!r.collides) {
             saveWallSurfaces(surfaceEntries.map(en => en.id === r.id
               ? {...en, offset: r.curOffset, yBottom: r.curYBottom, width: r.curWidth, height: r.curHeight}
@@ -12511,7 +12542,7 @@ ${rows}
           else if(m.includes('n')&&!m.includes('s')){const edge=nHY+nH/2;let best=Infinity;vSnaps.forEach(sp=>{const d=Math.abs(sp-edge);if(d<thresh&&d<best){best=d;vSL=sp;}});if(vSL!==null){const be=r.startHangY-r.startFHcm/2;nH=Math.max(5,vSL-be);nHY=be+nH/2;}}
           setWfvGuides({h:vSL!==null?[{pos:(ceilH-vSL)*scale,from:0,to:surfW}]:[],v:hSL!==null?[{pos:hSL*scale,from:0,to:surfH}]:[]});
           // Sticky opening block: refuse the candidate geometry if it lands on a vano, keep last valid instead
-          const openingBlocked = openingCollides(nOff, nW, nHY-nH/2, nH);
+          const openingBlocked = openingCollides(nOff, nW, nHY-nH/2, nH, null, r.boardId);
           const finalOff = openingBlocked ? r.curOffset : nOff;
           const finalHY  = openingBlocked ? r.curHangY  : nHY;
           const finalW   = openingBlocked ? r.curFWcm   : nW;
@@ -12520,8 +12551,8 @@ ${rows}
           wfvResizeRef.current=newR; setWfvResize(newR);
         };
         const onWfvResizePU = (e) => {
-          const r=wfvResizeRef.current; if(!r) return;
           e.currentTarget.releasePointerCapture(e.pointerId);
+          const r=wfvResizeRef.current; if(!r) return;
           const board_=boards.find(b=>b.id===r.boardId);
           if(board_){
             const newFixedW=fromCm(r.curFWcm,board_.units,board_.dpi);
@@ -12905,6 +12936,8 @@ ${rows}
                         onPointerUp={onWfvOpeningResizePU}
                       />
                     ))}
+                    {(isSelOpening || isDraggingOpening || isResizingOpening) &&
+                      renderWfvDims(dispOffset, dispWidth, dispHeight, dispYBottom, oW, oH)}
                   </div>
                 );
               })}
@@ -12913,10 +12946,13 @@ ${rows}
                 const l = Math.min(d.startXPx, d.curXPx), t = Math.min(d.startYPx, d.curYPx);
                 const w = Math.abs(d.curXPx - d.startXPx), h = Math.abs(d.curYPx - d.startYPx);
                 return (
-                  <div style={{position:'absolute',left:l,top:t,width:w,height:h,
-                    background:'repeating-linear-gradient(45deg, rgba(0,0,0,.35) 0 6px, transparent 6px 12px)',
-                    opacity:0.85,border:`2px solid ${d.collides?'#e74c3c':'rgba(0,0,0,.5)'}`,
-                    boxSizing:'border-box',pointerEvents:'none'}}/>
+                  <div style={{position:'absolute',left:l,top:t,width:w,height:h,pointerEvents:'none'}}>
+                    <div style={{position:'absolute',inset:0,
+                      background:'repeating-linear-gradient(45deg, rgba(0,0,0,.35) 0 6px, transparent 6px 12px)',
+                      opacity:0.85,border:`2px solid ${d.collides?'#e74c3c':'rgba(0,0,0,.5)'}`,
+                      boxSizing:'border-box',pointerEvents:'none'}}/>
+                    {renderWfvDims(l/scale, w/scale, h/scale, (surfH-(t+h))/scale, w, h)}
+                  </div>
                 );
               })()}
               {surfaceEntries.map(s => {
@@ -12972,10 +13008,13 @@ ${rows}
                 const l = Math.min(d.startXPx, d.curXPx), t = Math.min(d.startYPx, d.curYPx);
                 const w = Math.abs(d.curXPx - d.startXPx), h = Math.abs(d.curYPx - d.startYPx);
                 return (
-                  <div style={{position:'absolute',left:l,top:t,width:w,height:h,
-                    background: wfvSurfacePopover ? wfvSurfacePopover.color : WFV_SURFACE_COLORS[0],
-                    opacity:0.6,border:`2px solid ${d.collides?'#e74c3c':'rgba(255,255,255,.8)'}`,
-                    boxSizing:'border-box',pointerEvents:'none'}}/>
+                  <div style={{position:'absolute',left:l,top:t,width:w,height:h,pointerEvents:'none'}}>
+                    <div style={{position:'absolute',inset:0,
+                      background: wfvSurfacePopover ? wfvSurfacePopover.color : WFV_SURFACE_COLORS[0],
+                      opacity:0.6,border:`2px solid ${d.collides?'#e74c3c':'rgba(255,255,255,.8)'}`,
+                      boxSizing:'border-box',pointerEvents:'none'}}/>
+                    {renderWfvDims(l/scale, w/scale, h/scale, (surfH-(t+h))/scale, w, h)}
+                  </div>
                 );
               })()}
               {entries.map(entry => {
@@ -13069,7 +13108,7 @@ ${rows}
                       const candOffset = clampOff(rawOffset + (bestHcorr??0));
                       const candHangY  = clampHY(rawHangY + (bestVcorr??0));
                       // Sticky opening block: refuse the candidate position if it lands on a vano
-                      const openingBlocked = openingCollides(candOffset, d.fWcm, candHangY-d.fHcm/2, d.fHcm);
+                      const openingBlocked = openingCollides(candOffset, d.fWcm, candHangY-d.fHcm/2, d.fHcm, null, d.boardId);
                       const newOffset = openingBlocked ? d.curOffset : candOffset;
                       const newHangY  = openingBlocked ? d.curHangY  : candHangY;
 
@@ -13082,9 +13121,9 @@ ${rows}
                       });
                     }}
                     onPointerUp={e => {
+                      e.currentTarget.releasePointerCapture(e.pointerId);
                       const d = wfvDragRef.current;
                       if (!d || d.boardId !== entry.boardId || d.face !== face) return;
-                      e.currentTarget.releasePointerCapture(e.pointerId);
                       // Only persist when the board was actually dragged. A bare click (or
                       // either half of a double-click) leaves position untouched — no saveRoom.
                       if (d.moved) {
