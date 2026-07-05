@@ -2157,6 +2157,7 @@ function App() {
   const savedCam3DRef        = useRef(null); // {pos,target,wasWalk} — saved on artwork3D open
   const restoreCam3DRef      = useRef(null); // function set by 3D useEffect to restore camera
   const snapshot3DRef        = useRef(null);
+  const saveCamHomeRef       = useRef(null); // returns current camera/target position for cameraHome
   const toggle3DPersonRef    = useRef(null);
   const togglePersonMoveRef  = useRef(null);
   const toggle3DWalkRef      = useRef(null);
@@ -2685,11 +2686,16 @@ function App() {
       return;
     }
     if (shareRoomsOnlyRef.current) {
-      // Rooms-only project guest: load the full room list and jump straight into
-      // the 3D view of the first room. Boards/photos are not preloaded here — the
-      // 3D scene effect fetches board items and photos on demand, already scoped
-      // server-side to room-linked content for this share.
-      api.get(`/api/projects/${pid}/rooms`).then(rs => {
+      // Rooms-only project guest: load the full room list + room-linked boards
+      // (the 3D renderer needs board metadata — dpi/units/fixedW/fixedH — to place
+      // photos on walls) and jump straight into the 3D view of the first room.
+      // Items and photos are still fetched on demand by the 3D scene effect.
+      Promise.all([
+        api.get(`/api/projects/${pid}/rooms`),
+        api.get(`/api/projects/${pid}/boards`),
+      ]).then(([rs, bs]) => {
+        setBoards(bs || []);
+        boardsRef.current = bs || [];
         const arr = (rs || []).map(normalizeRoom);
         const r = arr[0] || null;
         setRooms(arr); roomsRef.current = arr;
@@ -2773,8 +2779,13 @@ function App() {
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(55, w / h, near, far);
       const dist = span * 0.9;
-      const initCamPos = new THREE.Vector3(cx, ch * 0.6 + dist * 0.5, cz + dist * 0.8);
-      const initTarget = new THREE.Vector3(cx, ch * 0.4, cz);
+      const home = room?.cameraHome;
+      const initCamPos = home
+        ? new THREE.Vector3(home.x, home.y, home.z)
+        : new THREE.Vector3(cx, ch * 0.6 + dist * 0.5, cz + dist * 0.8);
+      const initTarget = home
+        ? new THREE.Vector3(home.targetX, home.targetY, home.targetZ)
+        : new THREE.Vector3(cx, ch * 0.4, cz);
       camera.position.copy(initCamPos);
       camera.lookAt(initTarget);
 
@@ -2818,6 +2829,12 @@ function App() {
         if (walkActive) exitWalk();
         tweenCamera(initCamPos, initTarget, 800);
       };
+
+      // Current camera/target position exposed to the "save initial position" button
+      saveCamHomeRef.current = () => ({
+        x: camera.position.x, y: camera.position.y, z: camera.position.z,
+        targetX: controls.target.x, targetY: controls.target.y, targetZ: controls.target.z
+      });
 
       // Restore camera after closing artwork3D view
       restoreCam3DRef.current = () => {
@@ -7366,7 +7383,7 @@ ${rows}
     const list = side === 'A' ? (wall.boardsA || []) : (wall.boardsB || []);
     return list[0]?.boardId || null;
   };
-  const normalizeRoom = r => ({ ...r, walls: (r.walls || []).map(normalizeWall) });
+  const normalizeRoom = r => ({ ...r, walls: (r.walls || []).map(normalizeWall), cameraHome: r.cameraHome || null });
 
   const roomWallLen = (wall, verts) => {
     const v1 = verts.find(v=>v.id===wall.v1), v2 = verts.find(v=>v.id===wall.v2);
@@ -10483,6 +10500,14 @@ ${rows}
                   <div className="room-toolbar room-toolbar-3d">
                     {!isExpoGuest && !isMobile && <button className="btn" onClick={() => setRoomView('room')}>← {lang==='es'?'Planta':'Floor plan'}</button>}
                     <button className="btn" style={isMobile?{minHeight:44,minWidth:44}:undefined} onClick={() => reset3DViewRef.current?.()}>{lang==='es'?'Centrar':'Reset view'}</button>
+                    {!isExpoGuest && (
+                      <button className="btn" onClick={() => {
+                        const pos = saveCamHomeRef.current?.();
+                        if (pos) saveRoom({...room, cameraHome: pos});
+                      }}>
+                        {lang==='es' ? '📍 Guardar posición' : '📍 Save position'}
+                      </button>
+                    )}
                     {!isExpoGuest && !isMobile && <button className="btn" onClick={() => snapshot3DRef.current?.()}>{lang==='es'?'Capturar':'Snapshot'}</button>}
                     <button className={`btn${show3DPerson?' active':''}`} style={isMobile?{minHeight:44,minWidth:44}:undefined} data-tooltip={lang==='es'?'Mostrar escala humana (175 cm)':'Show human scale (175 cm)'} onClick={() => { if (show3DPerson && personMoveMode) togglePersonMoveRef.current?.(); toggle3DPersonRef.current?.(); setShow3DPerson(v => !v); }}>{lang==='es'?'👤 Persona':'👤 Person'}</button>
                     {!isMobile && show3DPerson && <button className={`btn${personMoveMode?' active':''}`} style={isMobile?{minHeight:44,minWidth:44}:undefined} data-tooltip={lang==='es'?'Arrastra la figura por el suelo de la sala':'Drag figure across the room floor'} onClick={() => togglePersonMoveRef.current?.()}>{lang==='es'?(personMoveMode?'✓ Listo':'↔ Mover'):(personMoveMode?'✓ Done':'↔ Move')}</button>}

@@ -1148,7 +1148,7 @@ app.post('/api/projects/:pid/share/invite', requireAuth, async (req, res) => {
   const shares = loadShares();
   let token = null;
   for (const [tok, s] of Object.entries(shares)) {
-    if (s.ownerId === req.session.userId && s.projectId === pid && s.role === 'view') { token = tok; break; }
+    if (s.ownerId === req.session.userId && s.projectId === pid && s.role === 'view' && !s.type) { token = tok; break; }
   }
   if (!token) {
     const projects = readJSON(projsFile(req.dd));
