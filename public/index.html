@@ -1945,6 +1945,15 @@ function App() {
   const [wfvGuides, setWfvGuides] = useState({ h:[], v:[] }); // snap guides — Fase 3c
   const [wfvGhost,  setWfvGhost]  = useState(null); // {boardId,fWcm,fHcm,curOffset,curHangY} — Fase 3d
   const wfvGhostRef = useRef(null);
+  const [wfvSurfaceMode, setWfvSurfaceMode] = useState(false); // "draw color surface" toggle — Fase 1b
+  const [wfvSurfaceDraw, setWfvSurfaceDraw] = useState(null); // {startXCm,startYCm,curXCm,curYCm,collides} while dragging
+  const wfvSurfaceDrawRef = useRef(null);
+  const [wfvSurfacePopover, setWfvSurfacePopover] = useState(null); // {id?,offset,yBottom,width,height,color} — pending confirmation (id present = editing existing)
+  const [wfvSurfaceSel, setWfvSurfaceSel] = useState(null); // selected surface id, null if none
+  const [wfvSurfaceDrag, setWfvSurfaceDrag] = useState(null); // {id,wasSelected,startPx,startOffset,startYBottom,width,height,curOffset,curYBottom,moved,collides}
+  const wfvSurfaceDragRef = useRef(null);
+  const [wfvSurfaceResize, setWfvSurfaceResize] = useState(null); // {id,mode,startPx,startOffset,startYBottom,startWidth,startHeight,curOffset,curYBottom,curWidth,curHeight,collides}
+  const wfvSurfaceResizeRef = useRef(null);
   const wfvGhostItemsRef = useRef(null); // items of the variable ghost board, for seeding wallFrontItems after confirm
   const [wfvMoveOrigin, setWfvMoveOrigin] = useState(null); // {boardId,wallId,face,roomId} — Fase 3e VÍA 2
   const wfvMoveOriginRef = useRef(null);
@@ -3111,6 +3120,28 @@ function App() {
           }
         });
         }); // wallSides.forEach
+
+        // Color surfaces (Fase 1b) — flat colored planes over the wall face
+        const surfaceSides = [
+          ...(wall.surfacesA || []).map(s => ({...s, sideSign: 1})),
+          ...(wall.surfacesB || []).map(s => ({...s, sideSign: -1})),
+        ];
+        surfaceSides.forEach(s => {
+          const normX = -dirZ * s.sideSign, normZ = dirX * s.sideSign;
+          const ix = s.sideSign === 1
+            ? startOffset + s.offset + s.width / 2
+            : startOffset + wallFaceLen - s.offset - s.width / 2;
+          const iy = s.yBottom + s.height / 2;
+          const surfMesh = new THREE.Mesh(
+            new THREE.PlaneGeometry(s.width, s.height),
+            new THREE.MeshBasicMaterial({ color: s.color, side: THREE.FrontSide })
+          );
+          surfMesh.position.set(x1 + dirX*ix + normX*(wt/2+0.5), iy, z1 + dirZ*ix + normZ*(wt/2+0.5));
+          // FrontSide only renders one face — flip 180° on side B so it faces into the room
+          // (photo pMeshes sidestep this with DoubleSide + a texture-space flip instead).
+          surfMesh.rotation.y = s.sideSign === 1 ? rotY : rotY + Math.PI;
+          scene.add(surfMesh);
+        });
       });
 
       // Corner posts — square post at each vertex where 2+ walls meet
@@ -7363,13 +7394,15 @@ ${rows}
   const normalizeWall = wall => {
     const normalizeEntry = e => ({ ...e, offset: e.offset ?? 0, hangY: e.hangY ?? 150 });
     if ('boardsA' in wall && 'boardsB' in wall) {
-      return { ...wall, boardsA: wall.boardsA.map(normalizeEntry), boardsB: wall.boardsB.map(normalizeEntry) };
+      return { ...wall, boardsA: wall.boardsA.map(normalizeEntry), boardsB: wall.boardsB.map(normalizeEntry), surfacesA: wall.surfacesA || [], surfacesB: wall.surfacesB || [] };
     }
     const { boardId, boardIdBack, ...rest } = wall;
     return {
       ...rest,
       boardsA: boardId     ? [{ boardId, offset: 0, hangY: 150 }] : [],
       boardsB: boardIdBack ? [{ boardId: boardIdBack, offset: 0, hangY: 150 }] : [],
+      surfacesA: wall.surfacesA || [],
+      surfacesB: wall.surfacesB || [],
     };
   };
   const wallBoardIds = wall => [
@@ -12132,6 +12165,119 @@ ${rows}
         const wColor = wfvWall.color || wfvWall.colorBack || '#d0c8bc';
         const toCm = (v, u, dpi) => !u||u==='cm' ? v : u==='mm' ? v/10 : u==='in' ? v*2.54 : v/(dpi||300)*2.54;
         const photoMap_ = Object.fromEntries(photos.map(p => [p.id, p]));
+
+        // ── Color surfaces (Fase 1b) ──
+        const surfaceFieldKey = face === 'A' ? 'surfacesA' : 'surfacesB';
+        const surfaceEntries  = wfvWall[surfaceFieldKey] || [];
+        const WFV_SURFACE_COLORS = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#1abc9c','#3498db','#9b59b6','#ecf0f1'];
+        const surfaceCollides = (offset, width, yBottom, height) => entries.some(en => {
+          const ob = boards.find(b => b.id === en.boardId);
+          if (!ob?.fixed || !ob.fixedW || !ob.fixedH) return false;
+          const ofW = toCm(ob.fixedW, ob.units, ob.dpi), ofH = toCm(ob.fixedH, ob.units, ob.dpi);
+          const bL = en.offset, bR = en.offset + ofW;
+          const bB = (en.hangY ?? 150) - ofH/2, bT = (en.hangY ?? 150) + ofH/2;
+          const nL = offset, nR = offset + width, nB = yBottom, nT = yBottom + height;
+          return nL < bR && nR > bL && nB < bT && nT > bB;
+        });
+        const saveWallSurfaces = nextSurfaces => {
+          const updWall = {...wfvWall, [surfaceFieldKey]: nextSurfaces};
+          const newRoom = {...roomRef.current, walls: roomRef.current.walls.map(w => w.id===wfvWall.id ? updWall : w)};
+          saveRoom(newRoom);
+          setWallFrontView(prev => prev ? {...prev, wall:updWall} : prev);
+          wallFrontViewRef.current = wallFrontViewRef.current ? {...wallFrontViewRef.current, wall:updWall} : null;
+        };
+        const removeSurface = sid => saveWallSurfaces(surfaceEntries.filter(s => s.id !== sid));
+        const exitSurfaceMode = () => {
+          setWfvSurfaceMode(false);
+          wfvSurfaceDrawRef.current = null; setWfvSurfaceDraw(null);
+          setWfvSurfacePopover(null);
+          setWfvSurfaceSel(null);
+          wfvSurfaceDragRef.current = null; setWfvSurfaceDrag(null);
+          wfvSurfaceResizeRef.current = null; setWfvSurfaceResize(null);
+        };
+        const confirmSurfacePopover = () => {
+          const p = wfvSurfacePopover;
+          if (!p || surfaceCollides(p.offset, p.width, p.yBottom, p.height)) return;
+          if (p.id) {
+            saveWallSurfaces(surfaceEntries.map(en => en.id === p.id ? {...en, color: p.color} : en));
+          } else {
+            const surface = { id: Date.now().toString(36) + Math.random().toString(36).slice(2,5),
+              offset: p.offset, yBottom: p.yBottom, width: p.width, height: p.height, color: p.color };
+            saveWallSurfaces([...surfaceEntries, surface]);
+          }
+          wfvSurfaceDrawRef.current = null; setWfvSurfaceDraw(null);
+          setWfvSurfacePopover(null);
+        };
+        // ── Surface drag (move) — mirrors board wfvDrag but simpler (cm-native, no unit conversion) ──
+        const onWfvSurfaceDragPD = (e, s) => {
+          if (wfvSurfaceMode || wfvGhostRef.current || wfvSurfacePopover) return;
+          e.stopPropagation(); e.preventDefault();
+          e.currentTarget.setPointerCapture(e.pointerId);
+          const drag = { id: s.id, wasSelected: wfvSurfaceSel === s.id,
+            startPx: { x: e.clientX, y: e.clientY }, moved: false,
+            startOffset: s.offset, startYBottom: s.yBottom, width: s.width, height: s.height,
+            curOffset: s.offset, curYBottom: s.yBottom, collides: false };
+          wfvSurfaceDragRef.current = drag; setWfvSurfaceDrag(drag);
+        };
+        const onWfvSurfaceDragPM = (e) => {
+          const d = wfvSurfaceDragRef.current; if (!d) return;
+          if (!d.moved && Math.hypot(e.clientX - d.startPx.x, e.clientY - d.startPx.y) < 4) return;
+          const dxCm = (e.clientX - d.startPx.x) / scale;
+          const dyCm = (e.clientY - d.startPx.y) / scale;
+          const clampedOffset  = Math.max(0, Math.min(wallLen - d.width, d.startOffset + dxCm));
+          const clampedYBottom = Math.max(0, Math.min(ceilH - d.height, d.startYBottom - dyCm));
+          const collides = surfaceCollides(clampedOffset, d.width, clampedYBottom, d.height);
+          const newDrag = {...d, moved: true, curOffset: clampedOffset, curYBottom: clampedYBottom, collides};
+          wfvSurfaceDragRef.current = newDrag; setWfvSurfaceDrag(newDrag);
+        };
+        const onWfvSurfaceDragPU = (e, s) => {
+          const d = wfvSurfaceDragRef.current; if (!d || d.id !== s.id) return;
+          e.currentTarget.releasePointerCapture(e.pointerId);
+          if (d.moved) {
+            if (!d.collides) {
+              saveWallSurfaces(surfaceEntries.map(en => en.id === s.id ? {...en, offset: d.curOffset, yBottom: d.curYBottom} : en));
+            }
+            setWfvSurfaceSel(s.id);
+          } else if (d.wasSelected) {
+            setWfvSurfacePopover({ id: s.id, offset: s.offset, yBottom: s.yBottom, width: s.width, height: s.height, color: s.color });
+          } else {
+            setWfvSurfaceSel(s.id);
+          }
+          wfvSurfaceDragRef.current = null; setWfvSurfaceDrag(null);
+        };
+        // ── Surface resize — mirrors onWfvResizePD/PM/PU but cm-native (no fixedW/fixedH PATCH) ──
+        const onWfvSurfaceResizePD = (e, s, mode) => {
+          e.stopPropagation(); e.preventDefault();
+          e.currentTarget.setPointerCapture(e.pointerId);
+          const r = { id: s.id, mode, startPx: { x: e.clientX, y: e.clientY },
+            startOffset: s.offset, startYBottom: s.yBottom, startWidth: s.width, startHeight: s.height,
+            curOffset: s.offset, curYBottom: s.yBottom, curWidth: s.width, curHeight: s.height, collides: false };
+          wfvSurfaceResizeRef.current = r; setWfvSurfaceResize(r);
+        };
+        const onWfvSurfaceResizePM = (e) => {
+          const r = wfvSurfaceResizeRef.current; if (!r) return;
+          const dxCm = (e.clientX - r.startPx.x) / scale;
+          const dyCm = (e.clientY - r.startPx.y) / scale;
+          const m = r.mode;
+          let nW = r.startWidth, nH = r.startHeight, nOff = r.startOffset, nYB = r.startYBottom;
+          if (m.includes('e')) { nW = Math.max(5, Math.min(r.startWidth + dxCm, wallLen - r.startOffset)); }
+          if (m.includes('w')) { const re = r.startOffset + r.startWidth; nW = Math.max(5, r.startWidth - dxCm); nOff = Math.max(0, re - nW); nW = re - nOff; }
+          if (m.includes('s')) { const topFixed = r.startYBottom + r.startHeight; nH = Math.max(5, Math.min(r.startHeight + dyCm, topFixed)); nYB = topFixed - nH; }
+          if (m.includes('n')) { nH = Math.max(5, Math.min(r.startHeight - dyCm, ceilH - r.startYBottom)); nYB = r.startYBottom; }
+          const collides = surfaceCollides(nOff, nW, nYB, nH);
+          const newR = {...r, curOffset: nOff, curWidth: nW, curYBottom: nYB, curHeight: nH, collides};
+          wfvSurfaceResizeRef.current = newR; setWfvSurfaceResize(newR);
+        };
+        const onWfvSurfaceResizePU = (e) => {
+          const r = wfvSurfaceResizeRef.current; if (!r) return;
+          e.currentTarget.releasePointerCapture(e.pointerId);
+          if (!r.collides) {
+            saveWallSurfaces(surfaceEntries.map(en => en.id === r.id
+              ? {...en, offset: r.curOffset, yBottom: r.curYBottom, width: r.curWidth, height: r.curHeight}
+              : en));
+          }
+          wfvSurfaceResizeRef.current = null; setWfvSurfaceResize(null);
+        };
         const closeWfv = () => {
           // Fase 3e: si esta VF es la de ORIGEN del movimiento, conservar wfvMoveOrigin para auto-ghost en la siguiente VF
           const mo = wfvMoveOriginRef.current;
@@ -12140,6 +12286,9 @@ ${rows}
           wfvDragRef.current = null; setWfvDrag(null); wfvResizeRef.current = null; setWfvResize(null);
           setWfvGuides({h:[],v:[]}); setWfvHovBid(null); setWfvCtxMenu(null);
           wfvGhostRef.current = null; setWfvGhost(null); wfvGhostItemsRef.current = null;
+          setWfvSurfaceMode(false); wfvSurfaceDrawRef.current = null; setWfvSurfaceDraw(null); setWfvSurfacePopover(null);
+          setWfvSurfaceSel(null); wfvSurfaceDragRef.current = null; setWfvSurfaceDrag(null);
+          wfvSurfaceResizeRef.current = null; setWfvSurfaceResize(null);
           if (!isOriginWfv) { wfvMoveOriginRef.current = null; setWfvMoveOrigin(null); }
         };
         const fromCm = (v, u, dpi) => !u||u==='cm' ? v : u==='mm' ? v*10 : u==='in' ? v/2.54 : v*((dpi||300)/2.54);
@@ -12220,7 +12369,7 @@ ${rows}
               <div style={{display:'flex',gap:2}}>
                 {['A','B'].map(f => (
                   <button key={f}
-                    onClick={e=>{e.stopPropagation();setWallFrontView(p=>({...p,face:f}));}}
+                    onClick={e=>{e.stopPropagation();exitSurfaceMode();setWallFrontView(p=>({...p,face:f}));}}
                     style={{padding:'2px 10px',fontSize:10,fontFamily:"'IBM Plex Mono',monospace",cursor:'pointer',border:'1px solid',
                       borderColor: face===f ? 'var(--acc)' : 'rgba(255,255,255,.15)',
                       background:  face===f ? 'var(--acc)' : 'rgba(255,255,255,.07)',
@@ -12239,10 +12388,45 @@ ${rows}
                   color:'rgba(255,255,255,.7)',lineHeight:1}}>
                 +
               </button>
+              <button
+                onClick={e=>{e.stopPropagation();
+                  wfvGhostRef.current=null; setWfvGhost(null);
+                  setWfvSurfaceMode(m=>!m); wfvSurfaceDrawRef.current=null; setWfvSurfaceDraw(null); setWfvSurfacePopover(null);
+                  setWfvSurfaceSel(null); wfvSurfaceDragRef.current=null; setWfvSurfaceDrag(null);
+                  wfvSurfaceResizeRef.current=null; setWfvSurfaceResize(null);
+                }}
+                data-tooltip={lang==='es'?'Dibujar superficie de color':'Draw color surface'}
+                style={{padding:'2px 10px',fontSize:10,fontFamily:"'IBM Plex Mono',monospace",cursor:'pointer',border:'1px solid',
+                  borderColor: wfvSurfaceMode ? 'var(--acc)' : 'rgba(255,255,255,.25)',
+                  background:  wfvSurfaceMode ? 'var(--acc)' : 'rgba(255,255,255,.1)',
+                  color:       wfvSurfaceMode ? 'var(--bg)'  : 'rgba(255,255,255,.7)'}}>
+                🎨 {lang==='es'?'Superficie':'Surface'}
+              </button>
             </div>
-            <div style={{position:'relative',width:surfW,height:surfH,background:wColor,flexShrink:0,overflow:'hidden',cursor:wfvGhost?'crosshair':undefined}}
+            <div style={{position:'relative',width:surfW,height:surfH,background:wColor,flexShrink:0,overflow:'hidden',cursor:wfvSurfaceMode?'crosshair':wfvGhost?'crosshair':undefined}}
+              onMouseDown={e => {
+                if (!wfvSurfaceMode || wfvGhostRef.current || wfvSurfacePopover) return;
+                e.stopPropagation();
+                const rect = e.currentTarget.getBoundingClientRect();
+                const x = e.clientX - rect.left, y = e.clientY - rect.top;
+                const d = { startXPx:x, startYPx:y, curXPx:x, curYPx:y, collides:false };
+                wfvSurfaceDrawRef.current = d; setWfvSurfaceDraw(d);
+              }}
+              onMouseUp={e => {
+                const d = wfvSurfaceDrawRef.current; if (!d) return;
+                e.stopPropagation();
+                const leftPx = Math.min(d.startXPx, d.curXPx), topPx = Math.min(d.startYPx, d.curYPx);
+                const wPx = Math.abs(d.curXPx - d.startXPx), hPx = Math.abs(d.curYPx - d.startYPx);
+                if (wPx < 6 || hPx < 6) { wfvSurfaceDrawRef.current = null; setWfvSurfaceDraw(null); return; }
+                const offset  = leftPx / scale;
+                const width   = wPx / scale;
+                const height  = hPx / scale;
+                const yBottom = (surfH - (topPx + hPx)) / scale;
+                setWfvSurfacePopover({ offset, yBottom, width, height, color: WFV_SURFACE_COLORS[0] });
+              }}
               onClick={e => {
                 e.stopPropagation();
+                if (wfvSurfaceSel) setWfvSurfaceSel(null);
                 const g = wfvGhostRef.current; if (!g) return;
                 // Confirm ghost placement
                 const wall_ = wallFrontViewRef.current?.wall;
@@ -12369,6 +12553,18 @@ ${rows}
                 }
               }}
               onMouseMove={e => {
+                const sd = wfvSurfaceDrawRef.current;
+                if (sd) {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const curXPx = e.clientX - rect.left, curYPx = e.clientY - rect.top;
+                  const leftPx = Math.min(sd.startXPx, curXPx), topPx = Math.min(sd.startYPx, curYPx);
+                  const wPx = Math.abs(curXPx - sd.startXPx), hPx = Math.abs(curYPx - sd.startYPx);
+                  const offset  = leftPx / scale, width = wPx / scale;
+                  const yBottom = (surfH - (topPx + hPx)) / scale, height = hPx / scale;
+                  const nd = { ...sd, curXPx, curYPx, collides: surfaceCollides(offset, width, yBottom, height) };
+                  wfvSurfaceDrawRef.current = nd; setWfvSurfaceDraw(nd);
+                  return;
+                }
                 const g = wfvGhostRef.current; if (!g) return;
                 const rect = e.currentTarget.getBoundingClientRect();
                 const cxPx = e.clientX - rect.left;
@@ -12416,6 +12612,63 @@ ${rows}
               }}
             >
               <div style={{position:'absolute',bottom:0,left:0,right:0,height:2,background:'rgba(0,0,0,.2)'}}/>
+              {surfaceEntries.map(s => {
+                const isSelSurf      = wfvSurfaceSel === s.id && !wfvSurfaceMode;
+                const isDraggingSurf = wfvSurfaceDrag?.id === s.id;
+                const isResizingSurf = wfvSurfaceResize?.id === s.id;
+                const dispOffset  = isDraggingSurf ? wfvSurfaceDrag.curOffset  : (isResizingSurf ? wfvSurfaceResize.curOffset  : s.offset);
+                const dispYBottom = isDraggingSurf ? wfvSurfaceDrag.curYBottom : (isResizingSurf ? wfvSurfaceResize.curYBottom : s.yBottom);
+                const dispWidth   = isResizingSurf ? wfvSurfaceResize.curWidth  : s.width;
+                const dispHeight  = isResizingSurf ? wfvSurfaceResize.curHeight : s.height;
+                const collidingNow = isDraggingSurf ? wfvSurfaceDrag.collides : (isResizingSurf ? wfvSurfaceResize.collides : false);
+                const sL = dispOffset * scale;
+                const sT = (ceilH - dispYBottom - dispHeight) * scale;
+                const sW = dispWidth * scale;
+                const sH = dispHeight * scale;
+                return (
+                  <div key={s.id} style={{position:'absolute',left:sL,top:sT,width:sW,height:sH,
+                    background:s.color,opacity:0.6,boxSizing:'border-box',
+                    cursor:isDraggingSurf?'grabbing':(wfvSurfaceMode?undefined:'grab'),
+                    border:collidingNow?'2px solid #e74c3c':(isSelSurf?'2px solid var(--acc)':'1px solid rgba(255,255,255,.4)')}}
+                    onClick={e=>e.stopPropagation()}
+                    onContextMenu={e=>{e.preventDefault();e.stopPropagation();removeSurface(s.id);}}
+                    onPointerDown={e=>onWfvSurfaceDragPD(e,s)}
+                    onPointerMove={onWfvSurfaceDragPM}
+                    onPointerUp={e=>onWfvSurfaceDragPU(e,s)}>
+                    <button onClick={e=>{e.stopPropagation();removeSurface(s.id);}}
+                      style={{position:'absolute',top:2,right:2,width:16,height:16,lineHeight:'14px',padding:0,
+                        fontSize:11,color:'#fff',background:'rgba(0,0,0,.55)',border:'1px solid rgba(255,255,255,.4)',
+                        cursor:'pointer',borderRadius:2}}>×</button>
+                    {isSelSurf && [
+                      {m:'nw',s:{top:2,left:2,width:10,height:10,cursor:'nw-resize',background:'rgba(255,255,255,.85)',outline:'1px solid rgba(0,0,0,.3)'}},
+                      {m:'ne',s:{top:2,right:2,width:10,height:10,cursor:'ne-resize',background:'rgba(255,255,255,.85)',outline:'1px solid rgba(0,0,0,.3)'}},
+                      {m:'sw',s:{bottom:2,left:2,width:10,height:10,cursor:'sw-resize',background:'rgba(255,255,255,.85)',outline:'1px solid rgba(0,0,0,.3)'}},
+                      {m:'se',s:{bottom:2,right:2,width:10,height:10,cursor:'se-resize',background:'rgba(255,255,255,.85)',outline:'1px solid rgba(0,0,0,.3)'}},
+                      {m:'n',s:{top:0,left:12,right:12,height:10,cursor:'n-resize',borderTop:'2px solid var(--acc)'}},
+                      {m:'s',s:{bottom:0,left:12,right:12,height:10,cursor:'s-resize',borderBottom:'2px solid var(--acc)'}},
+                      {m:'w',s:{top:12,bottom:12,left:0,width:10,cursor:'w-resize',borderLeft:'2px solid var(--acc)'}},
+                      {m:'e',s:{top:12,bottom:12,right:0,width:10,cursor:'e-resize',borderRight:'2px solid var(--acc)'}},
+                    ].map(({m,s:hs})=>(
+                      <div key={m} style={{position:'absolute',zIndex:31,...hs}}
+                        onPointerDown={e=>onWfvSurfaceResizePD(e,s,m)}
+                        onPointerMove={onWfvSurfaceResizePM}
+                        onPointerUp={onWfvSurfaceResizePU}
+                      />
+                    ))}
+                  </div>
+                );
+              })}
+              {wfvSurfaceDraw && (() => {
+                const d = wfvSurfaceDraw;
+                const l = Math.min(d.startXPx, d.curXPx), t = Math.min(d.startYPx, d.curYPx);
+                const w = Math.abs(d.curXPx - d.startXPx), h = Math.abs(d.curYPx - d.startYPx);
+                return (
+                  <div style={{position:'absolute',left:l,top:t,width:w,height:h,
+                    background: wfvSurfacePopover ? wfvSurfacePopover.color : WFV_SURFACE_COLORS[0],
+                    opacity:0.6,border:`2px solid ${d.collides?'#e74c3c':'rgba(255,255,255,.8)'}`,
+                    boxSizing:'border-box',pointerEvents:'none'}}/>
+                );
+              })()}
               {entries.map(entry => {
                 const board = boards.find(b => b.id === entry.boardId);
                 if (!board?.fixed || !board.fixedW || !board.fixedH) return null;
@@ -12697,6 +12950,44 @@ ${rows}
                 {cmLabel(wallLen)} × {cmLabel(ceilH)}
               </div>
             </div>
+            {wfvSurfacePopover && (() => {
+              const p = wfvSurfacePopover;
+              const collides = surfaceCollides(p.offset, p.width, p.yBottom, p.height);
+              const cancelDraw = () => { wfvSurfaceDrawRef.current = null; setWfvSurfaceDraw(null); setWfvSurfacePopover(null); };
+              return (
+                <div style={{position:'fixed',inset:0,zIndex:1200}} onClick={e=>{e.stopPropagation(); cancelDraw();}}>
+                  <div style={{position:'fixed',left:'50%',bottom:40,transform:'translateX(-50%)',
+                    background:'rgba(20,20,20,.95)',border:'1px solid rgba(255,255,255,.15)',borderRadius:6,
+                    padding:12,display:'flex',flexDirection:'column',gap:8,minWidth:220}}
+                    onClick={e=>e.stopPropagation()}>
+                    <div style={{fontSize:10,color:'rgba(255,255,255,.5)',fontFamily:"'IBM Plex Mono',monospace"}}>
+                      {lang==='es'?'Color de la superficie':'Surface color'}
+                    </div>
+                    <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>
+                      {WFV_SURFACE_COLORS.map(c => (
+                        <button key={c} onClick={()=>setWfvSurfacePopover(prev=>({...prev,color:c}))}
+                          style={{width:22,height:22,background:c,borderRadius:3,cursor:'pointer',padding:0,
+                            border:p.color===c?'2px solid #fff':'1px solid rgba(255,255,255,.3)'}}/>
+                      ))}
+                      <input type="color" value={p.color}
+                        onChange={e=>setWfvSurfacePopover(prev=>({...prev,color:e.target.value}))}
+                        style={{width:22,height:22,padding:0,border:'1px solid rgba(255,255,255,.3)',borderRadius:3,cursor:'pointer',background:'none'}}/>
+                    </div>
+                    {collides && (
+                      <div style={{fontSize:10,color:'#e74c3c'}}>
+                        {lang==='es'?'Se solapa con un tablero existente':'Overlaps an existing board'}
+                      </div>
+                    )}
+                    <div style={{display:'flex',gap:6,justifyContent:'flex-end'}}>
+                      <button className="btn" onClick={cancelDraw}>{t('cancel')}</button>
+                      <button className="btn acc" disabled={collides} onClick={confirmSurfacePopover}>
+                        {lang==='es'?'Confirmar':'Confirm'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
             {wfvCtxMenu && (() => {
               const cmBoard = boards.find(b => b.id === wfvCtxMenu.boardId);
               if (!cmBoard) return null;
