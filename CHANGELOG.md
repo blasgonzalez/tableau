@@ -1,5 +1,38 @@
 # Changelog
 
+## [1.27.0] — 2026-07-06
+
+### Añadido
+- **Enlace opcional en fotos del canvas:** desde el menú contextual de una
+  foto ("🔗 Enlace...") se puede asociar una URL, con vista previa de
+  título/dominio (mismo mecanismo que los enlaces de notas). Se muestra
+  como icono discreto en la barra superior del visor de artwork 3D y del
+  lightbox 2D (clic para abrir en pestaña nueva), y como indicador en la
+  esquina del elemento en el canvas, visible solo para el propietario.
+- **Reordenar salas por drag en el panel lateral:** igual que los
+  tableros, ahora las salas tienen asa de arrastre (⠿) para cambiar su
+  orden, persistido en el servidor.
+
+### Corregido
+- **Drag y resize de tableros en la vista frontal de pared:** bloqueados
+  por una auto-colisión en `openingCollides` (el tablero colisionaba
+  contra su propia posición guardada) y por `releasePointerCapture` no
+  liberado incondicionalmente en los seis handlers de arrastre/resize
+  (tableros, vanos, superficies). Ambos corregidos.
+- **Cierre accidental de la vista frontal al trazar vanos/superficies:**
+  si el `mouseup` ocurría fuera del lienzo, se disparaba `closeWfv` por
+  error. Ahora un listener en `document` finaliza el trazo esté donde
+  esté el cursor, y un guard evita que el clic sintético posterior
+  cierre la vista.
+- **Tipografía incorrecta en la vista 3D del visitante (modo
+  exposición):** las fuentes `@font-face` no llegaban a descargarse
+  porque ese flujo nunca renderiza ningún elemento DOM con ellas; ahora
+  se precargan explícitamente con `document.fonts.load()` antes de
+  activar la vista 3D, con manejo de errores para que un fallo de una
+  fuente no bloquee el arranque.
+- **Zoom brusco con la rueda del ratón en la vista 3D:** velocidad de
+  zoom de `OrbitControls` reducida a la mitad del valor por defecto.
+
 ## [1.26.0] — 2026-07-05
 
 ### Añadido

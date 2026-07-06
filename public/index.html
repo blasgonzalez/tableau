@@ -352,6 +352,8 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .room-no-sala{display:flex;flex:1;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:var(--dim);font-size:10px}
 .nsala-row{display:flex;align-items:center;padding:5px 8px 5px 16px;cursor:pointer;color:var(--dim);font-size:9px;letter-spacing:.5px;transition:color .12s;border-left:2px solid transparent}
 .nsala-row:hover{color:var(--acc)}.nsala-row.active{color:var(--acc);border-left-color:var(--acc);background:var(--acc-faint)}
+.nsala-row:hover .nboard-drag{opacity:.6}
+.nsala-row.drag-over{border-top:2px solid var(--acc)}
 .nsala-arrow{font-size:8px;width:12px;flex-shrink:0;color:var(--dim);margin-right:3px;transition:color .12s}
 .nsala-row:hover .nsala-arrow,.nsala-row.active .nsala-arrow{color:var(--acc)}
 .nsala-add{display:flex;align-items:center;padding:4px 8px 4px 22px;cursor:pointer;color:var(--muted);font-size:9px;letter-spacing:.4px;transition:color .12s}
@@ -388,6 +390,7 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .comment-badge{position:absolute;top:0;right:0;zoom:calc(1 / var(--canvas-zoom,1));background:var(--panel2);border:1px solid var(--border2);color:var(--sub);font-size:8px;line-height:1;padding:2px 5px;display:flex;align-items:center;gap:2px;z-index:260;pointer-events:all;cursor:pointer;white-space:nowrap}
 .comment-badge.has-pending{border-color:var(--acc-dim);color:var(--acc)}
 .comment-badge:hover{color:var(--text);border-color:var(--acc)}
+.link-badge{position:absolute;bottom:0;left:0;zoom:calc(1 / var(--canvas-zoom,1));background:var(--panel2);border:1px solid var(--border2);color:var(--sub);font-size:8px;line-height:1;padding:2px 4px;pointer-events:none;z-index:15;border-radius:0 3px 0 0}
 
 /* ── COMMENT PANEL ── */
 .comment-panel{position:fixed;top:46px;right:0;bottom:0;width:320px;background:var(--surf);border-left:1px solid var(--border);display:flex;flex-direction:column;z-index:400;overflow:hidden;box-shadow:-4px 0 18px rgba(0,0,0,.4)}
@@ -909,6 +912,9 @@ select.inp{cursor:pointer;appearance:none;padding-right:28px;background-image:ur
 .artwork3d-back:hover{color:#fff}
 .artwork3d-label{font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.85);letter-spacing:.3px;font-style:italic}
 .artwork3d-dims{font-size:9px;color:rgba(255,255,255,.3);font-family:'IBM Plex Mono',monospace;letter-spacing:.2px}
+.artwork3d-topctls{position:fixed;top:10px;display:flex;gap:2px;z-index:901}
+.artwork3d-topctl-btn{background:none;border:none;color:rgba(255,255,255,.45);font-size:15px;cursor:pointer;padding:6px 8px;line-height:1;transition:color .15s}
+.artwork3d-topctl-btn:hover{color:#fff}
 .artwork3d-comments{display:flex;flex-direction:column;gap:7px;margin-top:5px;max-height:130px;overflow-y:auto}
 .artwork3d-comment{display:flex;flex-direction:column;gap:2px}
 .artwork3d-comment-author{font-size:8px;color:rgba(255,255,255,.3);font-family:'IBM Plex Mono',monospace;letter-spacing:.3px;text-transform:uppercase}
@@ -1854,6 +1860,8 @@ function App() {
   const [renaming,      setRenaming]      = useState(null);
   const [boardDragId,   setBoardDragId]   = useState(null);
   const [boardDragOver, setBoardDragOver] = useState(null);
+  const [roomDragId,    setRoomDragId]    = useState(null);
+  const [roomDragOver,  setRoomDragOver]  = useState(null);
   const [snapGuides,    setSnapGuides]    = useState({ h: [], v: [] });
   const [dragSwapTarget, setDragSwapTarget] = useState(null);
   const [libSel,        setLibSel]        = useState([]);
@@ -1948,6 +1956,7 @@ function App() {
   const [wfvSurfaceMode, setWfvSurfaceMode] = useState(false); // "draw color surface" toggle — Fase 1b
   const [wfvSurfaceDraw, setWfvSurfaceDraw] = useState(null); // {startXCm,startYCm,curXCm,curYCm,collides} while dragging
   const wfvSurfaceDrawRef = useRef(null);
+  const wfvDrawJustEndedRef = useRef(false); // suppresses the synthetic click that follows a mouseup landing outside the wfv canvas
   const [wfvSurfacePopover, setWfvSurfacePopover] = useState(null); // {id?,offset,yBottom,width,height,color} — pending confirmation (id present = editing existing)
   const [wfvSurfaceSel, setWfvSurfaceSel] = useState(null); // selected surface id, null if none
   const [wfvSurfaceDrag, setWfvSurfaceDrag] = useState(null); // {id,wasSelected,startPx,startOffset,startYBottom,width,height,curOffset,curYBottom,moved,collides}
@@ -2712,7 +2721,7 @@ function App() {
       Promise.all([
         api.get(`/api/projects/${pid}/rooms`),
         api.get(`/api/projects/${pid}/boards`),
-      ]).then(([rs, bs]) => {
+      ]).then(async ([rs, bs]) => {
         setBoards(bs || []);
         boardsRef.current = bs || [];
         const arr = (rs || []).map(normalizeRoom);
@@ -2720,8 +2729,20 @@ function App() {
         setRooms(arr); roomsRef.current = arr;
         setRoom(r); roomRef.current = r;
         if (r) { setActiveRoomId(r.id); activeRoomIdRef.current = r.id; setRoomCeilH(r.ceilingHeight||280); setRoomWallThick(r.wallThickness??15); setRoomName(r.name||''); }
+        // document.fonts.ready alone isn't enough — @font-face files aren't fetched until
+        // first used in the DOM, and this guest flow never renders any element with them.
+        // document.fonts.load() forces the download even with no matching DOM element.
+        const fontFamiliesToLoad = [
+          'Playfair Display', 'DM Sans', 'Bebas Neue', 'IBM Plex Mono',
+          'Cormorant Garamond', 'Inter', 'Josefin Sans'
+        ];
+        await Promise.all(
+          fontFamiliesToLoad.map(f =>
+            document.fonts.load(`16px "${f}"`).catch(() => {})
+          )
+        );
         load3DLibs().then(() => setRoomView('3d'));
-      });
+      }).catch(err => console.error('shareRoomsOnly init error:', err));
       return;
     }
     const goRoom = pendingRoomViewRef.current;
@@ -2812,6 +2833,7 @@ function App() {
       controls.target.copy(initTarget);
       controls.enableDamping = true; controls.dampingFactor = 0.08;
       controls.enableZoom = true;
+      controls.zoomSpeed = 0.4;
       controls.minDistance = span * 0.05; controls.maxDistance = span * 6;
       controls.maxPolarAngle = Math.PI * 0.48;
       controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
@@ -5473,6 +5495,17 @@ ${rows}
     bs.splice(toIdx, 0, moved);
     setBoards(bs);
     await api.put(`/api/projects/${pid}/boards/order`, { order: bs.map(b => b.id) });
+  };
+
+  const reorderRooms = async (fromId, toId) => {
+    if (fromId === toId) return;
+    const rs = [...rooms];
+    const fromIdx = rs.findIndex(r => r.id === fromId);
+    const toIdx   = rs.findIndex(r => r.id === toId);
+    const [moved] = rs.splice(fromIdx, 1);
+    rs.splice(toIdx, 0, moved);
+    setRooms(rs); roomsRef.current = rs;
+    await api.put(`/api/projects/${pid}/rooms/order`, { order: rs.map(r => r.id) });
   };
 
   // ── upload ────────────────────────────────────────────────────────────────
@@ -9763,15 +9796,39 @@ ${rows}
                                 {unassigned.map(b => renderBoard(b, false))}
                                 {rooms.map(r => (
                                   <React.Fragment key={r.id}>
-                                    <div className={`nsala-row${isSalaActive(r)?' active':''}`}
+                                    <div className={`nsala-row${isSalaActive(r)?' active':''}${roomDragOver===r.id?' drag-over':''}`}
+                                      draggable
+                                      onDragStart={e => {
+                                        setRoomDragId(r.id);
+                                        e.dataTransfer.effectAllowed = 'move';
+                                        e.dataTransfer.setData('room-id', r.id);
+                                      }}
                                       onDragOver={e => {
+                                        if (e.dataTransfer.types.includes('room-id')) {
+                                          e.preventDefault();
+                                          setRoomDragOver(r.id);
+                                          return;
+                                        }
                                         if (!boardDragId) return;
                                         e.preventDefault();
                                         if (dragToRoomTimerRef.current) return;
                                         dragToRoomTimerRef.current = setTimeout(() => { dragToRoomTimerRef.current = null; switchRoom(r.id); }, 700);
                                       }}
-                                      onDragLeave={e => { if (e.currentTarget.contains(e.relatedTarget)) return; if (dragToRoomTimerRef.current) { clearTimeout(dragToRoomTimerRef.current); dragToRoomTimerRef.current = null; } }}
+                                      onDragLeave={e => {
+                                        if (e.currentTarget.contains(e.relatedTarget)) return;
+                                        setRoomDragOver(null);
+                                        if (dragToRoomTimerRef.current) { clearTimeout(dragToRoomTimerRef.current); dragToRoomTimerRef.current = null; }
+                                      }}
+                                      onDrop={e => {
+                                        if (!e.dataTransfer.types.includes('room-id')) return;
+                                        e.preventDefault();
+                                        setRoomDragOver(null);
+                                        if (roomDragId) reorderRooms(roomDragId, r.id);
+                                        setRoomDragId(null);
+                                      }}
+                                      onDragEnd={() => { setRoomDragId(null); setRoomDragOver(null); }}
                                     >
+                                      <span className="nboard-drag">⠿</span>
                                       <span className="nsala-arrow"
                                         onClick={() => setCollapsedRooms(prev => {
                                           const next = new Set(prev);
@@ -11280,6 +11337,7 @@ ${rows}
                       onMouseLeave={clearHoverInfo}
                     >
                       {item.locked && <div className="lock-badge"><SvgLock/></div>}
+                      {item.link && !shareRole && <div className="link-badge" title={item.link.url}>🔗</div>}
                       {(() => { const _ck = `photo:${item.photoId}`; const _cs = commentSummary[_ck]; if (!_cs || _cs.total === 0) return null; const _hp = !shareRole && _cs.pending > 0; return <div className={`comment-badge${_hp?' has-pending':''}`} onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); openCommentPanel('photo', item.photoId, bid, item.label || photo?.name); }}>💬 {_cs.total}</div>; })()}
                       <div className="bitem-bar" onPointerDown={e => e.stopPropagation()} style={_bbarBelow}>
                         <button className="ibc rot" data-tooltip={t('ttRotate')}
@@ -12144,6 +12202,10 @@ ${rows}
           <div className="fullscreen-overlay" style={{background:wc}} onClick={goBack}>
             <button className="artwork3d-back" style={{color:tcMuted}} onClick={e => { e.stopPropagation(); goBack(); }}>{t('artwork3DBack')}</button>
             {navCount > 1 && <div className="fullscreen-counter" style={{color:tcMuted}}>{t('artwork3DOf', navIdx+1, navCount)}</div>}
+            <div className="artwork3d-topctls" style={{right:16}}>
+              {item?.link && <button className="artwork3d-topctl-btn" style={{color:tcMuted}} data-tooltip={item.link.title || item.link.url}
+                onClick={e => { e.stopPropagation(); window.open(item.link.url, '_blank'); }}>🔗</button>}
+            </div>
             {!room3DReady
               ? <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8}}><div className="splash-dots"><span style={{background:tc}}></span><span style={{background:tc}}></span><span style={{background:tc}}></span></div><div style={{fontSize:11,color:tcMuted,letterSpacing:.5}}>{t('room3DLoading')}</div></div>
               : photo && (() => {
@@ -12419,6 +12481,44 @@ ${rows}
           setWfvSurfacePopover(null);
           setWfvSurfaceMode(false);
         };
+        // Finalizes an in-progress surface/opening draw-stroke (either the confirmed rectangle or a
+        // too-small discard). Called both from the container's own onMouseUp (mouseup inside the
+        // container) and from a document-level fallback listener (mouseup outside it, e.g. over the
+        // toolbar or the dark overlay) so a stroke that ends outside the canvas never leaves the ref
+        // dangling nor lets the click bubble to the fullscreen-overlay's closeWfv.
+        const finishWfvDraw = () => {
+          // Set synchronously (refs, unlike state, are readable immediately) so the fullscreen-overlay's
+          // onClick — which fires as a separate event right after this mouseup when the stroke ended
+          // outside the canvas — can detect and ignore it instead of calling closeWfv.
+          wfvDrawJustEndedRef.current = true;
+          const d = wfvSurfaceDrawRef.current;
+          if (d) {
+            wfvSurfaceDrawRef.current = null;
+            const leftPx = Math.min(d.startXPx, d.curXPx), topPx = Math.min(d.startYPx, d.curYPx);
+            const wPx = Math.abs(d.curXPx - d.startXPx), hPx = Math.abs(d.curYPx - d.startYPx);
+            if (wPx < 6 || hPx < 6) { setWfvSurfaceDraw(null); return; }
+            const offset  = leftPx / scale;
+            const width   = wPx / scale;
+            const height  = hPx / scale;
+            const yBottom = (surfH - (topPx + hPx)) / scale;
+            setWfvSurfacePopover({ offset, yBottom, width, height, color: WFV_SURFACE_COLORS[0] });
+            return;
+          }
+          const od = wfvOpeningDrawRef.current;
+          if (od) {
+            wfvOpeningDrawRef.current = null;
+            const leftPx = Math.min(od.startXPx, od.curXPx), topPx = Math.min(od.startYPx, od.curYPx);
+            const wPx = Math.abs(od.curXPx - od.startXPx), hPx = Math.abs(od.curYPx - od.startYPx);
+            if (wPx < 6 || hPx < 6) { setWfvOpeningDraw(null); return; }
+            const dispOffset = leftPx / scale;
+            const width   = wPx / scale;
+            const height  = hPx / scale;
+            const yBottom = (surfH - (topPx + hPx)) / scale;
+            // Openings are stored face-A-relative (canonical); mirror back when drawn on face B
+            const offset = face === 'B' ? wallLen - dispOffset - width : dispOffset;
+            setWfvOpeningPopover({ offset, yBottom, width, height });
+          }
+        };
         // ── Surface drag (move) — mirrors board wfvDrag but simpler (cm-native, no unit conversion) ──
         const onWfvSurfaceDragPD = (e, s) => {
           if (wfvSurfaceMode || wfvGhostRef.current || wfvSurfacePopover) return;
@@ -12571,7 +12671,7 @@ ${rows}
           wfvResizeRef.current=null; setWfvResize(null); setWfvGuides({h:[],v:[]});
         };
         return (
-          <div className="fullscreen-overlay" onClick={closeWfv} onMouseLeave={()=>setWfvHovBid(null)}>
+          <div className="fullscreen-overlay" onClick={e => { if (wfvDrawJustEndedRef.current) { wfvDrawJustEndedRef.current = false; return; } closeWfv(); }} onMouseLeave={()=>setWfvHovBid(null)}>
             <button className="fullscreen-close" onClick={e=>{e.stopPropagation();closeWfv();}}>×</button>
             <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:10,pointerEvents:'auto',position:'relative',zIndex:2}} onClick={e=>e.stopPropagation()}>
               <span style={{color:'rgba(255,255,255,.4)',fontSize:10,fontFamily:"'IBM Plex Mono',monospace"}}>
@@ -12643,6 +12743,10 @@ ${rows}
                   const x = e.clientX - rect.left, y = e.clientY - rect.top;
                   const d = { startXPx:x, startYPx:y, curXPx:x, curYPx:y, collides:false };
                   wfvSurfaceDrawRef.current = d; setWfvSurfaceDraw(d);
+                  document.addEventListener('mouseup', function onDocMouseUp(ev) {
+                    ev.preventDefault(); ev.stopPropagation();
+                    finishWfvDraw();
+                  }, { once:true });
                   return;
                 }
                 if (wfvOpeningMode) {
@@ -12651,36 +12755,16 @@ ${rows}
                   const x = e.clientX - rect.left, y = e.clientY - rect.top;
                   const d = { startXPx:x, startYPx:y, curXPx:x, curYPx:y, collides:false };
                   wfvOpeningDrawRef.current = d; setWfvOpeningDraw(d);
+                  document.addEventListener('mouseup', function onDocMouseUp(ev) {
+                    ev.preventDefault(); ev.stopPropagation();
+                    finishWfvDraw();
+                  }, { once:true });
                 }
               }}
               onMouseUp={e => {
-                const d = wfvSurfaceDrawRef.current;
-                if (d) {
-                  e.stopPropagation();
-                  const leftPx = Math.min(d.startXPx, d.curXPx), topPx = Math.min(d.startYPx, d.curYPx);
-                  const wPx = Math.abs(d.curXPx - d.startXPx), hPx = Math.abs(d.curYPx - d.startYPx);
-                  if (wPx < 6 || hPx < 6) { wfvSurfaceDrawRef.current = null; setWfvSurfaceDraw(null); return; }
-                  const offset  = leftPx / scale;
-                  const width   = wPx / scale;
-                  const height  = hPx / scale;
-                  const yBottom = (surfH - (topPx + hPx)) / scale;
-                  setWfvSurfacePopover({ offset, yBottom, width, height, color: WFV_SURFACE_COLORS[0] });
-                  return;
-                }
-                const od = wfvOpeningDrawRef.current;
-                if (od) {
-                  e.stopPropagation();
-                  const leftPx = Math.min(od.startXPx, od.curXPx), topPx = Math.min(od.startYPx, od.curYPx);
-                  const wPx = Math.abs(od.curXPx - od.startXPx), hPx = Math.abs(od.curYPx - od.startYPx);
-                  if (wPx < 6 || hPx < 6) { wfvOpeningDrawRef.current = null; setWfvOpeningDraw(null); return; }
-                  const dispOffset = leftPx / scale;
-                  const width   = wPx / scale;
-                  const height  = hPx / scale;
-                  const yBottom = (surfH - (topPx + hPx)) / scale;
-                  // Openings are stored face-A-relative (canonical); mirror back when drawn on face B
-                  const offset = face === 'B' ? wallLen - dispOffset - width : dispOffset;
-                  setWfvOpeningPopover({ offset, yBottom, width, height });
-                }
+                if (!wfvSurfaceDrawRef.current && !wfvOpeningDrawRef.current) return;
+                e.stopPropagation();
+                finishWfvDraw();
               }}
               onClick={e => {
                 e.stopPropagation();
@@ -13448,10 +13532,15 @@ ${rows}
         const { photo, index } = fullscreenPhoto;
         const total = displayedPhotosRef.current.length;
         const photos_ = displayedPhotosRef.current;
+        const linkItem = items.find(i => i.photoId === photo.id && i.link);
         return (
           <div className="fullscreen-overlay" onClick={() => setFullscreenPhoto(null)}>
             <button className="fullscreen-close" onClick={() => setFullscreenPhoto(null)}>×</button>
             <div className="fullscreen-counter">{index + 1} / {total}</div>
+            <div className="artwork3d-topctls" style={{right:56}}>
+              {linkItem && <button className="artwork3d-topctl-btn" data-tooltip={linkItem.link.title || linkItem.link.url}
+                onClick={e => { e.stopPropagation(); window.open(linkItem.link.url, '_blank'); }}>🔗</button>}
+            </div>
             <img className="fullscreen-img" src={`/photos/${pid}/${photo.id}`} alt={photo.name} onClick={e => e.stopPropagation()}/>
             {index > 0 && <button className="fullscreen-nav prev" onClick={e => { e.stopPropagation(); setFullscreenPhoto({ photo: photos_[index-1], index: index-1 }); }}>‹</button>}
             {index < total-1 && <button className="fullscreen-nav next" onClick={e => { e.stopPropagation(); setFullscreenPhoto({ photo: photos_[index+1], index: index+1 }); }}>›</button>}
@@ -13734,6 +13823,8 @@ ${rows}
               onClick={() => { const fp = {matSize: ctxItem.matSize ?? ctxItem.frame ?? 0, matColor: ctxItem.matColor||'#ffffff', frameSize: ctxItem.frameSize||0, frameColor: ctxItem.frameColor||'#5a3e1b'}; setFramePainter(fp); setCtxMenu(null); }}>▣ {t('framePainterCopy')}</button>}
             {!isNoteOrText && <button className="ctx-item" style={{color: ctxItem?.label ? 'var(--acc)' : undefined}}
               onClick={() => { pushUndo(); labelEditOrigRef.current = ctxItem?.label || ''; setLabelEditId(ctxMenu.itemId); setCtxMenu(null); }}>✎ {lang==='es'?'Etiqueta':'Label'}</button>}
+            {!isNoteOrText && !isExpoGuest && <button className="ctx-item" style={{color: ctxItem?.link ? 'var(--acc)' : undefined}}
+              onClick={() => { setLinkInputId(ctxMenu.itemId); setCtxMenu(null); }}>🔗 {lang==='es'?'Enlace...':'Link...'}</button>}
             {!isNoteOrText && <><div className="ctx-sep"/>
               <button className="ctx-item" onClick={() => { setCtxMenu(null); const ph = photos.find(p => p.id === ctxItem.photoId); if (ph) { const dp = displayedPhotosRef.current; const idx = dp.findIndex(x => x.id === ph.id); setFullscreenPhoto({ photo: ph, index: idx >= 0 ? idx : 0 }); } }}>{t('viewFullscreen')}</button>
               <button className="ctx-item" onClick={() => { setDefaultW(ctxItem.w); setCtxMenu(null); }}>⊞ {t('setDefaultSize')}</button>
@@ -14902,6 +14993,44 @@ ${rows}
               <div style={{display:'flex',justifyContent:'flex-start',flexShrink:0,paddingTop:2}}>
                 <button className="btn acc" onClick={closeLabelEdit}>{t('save')}</button>
               </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {linkInputId && (() => {
+        const editItem = items.find(i => i.id === linkInputId);
+        if (!editItem || editItem.type === 'note') return null;
+        const closeLinkEdit = () => setLinkInputId(null);
+        return (
+          <div className="lbl-popup-ov" onClick={closeLinkEdit}>
+            <div className="lbl-popup" style={{width:280,minHeight:'auto',resize:'none'}} onClick={e => e.stopPropagation()}>
+              <div className="lbl-popup-hd">
+                <span className="lbl-popup-name">🔗 {lang==='es'?'Enlace':'Link'}</span>
+                <button className="lbl-popup-close" onClick={closeLinkEdit}>×</button>
+              </div>
+              {linkFetching === editItem.id ? (
+                <div className="nitem-link-loading" style={{border:'none',padding:0}}>...</div>
+              ) : editItem.link ? (
+                <>
+                  <a className="nitem-link" href={editItem.link.url} target="_blank" rel="noreferrer" style={{border:'none',padding:0}}>
+                    <div className="nitem-link-info">
+                      <div className="nitem-link-title">{editItem.link.title}</div>
+                      <div className="nitem-link-domain">{editItem.link.domain}</div>
+                    </div>
+                  </a>
+                  <button className="btn" onClick={() => { removeLinkFromNote(editItem.id); setLinkInputId(null); }}>{lang==='es'?'Eliminar enlace':'Remove link'}</button>
+                </>
+              ) : (
+                <input autoFocus placeholder="https://..."
+                  style={{background:'var(--surf)',border:'1px solid var(--border2)',color:'var(--text)',fontFamily:"'IBM Plex Mono',monospace",fontSize:11,padding:'6px 8px',outline:'none',width:'100%',boxSizing:'border-box'}}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter')  fetchLinkPreview(editItem.id, e.target.value);
+                    if (e.key === 'Escape') setLinkInputId(null);
+                  }}
+                  onBlur={e => { if (e.target.value.trim()) fetchLinkPreview(editItem.id, e.target.value); }}
+                />
+              )}
             </div>
           </div>
         );

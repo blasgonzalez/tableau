@@ -1632,6 +1632,18 @@ app.delete('/api/projects/:pid/trash/boards/:bid', requireAuth, (req, res) => {
 });
 
 // ── Rooms (multi-room) ────────────────────────────────────────────────────────
+app.put('/api/projects/:pid/rooms/order', requireAuth, (req, res) => {
+  const { pid } = req.params;
+  const { order } = req.body;
+  if (!Array.isArray(order)) return res.status(400).json({ error: 'order required' });
+  const rooms = readJSON(roomsFile(pid, req.dd));
+  const map = Object.fromEntries(rooms.map(r => [r.id, r]));
+  const sorted = order.map(id => map[id]).filter(Boolean);
+  rooms.forEach(r => { if (!order.includes(r.id)) sorted.push(r); });
+  writeJSON(roomsFile(pid, req.dd), sorted);
+  res.json({ ok: true });
+});
+
 app.get('/api/projects/:pid/rooms', resolveAccess, (req, res) => {
   const { pid } = req.params;
   const rooms = loadRooms(pid, req.dd);
