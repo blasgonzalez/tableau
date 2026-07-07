@@ -1,6 +1,6 @@
 {
-  "version": "1.27.0",
+  "version": "1.28.0",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-07-06",
-  "notes": "Enlace opcional en fotos del canvas, reordenar salas por drag en el panel lateral, y corrección de tipografía/zoom en la vista 3D del visitante."
+  "releaseDate": "2026-07-07",
+  "notes": "Soporte de PNG con transparencia en la biblioteca de fotos y corrección de la tipografía en la vista 3D del propietario."
 }

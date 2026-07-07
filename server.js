@@ -128,6 +128,10 @@ const roomFile       = (pid, dd = DATA_DIR)     => path.join(projDir(pid, dd), '
 const roomsFile      = (pid, dd = DATA_DIR)     => path.join(projDir(pid, dd), 'rooms.json');
 const photoTrashDir  = (pid, dd = DATA_DIR)     => path.join(dd, pid, 'trash', 'photos');
 const photoTrashMeta = (pid, dd = DATA_DIR)     => path.join(dd, pid, 'trash', 'photos.json');
+// Formato opcional por foto (photo.format === 'png' preserva alpha; ausente/otro valor → jpg, retrocompatible)
+const photoExt   = (photo) => photo?.format === 'png' ? 'png' : 'jpg';
+const photoFile  = (id, photo) => `${id}.${photoExt(photo)}`;
+const thumbFile  = (id, photo) => `${id}_thumb.${photoExt(photo)}`;
 const boardTrashDir     = (pid, dd = DATA_DIR)  => path.join(dd, pid, 'trash', 'boards');
 const boardTrashItemDir = (pid, bid, dd = DATA_DIR) => path.join(dd, pid, 'trash', 'boards', bid);
 const roomTrashDir      = (pid, dd = DATA_DIR)  => path.join(dd, pid, 'trash', 'rooms');
@@ -184,7 +188,7 @@ function purgeOldTrash(dd) {
       const trashed = readJSON(tmf, []);
       const surviving = trashed.filter(p => {
         if (now - p.deletedAt <= TRASH_MAX_AGE_MS) return true;
-        [`${p.id}.jpg`, `${p.id}_thumb.jpg`].forEach(f => { try { fs.unlinkSync(path.join(photoTrashDir(pid, dd), f)); } catch {} });
+        [photoFile(p.id, p), thumbFile(p.id, p)].forEach(f => { try { fs.unlinkSync(path.join(photoTrashDir(pid, dd), f)); } catch {} });
         return false;
       });
       if (surviving.length !== trashed.length) writeJSON(tmf, surviving);
@@ -695,6 +699,7 @@ async function processImage(input, pid, existingId = null, dd = DATA_DIR) {
 
   const origMeta = await sharp(input).metadata();
   const exif = origMeta.exif ? parseExifBuffer(origMeta.exif) : null;
+  const hasPng = !!origMeta.hasAlpha;
 
   // Original pixel dimensions (corrected for EXIF orientation)
   const swapDims = origMeta.orientation >= 5 && origMeta.orientation <= 8;
@@ -703,30 +708,31 @@ async function processImage(input, pid, existingId = null, dd = DATA_DIR) {
   const rawDpi   = origMeta.density || null;
   const origDpi  = rawDpi ? Math.round(origMeta.densityUnit === 'cm' ? rawDpi * 2.54 : rawDpi) : null;
 
-  const resized = await sharp(input)
+  let resizedChain = sharp(input)
     .rotate()                    // aplica rotación EXIF automáticamente
-    .resize(RESIZE_PX, RESIZE_PX, { fit: 'inside', withoutEnlargement: true })
-    .jpeg({ quality: JPEG_QUALITY, mozjpeg: true })
-    .toBuffer();
+    .resize(RESIZE_PX, RESIZE_PX, { fit: 'inside', withoutEnlargement: true });
+  resizedChain = hasPng ? resizedChain.png({ compressionLevel: 6 }) : resizedChain.jpeg({ quality: JPEG_QUALITY, mozjpeg: true });
+  const resized = await resizedChain.toBuffer();
 
   const [meta, stats] = await Promise.all([
     sharp(resized).metadata(),
     sharp(resized).stats(),
   ]);
 
-  const thumb = await sharp(input)
+  let thumbChain = sharp(input)
     .rotate()
-    .resize(THUMB_PX, THUMB_PX, { fit: 'inside' })
-    .jpeg({ quality: 80 })
-    .toBuffer();
+    .resize(THUMB_PX, THUMB_PX, { fit: 'inside' });
+  thumbChain = hasPng ? thumbChain.png({ compressionLevel: 9 }) : thumbChain.jpeg({ quality: 80 });
+  const thumb = await thumbChain.toBuffer();
 
-  fs.writeFileSync(path.join(photoDir(pid, dd), `${id}.jpg`), resized);
-  fs.writeFileSync(path.join(photoDir(pid, dd), `${id}_thumb.jpg`), thumb);
+  const format = hasPng ? 'png' : 'jpg';
+  fs.writeFileSync(path.join(photoDir(pid, dd), `${id}.${format}`), resized);
+  fs.writeFileSync(path.join(photoDir(pid, dd), `${id}_thumb.${format}`), thumb);
 
   const ch = stats.channels;
   const brightness = Math.round((0.299 * ch[0].mean + 0.587 * ch[1].mean + 0.114 * ch[2].mean) / 255 * 100) / 100;
   const meanColor = { r: Math.round(ch[0].mean), g: Math.round(ch[1].mean), b: Math.round(ch[2].mean) };
-  return { id, w: meta.width, h: meta.height, size: resized.length, dominant: stats.dominant, brightness, meanColor, origW, origH, ...(origDpi && { origDpi }), ...(exif && { exif }) };
+  return { id, w: meta.width, h: meta.height, size: resized.length, dominant: stats.dominant, brightness, meanColor, origW, origH, format, ...(origDpi && { origDpi }), ...(exif && { exif }) };
 }
 
 // ── Vendor libs (React/ReactDOM served locally — no CDN dependency) ──────────
@@ -1968,9 +1974,9 @@ app.post('/api/projects/:pid/photos', requireAuth, upload.single('photo'), async
     }
   }
   try {
-    const { id, w, h, size, dominant, brightness, meanColor, origW, origH, origDpi, exif } = await processImage(req.file.buffer, pid, null, req.dd);
+    const { id, w, h, size, dominant, brightness, meanColor, origW, origH, format, origDpi, exif } = await processImage(req.file.buffer, pid, null, req.dd);
     const photos = readJSON(photosMeta(pid, req.dd));
-    const p = { id, name: req.file.originalname, w, h, size, dominant, brightness, meanColor, created: Date.now(), origW, origH, ...(origDpi ? { origDpi } : {}), ...(exif ? { exif } : {}) };
+    const p = { id, name: req.file.originalname, w, h, size, dominant, brightness, meanColor, created: Date.now(), origW, origH, format, ...(origDpi ? { origDpi } : {}), ...(exif ? { exif } : {}) };
     photos.push(p);
     writeJSON(photosMeta(pid, req.dd), photos);
     res.json(p);
@@ -1987,8 +1993,14 @@ app.put('/api/projects/:pid/photos/:id/file', requireAuth, upload.single('photo'
   const idx = photos.findIndex(p => p.id === id);
   if (idx === -1) return res.status(404).json({ error: 'Foto no encontrada' });
   try {
-    const { w, h, size, dominant, brightness, meanColor, origW, origH, origDpi, exif } = await processImage(req.file.buffer, pid, id, req.dd);
-    const updated = { ...photos[idx], w, h, size, dominant, brightness, meanColor, origW, origH, ...(origDpi ? { origDpi } : {}), ...(exif ? { exif } : {}) };
+    const oldPhoto = photos[idx];
+    const { w, h, size, dominant, brightness, meanColor, origW, origH, format, origDpi, exif } = await processImage(req.file.buffer, pid, id, req.dd);
+    if (photoExt(oldPhoto) !== format) {
+      [photoFile(id, oldPhoto), thumbFile(id, oldPhoto)].forEach(fname => {
+        try { fs.unlinkSync(path.join(photoDir(pid, req.dd), fname)); } catch {}
+      });
+    }
+    const updated = { ...photos[idx], w, h, size, dominant, brightness, meanColor, origW, origH, format, ...(origDpi ? { origDpi } : {}), ...(exif ? { exif } : {}) };
     photos[idx] = updated;
     writeJSON(photosMeta(pid, req.dd), photos);
     res.json(updated);
@@ -2006,7 +2018,7 @@ app.delete('/api/projects/:pid/photos/:id', requireAuth, (req, res) => {
   if (!photo) return res.status(404).json({ error: 'not found' });
   writeJSON(photosMeta(pid, dd), photos.filter(p => p.id !== id));
   ensureDir(photoTrashDir(pid, dd));
-  [`${id}.jpg`, `${id}_thumb.jpg`].forEach(fname => {
+  [photoFile(id, photo), thumbFile(id, photo)].forEach(fname => {
     const src = path.join(photoDir(pid, dd), fname);
     const dst = path.join(photoTrashDir(pid, dd), fname);
     if (fs.existsSync(src)) try { fs.renameSync(src, dst); } catch {}
@@ -2166,7 +2178,8 @@ app.get('/api/trash/photos', requireAuth, (req, res) => {
 
 app.get('/api/trash/photos/:pid/:id/thumb', requireAuth, (req, res) => {
   const { pid, id } = req.params;
-  const f = path.join(photoTrashDir(pid, req.dd), `${id}_thumb.jpg`);
+  const photo = readJSON(photoTrashMeta(pid, req.dd), []).find(p => p.id === id);
+  const f = path.join(photoTrashDir(pid, req.dd), thumbFile(id, photo));
   if (!fs.existsSync(f)) return res.status(404).send();
   res.sendFile(f);
 });
@@ -2179,7 +2192,7 @@ app.post('/api/trash/photos/:pid/:id/restore', requireAuth, (req, res) => {
   const photo = trashed.find(p => p.id === id);
   if (!photo) return res.status(404).json({ error: 'not found' });
   ensureDir(photoDir(pid, dd));
-  [`${id}.jpg`, `${id}_thumb.jpg`].forEach(fname => {
+  [photoFile(id, photo), thumbFile(id, photo)].forEach(fname => {
     const src = path.join(photoTrashDir(pid, dd), fname);
     const dst = path.join(photoDir(pid, dd), fname);
     if (fs.existsSync(src)) try { fs.renameSync(src, dst); } catch {}
@@ -2196,8 +2209,10 @@ app.delete('/api/trash/photos/:pid/:id', requireAuth, (req, res) => {
   const { pid, id } = req.params;
   const dd = req.dd;
   const tmf = photoTrashMeta(pid, dd);
-  writeJSON(tmf, readJSON(tmf, []).filter(p => p.id !== id));
-  [`${id}.jpg`, `${id}_thumb.jpg`].forEach(fname => {
+  const trashed = readJSON(tmf, []);
+  const photo = trashed.find(p => p.id === id);
+  writeJSON(tmf, trashed.filter(p => p.id !== id));
+  [photoFile(id, photo), thumbFile(id, photo)].forEach(fname => {
     try { fs.unlinkSync(path.join(photoTrashDir(pid, dd), fname)); } catch {}
   });
   res.json({ ok: true });
@@ -2212,7 +2227,7 @@ app.delete('/api/trash/photos', requireAuth, (req, res) => {
       const tmf = photoTrashMeta(pid, dd);
       if (!fs.existsSync(tmf)) continue;
       for (const p of readJSON(tmf, []))
-        [`${p.id}.jpg`, `${p.id}_thumb.jpg`].forEach(fname => {
+        [photoFile(p.id, p), thumbFile(p.id, p)].forEach(fname => {
           try { fs.unlinkSync(path.join(photoTrashDir(pid, dd), fname)); } catch {}
         });
       writeJSON(tmf, []);
@@ -2340,7 +2355,7 @@ app.post('/api/projects/:pid/photos/analyze-colors', requireAuth, async (req, re
   let updated = 0;
   for (const p of photos) {
     if (p.dominant) continue;
-    const pFile = path.join(photoDir(pid, req.dd), `${p.id}.jpg`);
+    const pFile = path.join(photoDir(pid, req.dd), photoFile(p.id, p));
     if (!fs.existsSync(pFile)) continue;
     try {
       const stats = await sharp(pFile).stats();
@@ -2364,8 +2379,8 @@ app.post('/api/projects/:pid/photos/:photoId/copy-to/:targetPid', requireAuth, (
   if (!projects.find(p => p.id === targetPid)) return res.status(404).json({ error: 'Proyecto destino no encontrado' });
   const nid = newId(12);
   try {
-    fs.copyFileSync(path.join(photoDir(pid, req.dd), `${photoId}.jpg`),       path.join(photoDir(targetPid, req.dd), `${nid}.jpg`));
-    fs.copyFileSync(path.join(photoDir(pid, req.dd), `${photoId}_thumb.jpg`), path.join(photoDir(targetPid, req.dd), `${nid}_thumb.jpg`));
+    fs.copyFileSync(path.join(photoDir(pid, req.dd), photoFile(photoId, photo)),       path.join(photoDir(targetPid, req.dd), photoFile(nid, photo)));
+    fs.copyFileSync(path.join(photoDir(pid, req.dd), thumbFile(photoId, photo)), path.join(photoDir(targetPid, req.dd), thumbFile(nid, photo)));
   } catch (e) { return res.status(500).json({ error: e.message }); }
   const dstPhotos = readJSON(photosMeta(targetPid, req.dd));
   const newPhoto = { ...photo, id: nid };
@@ -2381,7 +2396,8 @@ app.get('/photos/:pid/:id', resolveAccess, (req, res) => {
     const room = loadRooms(pid, req.dd).find(r => r.id === req.shareRoomId);
     if (!room || !roomPhotoIds(req.dd, pid, room).has(id)) return res.status(403).end();
   }
-  const file = path.join(photoDir(pid, req.dd), `${id}.jpg`);
+  const photo = readJSON(photosMeta(pid, req.dd)).find(p => p.id === id);
+  const file = path.join(photoDir(pid, req.dd), photoFile(id, photo));
   fs.existsSync(file) ? res.sendFile(file) : res.status(404).end();
 });
 
@@ -2391,7 +2407,8 @@ app.get('/photos/:pid/:id/thumb', resolveAccess, (req, res) => {
     const room = loadRooms(pid, req.dd).find(r => r.id === req.shareRoomId);
     if (!room || !roomPhotoIds(req.dd, pid, room).has(id)) return res.status(403).end();
   }
-  const file = path.join(photoDir(pid, req.dd), `${id}_thumb.jpg`);
+  const photo = readJSON(photosMeta(pid, req.dd)).find(p => p.id === id);
+  const file = path.join(photoDir(pid, req.dd), thumbFile(id, photo));
   fs.existsSync(file) ? res.sendFile(file) : res.status(404).end();
 });
 
@@ -2600,7 +2617,7 @@ app.get('/api/boards/:pid/:bid/export', requireAuth, async (req, res) => {
     try {
       const photo = photosData.find(p => p.id === item.photoId);
       if (!photo) return null;
-      const pFile = path.join(photoDir(pid, req.dd), `${item.photoId}.jpg`);
+      const pFile = path.join(photoDir(pid, req.dd), photoFile(item.photoId, photo));
       if (!fs.existsSync(pFile)) return null;
 
       const units = board?.units || 'px';
@@ -2830,14 +2847,16 @@ app.post('/api/projects/import/:tempId/confirm', requireAuth, (req, res) => {
       if (!entry.entryName.startsWith('photos/') || entry.isDirectory) return;
       const fname = path.basename(entry.entryName);
       let oldId, newFname;
-      if (fname.endsWith('_thumb.jpg')) {
-        oldId = fname.slice(0, fname.length - '_thumb.jpg'.length);
+      if (fname.endsWith('_thumb.jpg') || fname.endsWith('_thumb.png')) {
+        const ext = fname.endsWith('.png') ? '.png' : '.jpg';
+        oldId = fname.slice(0, fname.length - `_thumb${ext}`.length);
         const nid = photoIdMap[oldId]; if (!nid) return;
-        newFname = `${nid}_thumb.jpg`;
-      } else if (fname.endsWith('.jpg')) {
-        oldId = fname.slice(0, fname.length - '.jpg'.length);
+        newFname = `${nid}_thumb${ext}`;
+      } else if (fname.endsWith('.jpg') || fname.endsWith('.png')) {
+        const ext = fname.endsWith('.png') ? '.png' : '.jpg';
+        oldId = fname.slice(0, fname.length - ext.length);
         const nid = photoIdMap[oldId]; if (!nid) return;
-        newFname = `${nid}.jpg`;
+        newFname = `${nid}${ext}`;
       } else return;
       fs.writeFileSync(path.join(photoDir(newPid, dd), newFname), entry.getData());
     });

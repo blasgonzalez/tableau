@@ -1,5 +1,36 @@
 # Changelog
 
+## [1.28.0] — 2026-07-07
+
+### Añadido
+- **Soporte de PNG con transparencia en la biblioteca de fotos:** las
+  imágenes PNG con canal alpha ya no se convierten a JPEG — se detecta
+  el alpha en el momento de la subida y se conserva tanto el archivo
+  original como la miniatura en formato PNG (retrocompatible: las fotos
+  sin este campo se siguen tratando como JPEG). En la vista 3D, las
+  fotos con transparencia se renderizan con material transparente
+  (`alphaTest`) en paredes y bloques; las fotos opacas siguen usando el
+  material sólido de siempre.
+
+### Corregido
+- **Tipografía incorrecta en la vista 3D del propietario:** el precargado
+  de fuentes (`document.fonts.load()`) que ya se aplicaba en la vista 3D
+  del visitante se extrajo a una función reutilizable (`preloadFonts()`)
+  y se añadió en los seis puntos de entrada a la vista 3D del
+  propietario, que hasta ahora no la tenían.
+
+## [1.27.1] — 2026-07-06
+
+### Añadido
+- **Creación de tablero por dibujo de rectángulo en la vista frontal de
+  pared:** desde el menú contextual (clic derecho → "＋ Tablero"), junto
+  a "Superficie de color" y "Vano". Al soltar el trazo (mínimo 10×10 cm,
+  ajustado a los límites de la pared) se abre un popover con el nombre
+  autogenerado editable; al confirmar, el tablero se crea con la
+  posición y el tamaño dibujados. El botón "+" de la barra superior
+  queda eliminado — la creación pasa a ser exclusivamente por menú
+  contextual.
+
 ## [1.27.0] — 2026-07-06
 
 ### Añadido

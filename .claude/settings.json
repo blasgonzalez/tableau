@@ -60,7 +60,19 @@
       "Read(//d/blasg/Pictures/Proyectos/**)",
       "Bash(installer\\\\build.bat)",
       "Bash(git -C \"d:/blasg/Pictures/Proyectos/tableau\" log --oneline -15)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(rm -rf /tmp/tb_png_test)",
+      "Bash(TABLEAU_DATA_DIR=\"C:/Users/blasg/AppData/Local/Temp/claude/d--blasg-Pictures-Proyectos-tableau/fd00330b-7634-4904-8233-9a9d93699735/scratchpad/tb_data\" TABLEAU_AUTH=false TABLEAU_BACKUP=false TABLEAU_AUTO_SHUTDOWN=false PORT=4123 node server.js)",
+      "Bash(curl -s -X POST http://localhost:4123/api/projects -H \"Content-Type: application/json\" -d '{\"name\":\"pngtest\"}')",
+      "Bash(curl -s -X POST http://localhost:4123/api/projects/d27ddd91c1/photos -F photo=@C:/Users/blasg/AppData/Local/Temp/claude/d--blasg-Pictures-Proyectos-tableau/fd00330b-7634-4904-8233-9a9d93699735/scratchpad/alpha.png)",
+      "Bash(curl -sI http://localhost:4123/photos/d27ddd91c1/9b00b8055d6b)",
+      "Bash(curl -sI http://localhost:4123/photos/d27ddd91c1/9b00b8055d6b/thumb)",
+      "Bash(curl -s -X DELETE http://localhost:4123/api/projects/d27ddd91c1/photos/9b00b8055d6b)",
+      "Bash(curl -sI http://localhost:4123/api/trash/photos/d27ddd91c1/9b00b8055d6b/thumb)",
+      "Bash(curl -s -X DELETE http://localhost:4123/api/trash/photos/d27ddd91c1/9b00b8055d6b)",
+      "Bash(powershell -NoProfile -Command \"Get-NetTCPConnection -LocalPort 4123 -State Listen | Select-Object -ExpandProperty OwningProcess\")",
+      "Bash(powershell -NoProfile -Command \"Stop-Process -Id 39252 -Force\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:4123/api/projects)"
     ],
     "additionalDirectories": [
       "d:\\blasg\\Pictures\\Proyectos\\tableau\\fonts"

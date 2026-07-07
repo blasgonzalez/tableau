@@ -1972,6 +1972,10 @@ function App() {
   const wfvOpeningDragRef = useRef(null);
   const [wfvOpeningResize, setWfvOpeningResize] = useState(null); // {id,mode,startPx,startOffset,startYBottom,startWidth,startHeight,curOffset,curYBottom,curWidth,curHeight,collides} — DISPLAY space
   const wfvOpeningResizeRef = useRef(null);
+  const [wfvBoardMode, setWfvBoardMode] = useState(false); // "draw new board by rectangle" toggle
+  const [wfvBoardDraw, setWfvBoardDraw] = useState(null); // {startXPx,startYPx,curXPx,curYPx} while dragging
+  const wfvBoardDrawRef = useRef(null);
+  const [wfvBoardPopover, setWfvBoardPopover] = useState(null); // {offset,hangY,width,height,name} — pending confirmation
   const [wfvCanvasCtx, setWfvCanvasCtx] = useState(null); // {x,y} — right-click menu on empty wall-view area
   const wfvGhostItemsRef = useRef(null); // items of the variable ghost board, for seeding wallFrontItems after confirm
   const [wfvMoveOrigin, setWfvMoveOrigin] = useState(null); // {boardId,wallId,face,roomId} — Fase 3e VÍA 2
@@ -2531,6 +2535,7 @@ function App() {
           setRoomShareMode(true);
           setRoomShareInfo(d);
           setRoomShareAllowComments(d.allowComments || false);
+          await preloadFonts();
           await load3DLibs();
           setPid(d.projectId); // triggers pid useEffect which loads room and switches to 3D
           setReady(true);
@@ -2729,18 +2734,7 @@ function App() {
         setRooms(arr); roomsRef.current = arr;
         setRoom(r); roomRef.current = r;
         if (r) { setActiveRoomId(r.id); activeRoomIdRef.current = r.id; setRoomCeilH(r.ceilingHeight||280); setRoomWallThick(r.wallThickness??15); setRoomName(r.name||''); }
-        // document.fonts.ready alone isn't enough — @font-face files aren't fetched until
-        // first used in the DOM, and this guest flow never renders any element with them.
-        // document.fonts.load() forces the download even with no matching DOM element.
-        const fontFamiliesToLoad = [
-          'Playfair Display', 'DM Sans', 'Bebas Neue', 'IBM Plex Mono',
-          'Cormorant Garamond', 'Inter', 'Josefin Sans'
-        ];
-        await Promise.all(
-          fontFamiliesToLoad.map(f =>
-            document.fonts.load(`16px "${f}"`).catch(() => {})
-          )
-        );
+        await preloadFonts();
         load3DLibs().then(() => setRoomView('3d'));
       }).catch(err => console.error('shareRoomsOnly init error:', err));
       return;
@@ -3168,11 +3162,12 @@ function App() {
             pMesh.material = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, transparent: true, alphaTest: 0.01 });
           } else if (item.photoId) {
             const needsFlip = (sideSign === -1) !== !!(item.flipH);
+            const hasAlpha = photosRef.current.find(p => p.id === item.photoId)?.format === 'png';
             loader.load(`/photos/${pid}/${item.photoId}/thumb`, tex => {
               if (cancelled) return;
               tex.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
               if (needsFlip) { tex.repeat.x = -1; tex.offset.x = 1; tex.needsUpdate = true; }
-              pMesh.material = new THREE.MeshLambertMaterial({ map: tex, side: THREE.DoubleSide });
+              pMesh.material = new THREE.MeshLambertMaterial({ map: tex, side: THREE.DoubleSide, ...(hasAlpha ? { transparent: true, alphaTest: 0.01 } : {}) });
             });
           }
         });
@@ -3285,11 +3280,12 @@ function App() {
           const tex = new THREE.CanvasTexture(cvs);
           pMesh.material = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, transparent: true, alphaTest: 0.01 });
         } else if (item.photoId) {
+          const hasAlpha = photosRef.current.find(p => p.id === item.photoId)?.format === 'png';
           loader.load(`/photos/${pid}/${item.photoId}/thumb`, tex => {
             if (cancelled) return;
             tex.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
             if (needsFlip) { tex.repeat.x = -1; tex.offset.x = 1; tex.needsUpdate = true; }
-            pMesh.material = new THREE.MeshLambertMaterial({ map: tex, side: THREE.DoubleSide });
+            pMesh.material = new THREE.MeshLambertMaterial({ map: tex, side: THREE.DoubleSide, ...(hasAlpha ? { transparent: true, alphaTest: 0.01 } : {}) });
           });
         }
       };
@@ -4356,7 +4352,7 @@ function App() {
           setRoom(linkedRoom); roomRef.current = linkedRoom;
           setActiveRoomId(linkedRoom.id); activeRoomIdRef.current = linkedRoom.id;
           if (e.shiftKey) {
-            load3DLibs().then(() => setRoomView('3d'));
+            preloadFonts().then(() => load3DLibs()).then(() => setRoomView('3d'));
           } else {
             setRoomView('room');
           }
@@ -7868,7 +7864,15 @@ ${rows}
     document.head.appendChild(s1);
   });
 
-  const openRoom3D = async () => { await load3DLibs(); setRoomView('3d'); };
+  // document.fonts.ready alone isn't enough — @font-face files aren't fetched until
+  // a matching DOM element renders. Canvas-only text (3D room textures) never triggers
+  // that, so document.fonts.load() forces the download even with no matching DOM element.
+  const preloadFonts = () => Promise.all(
+    ['Playfair Display','DM Sans','Bebas Neue','IBM Plex Mono','Cormorant Garamond','Inter','Josefin Sans']
+      .map(f => document.fonts.load(`16px "${f}"`).catch(() => {}))
+  );
+
+  const openRoom3D = async () => { await preloadFonts(); await load3DLibs(); setRoomView('3d'); };
 
   const deleteRoomVertex = vid => {
     const r = roomRef.current; if (!r) return;
@@ -8000,29 +8004,35 @@ ${rows}
     document.addEventListener('pointerup', onMU);
   };
 
-  const createRoomBoardSide = async (wallId, side='A', { noNav = false } = {}) => {
+  const createRoomBoardSide = async (wallId, side='A', {
+    noNav = false,
+    customOffset, customHangY, customW, customH, customName,
+  } = {}) => {
     const r = roomRef.current; if (!r) return;
     const wall = r.walls.find(w=>w.id===wallId); if (!wall) return;
     const listField = side === 'A' ? 'boardsA' : 'boardsB';
     const len = Math.round(roomWallLen(wall, r.vertices));
     const wallH = wall.height ?? (r.ceilingHeight || 280);
     const existingList = wall[listField] || [];
-    const offset = existingList.reduce((sum, e) => sum + (boardsRef.current.find(b=>b.id===e.boardId)?.fixedW || 0), 0);
+    const autoOffset = existingList.reduce((sum, e) => sum + (boardsRef.current.find(b=>b.id===e.boardId)?.fixedW || 0), 0);
+    const offset = customOffset !== undefined ? customOffset : autoOffset;
     const isFirst = existingList.length === 0;
-    const boardW = isFirst ? len : Math.round(len / 2);
+    const boardW = customW !== undefined ? Math.round(customW) : (isFirst ? len : Math.round(len / 2));
+    const boardH = customH !== undefined ? Math.round(customH) : wallH;
     const suffix = isFirst ? '' : ` ${existingList.length + 1}`;
-    const label = `${wall.name}${side==='B'?' B':''}${suffix}`;
+    const autoLabel = `${wall.name}${side==='B'?' B':''}${suffix}`;
+    const label = (customName || '').trim() ? customName.trim() : autoLabel;
     const b = await api.post(`/api/projects/${pidRef.current}/boards`, {name:label});
     const TARGET_W = 4000;
     const dpi = Math.max(1, Math.round(TARGET_W / boardW * 2.54 * 10) / 10);
     // defaultW = ~60cm in canvas px — sensible starting size for a print on a wall
     const defaultW = Math.round(60 / 2.54 * dpi);
     await api.patch(`/api/projects/${pidRef.current}/boards/${b.id}`, {
-      fixed:true, fixedW:boardW, fixedH:wallH, dpi, units:'cm', defaultW,
+      fixed:true, fixedW:boardW, fixedH:boardH, dpi, units:'cm', defaultW,
     });
-    const fullB = {...b, fixed:true, fixedW:boardW, fixedH:wallH, dpi, units:'cm', defaultW};
+    const fullB = {...b, fixed:true, fixedW:boardW, fixedH:boardH, dpi, units:'cm', defaultW};
     setBoards(bs=>[...bs, fullB]);
-    const newEntry = {boardId: b.id, offset};
+    const newEntry = customHangY !== undefined ? {boardId: b.id, offset, hangY: customHangY} : {boardId: b.id, offset};
     const updatedWall = {...wall, [listField]: [...existingList, newEntry]};
     const updatedRoom = {...r, walls: r.walls.map(w => w.id===wallId ? updatedWall : w)};
     saveRoom(updatedRoom);
@@ -10539,7 +10549,7 @@ ${rows}
                           const prevRoom = rooms[(idx - 1 + rooms.length) % rooms.length];
                           if (!prevRoom) return;
                           switchRoom(prevRoom.id);
-                          load3DLibs().then(() => setRoomView('3d'));
+                          preloadFonts().then(() => load3DLibs()).then(() => setRoomView('3d'));
                         }}>‹</button>
                       <button
                         style={{position:'absolute',top:'50%',right:12,transform:'translateY(-50%)',zIndex:20,width:36,height:52,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(0,0,0,.45)',border:'1px solid rgba(255,255,255,.15)',color:'rgba(255,255,255,.75)',cursor:'pointer',fontSize:20,backdropFilter:'blur(4px)'}}
@@ -10548,7 +10558,7 @@ ${rows}
                           const nextRoom = rooms[(idx + 1) % rooms.length];
                           if (!nextRoom) return;
                           switchRoom(nextRoom.id);
-                          load3DLibs().then(() => setRoomView('3d'));
+                          preloadFonts().then(() => load3DLibs()).then(() => setRoomView('3d'));
                         }}>›</button>
                     </>
                   )}
@@ -11810,7 +11820,7 @@ ${rows}
             if (!linkedRoom) return null;
             const roomName = linkedRoom.name || (lang==='es'?'Sala':'Room');
             const goFloor = () => { setBoardBeforeRoom(bid); setRoom(linkedRoom); roomRef.current = linkedRoom; setActiveRoomId(linkedRoom.id); activeRoomIdRef.current = linkedRoom.id; setRoomView('room'); };
-            const go3D = async () => { setBoardBeforeRoom(bid); setRoom(linkedRoom); roomRef.current = linkedRoom; setActiveRoomId(linkedRoom.id); activeRoomIdRef.current = linkedRoom.id; await load3DLibs(); setRoomView('3d'); };
+            const go3D = async () => { setBoardBeforeRoom(bid); setRoom(linkedRoom); roomRef.current = linkedRoom; setActiveRoomId(linkedRoom.id); activeRoomIdRef.current = linkedRoom.id; await preloadFonts(); await load3DLibs(); setRoomView('3d'); };
             return (
               <div className="zc-room">
                 <div className="zc-room-plan" data-tooltip={t('goToRoom', roomName)} onClick={goFloor}>🏛 {roomName}</div>
@@ -12383,6 +12393,22 @@ ${rows}
           setWfvOpeningPopover(null);
           setWfvOpeningMode(false);
         };
+        const confirmBoardPopover = () => {
+          const p = wfvBoardPopover;
+          if (!p) return;
+          createRoomBoardSide(wfvWall.id, face, {
+            noNav: true,
+            customOffset: p.offset, customHangY: p.hangY, customW: p.width, customH: p.height, customName: p.name,
+          });
+          wfvBoardDrawRef.current = null; setWfvBoardDraw(null);
+          setWfvBoardPopover(null);
+          setWfvBoardMode(false);
+        };
+        const cancelBoardDraw = () => {
+          wfvBoardDrawRef.current = null; setWfvBoardDraw(null);
+          setWfvBoardPopover(null);
+          setWfvBoardMode(false);
+        };
         // ── Opening drag (move) — same shape as surface drag, plus canonical/display mirroring for face B ──
         const onWfvOpeningDragPD = (e, o) => {
           if (wfvOpeningMode || wfvSurfaceMode || wfvGhostRef.current || wfvOpeningPopover) return;
@@ -12466,6 +12492,9 @@ ${rows}
           setWfvOpeningSel(null);
           wfvOpeningDragRef.current = null; setWfvOpeningDrag(null);
           wfvOpeningResizeRef.current = null; setWfvOpeningResize(null);
+          setWfvBoardMode(false);
+          wfvBoardDrawRef.current = null; setWfvBoardDraw(null);
+          setWfvBoardPopover(null);
         };
         const confirmSurfacePopover = () => {
           const p = wfvSurfacePopover;
@@ -12517,6 +12546,23 @@ ${rows}
             // Openings are stored face-A-relative (canonical); mirror back when drawn on face B
             const offset = face === 'B' ? wallLen - dispOffset - width : dispOffset;
             setWfvOpeningPopover({ offset, yBottom, width, height });
+            return;
+          }
+          const bd = wfvBoardDrawRef.current;
+          if (bd) {
+            wfvBoardDrawRef.current = null;
+            const leftPx = Math.min(bd.startXPx, bd.curXPx), topPx = Math.min(bd.startYPx, bd.curYPx);
+            const wPx = Math.abs(bd.curXPx - bd.startXPx), hPx = Math.abs(bd.curYPx - bd.startYPx);
+            const width  = wPx / scale;
+            const height = hPx / scale;
+            if (width < 10 || height < 10) { setWfvBoardDraw(null); return; }
+            const offset  = leftPx / scale;
+            const yBottom = (surfH - (topPx + hPx)) / scale;
+            const hangY   = yBottom + height / 2;
+            const existingCount = (face==='A' ? (wfvWall.boardsA||[]) : (wfvWall.boardsB||[])).length;
+            const suffix = existingCount === 0 ? '' : ` ${existingCount + 1}`;
+            const autoName = `${wfvWall.name}${face==='B'?' B':''}${suffix}`;
+            setWfvBoardPopover({ offset, hangY, width, height, name: autoName });
           }
         };
         // ── Surface drag (move) — mirrors board wfvDrag but simpler (cm-native, no unit conversion) ──
@@ -12604,6 +12650,7 @@ ${rows}
           setWfvOpeningPopover(null);
           setWfvOpeningSel(null); wfvOpeningDragRef.current = null; setWfvOpeningDrag(null);
           wfvOpeningResizeRef.current = null; setWfvOpeningResize(null);
+          setWfvBoardMode(false); wfvBoardDrawRef.current = null; setWfvBoardDraw(null); setWfvBoardPopover(null);
           setWfvCanvasCtx(null);
           if (!isOriginWfv) { wfvMoveOriginRef.current = null; setWfvMoveOrigin(null); }
         };
@@ -12702,33 +12749,25 @@ ${rows}
                   </button>
                 ))}
               </div>
-              <button
-                onClick={e=>{e.stopPropagation();createRoomBoardSide(wfvWall.id, face, {noNav:true});}}
-                data-tooltip={lang==='es'?'Añadir tablero a esta cara':'Add board to this face'}
-                style={{padding:'2px 10px',fontSize:12,fontFamily:"'IBM Plex Mono',monospace",cursor:'pointer',
-                  border:'1px solid rgba(255,255,255,.25)',background:'rgba(255,255,255,.1)',
-                  color:'rgba(255,255,255,.7)',lineHeight:1}}>
-                +
-              </button>
-              {(wfvSurfaceMode || wfvOpeningMode) && (
+              {(wfvSurfaceMode || wfvOpeningMode || wfvBoardMode) && (
                 <span style={{color:'var(--acc)',fontSize:10,fontFamily:"'IBM Plex Mono',monospace"}}>
-                  {lang==='es'?'Traza el rectángulo · clic derecho para cancelar':'Draw the rectangle · right-click to cancel'}
+                  {lang==='es'?'Traza el rectángulo y confirma para crear · clic derecho para cancelar':'Draw the rectangle and confirm to create · right-click to cancel'}
                 </span>
               )}
-              {!wfvGhost && !wfvSurfaceMode && !wfvOpeningMode && (
+              {!wfvGhost && !wfvSurfaceMode && !wfvOpeningMode && !wfvBoardMode && (
                 <span style={{color:'rgba(255,255,255,.3)',fontSize:10,fontFamily:"'IBM Plex Mono',monospace"}}>
-                  {lang==='es'?'Clic derecho: superficie / vano':'Right-click: surface / opening'}
+                  {lang==='es'?'Clic derecho: superficie / vano / tablero':'Right-click: surface / opening / board'}
                 </span>
               )}
             </div>
-            <div style={{position:'relative',width:surfW,height:surfH,background:wColor,flexShrink:0,overflow:'hidden',cursor:(wfvSurfaceMode||wfvOpeningMode)?'crosshair':wfvGhost?'crosshair':undefined}}
+            <div style={{position:'relative',width:surfW,height:surfH,background:wColor,flexShrink:0,overflow:'hidden',cursor:(wfvSurfaceMode||wfvOpeningMode||wfvBoardMode)?'crosshair':wfvGhost?'crosshair':undefined}}
               onContextMenu={e => {
                 e.preventDefault();
-                if (wfvSurfaceDrawRef.current || wfvOpeningDrawRef.current) return;
+                if (wfvSurfaceDrawRef.current || wfvOpeningDrawRef.current || wfvBoardDrawRef.current) return;
                 e.stopPropagation();
-                if (wfvSurfaceMode || wfvOpeningMode) {
+                if (wfvSurfaceMode || wfvOpeningMode || wfvBoardMode) {
                   // Right-click while a draw tool is armed (but not yet mid-stroke) cancels it.
-                  setWfvSurfaceMode(false); setWfvOpeningMode(false);
+                  setWfvSurfaceMode(false); setWfvOpeningMode(false); setWfvBoardMode(false);
                   return;
                 }
                 if (wfvGhostRef.current || wfvSurfacePopover) return;
@@ -12759,10 +12798,23 @@ ${rows}
                     ev.preventDefault(); ev.stopPropagation();
                     finishWfvDraw();
                   }, { once:true });
+                  return;
+                }
+                if (wfvBoardMode) {
+                  e.stopPropagation();
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const x = Math.max(0, Math.min(surfW, e.clientX - rect.left));
+                  const y = Math.max(0, Math.min(surfH, e.clientY - rect.top));
+                  const d = { startXPx:x, startYPx:y, curXPx:x, curYPx:y };
+                  wfvBoardDrawRef.current = d; setWfvBoardDraw(d);
+                  document.addEventListener('mouseup', function onDocMouseUp(ev) {
+                    ev.preventDefault(); ev.stopPropagation();
+                    finishWfvDraw();
+                  }, { once:true });
                 }
               }}
               onMouseUp={e => {
-                if (!wfvSurfaceDrawRef.current && !wfvOpeningDrawRef.current) return;
+                if (!wfvSurfaceDrawRef.current && !wfvOpeningDrawRef.current && !wfvBoardDrawRef.current) return;
                 e.stopPropagation();
                 finishWfvDraw();
               }}
@@ -12920,6 +12972,15 @@ ${rows}
                   const offset = face === 'B' ? wallLen - dispOffset - width : dispOffset;
                   const nd = { ...od, curXPx, curYPx, collides: openingCollides(offset, width, yBottom, height) };
                   wfvOpeningDrawRef.current = nd; setWfvOpeningDraw(nd);
+                  return;
+                }
+                const bd = wfvBoardDrawRef.current;
+                if (bd) {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const curXPx = Math.max(0, Math.min(surfW, e.clientX - rect.left));
+                  const curYPx = Math.max(0, Math.min(surfH, e.clientY - rect.top));
+                  const nd = { ...bd, curXPx, curYPx };
+                  wfvBoardDrawRef.current = nd; setWfvBoardDraw(nd);
                   return;
                 }
                 const g = wfvGhostRef.current; if (!g) return;
@@ -13096,6 +13157,20 @@ ${rows}
                     <div style={{position:'absolute',inset:0,
                       background: wfvSurfacePopover ? wfvSurfacePopover.color : WFV_SURFACE_COLORS[0],
                       opacity:0.6,border:`2px solid ${d.collides?'#e74c3c':'rgba(255,255,255,.8)'}`,
+                      boxSizing:'border-box',pointerEvents:'none'}}/>
+                    {renderWfvDims(l/scale, w/scale, h/scale, (surfH-(t+h))/scale, w, h)}
+                  </div>
+                );
+              })()}
+              {wfvBoardDraw && (() => {
+                const d = wfvBoardDraw;
+                const l = Math.min(d.startXPx, d.curXPx), t = Math.min(d.startYPx, d.curYPx);
+                const w = Math.abs(d.curXPx - d.startXPx), h = Math.abs(d.curYPx - d.startYPx);
+                return (
+                  <div style={{position:'absolute',left:l,top:t,width:w,height:h,pointerEvents:'none'}}>
+                    <div style={{position:'absolute',inset:0,
+                      background:'rgba(255,255,255,.12)',
+                      opacity:0.9,border:'2px solid var(--acc)',
                       boxSizing:'border-box',pointerEvents:'none'}}/>
                     {renderWfvDims(l/scale, w/scale, h/scale, (surfH-(t+h))/scale, w, h)}
                   </div>
@@ -13453,6 +13528,32 @@ ${rows}
                 </div>
               );
             })()}
+            {wfvBoardPopover && (() => {
+              const p = wfvBoardPopover;
+              return (
+                <div style={{position:'fixed',inset:0,zIndex:1200}} onClick={e=>{e.stopPropagation(); cancelBoardDraw();}}>
+                  <div style={{position:'fixed',left:'50%',bottom:40,transform:'translateX(-50%)',
+                    background:'rgba(20,20,20,.95)',border:'1px solid rgba(255,255,255,.15)',borderRadius:6,
+                    padding:12,display:'flex',flexDirection:'column',gap:8,minWidth:220}}
+                    onClick={e=>e.stopPropagation()}>
+                    <div style={{fontSize:10,color:'rgba(255,255,255,.5)',fontFamily:"'IBM Plex Mono',monospace"}}>
+                      {lang==='es'?'Confirmar tablero':'Confirm board'}
+                    </div>
+                    <input autoFocus value={p.name} placeholder={lang==='es'?'Nombre':'Name'}
+                      onChange={e => setWfvBoardPopover(prev => ({...prev, name:e.target.value}))}
+                      style={{background:'var(--surf)',border:'1px solid var(--border2)',color:'var(--text)',
+                        fontFamily:"'IBM Plex Mono',monospace",fontSize:11,padding:'6px 8px',outline:'none',
+                        width:'100%',boxSizing:'border-box'}}/>
+                    <div style={{display:'flex',gap:6,justifyContent:'flex-end'}}>
+                      <button className="btn" onClick={cancelBoardDraw}>{t('cancel')}</button>
+                      <button className="btn acc" onClick={confirmBoardPopover}>
+                        {lang==='es'?'Confirmar':'Confirm'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
             {wfvCanvasCtx && (
               <>
                 <div style={{position:'fixed',inset:0,zIndex:1099}} onClick={() => setWfvCanvasCtx(null)} onContextMenu={e=>{e.preventDefault();setWfvCanvasCtx(null);}}/>
@@ -13462,6 +13563,7 @@ ${rows}
                     setWfvOpeningMode(false); wfvOpeningDrawRef.current=null; setWfvOpeningDraw(null); setWfvOpeningPopover(null);
                     setWfvOpeningSel(null); wfvOpeningDragRef.current=null; setWfvOpeningDrag(null);
                     wfvOpeningResizeRef.current=null; setWfvOpeningResize(null);
+                    setWfvBoardMode(false); wfvBoardDrawRef.current=null; setWfvBoardDraw(null); setWfvBoardPopover(null);
                     setWfvSurfaceMode(true); wfvSurfaceDrawRef.current=null; setWfvSurfaceDraw(null); setWfvSurfacePopover(null);
                     setWfvSurfaceSel(null); wfvSurfaceDragRef.current=null; setWfvSurfaceDrag(null);
                     wfvSurfaceResizeRef.current=null; setWfvSurfaceResize(null);
@@ -13472,11 +13574,23 @@ ${rows}
                     setWfvSurfaceMode(false); wfvSurfaceDrawRef.current=null; setWfvSurfaceDraw(null); setWfvSurfacePopover(null);
                     setWfvSurfaceSel(null); wfvSurfaceDragRef.current=null; setWfvSurfaceDrag(null);
                     wfvSurfaceResizeRef.current=null; setWfvSurfaceResize(null);
+                    setWfvBoardMode(false); wfvBoardDrawRef.current=null; setWfvBoardDraw(null); setWfvBoardPopover(null);
                     setWfvOpeningMode(true); wfvOpeningDrawRef.current=null; setWfvOpeningDraw(null); setWfvOpeningPopover(null);
                     setWfvOpeningSel(null); wfvOpeningDragRef.current=null; setWfvOpeningDrag(null);
                     wfvOpeningResizeRef.current=null; setWfvOpeningResize(null);
                     setWfvCanvasCtx(null);
                   }}>＋ {lang==='es'?'Vano':'Opening'}</button>
+                  <button className="ctx-item" onClick={() => {
+                    wfvGhostRef.current=null; setWfvGhost(null);
+                    setWfvSurfaceMode(false); wfvSurfaceDrawRef.current=null; setWfvSurfaceDraw(null); setWfvSurfacePopover(null);
+                    setWfvSurfaceSel(null); wfvSurfaceDragRef.current=null; setWfvSurfaceDrag(null);
+                    wfvSurfaceResizeRef.current=null; setWfvSurfaceResize(null);
+                    setWfvOpeningMode(false); wfvOpeningDrawRef.current=null; setWfvOpeningDraw(null); setWfvOpeningPopover(null);
+                    setWfvOpeningSel(null); wfvOpeningDragRef.current=null; setWfvOpeningDrag(null);
+                    wfvOpeningResizeRef.current=null; setWfvOpeningResize(null);
+                    setWfvBoardMode(true); wfvBoardDrawRef.current=null; setWfvBoardDraw(null); setWfvBoardPopover(null);
+                    setWfvCanvasCtx(null);
+                  }}>＋ {lang==='es'?'Tablero':'Board'}</button>
                 </div>
               </>
             )}
