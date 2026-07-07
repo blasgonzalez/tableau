@@ -1,6 +1,6 @@
 {
-  "version": "1.28.0",
+  "version": "1.28.1",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-07-07",
-  "notes": "Soporte de PNG con transparencia en la biblioteca de fotos y corrección de la tipografía en la vista 3D del propietario."
+  "notes": "Corrección de la transparencia PNG y de la navegación por zonas/grids en la vista 3D del visitante."
 }

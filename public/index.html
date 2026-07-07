@@ -1469,7 +1469,7 @@ const I18N = {
     commentsRoomLabel: n => `Sala · ${n} comentario${n!==1?'s':''}`,
     commentsProjectLabel: n => `Proyecto · ${n} comentario${n!==1?'s':''}`,
     commentsObsTitle:'Observaciones',
-    artwork3DBack:'← Volver', artwork3DOf:(i,n)=>`${i} de ${n}`, room3DLoading:'Cargando...',
+    artwork3DBack:'← Volver', artwork3DBackLevel:'‹‹ Volver', artwork3DOf:(i,n)=>`${i} de ${n}`, room3DLoading:'Cargando...',
   },
   en: {
     upload:'↑ Upload', uploadPhotos:'Photos', report:'≡ Report', config:'⚙ Config', exportJpeg:'Export',
@@ -1699,7 +1699,7 @@ const I18N = {
     commentsRoomLabel: n => `Room · ${n} comment${n!==1?'s':''}`,
     commentsProjectLabel: n => `Project · ${n} comment${n!==1?'s':''}`,
     commentsObsTitle:'Observations',
-    artwork3DBack:'← Back', artwork3DOf:(i,n)=>`${i} of ${n}`, room3DLoading:'Loading...',
+    artwork3DBack:'← Back', artwork3DBackLevel:'‹‹ Back', artwork3DOf:(i,n)=>`${i} of ${n}`, room3DLoading:'Loading...',
     shareRoom:'Share room', shareRoomTitle:'Share room — 3D view', shareRoomLink:'Room link',
     shareRoomGenerate:'Generate link', shareRoomRevoke:'Revoke', shareRoomCopy:'Copy link',
     shareRoomCopied:'Link copied', shareRoomRegenerate:'Regenerate (revokes current)',
@@ -3059,7 +3059,7 @@ function App() {
             let rowY = it.y;
             layout.rows.forEach(row => {
               row.ids.forEach((photoId, c) => {
-                if (photoId) renderItems.push({ photoId, x: it.x + c*(layout.cellW+layout.gapColPx), y: rowY, w: layout.cellW, gridItemId: it.id });
+                if (photoId) renderItems.push({ photoId, x: it.x + c*(layout.cellW+layout.gapColPx), y: rowY, w: layout.cellW, gridItemId: it.id, zoneId: it.zoneId || null });
               });
               rowY += row.h + layout.gapRowPx;
             });
@@ -3162,7 +3162,8 @@ function App() {
             pMesh.material = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, transparent: true, alphaTest: 0.01 });
           } else if (item.photoId) {
             const needsFlip = (sideSign === -1) !== !!(item.flipH);
-            const hasAlpha = photosRef.current.find(p => p.id === item.photoId)?.format === 'png';
+            const hasAlpha = (room3DPhotoMapRef.current[item.photoId]?.format === 'png') ||
+                             (photosRef.current.find(p => p.id === item.photoId)?.format === 'png');
             loader.load(`/photos/${pid}/${item.photoId}/thumb`, tex => {
               if (cancelled) return;
               tex.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
@@ -3280,7 +3281,8 @@ function App() {
           const tex = new THREE.CanvasTexture(cvs);
           pMesh.material = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, transparent: true, alphaTest: 0.01 });
         } else if (item.photoId) {
-          const hasAlpha = photosRef.current.find(p => p.id === item.photoId)?.format === 'png';
+          const hasAlpha = (room3DPhotoMapRef.current[item.photoId]?.format === 'png') ||
+                           (photosRef.current.find(p => p.id === item.photoId)?.format === 'png');
           loader.load(`/photos/${pid}/${item.photoId}/thumb`, tex => {
             if (cancelled) return;
             tex.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
@@ -3920,7 +3922,7 @@ function App() {
             if (itm.type === 'zone') {
               const members = (allBI[bid] || []).filter(i => i.zoneId === itm.id);
               seen.add(k); roomPhotos.push({ photo: null, item: itm, boardId: bid, wallColor: wc, itemType: 'zone', members });
-            } else if (itm.type === 'grid') {
+            } else if (itm.type === 'grid' && !itm.zoneId) {
               seen.add(k); roomPhotos.push({ photo: null, item: itm, boardId: bid, wallColor: wc, itemType: 'grid' });
             } else if (itm.type === 'text' && !itm.zoneId) {
               seen.add(k); roomPhotos.push({ photo: null, item: itm, boardId: bid, wallColor: wc, itemType: 'text' });
@@ -3937,6 +3939,51 @@ function App() {
         const boardOrder = boardsRef.current.map(b => b.id);
         [...roomBoardIds].sort((a, b) => { const ia = boardOrder.indexOf(a); const ib = boardOrder.indexOf(b); return (ia === -1 ? Infinity : ia) - (ib === -1 ? Infinity : ib); }).forEach(addBoard);
         const wc = boardWallColor[ud.boardId] || '#d0c8bc';
+        // Si pertenece a una zona, abrir la zona siempre (incluso si el clic fue en una celda de grid)
+        if (ud.zoneId) {
+          const zoneItem = (allBI[ud.boardId] || []).find(i => i.id === ud.zoneId);
+          if (zoneItem) {
+            const rawMembers = (allBI[ud.boardId] || []).filter(i => i.zoneId === ud.zoneId);
+            const board = boardsRef.current.find(b => b.id === ud.boardId);
+            const photosArr = Object.values(photoMap_);
+            // Expandir cualquier miembro type:'grid' en pseudo-miembros de foto individual,
+            // una entrada por celda no nula, al mismo nivel que las fotos sueltas de la zona.
+            const members = [];
+            rawMembers.forEach(m => {
+              if (m.type === 'grid') {
+                const layout = calcGridLayout(m, photosArr, board?.dpi || 150, board?.units || 'cm');
+                let rowY = m.y;
+                layout.rows.forEach(row => {
+                  row.ids.forEach((cellPhotoId, c) => {
+                    if (cellPhotoId) members.push({
+                      id: `${m.id}_${c}_${cellPhotoId}`,
+                      type: 'photo',
+                      photoId: cellPhotoId,
+                      x: m.x + c * (layout.cellW + layout.gapColPx),
+                      y: rowY,
+                      w: layout.cellW,
+                      gridItemId: m.id,
+                    });
+                  });
+                  rowY += row.h + layout.gapRowPx;
+                });
+              } else {
+                members.push(m);
+              }
+            });
+            // Índice inicial: la celda pulsada (si el clic vino de un grid) o la foto suelta pulsada
+            let initialIdx = 0;
+            const clickedIdx = ud.gridItemId
+              ? members.findIndex(m => m.gridItemId === ud.gridItemId && m.photoId === ud.photoId)
+              : members.findIndex(m => m.id === ud.itemId);
+            if (clickedIdx >= 0) initialIdx = clickedIdx;
+            const roomIdx = roomPhotos.findIndex(rp => rp.item.id === ud.zoneId && rp.boardId === ud.boardId);
+            const valZ3 = { zone: zoneItem, members, initialIdx, photoMap: photoMap_, boardId: ud.boardId, wallColor: wc, roomPhotos, roomIdx: Math.max(0, roomIdx) };
+            setArtwork3DZone(valZ3); artwork3DZoneRef.current = valZ3;
+            return;
+          }
+        }
+        // Solo si no hay zona, abrir el grid directamente
         if (ud.gridItemId) {
           const gridItem = (allBI[ud.boardId] || []).find(i => i.id === ud.gridItemId);
           if (gridItem) {
@@ -3945,16 +3992,6 @@ function App() {
             setArtwork3DGrid(val); artwork3DGridRef.current = val;
           }
           return;
-        }
-        if (ud.zoneId) {
-          const zoneItem = (allBI[ud.boardId] || []).find(i => i.id === ud.zoneId);
-          if (zoneItem) {
-            const members = (allBI[ud.boardId] || []).filter(i => i.zoneId === ud.zoneId);
-            const roomIdx = roomPhotos.findIndex(rp => rp.item.id === ud.zoneId && rp.boardId === ud.boardId);
-            const valZ3 = { zone: zoneItem, members, photoMap: photoMap_, boardId: ud.boardId, wallColor: wc, roomPhotos, roomIdx: Math.max(0, roomIdx) };
-            setArtwork3DZone(valZ3); artwork3DZoneRef.current = valZ3;
-            return;
-          }
         }
         const photo = photoMap_[ud.photoId];
         const itm = (allBI[ud.boardId] || []).find(i => i.id === ud.itemId);
@@ -11996,7 +12033,10 @@ ${rows}
         const scaleY = (window.innerHeight - 80) / layout.totalH;
         const scale  = Math.min(scaleX, scaleY, 1);
         const photoMap_ = {};
-        photos.forEach(p => { photoMap_[p.id] = p; });
+        // Primero room3DPhotoMapRef (disponible para todos los modos)
+        Object.assign(photoMap_, room3DPhotoMapRef.current || {});
+        // Fallback: photos state (propietario en modo normal)
+        photos.forEach(p => { if (!photoMap_[p.id]) photoMap_[p.id] = p; });
         const wc = gridWC || '#d0c8bc';
         const tc = bgContrast(wc);
         const tcMuted = tc === '#ffffff' ? 'rgba(255,255,255,.45)' : 'rgba(0,0,0,.45)';
@@ -12100,7 +12140,11 @@ ${rows}
                         onClick={isGrid ? undefined : openMember}>
                         {isGrid
                           ? (() => {
-                              const gl = calcGridLayout(member, photos, board?.dpi || 150, board?.units || 'cm');
+                              const allPhotos = Object.values({
+                                ...room3DPhotoMapRef.current,
+                                ...Object.fromEntries(photos.map(p => [p.id, p]))
+                              });
+                              const gl = calcGridLayout(member, allPhotos, board?.dpi || 150, board?.units || 'cm');
                               return (
                                 <div style={{display:'flex',flexDirection:'column',gap:gl.gapRowPx*scale}}>
                                   {gl.rows.map((row, ri) => (
@@ -12198,7 +12242,7 @@ ${rows}
           const tFont = TEXT_FONTS.find(f => f.id === (item.fontFamily||'serif'))||TEXT_FONTS[0];
           return (
             <div className="fullscreen-overlay" style={{background:wc}} onClick={goBack}>
-              <button className="artwork3d-back" style={{color:tcMuted}} onClick={e => { e.stopPropagation(); goBack(); }}>{t('artwork3DBack')}</button>
+              <button className="artwork3d-back" style={{color:tcMuted}} onClick={e => { e.stopPropagation(); goBack(); }}>{t((fromZone || fromGrid) ? 'artwork3DBackLevel' : 'artwork3DBack')}</button>
               {navCount > 1 && <div className="fullscreen-counter" style={{color:tcMuted}}>{t('artwork3DOf', navIdx+1, navCount)}</div>}
               <div style={{maxWidth:'80vw',maxHeight:'80vh',overflow:'hidden',display:'flex',alignItems:'center',justifyContent:item.textAlign==='right'?'flex-end':item.textAlign==='center'?'center':'flex-start',fontSize:Math.min(item.fontSize||64, 80),fontFamily:tFont.family,fontWeight:item.fontWeight||'normal',fontStyle:item.fontStyle||'normal',textAlign:item.textAlign||'center',color:item.textColor||tc,whiteSpace:'pre-wrap',lineHeight:1.35,padding:'0 40px'}}
                 onClick={e => e.stopPropagation()}>{item.text}</div>
@@ -12210,7 +12254,7 @@ ${rows}
         // Photo view
         return (
           <div className="fullscreen-overlay" style={{background:wc}} onClick={goBack}>
-            <button className="artwork3d-back" style={{color:tcMuted}} onClick={e => { e.stopPropagation(); goBack(); }}>{t('artwork3DBack')}</button>
+            <button className="artwork3d-back" style={{color:tcMuted}} onClick={e => { e.stopPropagation(); goBack(); }}>{t((fromZone || fromGrid) ? 'artwork3DBackLevel' : 'artwork3DBack')}</button>
             {navCount > 1 && <div className="fullscreen-counter" style={{color:tcMuted}}>{t('artwork3DOf', navIdx+1, navCount)}</div>}
             <div className="artwork3d-topctls" style={{right:16}}>
               {item?.link && <button className="artwork3d-topctl-btn" style={{color:tcMuted}} data-tooltip={item.link.title || item.link.url}

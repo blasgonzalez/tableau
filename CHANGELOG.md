@@ -1,5 +1,38 @@
 # Changelog
 
+## [1.28.1] — 2026-07-07
+
+### Corregido
+- **Fondo negro en fotos PNG con transparencia (vista 3D del
+  visitante):** el material 3D consultaba solo el estado `photos` para
+  decidir si aplicar transparencia, y ese estado nunca se rellena en el
+  modo de visitante `shareRoomsOnly`. Ahora consulta primero
+  `room3DPhotoMapRef` (poblado siempre, propietario y visitante) con
+  `photos` como resguardo.
+- **Fotos de grid en negro y foto suelta de zona ausente (visor de
+  grid/zona):** mismo origen — `artwork3DGrid` construía su mapa de
+  fotos solo desde `photos`; ahora usa `room3DPhotoMapRef` como fuente
+  primaria. El cálculo de layout de un grid embebido en una zona
+  también se corrigió para usar la unión de ambas fuentes.
+- **Grid dentro de una zona abría el grid en vez de la zona:** al hacer
+  clic en una celda de un grid que pertenece a una zona, `gridItemId`
+  se comprobaba antes que `zoneId`, abriendo siempre el grid
+  aisladamente. Se invirtió la prioridad (zona primero) y se propagó
+  el `zoneId` del grid padre a los pseudo-items de cada celda, que
+  antes se perdía en la expansión.
+- **Grid en zona duplicado en el reel:** los items `grid` se añadían
+  siempre al reel principal de la sala, sin comprobar si pertenecían a
+  una zona (a diferencia de fotos y textos, que sí lo comprobaban) —
+  aparecían dos veces: dentro de la zona y como entrada independiente.
+- **Reel de zona con grid no expandía las celdas:** al abrir una zona
+  que contiene un grid, sus celdas ahora se expanden a pseudo-miembros
+  individuales al mismo nivel que las fotos sueltas, permitiendo
+  navegar celda a celda dentro del reel acotado a la zona (antes el
+  grid aparecía como un único miembro sin desglosar). El botón "Volver"
+  del visor de foto individual ahora indica con "‹‹ Volver" cuando el
+  reel está acotado a una zona o grid (hay un nivel superior al que
+  volver), frente a "← Volver" cuando vuelve directo a la sala.
+
 ## [1.28.0] — 2026-07-07
 
 ### Añadido
