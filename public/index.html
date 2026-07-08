@@ -3005,6 +3005,11 @@ function App() {
         wMesh.position.set((x1+x2)/2, wh/2, (z1+z2)/2);
         wMesh.rotation.y = rotY;
         wMesh.userData.isWalkTarget = true;
+        wMesh.userData.isWallSolid = true;
+        wMesh.userData.wallLen = len;
+        wMesh.userData.wallH = wh;
+        wMesh.userData.wallNormX = -dirZ;
+        wMesh.userData.wallNormZ = dirX;
         // Unambiguous single-board wall: expose boardId for paste-click navigation
         // Fase 3: con N tableros, reemplazar por hit-testing por segmento (raycasting
         // contra planos individuales) para determinar el tablero en el punto de click.
@@ -3121,7 +3126,10 @@ function App() {
           itemMeshes.push(pMesh);
           if (isText) {
             const SCALE = 2;
-            const cvW = Math.max(1, Math.round(item.w * SCALE));
+            const MAX_TEX = 4096;
+            const rawCvW = Math.max(1, Math.round(item.w * SCALE));
+            const cvW = Math.min(rawCvW, MAX_TEX);
+            const scaleX = cvW / rawCvW;
             const tFont = TEXT_FONTS.find(f => f.id === (item.fontFamily || 'serif')) || TEXT_FONTS[0];
             const baseCvH = Math.max(1, Math.round(itemH * SCALE));
             const fs = Math.min((item.fontSize || 40) * SCALE, baseCvH * 0.85);
@@ -3130,7 +3138,7 @@ function App() {
             const cvs = document.createElement('canvas');
             cvs.width = cvW; cvs.height = 1;
             const ctx2 = cvs.getContext('2d');
-            ctx2.font = `${italic}${bold}${fs}px ${tFont.family}`;
+            ctx2.font = `${italic}${bold}${fs * scaleX}px ${tFont.family}`;
             const maxW = cvW - 8 * SCALE;
             const lines = [];
             for (const para of (item.text || '').split('\n')) {
@@ -3145,9 +3153,9 @@ function App() {
             }
             const lineH = fs * 1.25;
             const totalH = lines.length * lineH;
-            const cvH = Math.max(baseCvH, Math.ceil(totalH + fs * 0.4));
+            const cvH = Math.min(Math.max(baseCvH, Math.ceil(totalH + fs * 0.4)), MAX_TEX);
             cvs.height = cvH;
-            ctx2.font = `${italic}${bold}${fs}px ${tFont.family}`;
+            ctx2.font = `${italic}${bold}${fs * scaleX}px ${tFont.family}`;
             const wallFallback = bgContrast(hexWall);
             let textCol = item.textColor || wallFallback;
             if (textCol.startsWith('#') && bgContrast(textCol) === bgContrast(hexWall)) textCol = wallFallback;
@@ -3232,6 +3240,7 @@ function App() {
         boxMesh.position.set(block.x + block.w/2, block.h/2, block.y + block.d/2);
         boxMesh.rotation.y = -(block.rot || 0) * Math.PI / 180;
         boxMesh.userData.isWalkTarget = true;
+        boxMesh.userData.isWallSolid = true;
         scene.add(boxMesh);
         walkTargets.push(boxMesh);
       });
@@ -3242,7 +3251,10 @@ function App() {
         const isText = item.type === 'text';
         if (isText) {
           const SCALE = 2;
-          const cvW = Math.max(1, Math.round(item.w * SCALE));
+          const MAX_TEX = 4096;
+          const rawCvW = Math.max(1, Math.round(item.w * SCALE));
+          const cvW = Math.min(rawCvW, MAX_TEX);
+          const scaleX = cvW / rawCvW;
           const tFont = TEXT_FONTS.find(f => f.id === (item.fontFamily || 'serif')) || TEXT_FONTS[0];
           const baseCvH = Math.max(1, Math.round(itemH * SCALE));
           const fs = Math.min((item.fontSize || 40) * SCALE, baseCvH * 0.85);
@@ -3251,7 +3263,7 @@ function App() {
           const cvs = document.createElement('canvas');
           cvs.width = cvW; cvs.height = 1;
           const ctx2 = cvs.getContext('2d');
-          ctx2.font = `${italic}${bold}${fs}px ${tFont.family}`;
+          ctx2.font = `${italic}${bold}${fs * scaleX}px ${tFont.family}`;
           const maxW = cvW - 8 * SCALE;
           const lines = [];
           for (const para of (item.text || '').split('\n')) {
@@ -3266,9 +3278,9 @@ function App() {
           }
           const lineH = fs * 1.25;
           const totalH = lines.length * lineH;
-          const cvH = Math.max(baseCvH, Math.ceil(totalH + fs * 0.4));
+          const cvH = Math.min(Math.max(baseCvH, Math.ceil(totalH + fs * 0.4)), MAX_TEX);
           cvs.height = cvH;
-          ctx2.font = `${italic}${bold}${fs}px ${tFont.family}`;
+          ctx2.font = `${italic}${bold}${fs * scaleX}px ${tFont.family}`;
           const fallback = bgContrast(bgHex);
           let textCol = item.textColor || fallback;
           if (textCol.startsWith('#') && bgContrast(textCol) === bgContrast(bgHex)) textCol = fallback;
@@ -4018,6 +4030,49 @@ function App() {
         const my = -((e.clientY - rect.top) / rect.height) * 2 + 1;
         itemRay.setFromCamera(new THREE.Vector2(mx, my), camera);
         const hits = filterHitsBySide(itemRay.intersectObjects(itemMeshes));
+        if (hits.length === 0 && !walkActive) {
+          // Raycast contra superficies sólidas de pared/bloque
+          const wallHits = itemRay.intersectObjects(walkTargets)
+            .filter(h => h.object.userData.isWallSolid);
+          if (wallHits.length === 0) return;
+
+          const hit = wallHits[0];
+          const ud = hit.object.userData;
+
+          // Centro de la pared en world space
+          const wallCenter = hit.object.position.clone();
+
+          // Normal de la cara clicada, transformada a world space
+          const normal = hit.face.normal.clone()
+            .transformDirection(hit.object.matrixWorld)
+            .normalize();
+
+          // Distancia para ver la pared completa
+          const W = ud.wallLen || 300;
+          const H = ud.wallH || 250;
+          const fovV = camera.fov * Math.PI / 180;
+          const distH = (H / 2) / Math.tan(fovV / 2);
+          const distW = (W / 2) / (Math.tan(fovV / 2) * camera.aspect);
+          const dist = Math.max(distH, distW) * 1.15; // margen 15%
+
+          // Punto destino
+          const dest = wallCenter.clone().addScaledVector(normal, dist);
+
+          // Detección de obstáculos desde el centro de la pared
+          const obstacleRay = new THREE.Raycaster(
+            wallCenter.clone().addScaledVector(normal, 1),
+            normal.clone(),
+            0,
+            dist - 1
+          );
+          const obstacles = obstacleRay.intersectObjects(walkTargets)
+            .filter(o => o.object !== hit.object && o.object.userData.isWallSolid);
+
+          if (obstacles.length > 0) return;
+
+          tweenCamera(dest, wallCenter, 800);
+          return;
+        }
         if (hits.length === 0) return;
         openFrom3D(hits[0].object.userData);
       };
@@ -10077,23 +10132,30 @@ ${rows}
                                 fill={hov?'var(--acc)':'var(--sub)'} stroke="var(--bg)" strokeWidth={2.5} paintOrder="stroke"
                                 style={{pointerEvents:'none'}}>h {cmLabel(wall.height)}</text>
                             )}
-                            {hovSide && (()=>{
+                            {hov && (()=>{
                               const dx=v2.x-v1.x, dy=v2.y-v1.y, l=Math.sqrt(dx*dx+dy*dy);
                               if(l<1) return null;
                               const nx=-dy/l, ny=dx/l;
-                              const sign = hovSide==='A' ? 1 : -1;
                               const wt2 = (wall.thickness??(room.wallThickness??15))/2;
-                              // Push indicator clearly outside the wall stroke + scale with zoom
                               const lw = Math.max(svgFontSz * 0.45, 3);
-                              const extraOff = svgFontSz * 0.55;
-                              const ox = nx*sign*(wt2+extraOff), oy = ny*sign*(wt2+extraOff);
-                              const fc = hovSide==='A' ? '#ff3f3f' : '#38b0ff';
+                              // Offset mínimo — franjas pegadas a la pared, casi encima de ella
+                              const off = wt2/2;
+                              const normA = { x: nx*off,  y: ny*off  };
+                              const normB = { x: -nx*off, y: -ny*off };
+                              const clickW = lw*1.5;
                               return <>
-                                {/* Halo using --text (light on dark themes, dark on light) for contrast against any wall color */}
-                                <line x1={v1.x+ox} y1={v1.y+oy} x2={v2.x+ox} y2={v2.y+oy}
-                                  stroke="var(--text)" strokeWidth={lw*2.4} strokeLinecap="round" style={{pointerEvents:'none'}}/>
-                                <line x1={v1.x+ox} y1={v1.y+oy} x2={v2.x+ox} y2={v2.y+oy}
-                                  stroke={fc} strokeWidth={lw} strokeLinecap="round" style={{pointerEvents:'none'}}/>
+                                {/* Cara A — franja roja */}
+                                <line x1={v1.x+normA.x} y1={v1.y+normA.y} x2={v2.x+normA.x} y2={v2.y+normA.y}
+                                  stroke="var(--text)" strokeWidth={lw*2} strokeLinecap="round" style={{pointerEvents:'none'}}/>
+                                <line x1={v1.x+normA.x} y1={v1.y+normA.y} x2={v2.x+normA.x} y2={v2.y+normA.y}
+                                  stroke="#ff3f3f" strokeWidth={clickW} strokeLinecap="round" style={{cursor:'pointer'}}
+                                  onClick={e=>{e.stopPropagation();openWallFrontView(normalizeWall(wall), 'A');}}/>
+                                {/* Cara B — franja azul */}
+                                <line x1={v1.x+normB.x} y1={v1.y+normB.y} x2={v2.x+normB.x} y2={v2.y+normB.y}
+                                  stroke="var(--text)" strokeWidth={lw*2} strokeLinecap="round" style={{pointerEvents:'none'}}/>
+                                <line x1={v1.x+normB.x} y1={v1.y+normB.y} x2={v2.x+normB.x} y2={v2.y+normB.y}
+                                  stroke="#38b0ff" strokeWidth={clickW} strokeLinecap="round" style={{cursor:'pointer'}}
+                                  onClick={e=>{e.stopPropagation();openWallFrontView(normalizeWall(wall), 'B');}}/>
                               </>;
                             })()}
                             {boardDragId && !roomDrawing && (
@@ -10489,11 +10551,24 @@ ${rows}
                             )}
                             <span className="room-wall-len">{cmLabel(len)}</span>
                             {totalBoards > 0 && <span style={{fontSize:9,color:'var(--dim)',flexShrink:0}}>▣ {totalBoards}</span>}
-                            <button className="btn" style={{fontSize:9,padding:'1px 6px',flexShrink:0}}
-                              data-tooltip={lang==='es'?'Abrir vista frontal':'Open front view'}
-                              onClick={()=>openWallFrontView(normalizeWall(wall))}>
-                              →
-                            </button>
+                            {wfvMoveOrigin ? (<>
+                              <button className="btn" style={{fontSize:9,padding:'1px 6px',flexShrink:0}}
+                                data-tooltip={lang==='es'?'Abrir vista frontal — Cara A':'Open front view — Side A'}
+                                onClick={()=>openWallFrontView(normalizeWall(wall), 'A')}>
+                                A →
+                              </button>
+                              <button className="btn" style={{fontSize:9,padding:'1px 6px',flexShrink:0}}
+                                data-tooltip={lang==='es'?'Abrir vista frontal — Cara B':'Open front view — Side B'}
+                                onClick={()=>openWallFrontView(normalizeWall(wall), 'B')}>
+                                B →
+                              </button>
+                            </>) : (
+                              <button className="btn" style={{fontSize:9,padding:'1px 6px',flexShrink:0}}
+                                data-tooltip={lang==='es'?'Abrir vista frontal':'Open front view'}
+                                onClick={()=>openWallFrontView(normalizeWall(wall))}>
+                                →
+                              </button>
+                            )}
                           </div>
                         );
                       })}

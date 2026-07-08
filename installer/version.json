@@ -1,6 +1,6 @@
 {
-  "version": "1.28.1",
+  "version": "1.28.2",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-07-07",
-  "notes": "Corrección de la transparencia PNG y de la navegación por zonas/grids en la vista 3D del visitante."
+  "releaseDate": "2026-07-08",
+  "notes": "Clic en pared vacía en vista orbital para centrar la cámara, franjas de cara A/B siempre visibles y clicables en el plano, y límite de tamaño de textura para textos 3D grandes."
 }

@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.28.2] — 2026-07-08
+
+### Añadido
+- **Clic en pared vacía en vista orbital para centrar la cámara:**
+  igual que ya ocurría en modo paseo, ahora un clic en una superficie
+  de pared o bloque sin foto en la vista orbital normal posiciona la
+  cámara perpendicular al centro de la pared, a la distancia justa
+  para encuadrarla completa (calculada a partir del FOV y las
+  dimensiones reales de la pared), con detección de obstáculos: si
+  otra pared o bloque bloquea el punto de destino, la cámara no se
+  mueve.
+- **Franjas de cara A/B siempre visibles y clicables en el plano de
+  sala:** al pasar el ratón por cualquier pared se muestran ambas
+  franjas (roja=A, azul=B) pegadas a la línea de la pared, tenga o no
+  tableros — antes solo aparecía una franja, y solo si esa cara ya
+  tenía algún tablero vinculado. Cada franja es clicable y abre la
+  vista frontal de esa cara directamente.
+
+### Corregido
+- **Límite de tamaño de textura en textos 3D:** el canvas usado como
+  textura para elementos de texto en la vista 3D (pared y bloque) no
+  tenía ningún límite máximo — un texto grande en un tablero ancho
+  podía generar un canvas de varios miles de píxeles y arriesgar
+  corrupción/rechazo silencioso en GPUs con `MAX_TEXTURE_SIZE`
+  limitado. Ahora se limita a 4096px, reescalando la fuente
+  proporcionalmente si el ancho se recorta.
+
 ## [1.28.1] — 2026-07-07
 
 ### Corregido
