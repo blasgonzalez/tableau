@@ -2479,6 +2479,34 @@ function App() {
   }, [pid]);
   useEffect(() => { setCommentPanel(null); commentPanelRef.current = null; }, [bid]);
   useEffect(() => { setCommentPanel(null); commentPanelRef.current = null; }, [roomView]);
+  useEffect(() => {
+    if (rooms.length > 0) {
+      setCollapsedRooms(prev => {
+        if (prev.size === 0) {
+          return new Set(rooms.map(r => r.id));
+        }
+        return prev;
+      });
+    }
+  }, [rooms.length]);
+  useEffect(() => {
+    if (roomView === 'board') {
+      const activeRoom = rooms.find(r =>
+        r.walls?.some(w => wallLinksBoard(w, bid)) ||
+        r.blocks?.some(bl => bl.faces && Object.values(bl.faces).some(f => f?.boardId === bid))
+      );
+      setCollapsedRooms(new Set(
+        rooms.filter(r => r.id !== activeRoom?.id).map(r => r.id)
+      ));
+    }
+  }, [roomView, bid]);
+  useEffect(() => {
+    if (room?.id && (roomView === 'room' || roomView === '3d')) {
+      setCollapsedRooms(new Set(
+        rooms.filter(r => r.id !== room.id).map(r => r.id)
+      ));
+    }
+  }, [room?.id, roomView]);
 
   // ── init ──────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -2945,7 +2973,7 @@ function App() {
         if (!pv1 || !pv2) return;
         const pwh = wall.height ?? ch;
         const pwt = wall.thickness ?? (room.wallThickness ?? 15);
-        const pc  = wall.color || wall.colorBack || '#d0c8bc';
+        const pc  = wall.color || '#d0c8bc';
         for (const [vid, vx, vz] of [[wall.v1, pv1.x, pv1.y], [wall.v2, pv2.x, pv2.y]]) {
           const ex = vertexPosts.get(vid);
           if (!ex) vertexPosts.set(vid, {x:vx, z:vz, wt:pwt, wh:pwh, color:pc, n:1});
@@ -2972,7 +3000,7 @@ function App() {
         const endOffset   = (v2p && v2p.n >= 2) ? v2p.wt / 2 : 0;
         const wallFaceLen = Math.max(0, len - startOffset - endOffset);
 
-        const wColor = wall.color || wall.colorBack || '#d0c8bc';
+        const wColor = wall.color || '#d0c8bc';
         const hasOpenings = wall.openings && wall.openings.length > 0;
         let wGeo;
         if (hasOpenings) {
@@ -3914,8 +3942,8 @@ function App() {
         // Build wall color map (boardId → wall/block color)
         const boardWallColor = {};
         (room_?.walls || []).forEach(w => {
-          (w.boardsA || []).forEach(e => { boardWallColor[e.boardId] = w.color     || '#d0c8bc'; });
-          (w.boardsB || []).forEach(e => { boardWallColor[e.boardId] = w.colorBack || '#d0c8bc'; });
+          (w.boardsA || []).forEach(e => { boardWallColor[e.boardId] = w.color || '#d0c8bc'; });
+          (w.boardsB || []).forEach(e => { boardWallColor[e.boardId] = w.color || '#d0c8bc'; });
         });
         (room_?.blocks || []).forEach(b => ['n','s','e','w','t'].forEach(f => {
           const bId = b.faces?.[f]?.boardId;
@@ -10120,9 +10148,9 @@ ${rows}
                                 stroke="var(--text)" strokeWidth={5} strokeLinecap="round" style={{pointerEvents:'none'}}/>
                             )}
                             <line x1={v1.x} y1={v1.y} x2={v2.x} y2={v2.y}
-                              stroke={hov||linked?'var(--acc)':(wall.color||wall.colorBack||'var(--dim)')}
+                              stroke={hov||linked?'var(--acc)':(wall.color||'var(--dim)')}
                               strokeWidth={hov && !hovSide ? 3 : (hov ? sw+3 : sw)}
-                              opacity={hov||linked?1:(wall.color||wall.colorBack)?0.9:0.8}
+                              opacity={hov||linked?1:wall.color?0.9:0.8}
                               strokeDasharray={isTabique?`${sw*2.5} ${sw*.8}`:undefined}/>
                             <text x={mx} y={my+svgFontSz*(isTabique?-.1:.4)} textAnchor="middle" fontSize={svgFontSz}
                               fill={hov?'var(--acc)':'var(--text)'} stroke="var(--bg)" strokeWidth={3} paintOrder="stroke"
@@ -10132,14 +10160,13 @@ ${rows}
                                 fill={hov?'var(--acc)':'var(--sub)'} stroke="var(--bg)" strokeWidth={2.5} paintOrder="stroke"
                                 style={{pointerEvents:'none'}}>h {cmLabel(wall.height)}</text>
                             )}
-                            {hov && (()=>{
+                            {(hov || hovSide) && (()=>{
                               const dx=v2.x-v1.x, dy=v2.y-v1.y, l=Math.sqrt(dx*dx+dy*dy);
                               if(l<1) return null;
                               const nx=-dy/l, ny=dx/l;
                               const wt2 = (wall.thickness??(room.wallThickness??15))/2;
                               const lw = Math.max(svgFontSz * 0.45, 3);
-                              // Offset mínimo — franjas pegadas a la pared, casi encima de ella
-                              const off = wt2/2;
+                              const off = Math.max(wt2 / 2, lw * 1.2); // siempre mayor que lw
                               const normA = { x: nx*off,  y: ny*off  };
                               const normB = { x: -nx*off, y: -ny*off };
                               const clickW = lw*1.5;
@@ -12389,7 +12416,7 @@ ${rows}
         const scale = Math.min(vw / Math.max(wallLen, 1), vh / Math.max(ceilH, 1));
         const surfW  = wallLen * scale;
         const surfH  = ceilH  * scale;
-        const wColor = wfvWall.color || wfvWall.colorBack || '#d0c8bc';
+        const wColor = wfvWall.color || '#d0c8bc';
         const toCm = (v, u, dpi) => !u||u==='cm' ? v : u==='mm' ? v/10 : u==='in' ? v*2.54 : v/(dpi||300)*2.54;
         const photoMap_ = Object.fromEntries(photos.map(p => [p.id, p]));
 
@@ -12868,6 +12895,16 @@ ${rows}
                   </button>
                 ))}
               </div>
+              <input type="color" value={wColor}
+                style={{width:20,height:20,padding:0,border:'1px solid rgba(255,255,255,.15)',borderRadius:2,cursor:'pointer',flexShrink:0}}
+                onClick={e=>e.stopPropagation()}
+                onChange={e=>{
+                  const updWall = {...wfvWall, color: e.target.value};
+                  const newRoom = {...roomRef.current, walls: roomRef.current.walls.map(w => w.id===wfvWall.id ? updWall : w)};
+                  saveRoom(newRoom);
+                  setWallFrontView(prev => prev ? {...prev, wall:updWall} : prev);
+                  wallFrontViewRef.current = wallFrontViewRef.current ? {...wallFrontViewRef.current, wall:updWall} : null;
+                }}/>
               {(wfvSurfaceMode || wfvOpeningMode || wfvBoardMode) && (
                 <span style={{color:'var(--acc)',fontSize:10,fontFamily:"'IBM Plex Mono',monospace"}}>
                   {lang==='es'?'Traza el rectángulo y confirma para crear · clic derecho para cancelar':'Draw the rectangle and confirm to create · right-click to cancel'}
@@ -13850,7 +13887,7 @@ ${rows}
             onPointerDown={e=>e.stopPropagation()} onChange={onChange}/>
         );
         const sideLabel = s => s==='A' ? (lang==='es'?'Cara A':'Side A') : (lang==='es'?'Cara B':'Side B');
-        const ctxSideSection = (side, colorKey, colorVal) => {
+        const ctxSideSection = (side) => {
           const list = side === 'A' ? (cw.boardsA||[]) : (cw.boardsB||[]);
           const count = list.length;
           return (<>
@@ -13858,10 +13895,6 @@ ${rows}
               onMouseEnter={()=>setRoomHovSide({wallId:cw.id,side})}
               onMouseLeave={()=>setRoomHovSide(null)}>
               <span style={{flex:1,color:side==='A'?'#ff3f3f':'#38b0ff',fontWeight:600}}>{sideLabel(side)}</span>
-              <input type="color" value={colorVal}
-                style={{width:20,height:16,padding:0,border:'1px solid var(--border2)',borderRadius:2,cursor:'pointer',flexShrink:0}}
-                onPointerDown={e=>e.stopPropagation()}
-                onChange={e=>saveWall({[colorKey]:e.target.value})}/>
             </div>
             {count > 0 && (
               <button className="ctx-item"
@@ -13869,10 +13902,6 @@ ${rows}
                 {lang==='es'?`Tableros (${count}) →`:`Boards (${count}) →`}
               </button>
             )}
-            <button className="ctx-item"
-              onClick={()=>{createRoomBoardSide(cw.id,side);setRoomWallCtx(null);}}>
-              {count === 0 ? t('salaCreateBoard') : (lang==='es'?'+ Tablero':'+ Board')}
-            </button>
           </>);
         };
         return (
@@ -13895,8 +13924,15 @@ ${rows}
               })}
               <span style={{fontSize:9,color:'var(--muted)'}}>cm</span>
             </div>
-            {ctxSideSection('A', 'color',     cw.color    ||'#d0c8bc')}
-            {ctxSideSection('B', 'colorBack', cw.colorBack||'#d0c8bc')}
+            <div className="ctx-item" style={{display:'flex',alignItems:'center',gap:7,cursor:'default',paddingTop:4,paddingBottom:6}}>
+              <span style={{flex:1,fontSize:9,color:'var(--dim)'}}>{lang==='es'?'Color':'Color'}</span>
+              <input type="color" value={cw.color||'#d0c8bc'}
+                style={{width:20,height:16,padding:0,border:'1px solid var(--border2)',borderRadius:2,cursor:'pointer',flexShrink:0}}
+                onPointerDown={e=>e.stopPropagation()}
+                onChange={e=>saveWall({color:e.target.value})}/>
+            </div>
+            {ctxSideSection('A')}
+            {ctxSideSection('B')}
             <div style={{borderTop:'1px solid var(--border)',marginTop:2}}/>
             <button className="ctx-item ctx-danger" onClick={()=>deleteRoomWall(cw.id)}>
               × {lang==='es'?'Eliminar pared':'Delete wall'}

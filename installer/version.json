@@ -1,6 +1,6 @@
 {
-  "version": "1.28.2",
+  "version": "1.28.3",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-07-08",
-  "notes": "Clic en pared vacía en vista orbital para centrar la cámara, franjas de cara A/B siempre visibles y clicables en el plano, y límite de tamaño de textura para textos 3D grandes."
+  "notes": "Modelo de color de pared simplificado a un color único por pared, separación corregida entre las franjas de cara A/B en el plano, y creación de tableros movida exclusivamente a la vista frontal."
 }

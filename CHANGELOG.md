@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.28.3] — 2026-07-08
+
+### Cambiado
+- **Modelo de color de pared simplificado:** una pared tiene ahora un
+  único color, aplicado por igual a ambas caras (antes existían
+  `color` y `colorBack` independientes por cara A/B, lo que causaba
+  inconsistencias entre el plano, la vista frontal y la vista 3D). El
+  selector de color del menú contextual del plano y el de la vista
+  frontal escriben ambos sobre el mismo campo. El campo `colorBack`
+  se conserva en el modelo de datos por retrocompatibilidad, pero ya
+  no se lee ni se muestra en ningún sitio.
+- **Creación de tableros movida exclusivamente a la vista frontal:**
+  se eliminaron los botones "+ Tablero" del menú contextual de pared
+  en el plano de sala — eran anteriores a la vista frontal y no
+  gestionaban vanos, superficies ni colisiones. Ahora la creación se
+  hace siempre desde la vista frontal (clic derecho → "＋ Tablero").
+
+### Corregido
+- **Franjas de cara A/B solapadas en el plano de sala:** el offset de
+  separación entre ambas franjas era menor que el grosor visual de su
+  propio halo, por lo que se solapaban visualmente en paredes finas o
+  con zoom alto. Ahora el offset nunca baja de un mínimo proporcional
+  al grosor de la franja.
+- **Colapso de sala activa al abrir un tablero:** al entrar en un
+  tablero vinculado a una sala, el acordeón del panel lateral
+  colapsaba todas las salas, incluida la que contenía ese tablero.
+  Ahora esa sala permanece expandida.
+
 ## [1.28.2] — 2026-07-08
 
 ### Añadido
