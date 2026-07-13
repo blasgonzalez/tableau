@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.28.5] — 2026-07-13
+
+### Añadido
+- **Pincel de color para paredes:** desde el menú contextual de una
+  pared en el plano de sala, "🖌 Copiar color" activa un modo pincel
+  (igual que el ya existente para marcos de fotos) que permite
+  aplicar ese mismo color a otras paredes con un clic, tanto en el
+  plano SVG como en la vista 3D orbital (identificando la pared
+  clicada por raycasting). Mientras está activo, la pared bajo el
+  cursor previsualiza el color a aplicar y el cursor cambia a
+  crosshair en todo el plano; ESC cancela el modo.
+
+### Corregido
+- **Color de pared ignorado si tenía tableros vinculados:** en el
+  plano de sala, cualquier pared con al menos un tablero vinculado
+  mostraba siempre el color de acento, ignorando por completo el
+  color personalizado (`wall.color`). Ahora el color personalizado
+  tiene prioridad sobre el acento de "vinculada".
+
 ## [1.28.4] — 2026-07-13
 
 ### Añadido

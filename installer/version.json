@@ -1,6 +1,6 @@
 {
-  "version": "1.28.4",
+  "version": "1.28.5",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
   "releaseDate": "2026-07-13",
-  "notes": "Open Graph para enlaces compartidos con imagen de preview seleccionable, registro de visitas a enlaces, nombre opcional en zonas y mosaicos, y mejoras en el clic sobre pared en vista 3D orbital."
+  "notes": "Pincel de color para paredes en el plano de sala y en la vista 3D orbital, y corrección de color ignorado en paredes con tableros vinculados."
 }

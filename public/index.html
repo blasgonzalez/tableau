@@ -314,6 +314,7 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .room-view{display:flex;flex:1;overflow:hidden}
 .room-svg-wrap{flex:1;position:relative;overflow:hidden;background:var(--deep)}
 .room-svg-wrap svg{width:100%;height:100%}
+.room-svg-wrap.wall-painting,.room-svg-wrap.wall-painting *{cursor:crosshair !important}
 .room-toolbar{position:absolute;top:10px;left:10px;display:flex;gap:6px;align-items:center;z-index:2}
 .room-toolbar-3d .btn{background:rgba(0,0,0,.55);color:rgba(255,255,255,.78);border-color:rgba(255,255,255,.18);backdrop-filter:blur(4px)}
 .room-toolbar-3d .btn:hover{color:#fff;border-color:rgba(255,255,255,.4);background:rgba(0,0,0,.72)}
@@ -2024,6 +2025,9 @@ function App() {
   const [cfgExportPad,   setCfgExportPad]   = useState('60');
   const [propsPanelId,  setPropsPanelId]  = useState(null);
   const [framePainter,  setFramePainter]  = useState(null); // {matSize,matColor,frameSize,frameColor} when active
+  const [wallColorPainter, setWallColorPainter] = useState(null); // null = inactivo; '#rrggbb' = color cargado y listo para aplicar
+  const wallColorPainterRef = useRef(null);
+  useEffect(() => { wallColorPainterRef.current = wallColorPainter; }, [wallColorPainter]);
   const [propsModal,    setPropsModal]    = useState(null); // {itemId} when open
   const [propsLockRatio, setPropsLockRatio] = useState(() => localStorage.getItem('tableau-props-lock-ratio') === 'true');
   const propsXRef  = useRef(null);
@@ -4060,6 +4064,18 @@ function App() {
         const mx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
         const my = -((e.clientY - rect.top) / rect.height) * 2 + 1;
         itemRay.setFromCamera(new THREE.Vector2(mx, my), camera);
+        if (wallColorPainterRef.current) {
+          const paintHits = itemRay.intersectObjects(wallMeshes);
+          if (paintHits.length > 0 && paintHits[0].object.userData.wallId) {
+            const wallId = paintHits[0].object.userData.wallId;
+            saveRoom({...roomRef.current,
+              walls: roomRef.current.walls.map(w =>
+                w.id === wallId ? {...w, color: wallColorPainterRef.current} : w
+              )
+            });
+          }
+          return;
+        }
         const hits = filterHitsBySide(itemRay.intersectObjects(itemMeshes));
         if (hits.length === 0 && !walkActive) {
           // Raycast contra superficies sólidas de pared/bloque
@@ -6147,6 +6163,7 @@ ${rows}
       if (fillPlaceholder) { setFillPlaceholder(null); return; }
       if (replaceMode) { setReplaceMode(null); return; }
       if (framePainter) { setFramePainter(null); return; }
+      if (wallColorPainterRef.current) { setWallColorPainter(null); return; }
       if (gridPendingRef.current) { setGridPending(null); return; }
       if (gridCellSelRef.current) { setGridCellSel(null); return; }
     };
@@ -10126,7 +10143,7 @@ ${rows}
               const svgFontSz = Math.round(vb.w * 0.013);
               return (
                 <div className="room-view">
-                  <div className="room-svg-wrap" onDragOver={e => { if (boardDragId) e.preventDefault(); }}>
+                  <div className={`room-svg-wrap${wallColorPainter?' wall-painting':''}`} onDragOver={e => { if (boardDragId) e.preventDefault(); }}>
                     <svg ref={roomSvgRef} viewBox={vbStr}
                       onClick={onRoomSvgClick} onMouseMove={onRoomSvgMM}
                       onDoubleClick={onRoomSvgDblClick}
@@ -10167,7 +10184,16 @@ ${rows}
                             onMouseEnter={()=>{if(!roomDrawing){setRoomHovWall(wall.id);setHoveredBoardId(wallBoardIds(wall)[0]||null);}}} // TODO: con resaltado por tablero individual, afinar cuál se resalta
                             onMouseLeave={()=>{setRoomHovWall(null);setHoveredBoardId(null);}}
                             onContextMenu={e=>{if(shareRole)return;e.preventDefault();e.stopPropagation();setRoomWallCtx({wallId:wall.id,x:e.clientX,y:e.clientY});}}
-                            onDoubleClick={e=>{if(shareRole||roomDrawing)return;e.stopPropagation();openWallFrontView(normalizeWall(wall));}}>
+                            onDoubleClick={e=>{if(shareRole||roomDrawing)return;e.stopPropagation();openWallFrontView(normalizeWall(wall));}}
+                            onClick={e => {
+                              if (!wallColorPainter) return;
+                              e.stopPropagation();
+                              saveRoom({...roomRef.current,
+                                walls: roomRef.current.walls.map(w =>
+                                  w.id === wall.id ? {...w, color: wallColorPainter} : w
+                                )
+                              });
+                            }}>
                             {/* Wide invisible hit area for easier hover */}
                             <line x1={v1.x} y1={v1.y} x2={v2.x} y2={v2.y} stroke="transparent" strokeWidth={Math.max(svgFontSz*1.4, sw*2)} style={{pointerEvents:'stroke'}}/>
                             {/* Highlight halo when hovering general wall (no face-specific) */}
@@ -10176,7 +10202,11 @@ ${rows}
                                 stroke="var(--text)" strokeWidth={5} strokeLinecap="round" style={{pointerEvents:'none'}}/>
                             )}
                             <line x1={v1.x} y1={v1.y} x2={v2.x} y2={v2.y}
-                              stroke={hov||linked?'var(--acc)':(wall.color||'var(--dim)')}
+                              stroke={wallColorPainter && hov ? wallColorPainter
+                                : hov ? 'var(--acc)'
+                                : (wall.color && wall.color !== '#d0c8bc') ? wall.color
+                                : linked ? 'var(--acc)'
+                                : 'var(--dim)'}
                               strokeWidth={hov && !hovSide ? 3 : (hov ? sw+3 : sw)}
                               opacity={hov||linked?1:wall.color?0.9:0.8}
                               strokeDasharray={isTabique?`${sw*2.5} ${sw*.8}`:undefined}/>
@@ -10188,7 +10218,7 @@ ${rows}
                                 fill={hov?'var(--acc)':'var(--sub)'} stroke="var(--bg)" strokeWidth={2.5} paintOrder="stroke"
                                 style={{pointerEvents:'none'}}>h {cmLabel(wall.height)}</text>
                             )}
-                            {(hov || hovSide) && (()=>{
+                            {!wallColorPainter && (hov || hovSide) && (()=>{
                               const dx=v2.x-v1.x, dy=v2.y-v1.y, l=Math.sqrt(dx*dx+dy*dy);
                               if(l<1) return null;
                               const nx=-dy/l, ny=dx/l;
@@ -12022,6 +12052,11 @@ ${rows}
       {framePainter && (
         <div className="frame-painter-banner">
           ▣ {t('framePainterHint')}
+        </div>
+      )}
+      {wallColorPainter && (
+        <div className="frame-painter-banner">
+          🖌 {lang==='es'?'Clic en una pared para aplicar el color · ESC para cancelar':'Click a wall to apply the color · ESC to cancel'}
         </div>
       )}
 
@@ -13965,6 +14000,9 @@ ${rows}
                 onPointerDown={e=>e.stopPropagation()}
                 onChange={e=>saveWall({color:e.target.value})}/>
             </div>
+            <button className="ctx-item" onClick={()=>{setWallColorPainter(cw.color||'#d0c8bc');setRoomWallCtx(null);}}>
+              🖌 {lang==='es'?'Copiar color':'Copy color'}
+            </button>
             {ctxSideSection('A')}
             {ctxSideSection('B')}
             <div style={{borderTop:'1px solid var(--border)',marginTop:2}}/>
