@@ -13,6 +13,7 @@ const bcrypt    = require('bcryptjs');
 const { version: APP_VERSION } = require('./package.json');
 
 const app  = express();
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
 
 // ── Auth config ───────────────────────────────────────────────────────────────
@@ -421,6 +422,22 @@ function consumeResetToken(token) {
 const sharesIndexFile = () => path.join(DATA_DIR, 'shares.json');
 function loadShares() { try { return JSON.parse(fs.readFileSync(sharesIndexFile(), 'utf8')); } catch { return {}; } }
 function saveShares(s) { fs.writeFileSync(sharesIndexFile(), JSON.stringify(s)); }
+
+// ── Share visit log ───────────────────────────────────────────────────────────
+const visitsFile = () => path.join(DATA_DIR, 'share-visits.json');
+const loadVisits = () => { try { return JSON.parse(fs.readFileSync(visitsFile(),'utf8')); } catch { return {}; } };
+const saveVisit = (token, req) => {
+  const visits = loadVisits();
+  if (!visits[token]) visits[token] = { count: 0, lastVisit: null, ips: [], userAgents: [] };
+  const v = visits[token];
+  v.count++;
+  v.lastVisit = new Date().toISOString();
+  const ip = req.ip || req.headers['x-forwarded-for'] || 'unknown';
+  if (!v.ips.includes(ip)) v.ips.push(ip);
+  const ua = req.headers['user-agent'] || 'unknown';
+  if (!v.userAgents.includes(ua)) v.userAgents.push(ua);
+  try { fs.writeFileSync(visitsFile(), JSON.stringify(visits)); } catch {}
+};
 function resolveShareToken(token) {
   if (!AUTH_ENABLED || !token) return null;
   return loadShares()[token] || null;
@@ -754,6 +771,39 @@ let _buildError  = null;  // error del último intento de build
 //              espera con auto-refresh. Passenger recibe respuesta instantánea.
 //              Al finalizar el build el siguiente GET / toma el fast path.
 app.get('/', (req, res) => {
+  const ua = req.headers['user-agent'] || '';
+  const isCrawler = /facebookexternalhit|WhatsApp|Twitterbot|LinkedInBot|TelegramBot|Slackbot/i.test(ua);
+  const shareTok = req.query.share || req.query.room;
+  if (isCrawler && shareTok) {
+    const share = resolveShareToken(shareTok);
+    if (share) {
+      const dd       = path.join(DATA_DIR, share.ownerId);
+      const proj     = readJSON(projsFile(dd)).find(p => p.id === share.projectId);
+      const projName = proj?.name || 'Tableau';
+      let title = projName;
+      if (share.type === 'room') {
+        const room = loadRooms(share.projectId, dd).find(r => r.id === share.roomId);
+        if (room?.name) title = `${projName} — ${room.name}`;
+      }
+      const origin      = `${req.protocol}://${req.get('host')}`;
+      const description = proj?.notes?.trim() || 'Proyecto fotográfico compartido en Tableau';
+      const imageUrl    = share.ogPhotoId
+        ? `${origin}/photos/${share.projectId}/${share.ogPhotoId}/thumb?token=${shareTok}`
+        : `${origin}/favicon.png`;
+      const esc  = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      const html = `<!DOCTYPE html><html><head>
+<meta charset="utf-8">
+<meta property="og:title" content="${esc(title)}">
+<meta property="og:description" content="${esc(description)}">
+<meta property="og:image" content="${esc(imageUrl)}">
+<meta property="og:url" content="${esc(origin + req.originalUrl)}">
+<meta property="og:type" content="website">
+<meta http-equiv="refresh" content="0;url=${esc(req.originalUrl)}">
+</head><body></body></html>`;
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.send(html);
+    }
+  }
   try {
     if (fs.statSync(HTML_BUILT).mtimeMs >= fs.statSync(HTML_SRC).mtimeMs)
       return res.sendFile(HTML_BUILT);
@@ -1024,6 +1074,7 @@ app.post('/api/admin/users/:uid/reset-password', requireAdmin, async (req, res) 
 app.get('/api/share/:token', (req, res) => {
   const share = resolveShareToken(req.params.token);
   if (!share || share.type === 'room') return res.status(404).json({ error: 'Enlace no válido' });
+  saveVisit(req.params.token, req);
   const dd = path.join(DATA_DIR, share.ownerId);
   const proj = readJSON(projsFile(dd)).find(p => p.id === share.projectId);
   if (!proj) return res.status(404).json({ error: 'Proyecto no encontrado' });
@@ -1036,20 +1087,28 @@ app.get('/api/shares', requireAuth, (req, res) => {
   const ownerId   = req.session.userId;
   const allProjs  = readJSON(projsFile(req.dd));
   const roomsCache = {};
+  const visits    = loadVisits();
   const result    = [];
   for (const [token, s] of Object.entries(loadShares())) {
     if (s.ownerId !== ownerId) continue;
-    const proj = allProjs.find(p => p.id === s.projectId);
-    if (s.type === 'room') {
-      if (!roomsCache[s.projectId])
-        roomsCache[s.projectId] = loadRooms(s.projectId, req.dd);
-      const room = roomsCache[s.projectId].find(r => r.id === s.roomId);
-      result.push({ token, type: 'room', projectId: s.projectId, projectName: proj?.name || s.projectId,
-        roomId: s.roomId, roomName: room?.name || '', email: s.email || null,
-        role: s.role, allowComments: s.allowComments || false, created: s.created, url: `${APP_URL}/?room=${token}` });
-    } else {
-      result.push({ token, type: 'project', projectId: s.projectId, projectName: proj?.name || s.projectId,
-        email: s.email || null, role: s.role, allowComments: s.allowComments || false, created: s.created, url: `${APP_URL}/?share=${token}` });
+    try {
+      const proj = allProjs.find(p => p.id === s.projectId);
+      const v = visits[token] || { count: 0, lastVisit: null, ips: [], userAgents: [] };
+      if (s.type === 'room') {
+        if (!roomsCache[s.projectId])
+          roomsCache[s.projectId] = loadRooms(s.projectId, req.dd);
+        const room = roomsCache[s.projectId].find(r => r.id === s.roomId);
+        result.push({ token, type: 'room', projectId: s.projectId, projectName: proj?.name || s.projectId,
+          roomId: s.roomId, roomName: room?.name || '', email: s.email || null,
+          role: s.role, allowComments: s.allowComments || false, created: s.created, url: `${APP_URL}/?room=${token}`,
+          visits: v.count, lastVisit: v.lastVisit, uniqueIPs: v.ips.length, userAgents: v.userAgents });
+      } else {
+        result.push({ token, type: 'project', projectId: s.projectId, projectName: proj?.name || s.projectId,
+          email: s.email || null, role: s.role, allowComments: s.allowComments || false, created: s.created, url: `${APP_URL}/?share=${token}`,
+          visits: v.count, lastVisit: v.lastVisit, uniqueIPs: v.ips.length, userAgents: v.userAgents });
+      }
+    } catch (err) {
+      console.error('shares: skipping corrupt token', token, err.message);
     }
   }
   result.sort((a, b) => b.created - a.created);
@@ -1063,7 +1122,7 @@ app.get('/api/projects/:pid/share', requireAuth, (req, res) => {
   const result  = { view: null, edit: null };
   for (const [tok, s] of Object.entries(loadShares())) {
     if (s.ownerId === ownerId && s.projectId === pid && !s.type) {
-      result[s.role] = { token: tok, url: `${APP_URL}/?share=${tok}`, allowComments: s.allowComments || false, roomsOnly: s.roomsOnly || false, created: s.created };
+      result[s.role] = { token: tok, url: `${APP_URL}/?share=${tok}`, allowComments: s.allowComments || false, roomsOnly: s.roomsOnly || false, ogPhotoId: s.ogPhotoId || null, created: s.created };
     }
   }
   res.json(result);
@@ -1072,7 +1131,7 @@ app.get('/api/projects/:pid/share', requireAuth, (req, res) => {
 app.post('/api/projects/:pid/share', requireAuth, (req, res) => {
   if (!AUTH_ENABLED) return res.status(400).json({ error: 'Solo disponible en modo servidor' });
   const { pid } = req.params;
-  const { role, allowComments, roomsOnly } = req.body;
+  const { role, allowComments, roomsOnly, ogPhotoId } = req.body;
   if (role !== 'view' && role !== 'edit') return res.status(400).json({ error: 'role debe ser view o edit' });
   const projects = readJSON(projsFile(req.dd));
   if (!projects.find(p => p.id === pid)) return res.status(404).json({ error: 'Proyecto no encontrado' });
@@ -1082,9 +1141,9 @@ app.post('/api/projects/:pid/share', requireAuth, (req, res) => {
     if (s.ownerId === ownerId && s.projectId === pid && s.role === role && !s.type) delete shares[tok];
   }
   const token = uuidv4().replace(/-/g, '');
-  shares[token] = { ownerId, projectId: pid, role, allowComments: !!allowComments, roomsOnly: !!roomsOnly, created: Date.now() };
+  shares[token] = { ownerId, projectId: pid, role, allowComments: !!allowComments, roomsOnly: !!roomsOnly, ogPhotoId: ogPhotoId || null, created: Date.now() };
   saveShares(shares);
-  res.json({ token, url: `${APP_URL}/?share=${token}`, role, allowComments: !!allowComments, roomsOnly: !!roomsOnly });
+  res.json({ token, url: `${APP_URL}/?share=${token}`, role, allowComments: !!allowComments, roomsOnly: !!roomsOnly, ogPhotoId: ogPhotoId || null });
 });
 
 app.patch('/api/projects/:pid/share/:role', requireAuth, (req, res) => {
@@ -1097,6 +1156,7 @@ app.patch('/api/projects/:pid/share/:role', requireAuth, (req, res) => {
     if (s.ownerId === ownerId && s.projectId === pid && s.role === role && !s.type) {
       if (req.body.allowComments !== undefined) s.allowComments = !!req.body.allowComments;
       if (req.body.roomsOnly !== undefined) s.roomsOnly = !!req.body.roomsOnly;
+      if (req.body.ogPhotoId !== undefined) s.ogPhotoId = req.body.ogPhotoId || null;
       found = true;
     }
   }
@@ -1130,6 +1190,7 @@ app.post('/api/share/:token/activate', (req, res) => {
 app.get('/api/rooms/share/:token', (req, res) => {
   const share = resolveShareToken(req.params.token);
   if (!share || share.type !== 'room') return res.status(404).json({ error: 'Enlace de sala no válido' });
+  saveVisit(req.params.token, req);
   const dd    = path.join(DATA_DIR, share.ownerId);
   const rooms = loadRooms(share.projectId, dd);
   const room  = rooms.find(r => r.id === share.roomId);
@@ -1823,7 +1884,7 @@ app.get('/api/projects/:pid/rooms/:rid/share', requireAuth, (req, res) => {
   const ownerId = req.session.userId;
   for (const [tok, s] of Object.entries(loadShares())) {
     if (s.type === 'room' && s.ownerId === ownerId && s.projectId === pid && s.roomId === rid)
-      return res.json({ token: tok, url: `${APP_URL}/?room=${tok}` });
+      return res.json({ token: tok, url: `${APP_URL}/?room=${tok}`, ogPhotoId: s.ogPhotoId || null });
   }
   res.json({ token: null, url: null });
 });
@@ -1841,9 +1902,10 @@ app.post('/api/projects/:pid/rooms/:rid/share', requireAuth, (req, res) => {
   }
   const token = uuidv4().replace(/-/g, '');
   const allowComments = !!(req.body && req.body.allowComments);
-  shares[token] = { type: 'room', ownerId, projectId: pid, roomId: rid, role: 'view', allowComments, created: Date.now() };
+  const ogPhotoId = (req.body && req.body.ogPhotoId) || null;
+  shares[token] = { type: 'room', ownerId, projectId: pid, roomId: rid, role: 'view', allowComments, ogPhotoId, created: Date.now() };
   saveShares(shares);
-  res.json({ token, url: `${APP_URL}/?room=${token}`, allowComments });
+  res.json({ token, url: `${APP_URL}/?room=${token}`, allowComments, ogPhotoId });
 });
 
 app.delete('/api/projects/:pid/rooms/:rid/share', requireAuth, (req, res) => {
@@ -1868,6 +1930,7 @@ app.patch('/api/projects/:pid/rooms/:rid/share', requireAuth, (req, res) => {
   for (const s of Object.values(shares)) {
     if (s.type === 'room' && s.ownerId === ownerId && s.projectId === pid && s.roomId === rid) {
       if (req.body.allowComments !== undefined) s.allowComments = !!req.body.allowComments;
+      if (req.body.ogPhotoId !== undefined) s.ogPhotoId = req.body.ogPhotoId || null;
       found = true;
     }
   }

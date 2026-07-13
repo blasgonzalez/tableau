@@ -1,6 +1,6 @@
 {
-  "version": "1.28.3",
+  "version": "1.28.4",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-07-08",
-  "notes": "Modelo de color de pared simplificado a un color único por pared, separación corregida entre las franjas de cara A/B en el plano, y creación de tableros movida exclusivamente a la vista frontal."
+  "releaseDate": "2026-07-13",
+  "notes": "Open Graph para enlaces compartidos con imagen de preview seleccionable, registro de visitas a enlaces, nombre opcional en zonas y mosaicos, y mejoras en el clic sobre pared en vista 3D orbital."
 }

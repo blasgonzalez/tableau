@@ -1,5 +1,39 @@
 # Changelog
 
+## [1.28.4] — 2026-07-13
+
+### Añadido
+- **Open Graph para enlaces compartidos:** al abrir un enlace de
+  proyecto o de sala desde WhatsApp/Facebook/Twitter/LinkedIn/
+  Telegram/Slack, el servidor detecta el crawler y sirve una página
+  con las meta tags `og:title`, `og:description`, `og:image` y
+  `og:url` en vez de la aplicación completa. El propietario puede
+  elegir una foto de la biblioteca como imagen de preview desde el
+  modal de compartir (proyecto y sala); si no se elige ninguna, se
+  usa el favicon. La descripción usa las notas del proyecto si
+  existen.
+- **Registro de visitas a enlaces compartidos:** cada apertura de un
+  enlace de proyecto o sala queda registrada (fecha, IP, user-agent)
+  en un log interno. El panel de "Invitaciones activas" muestra ahora
+  el número de visitas, la fecha de la última y el número de IPs
+  únicas por invitación.
+- **Nombre opcional en zonas y mosaicos:** ambos se pueden titular
+  desde la opción "Título..." de su menú contextual (mismo mecanismo
+  ya usado para la etiqueta de fotos). El título se muestra en la
+  parte inferior del visor de zona/mosaico en la vista 3D, con fondo
+  semitransparente, igual que el HUD de sala — ya no se solapa con el
+  contador "N de M".
+
+### Corregido
+- **Clic en pared larga en vista orbital:** en vez de encuadrar la
+  pared completa (lo que en paredes muy largas generaba distancias
+  enormes que chocaban con obstáculos), ahora encuadra una sección de
+  tamaño cómodo centrada en el punto exacto de clic, clampeada a los
+  bordes reales de la pared.
+- **Token de sala corrupto o huérfano rompía el listado de
+  invitaciones activas:** ahora cada token se procesa de forma
+  aislada y uno inválido no afecta al resto.
+
 ## [1.28.3] — 2026-07-08
 
 ### Cambiado

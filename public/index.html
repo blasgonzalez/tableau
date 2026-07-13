@@ -1399,6 +1399,7 @@ const I18N = {
     shareProject:'Compartir proyecto', shareModalTitle:'Compartir proyecto', shareViewLink:'Enlace de solo lectura', shareEditLink:'Enlace de edición', shareGenerate:'Generar enlace', shareRevoke:'Revocar', shareCopy:'Copiar enlace', shareCopied:'Enlace copiado', shareGuestView:'Solo lectura', shareGuestEdit:'Editor invitado', shareBoardLocked:'El tablero está siendo editado por otro usuario', shareInvalidLink:'Enlace no válido o expirado',
     shareInviteEmail:'Enviar por email', shareInvitePh:'correo@ejemplo.com', shareInviteSend:'Enviar', shareInviteSent:'Invitación enviada', shareInviteError:'Error al enviar el correo', shareNoSmtp:'El servidor no tiene SMTP configurado',
     shareActiveTitle:'Invitaciones activas', shareActiveEmpty:'No tienes invitaciones activas', shareActiveProject:'Proyecto', shareActiveCreated:'Enviada', shareActiveRevoke:'Revocar', shareActiveRevokeOk:'Invitación revocada',
+    ogImageLabel:'Imagen de preview (WhatsApp/Facebook)', ogImageSelect:'Seleccionar imagen de preview',
     menu3DCopy:'Copiar', menu3DCut:'Cortar', menu3DCopyZone:'Copiar zona', menu3DCutZone:'Cortar zona',
     wall3DEdit:'✏️ Editar tablero', wall3DPaste:'📋 Pegar aquí', wall3DCreate:'+ Crear tablero', wall3DCreatePaste:'📋 Crear y pegar', wall3DNoBoard:'Cara sin tablero',
     acctChangePass:'Cambiar clave', acctAdmin:'⚙ Admin', acctSignOut:'Cerrar sesión',
@@ -1641,6 +1642,7 @@ const I18N = {
     shareProject:'Share project', shareModalTitle:'Share project', shareViewLink:'Read-only link', shareEditLink:'Edit link', shareGenerate:'Generate link', shareRevoke:'Revoke', shareCopy:'Copy link', shareCopied:'Link copied', shareGuestView:'Read only', shareGuestEdit:'Guest editor', shareBoardLocked:'Board is being edited by another user', shareInvalidLink:'Invalid or expired link',
     shareInviteEmail:'Send by email', shareInvitePh:'email@example.com', shareInviteSend:'Send', shareInviteSent:'Invitation sent', shareInviteError:'Error sending email', shareNoSmtp:'SMTP not configured on server',
     shareActiveTitle:'Active invitations', shareActiveEmpty:'No active invitations', shareActiveProject:'Project', shareActiveCreated:'Sent', shareActiveRevoke:'Revoke', shareActiveRevokeOk:'Invitation revoked',
+    ogImageLabel:'Preview image (WhatsApp/Facebook)', ogImageSelect:'Select preview image',
     menu3DCopy:'Copy', menu3DCut:'Cut', menu3DCopyZone:'Copy zone', menu3DCutZone:'Cut zone',
     wall3DEdit:'✏️ Edit board', wall3DPaste:'📋 Paste here', wall3DCreate:'+ Create board', wall3DCreatePaste:'📋 Create & paste', wall3DNoBoard:'No board on this face',
     acctChangePass:'Change password', acctAdmin:'⚙ Admin', acctSignOut:'Sign out',
@@ -2079,6 +2081,7 @@ function App() {
   const [shareModal,    setShareModal]    = useState(null);   // null | {pid, view, edit}
   const [shareInviteEmail, setShareInviteEmail] = useState('');
   const [sharesPanel,   setSharesPanel]   = useState(null);  // null | [{token, projectName, role, created, url}]
+  const [ogPicker,      setOgPicker]      = useState(null);  // null | {scope:'project'|'room', rid?}
   const [lockState,     setLockState]     = useState({});     // {[bid]: 'pending'|'locked'|'conflict'}
   const shareRoleRef = useRef(null);
   useEffect(() => { shareRoleRef.current = shareRole; }, [shareRole]);
@@ -4075,20 +4078,45 @@ function App() {
             .transformDirection(hit.object.matrixWorld)
             .normalize();
 
-          // Distancia para ver la pared completa
           const W = ud.wallLen || 300;
           const H = ud.wallH || 250;
+
+          // Sección visible: wallH * aspect (o wallLen si es menor)
+          const sectionW = Math.min(W, H * camera.aspect);
+          const sectionH = H;
+
+          // Distancia para encuadrar la sección (no la pared completa)
           const fovV = camera.fov * Math.PI / 180;
-          const distH = (H / 2) / Math.tan(fovV / 2);
-          const distW = (W / 2) / (Math.tan(fovV / 2) * camera.aspect);
-          const dist = Math.max(distH, distW) * 1.15; // margen 15%
+          const dist = (sectionH / 2) / Math.tan(fovV / 2) * 1.15;
 
-          // Punto destino
-          const dest = wallCenter.clone().addScaledVector(normal, dist);
+          // Clampear hit.point para que la sección no sobresalga
+          // de los bordes de la pared cuando el clic cae en esquina.
+          // Descomponer hit.point - wallCenter en eje tangente y vertical:
+          const tangent = new THREE.Vector3(-normal.z, 0, normal.x).normalize();
+          const delta = hit.point.clone().sub(wallCenter);
+          const alongWall = delta.dot(tangent);
+          const alongHeight = delta.y;
 
-          // Detección de obstáculos desde el centro de la pared
+          const clampedAlong = Math.max(
+            -(W/2 - sectionW/2),
+            Math.min(W/2 - sectionW/2, alongWall)
+          );
+          const clampedHeight = Math.max(
+            -(H/2 - sectionH/2),
+            Math.min(H/2 - sectionH/2, alongHeight)
+          );
+
+          // Punto de mira: hit.point clampeado a bordes seguros
+          const lookTarget = wallCenter.clone()
+            .addScaledVector(tangent, clampedAlong)
+            .setY(wallCenter.y + clampedHeight);
+
+          // Destino de cámara: lookTarget + normal * dist
+          const dest = lookTarget.clone().addScaledVector(normal, dist);
+
+          // Detección de obstáculos desde lookTarget (no desde wallCenter)
           const obstacleRay = new THREE.Raycaster(
-            wallCenter.clone().addScaledVector(normal, 1),
+            lookTarget.clone().addScaledVector(normal, 1),
             normal.clone(),
             0,
             dist - 1
@@ -4098,7 +4126,7 @@ function App() {
 
           if (obstacles.length > 0) return;
 
-          tweenCamera(dest, wallCenter, 800);
+          tweenCamera(dest, lookTarget, 800);
           return;
         }
         if (hits.length === 0) return;
@@ -7152,7 +7180,7 @@ ${rows}
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
       type: 'grid', x: Math.max(0, Math.round(gp.x || 0)), y: Math.max(0, Math.round(gp.y || 0)),
       w: gp.w, cols: gp.cols, gapCol: gp.gapCol ?? gp.gap, gapRow: gp.gapRow ?? gp.gap,
-      photoIds: [...gp.photoIds], z: maxZ + 1,
+      photoIds: [...gp.photoIds], z: maxZ + 1, label: '',
     };
     const nit = [...itemsRef.current, item];
     itemsRef.current = nit; setItems(nit); saveItemsNow(nit);
@@ -7183,7 +7211,7 @@ ${rows}
       gapCol: gcGapCol, gapRow: gcGapRow,
       ...(rowsInt ? { rows: rowsInt, compact: gcCompact } : {}),
       photoIds,
-      z: maxZ + 1,
+      z: maxZ + 1, label: '',
     };
     pushUndo();
     const nit = [...itemsRef.current, item];
@@ -9981,7 +10009,7 @@ ${rows}
                                       {!shareRole && <div className="nrow-acts">
                                         <button className="nact edit" data-tooltip={t('renameBtn')}       onClick={e=>startRename('room',r.id,r.name,e)}>✎</button>
                                         <button className="nact edit" data-tooltip={t('salaDuplicate')}   onClick={e=>duplicateRoom(r.id,e)}>⧉</button>
-                                        {authMode && <button className="nact edit" data-tooltip={t('shareRoom')} onClick={e=>{e.stopPropagation();const rid=r.id;setRoomShareModal({rid,loading:true});api.get(`/api/projects/${pid}/rooms/${rid}/share`).then(d=>setRoomShareModal({rid,token:d.token,url:d.url,allowComments:d.allowComments||false})).catch(()=>setRoomShareModal({rid,token:null,url:null}));}}><SvgShareNet size={10}/></button>}
+                                        {authMode && <button className="nact edit" data-tooltip={t('shareRoom')} onClick={e=>{e.stopPropagation();const rid=r.id;setRoomShareModal({rid,loading:true});api.get(`/api/projects/${pid}/rooms/${rid}/share`).then(d=>setRoomShareModal({rid,token:d.token,url:d.url,allowComments:d.allowComments||false,ogPhotoId:d.ogPhotoId||null})).catch(()=>setRoomShareModal({rid,token:null,url:null}));}}><SvgShareNet size={10}/></button>}
                                         <button className="nact del"  data-tooltip={t('salaDelete')}      onClick={e=>{e.stopPropagation();switchRoom(r.id);setTimeout(deleteRoom,0);}}>×</button>
                                       </div>}
                                     </div>
@@ -10353,6 +10381,7 @@ ${rows}
 
                     {/* Toolbar */}
                     <div className="room-toolbar">
+                      {room && !roomDrawing && <button className="btn" onClick={openRoom3D}>{lang==='es'?'Vista 3D':'3D View'}</button>}
                       {!shareRole && !roomDrawing && !room && <button className="btn" onClick={()=>{setRoomDrawing(true);setRoomAppending(false);setRoomTempVerts([]);setRoomCursor(null);}}>
                         {t('salaDraw')}
                       </button>}
@@ -10367,19 +10396,17 @@ ${rows}
                           {t('salaFinish')}
                         </button>
                       )}
-                      {room && <button className="btn" onClick={fitRoomView} data-tooltip={lang==='es'?'Ajustar vista (Ctrl+0)':'Fit view (Ctrl+0)'} style={{fontSize:13}}>⇔</button>}
-                      {room && !roomDrawing && <button className="btn" onClick={openRoom3D}>{lang==='es'?'Vista 3D':'3D View'}</button>}
+                      {!shareRole && room && !roomDrawing && <button className="btn danger" onClick={deleteRoom}>{t('salaDelete')}</button>}
                       {!shareRole && room && !roomDrawing && <button className="btn" onClick={exportRoom} data-tooltip={lang==='es'?'Exportar sala':'Export room'}><SvgExport size={11}/></button>}
                       {!shareRole && !roomDrawing && <button className="btn" onClick={()=>importRoomRef.current?.click()} data-tooltip={lang==='es'?'Importar sala':'Import room'}><SvgImport size={11}/></button>}
                       <input ref={importRoomRef} type="file" accept=".json" style={{display:'none'}} onChange={importRoom}/>
-                      {!shareRole && room && !roomDrawing && <button className="btn danger" onClick={deleteRoom}>{t('salaDelete')}</button>}
                       {!shareRole && room && !roomDrawing && authMode && (
                         <button className="btn" data-tooltip={t('ttShareRoom')}
                           onClick={() => {
                             const rid = activeRoomId || room.id;
                             setRoomShareModal({ rid, loading: true });
                             api.get(`/api/projects/${pid}/rooms/${rid}/share`)
-                              .then(d => setRoomShareModal({ rid, token: d.token, url: d.url, allowComments: d.allowComments||false }))
+                              .then(d => setRoomShareModal({ rid, token: d.token, url: d.url, allowComments: d.allowComments||false, ogPhotoId: d.ogPhotoId||null }))
                               .catch(() => setRoomShareModal({ rid, token: null, url: null }));
                           }}>
                           <SvgShareNet size={11}/>
@@ -10395,6 +10422,12 @@ ${rows}
                     </div>}
                     {!roomDrawing && !room && <div className="room-hint">{lang==='es'?'Pulsa "Dibujar planta" para empezar':'Click "Draw floor plan" to start'}</div>}
                     {blockDrawing && <div className="room-hint">{lang==='es'?'Arrastra para dibujar un bloque · Esc para cancelar':'Drag to draw a block · Esc to cancel'}</div>}
+
+                    {room && (
+                      <button className="zc-btn" data-tooltip={lang==='es'?'Ajustar vista (Ctrl+0)':'Fit view (Ctrl+0)'}
+                        onClick={fitRoomView}
+                        style={{position:'absolute',bottom:8,right:8,fontSize:13,background:'var(--panel)',border:'1px solid var(--border2)',boxShadow:'0 2px 10px rgba(0,0,0,.4)',zIndex:200}}>⇔</button>
+                    )}
 
                     {selBlock && (() => {
                       const block = getBlocks(room).find(b => b.id === selBlock);
@@ -12145,6 +12178,7 @@ ${rows}
         return (
           <div className="fullscreen-overlay" style={{background: wc, cursor:'default'}} onClick={closeArtwork3D}>
             <button className="artwork3d-back" style={{color:tcMuted}} onClick={e => { e.stopPropagation(); closeArtwork3D(); }}>{t('artwork3DBack')}</button>
+            {grid.label && <div className="artwork3d-label" style={{position:'fixed',bottom:16,left:'50%',transform:'translateX(-50%)',background:'rgba(0,0,0,0.65)',color:'#fff',padding:'4px 12px',borderRadius:4,maxWidth:'60%',textAlign:'center',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{grid.label}</div>}
             {gridRP && gridRP.length > 1 && <div className="fullscreen-counter" style={{color:tcMuted}}>{t('artwork3DOf', (gridRoomIdx||0)+1, gridRP.length)}</div>}
             {!room3DReady
               ? <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8}}><div className="splash-dots"><span style={{background:tc}}></span><span style={{background:tc}}></span><span style={{background:tc}}></span></div><div style={{fontSize:11,color:tcMuted,letterSpacing:.5}}>{t('room3DLoading')}</div></div>
@@ -12218,7 +12252,7 @@ ${rows}
         return (
           <div className="fullscreen-overlay" style={{background:wc,cursor:'default'}} onClick={closeArtwork3D}>
             <button className="artwork3d-back" style={{color:tcMuted}} onClick={e => { e.stopPropagation(); closeArtwork3D(); }}>{t('artwork3DBack')}</button>
-            {zone.label && <div className="artwork3d-label" style={{position:'fixed',top:14,left:'50%',transform:'translateX(-50%)',color:tc}}>{zone.label}</div>}
+            {zone.label && <div className="artwork3d-label" style={{position:'fixed',bottom:16,left:'50%',transform:'translateX(-50%)',background:'rgba(0,0,0,0.65)',color:'#fff',padding:'4px 12px',borderRadius:4,maxWidth:'60%',textAlign:'center',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{zone.label}</div>}
             {zoneRP && zoneRP.length > 1 && <div className="fullscreen-counter" style={{color:tcMuted}}>{t('artwork3DOf', (zoneRoomIdx||0)+1, zoneRP.length)}</div>}
             {!room3DReady
               ? <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8}}><div className="splash-dots"><span style={{background:tc}}></span><span style={{background:tc}}></span><span style={{background:tc}}></span></div><div style={{fontSize:11,color:tcMuted,letterSpacing:.5}}>{t('room3DLoading')}</div></div>
@@ -14019,6 +14053,7 @@ ${rows}
                 <div className="ctx-sep"/>
               </>}
               <button className="ctx-item" onClick={() => { openGridProps(ctxMenu.itemId); setCtxMenu(null); }}>{t('gridProps')}</button>
+              <button className="ctx-item" onClick={() => { pushUndo(); labelEditOrigRef.current = ctxItem?.label || ''; setLabelEditId(ctxMenu.itemId); setCtxMenu(null); }}>✎ {lang==='es'?'Título...':'Title...'}</button>
               <div className="ctx-sep"/>
               <button className="ctx-item" onClick={() => { bringFwd(ctxMenu.itemId); setCtxMenu(null); }}>↑ {t('bringFwdBtn')}</button>
               <button className="ctx-item" onClick={() => { sendBack(ctxMenu.itemId); setCtxMenu(null); }}>↓ {t('sendBackBtn')}</button>
@@ -14059,6 +14094,7 @@ ${rows}
                 const nit = itemsRef.current.map(i => i.id === ctxItem.id ? {...i, scaleContent: !ctxItem.scaleContent} : i);
                 setItems(nit); itemsRef.current = nit; saveItemsNow(nit); setCtxMenu(null);
               }}>{ctxItem.scaleContent ? '☑' : '☐'} {t('zoneScaleContent')}</button>
+              <button className="ctx-item" onClick={() => { pushUndo(); labelEditOrigRef.current = ctxItem?.label || ''; setLabelEditId(ctxMenu.itemId); setCtxMenu(null); }}>✎ {lang==='es'?'Título...':'Title...'}</button>
               {!isExpoGuest && <>
                 <div className="ctx-sep"/>
                 <button className="ctx-item" onClick={() => { openCommentPanel('zone', ctxItem.id, bid, ctxItem.label); setCtxMenu(null); }}>💬 {t('commentsBtn')}</button>
@@ -14524,7 +14560,6 @@ ${rows}
           <div className="overlay" onClick={() => setGridPropsModal(null)}>
             <div className="modal" onClick={e => e.stopPropagation()} style={{minWidth:260}}>
               <div className="modal-h">{t('gridProps')}</div>
-              <div className="modal-sub">{_it.label || ''}</div>
               <div className="cfg-row">
                 <div>
                   <div className="cfg-label">{t('gridColsLabel')}</div>
@@ -15372,7 +15407,7 @@ ${rows}
                   const { rid } = roomShareModal;
                   setRoomShareModal(m => ({ ...m, loading: true }));
                   api.post(`/api/projects/${pid}/rooms/${rid}/share`, {})
-                    .then(d => setRoomShareModal({ rid, token: d.token, url: d.url, allowComments: false }))
+                    .then(d => setRoomShareModal({ rid, token: d.token, url: d.url, allowComments: false, ogPhotoId: d.ogPhotoId||null }))
                     .catch(() => setRoomShareModal(m => ({ ...m, loading: false })));
                 }}>
                 {t('shareRoomGenerate')}
@@ -15390,6 +15425,28 @@ ${rows}
                     }}/>
                   {t('allowCommentsLabel')}
                 </label>
+              </div>
+            )}
+            {roomShareModal.url && (
+              <div style={{marginTop:10}}>
+                <div style={{fontSize:10,color:'var(--sub)',marginBottom:6}}>{t('ogImageLabel')}</div>
+                {roomShareModal.ogPhotoId ? (
+                  <div style={{display:'flex',alignItems:'center',gap:8}}>
+                    <img src={`/photos/${pid}/${roomShareModal.ogPhotoId}/thumb`} alt=""
+                      style={{width:56,height:56,objectFit:'cover',borderRadius:4,border:'1px solid var(--border2)'}}/>
+                    <button className="btn danger" style={{fontSize:11,padding:'3px 8px'}}
+                      onClick={() => {
+                        const {rid} = roomShareModal;
+                        setRoomShareModal(m => ({ ...m, ogPhotoId: null }));
+                        api.patch(`/api/projects/${pid}/rooms/${rid}/share`, { ogPhotoId: null }).catch(() => {});
+                      }}>×</button>
+                  </div>
+                ) : (
+                  <button className="btn" style={{fontSize:11,padding:'4px 10px'}}
+                    onClick={() => setOgPicker({ scope: 'room', rid: roomShareModal.rid })}>
+                    {t('ogImageSelect')}
+                  </button>
+                )}
               </div>
             )}
             <div style={{marginTop:16,display:'flex',justifyContent:'flex-end'}}>
@@ -15477,6 +15534,27 @@ ${rows}
                 </label>
               </div>
             )}
+            {shareModal.view && (
+              <div style={{marginTop:10}}>
+                <div style={{fontSize:10,color:'var(--sub)',marginBottom:6}}>{t('ogImageLabel')}</div>
+                {shareModal.view.ogPhotoId ? (
+                  <div style={{display:'flex',alignItems:'center',gap:8}}>
+                    <img src={`/photos/${shareModal.pid}/${shareModal.view.ogPhotoId}/thumb`} alt=""
+                      style={{width:56,height:56,objectFit:'cover',borderRadius:4,border:'1px solid var(--border2)'}}/>
+                    <button className="btn danger" style={{fontSize:11,padding:'3px 8px'}}
+                      onClick={() => {
+                        setShareModal(m => ({ ...m, view: { ...m.view, ogPhotoId: null } }));
+                        api.patch(`/api/projects/${shareModal.pid}/share/view`, { ogPhotoId: null }).catch(() => {});
+                      }}>×</button>
+                  </div>
+                ) : (
+                  <button className="btn" style={{fontSize:11,padding:'4px 10px'}}
+                    onClick={() => setOgPicker({ scope: 'project' })}>
+                    {t('ogImageSelect')}
+                  </button>
+                )}
+              </div>
+            )}
             <div style={{marginTop:16,display:'flex',justifyContent:'flex-end'}}>
               <button className="btn" onClick={() => { setShareModal(null); setShareInviteEmail(''); }}>{t('close')}</button>
             </div>
@@ -15510,6 +15588,19 @@ ${rows}
                             {new Date(inv.created).toLocaleDateString()}
                           </span>
                         </div>
+                        <div style={{display:'flex',gap:10,flexWrap:'wrap',marginTop:3}}>
+                          <span style={{fontSize:9,color:'var(--muted)'}}>
+                            {lang==='es'?`${inv.visits||0} visitas`:`${inv.visits||0} visits`}
+                          </span>
+                          {inv.lastVisit && (
+                            <span style={{fontSize:9,color:'var(--dim)'}}>
+                              {lang==='es'?'Última visita: ':'Last visit: '}{new Date(inv.lastVisit).toLocaleDateString()}
+                            </span>
+                          )}
+                          <span style={{fontSize:9,color:'var(--dim)'}}>
+                            {lang==='es'?`${inv.uniqueIPs||0} IPs únicas`:`${inv.uniqueIPs||0} unique IPs`}
+                          </span>
+                        </div>
                       </div>
                       <div style={{display:'flex',gap:4,flexShrink:0}}>
                         <button className="btn" style={{fontSize:11,padding:'3px 8px'}}
@@ -15535,6 +15626,38 @@ ${rows}
             )}
             <div style={{marginTop:16,display:'flex',justifyContent:'flex-end'}}>
               <button className="btn" onClick={() => setSharesPanel(null)}>{t('close')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {ogPicker && (
+        <div className="overlay" style={{zIndex:1200}} onClick={() => setOgPicker(null)}>
+          <div className="modal" style={{maxWidth:420}} onClick={e => e.stopPropagation()}>
+            <div className="modal-h">{t('ogImageSelect')}</div>
+            {photos.length === 0 ? (
+              <div style={{color:'var(--muted)',fontSize:11,padding:'8px 0'}}>{t('shareActiveEmpty')}</div>
+            ) : (
+              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(64px,1fr))',gap:6,maxHeight:360,overflowY:'auto'}}>
+                {photos.map(p => (
+                  <img key={p.id} src={`/photos/${pid}/${p.id}/thumb`} alt={p.name}
+                    style={{width:'100%',aspectRatio:'1',objectFit:'cover',borderRadius:4,cursor:'pointer',border:'1px solid var(--border2)'}}
+                    onClick={() => {
+                      if (ogPicker.scope === 'room') {
+                        const rid = ogPicker.rid;
+                        setRoomShareModal(m => m ? ({ ...m, ogPhotoId: p.id }) : m);
+                        api.patch(`/api/projects/${pid}/rooms/${rid}/share`, { ogPhotoId: p.id }).catch(() => {});
+                      } else {
+                        setShareModal(m => m ? ({ ...m, view: { ...m.view, ogPhotoId: p.id } }) : m);
+                        api.patch(`/api/projects/${shareModal?.pid}/share/view`, { ogPhotoId: p.id }).catch(() => {});
+                      }
+                      setOgPicker(null);
+                    }}/>
+                ))}
+              </div>
+            )}
+            <div style={{marginTop:16,display:'flex',justifyContent:'flex-end'}}>
+              <button className="btn" onClick={() => setOgPicker(null)}>{t('close')}</button>
             </div>
           </div>
         </div>
