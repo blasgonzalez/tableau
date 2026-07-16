@@ -1,5 +1,43 @@
 # Changelog
 
+## [1.30.0] — 2026-07-15
+
+### Añadido
+- **Memorias múltiples por proyecto:** el informe de memoria pasa de ser
+  un único documento fijo por proyecto a soportar varias "memorias"
+  independientes (p. ej. "Memoria principal", "Guía de producción"),
+  cada una con su propio nombre, descripción y secciones. El modal de
+  configuración se rediseñó por completo: selector de memorias (crear,
+  duplicar, eliminar), editor de secciones reordenables con título y
+  descripción libres, y un selector de contenido por sección que
+  permite añadir salas completas, tableros individuales (agrupados por
+  sala/pared, igual que antes), solo el plano de una sala, capturas 3D
+  de la vista orbital, o fotos sueltas de la biblioteca — cada
+  elemento se puede reordenar arrastrando.
+- **Vista previa espacial inline en el árbol de tableros:** tanto en la
+  lista de secciones como en el selector de contenido, cada tablero
+  tiene un desplegable ▸/▾ que muestra una miniatura a escala de su
+  composición real (fotos posicionadas, marcos, texto) sin necesidad
+  de abrir el tablero.
+- **Plano de sala y captura 3D en el informe impreso:** al incluir una
+  sala completa o su plano, el informe genera un plano SVG con las
+  paredes, bloques y longitud de cada pared, resaltando en color de
+  acento las que tienen tableros incluidos; si la sala tiene una vista
+  3D guardada y una captura asociada, se incluye también como imagen.
+
+### Cambiado
+- El informe impreso ahora se genera exclusivamente a partir del
+  contenido de la memoria seleccionada (salas, tableros y fotos
+  añadidos explícitamente), reemplazando el mecanismo anterior de
+  "incluir/excluir tablero" global por proyecto.
+
+### Seguridad
+- Actualizada la dependencia `uuid` a la v14 y `nodemailer` a la v9
+  (revisado el CHANGELOG oficial, sin cambios de comportamiento para
+  el uso que hace este proyecto); resueltas el resto de
+  vulnerabilidades señaladas por `npm audit` (0 vulnerabilidades
+  restantes).
+
 ## [1.28.5] — 2026-07-13
 
 ### Añadido

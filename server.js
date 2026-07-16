@@ -1459,7 +1459,7 @@ app.post('/api/projects', requireAuth, (req, res) => {
 
 app.patch('/api/projects/:pid', requireAuth, (req, res) => {
   const { pid } = req.params;
-  const allowed = ['name','exTitle','subtitle','memSections','notes','defaults'];
+  const allowed = ['name','memories','notes','defaults'];
   const patch = {};
   for (const k of allowed) if (req.body[k] !== undefined) patch[k] = req.body[k];
   if (patch.name) patch.name = patch.name.trim();

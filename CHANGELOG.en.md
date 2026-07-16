@@ -1,5 +1,41 @@
 # Changelog
 
+## [1.30.0] — 2026-07-15
+
+### Added
+- **Multiple reports per project:** the memory report is no longer a
+  single fixed document per project — it now supports several
+  independent "reports" (e.g. "Main report", "Production guide"),
+  each with its own name, description, and sections. The
+  configuration modal was completely redesigned: a report selector
+  (create, duplicate, delete), a reorderable section editor with
+  free-form title and description, and a per-section content picker
+  that lets you add whole rooms, individual boards (grouped by
+  room/wall, as before), just a room's floor plan, 3D captures from
+  the orbital view, or loose photos from the library — every item can
+  be reordered by dragging.
+- **Inline spatial preview in the board tree:** both in the section
+  list and the content picker, every board has a ▸/▾ toggle that
+  shows a scaled thumbnail of its actual composition (positioned
+  photos, frames, text) without opening the board.
+- **Room floor plan and 3D capture in the printed report:** including
+  a whole room or its plan now generates an SVG floor plan with
+  walls, blocks, and each wall's length, highlighting in accent color
+  the walls with included boards; if the room has a saved 3D view and
+  a matching capture, it's included as an image too.
+
+### Changed
+- The printed report is now generated exclusively from the selected
+  report's content (explicitly added rooms, boards, and photos),
+  replacing the previous project-wide "include/exclude board"
+  mechanism.
+
+### Security
+- Updated the `uuid` dependency to v14 and `nodemailer` to v9
+  (reviewed the official changelog — no behavior changes for this
+  project's usage); resolved the remaining vulnerabilities flagged by
+  `npm audit` (0 vulnerabilities left).
+
 ## [1.25.20] — 2026-07-04
 
 ### Added

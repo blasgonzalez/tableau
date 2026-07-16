@@ -1,6 +1,6 @@
 {
-  "version": "1.28.5",
+  "version": "1.30.0",
   "downloadUrl": "https://github.com/blasgonzalez/tableau/releases/latest",
-  "releaseDate": "2026-07-13",
-  "notes": "Pincel de color para paredes en el plano de sala y en la vista 3D orbital, y corrección de color ignorado en paredes con tableros vinculados."
+  "releaseDate": "2026-07-15",
+  "notes": "Memorias múltiples por proyecto: cada proyecto admite ahora varios informes independientes, con secciones reordenables, selector de contenido (salas, tableros, planos, capturas 3D, fotos) y vista previa espacial inline de cada tablero."
 }

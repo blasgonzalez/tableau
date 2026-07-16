@@ -583,16 +583,47 @@ body{font-family:'IBM Plex Mono',monospace;color:var(--text)}
 .mem-free-body:focus{border-color:var(--acc-dim)}
 .mem-add-section-btn{background:none;border:1px dashed var(--border2);color:var(--dim);cursor:pointer;font-size:9px;padding:4px 10px;font-family:'IBM Plex Mono',monospace;letter-spacing:.8px;text-transform:uppercase;margin-bottom:14px;transition:all .12s;display:block}
 .mem-add-section-btn:hover{border-color:var(--acc-dim);color:var(--acc)}
-.mem-boards-sep{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);padding:10px 0 8px;border-top:1px solid var(--border2);margin-top:4px}
-
-/* ── MEM NOTES SECTION ── */
-.mem-notes-hd{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);padding:6px 0 4px;border-top:1px solid var(--border2);margin-top:6px}
-.mem-note-item{padding:5px 0 5px 8px;border-bottom:1px solid var(--border);border-left:2px solid var(--acc-dim)}
-.mem-note-title{font-size:10px;color:var(--sub);font-weight:600;margin-bottom:2px}
-.mem-note-text{font-size:9px;color:var(--dim);white-space:pre-wrap;line-height:1.6}
-.mem-note-link{display:inline-block;margin-top:5px;font-size:9px;color:var(--acc);text-decoration:underline;word-break:break-all}
-.mem-note-link-domain{color:var(--muted);font-size:8px;margin-left:4px}
-.mem-lbl{font-size:8px;color:var(--muted);font-style:italic;margin-top:2px;letter-spacing:.2px;white-space:pre-wrap}
+/* ── MEM TABS (memorias múltiples) ── */
+.mem-tabs{display:flex;flex-wrap:wrap;gap:6px;padding-bottom:12px;border-bottom:1px solid var(--border2)}
+.mem-tab{display:flex;align-items:center;gap:6px;background:var(--surf);border:1px solid var(--border);padding:4px 4px 4px 9px;cursor:pointer;transition:all .12s}
+.mem-tab.active{border-color:var(--acc-dim);color:var(--acc)}
+.mem-tab-name{font-size:10px;letter-spacing:.3px}
+.mem-tab-actions{display:flex;gap:2px}
+.mem-tab-act{background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;line-height:1;padding:2px 4px;font-family:inherit;transition:color .1s}
+.mem-tab-act:hover{color:var(--acc)}
+.mem-tab-act.danger:hover{color:var(--danger)}
+.mem-tab-new{background:none;border:1px dashed var(--border2);color:var(--dim);cursor:pointer;font-size:9px;padding:4px 10px;font-family:'IBM Plex Mono',monospace;letter-spacing:.5px;transition:all .12s}
+.mem-tab-new:hover{border-color:var(--acc-dim);color:var(--acc)}
+/* ── MEM SECTION ITEMS ── */
+.mem-section-items{margin:6px 0}
+.mem-item-row{display:flex;align-items:center;gap:7px;padding:4px 0;border-bottom:1px solid var(--border)}
+.mem-drag-handle{color:var(--muted);cursor:grab;font-size:11px;flex-shrink:0}
+.mem-item-icon{flex-shrink:0}
+.mem-item-label{flex:1;font-size:10px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mem-item-expand{background:none;border:none;color:var(--muted);cursor:pointer;font-size:9px;padding:0 3px;font-family:inherit}
+.mem-item-expand:hover{color:var(--acc)}
+.mem-room-sub{margin:0 0 6px 34px;padding-left:9px;border-left:2px solid var(--border2);display:flex;flex-direction:column;gap:3px}
+.mem-room-sub-row{display:flex;align-items:center;gap:6px;font-size:9px;color:var(--dim);cursor:pointer}
+.mem-board-strip{margin:0 0 8px 34px;padding-left:9px;border-left:2px solid var(--border2)}
+.mem-board-strip-empty{font-size:8px;color:var(--muted);letter-spacing:.5px;padding:3px 0}
+.mem-preview{position:relative;overflow:hidden;flex-shrink:0}
+.mem-preview-dim{font-size:8px;color:var(--acc-dim);letter-spacing:.8px;text-transform:uppercase;margin-top:5px}
+.mem-add-item-btn{background:none;border:1px dashed var(--border2);color:var(--dim);cursor:pointer;font-size:9px;padding:3px 8px;font-family:'IBM Plex Mono',monospace;letter-spacing:.5px;transition:all .12s}
+.mem-add-item-btn:hover{border-color:var(--acc-dim);color:var(--acc)}
+/* ── MEM CONTENT PICKER ── */
+.mem-picker-box{min-width:420px;max-width:520px}
+.mem-picker-group-hd{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);padding:10px 0 6px;border-top:1px solid var(--border2);margin-top:4px}
+.mem-picker-group-hd:first-child{border-top:none;margin-top:0}
+.mem-picker-subhd{font-size:9px;letter-spacing:.5px;color:var(--text);margin:6px 0 3px}
+.mem-picker-opt{font-size:10px;color:var(--sub);padding:5px 6px;cursor:pointer;border-radius:2px;transition:background .1s}
+.mem-picker-opt:hover{background:var(--surf)}
+.mem-picker-opt.added{color:var(--acc);background:var(--surf)}
+.mem-picker-ctx{color:var(--muted);font-size:9px;margin-left:6px}
+.mem-picker-empty{color:var(--muted);font-size:10px;padding:4px 0}
+.mem-picker-photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:6px}
+.mem-picker-photo{position:relative;aspect-ratio:1;overflow:hidden;border-radius:2px;cursor:pointer;border:2px solid transparent}
+.mem-picker-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.mem-picker-photo.added{border-color:var(--acc)}
 
 /* ── LIBRARY ── */
 .lib-splitter{height:5px;flex-shrink:0;cursor:ns-resize;z-index:101;display:flex;align-items:center;justify-content:center;background:transparent;user-select:none}
@@ -810,22 +841,6 @@ select.inp{cursor:pointer;appearance:none;padding-right:28px;background-image:ur
 .mem-scroll{overflow-y:auto;flex:1;max-height:58vh;padding-right:4px}
 .mem-scroll::-webkit-scrollbar{width:3px}
 .mem-scroll::-webkit-scrollbar-thumb{background:var(--border2)}
-.mem-board{margin-bottom:20px}
-.mem-board-hd{display:flex;align-items:baseline;gap:10px;border-bottom:1px solid var(--border2);padding-bottom:6px;margin-bottom:8px}
-.mem-board-name{font-size:12px;color:var(--text);letter-spacing:.5px}
-.mem-board-cfg{font-size:8px;color:var(--acc-dim);letter-spacing:.8px;text-transform:uppercase}
-.mem-board-empty{font-size:8px;color:var(--muted);letter-spacing:.5px;padding:3px 0}
-.mem-item{display:flex;align-items:center;gap:9px;padding:5px 0;border-bottom:1px solid var(--border)}
-.mem-idx{width:18px;font-size:8px;color:var(--muted);flex-shrink:0;text-align:right;align-self:flex-start;padding-top:2px}
-.mem-thumb{width:44px;height:44px;object-fit:cover;border-radius:2px;flex-shrink:0;background:var(--border)}
-.mem-info{flex:1;min-width:0}
-.mem-iname{font-size:10px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mem-dims{font-size:9px;color:var(--dim);margin-top:2px;letter-spacing:.2px}
-.mem-phys{color:var(--acc-dim);margin-left:7px}
-.mem-lbl{font-size:8px;color:var(--muted);font-style:italic;margin-top:2px;letter-spacing:.2px}
-.mem-preview-wrap{margin-bottom:12px}
-.mem-preview{position:relative;overflow:hidden;flex-shrink:0}
-.mem-preview-dim{font-size:8px;color:var(--acc-dim);letter-spacing:.8px;text-transform:uppercase;margin-top:5px}
 
 /* ── START ── */
 .start{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px}
@@ -1216,6 +1231,8 @@ const calcGridLayout = (item, photosArr, dpi, units) => {
   return { gapColPx, gapRowPx, cols, cellW, rows, totalH };
 };
 
+const slugifyRoomName = s => (s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-zA-Z0-9]+/g,'_').replace(/^_+|_+$/g,'').toLowerCase();
+
 const dimLabel = (w, h, dpi, units, frame = 0) => {
   const f = parseFloat(frame) || 0;
   if (dpi && units && units !== 'px') {
@@ -1287,11 +1304,26 @@ const I18N = {
     boardConfigNote:'Las dimensiones físicas aparecen sobre cada foto al pasar el ratón\ny en el panel de información lateral.',
     boardPrivate:'Tablero privado', boardPrivateHint:'Los invitados no pueden ver ni acceder a este tablero',
     save:'Guardar', close:'Cerrar',
-    reportTitle:'Memoria del proyecto', noBoardsInProject:'Sin tableros en este proyecto',
-    exInfoHd:'Información del proyecto', exTitlePh:'Título…', exSubtitlePh:'Descripción breve…',
-    customSectionsHd:'Secciones', addSection:'+ Añadir sección', sectionTitlePh:'Epígrafe…', sectionBodyPh:'Contenido…', boardsSectionHd:'Tableros y piezas',
-    boardInMemory:'Incluir en memoria', boardExMemory:'Excluir de memoria', memIncludeInfo:'Incluir información del proyecto en el informe',
-    noPhysScale:'sin escala física', emptyBoardMem:'Tablero vacío',
+    reportTitle:'Memoria del proyecto',
+    memCtxWall:(rn,wn,s)=>`Sala ${rn} · Pared ${wn} · Cara ${s}`,
+    memCtxBlock:(rn,bl,fn)=>`Sala ${rn} · ${bl} · Cara ${fn}`,
+    memCtxWallShort:(wn,s)=>`Pared ${wn} · Cara ${s}`,
+    memCtxBlockShort:(bl,fn)=>`${bl} · Cara ${fn}`,
+    memZoneLabel: l => `Zona: ${l}`, memZoneNoName:'Sin nombre', memNoZone:'Sin zona',
+    freeBoardsHd:'Tableros libres',
+    customSectionsHd:'Secciones', sectionTitlePh:'Epígrafe…', sectionBodyPh:'Contenido…', boardsSectionHd:'Tableros y piezas',
+    memIncludeInfo:'Incluir información del proyecto en el informe',
+    memDefaultName:'Memoria', memNewBtn:'＋ Nueva memoria',
+    memDuplicateTip:'Duplicar memoria', memDeleteTip:'Eliminar memoria',
+    memNamePh:'Nombre de la memoria…', memDescPh:'Descripción (opcional)…',
+    memAddSectionBtn:'+ Añadir sección', memAddContentBtn:'+ Añadir contenido',
+    memPickerRoomsHd:'Salas completas', memPickerPlansHd:'Planos de sala',
+    memPickerCapturesHd:'Capturas 3D', memPickerPhotosHd:'Fotos sueltas',
+    memNoRoomsForPicker:'Sin salas en este proyecto', memNoCapturesForPicker:'Sin capturas 3D disponibles',
+    memNoPhotosForPicker:'Sin fotos en la biblioteca', memNoSections:'Sin secciones — usa «+ Añadir sección»',
+    memConfirmDeleteMemory:'¿Eliminar esta memoria y todas sus secciones?',
+    memConfirmDeleteSection: n => `¿Eliminar esta sección y sus ${n} elemento${n===1?'':'s'}?`,
+    emptyBoardMem:'Tablero vacío',
     reportConfigNote:'Configura DPI y unidades en cada tablero (⚙ Config) para ver las dimensiones físicas.',
     printPdf:'⎙ Imprimir / Guardar PDF',
     startSub:'Organiza tus fotos en tableros visuales, sin complicaciones.',
@@ -1530,11 +1562,26 @@ const I18N = {
     boardConfigNote:'Physical dimensions appear on each photo on hover\nand in the side info panel.',
     boardPrivate:'Private board', boardPrivateHint:'Guests cannot see or access this board',
     save:'Save', close:'Close',
-    reportTitle:'Project report', noBoardsInProject:'No boards in this project',
-    exInfoHd:'Project info', exTitlePh:'Title…', exSubtitlePh:'Short description…',
-    customSectionsHd:'Sections', addSection:'+ Add section', sectionTitlePh:'Heading…', sectionBodyPh:'Content…', boardsSectionHd:'Boards & pieces',
-    boardInMemory:'Include in report', boardExMemory:'Exclude from report', memIncludeInfo:'Include project info in printed report',
-    noPhysScale:'no physical scale', emptyBoardMem:'Empty board',
+    reportTitle:'Project report',
+    memCtxWall:(rn,wn,s)=>`${rn} Room · Wall ${wn} · Side ${s}`,
+    memCtxBlock:(rn,bl,fn)=>`${rn} Room · ${bl} · ${fn} Face`,
+    memCtxWallShort:(wn,s)=>`Wall ${wn} · Side ${s}`,
+    memCtxBlockShort:(bl,fn)=>`${bl} · ${fn} Face`,
+    memZoneLabel: l => `Zone: ${l}`, memZoneNoName:'Unnamed', memNoZone:'No zone',
+    freeBoardsHd:'Unassigned boards',
+    customSectionsHd:'Sections', sectionTitlePh:'Heading…', sectionBodyPh:'Content…', boardsSectionHd:'Boards & pieces',
+    memIncludeInfo:'Include project info in printed report',
+    memDefaultName:'Report', memNewBtn:'＋ New report',
+    memDuplicateTip:'Duplicate report', memDeleteTip:'Delete report',
+    memNamePh:'Report name…', memDescPh:'Description (optional)…',
+    memAddSectionBtn:'+ Add section', memAddContentBtn:'+ Add content',
+    memPickerRoomsHd:'Whole rooms', memPickerPlansHd:'Room plans',
+    memPickerCapturesHd:'3D captures', memPickerPhotosHd:'Loose photos',
+    memNoRoomsForPicker:'No rooms in this project', memNoCapturesForPicker:'No 3D captures available',
+    memNoPhotosForPicker:'No photos in the library', memNoSections:'No sections — use "+ Add section"',
+    memConfirmDeleteMemory:'Delete this report and all its sections?',
+    memConfirmDeleteSection: n => `Delete this section and its ${n} item${n===1?'':'s'}?`,
+    emptyBoardMem:'Empty board',
     reportConfigNote:'Configure DPI and units in each board (⚙ Config) to see physical dimensions.',
     printPdf:'⎙ Print / Save PDF',
     startSub:'Organize your photos on visual boards, no fuss.',
@@ -1794,7 +1841,13 @@ function App() {
   const [toast,         setToast]         = useState(null);
   const [modal,         setModal]         = useState(null); // 'project'|'board'|'boardcfg'
   const [confirmModal,  setConfirmModal]  = useState(null); // {message, onConfirm, danger}
-  const [memDraft,      setMemDraft]      = useState({ exTitle:'', subtitle:'', memSections:[] });
+  const [memories,      setMemories]      = useState([]);
+  const [activeMemId,   setActiveMemId]   = useState(null);
+  const [memPicker,     setMemPicker]     = useState(null); // sectionId of the section currently picking content
+  const [expandedRoomItem, setExpandedRoomItem] = useState(null); // itemId of an expanded type:'room' item
+  const [expandedBoardKeys, setExpandedBoardKeys] = useState({}); // {key: bool} — inline board thumbnail strips
+  const [memSecDragId,  setMemSecDragId]  = useState(null);
+  const [memItemDragId, setMemItemDragId] = useState(null);
   const [memIncludeHeader, setMemIncludeHeader] = useState(true);
   const [rooms,          setRooms]         = useState([]);       // [{id, name, ceilingHeight, vertices, walls, columns}]
   const [activeRoomId,   setActiveRoomId]  = useState(null);
@@ -2924,7 +2977,8 @@ function App() {
         const res = await fetch(dataUrl);
         const blob = await res.blob();
         const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-        const file = new File([blob], `sala_${ts}.jpg`, { type: 'image/jpeg' });
+        const roomSlug = slugifyRoomName(room?.name) || 'sala';
+        const file = new File([blob], `${roomSlug}_${ts}.jpg`, { type: 'image/jpeg' });
         const p = pidRef.current;
         if (!p) return;
         const photo = await api.upload(`/api/projects/${p}/photos`, file);
@@ -4300,17 +4354,29 @@ function App() {
     };
   }, [roomView, room, boards, pid]);
 
+  // Fase 1B: al abrir el modal de memoria, cargar project.memories o,
+  // si no existe/está vacío, migrar desde el modelo antiguo (board.inMemory + salas)
+  // a una única memoria por defecto con una sección que referencia esos tableros y planos.
   useEffect(() => {
-    if (modal === 'memoria') {
-      const proj = projects.find(p => p.id === pid);
-      if (proj) {
-        setMemDraft({
-          exTitle: proj.exTitle || '',
-          subtitle: proj.subtitle || '',
-          memSections: proj.memSections || [],
-        });
-      }
+    if (modal !== 'memoria') return;
+    const proj = projects.find(p => p.id === pid);
+    if (!proj) return;
+    let mems = proj.memories;
+    if (!mems || mems.length === 0) {
+      const boardItems = boards.filter(b => b.inMemory !== false)
+        .map(b => ({ id: genId(), type: 'board', boardId: b.id }));
+      const roomPlanItems = rooms.map(r => ({ id: genId(), type: 'room-plan', roomId: r.id }));
+      mems = [{
+        id: genId(),
+        name: t('memDefaultName'),
+        description: '',
+        created: new Date().toISOString(),
+        sections: [{ id: genId(), title: '', body: '', items: [...boardItems, ...roomPlanItems] }],
+      }];
+      saveProjectInfo({ memories: mems });
     }
+    setMemories(mems);
+    setActiveMemId(prev => mems.some(m => m.id === prev) ? prev : mems[0].id);
   }, [modal, pid]);
 
   useEffect(() => {
@@ -4826,29 +4892,255 @@ function App() {
     api.patch(`/api/projects/${pid}`, patch);
     setProjects(ps => ps.map(p => p.id === pid ? { ...p, ...patch } : p));
   };
-  const addMemSection = () => {
-    const sec = { id: Date.now().toString(36) + Math.random().toString(36).slice(2,5), title: '', body: '' };
-    const memSections = [...memDraft.memSections, sec];
-    setMemDraft(d => ({ ...d, memSections }));
-    saveProjectInfo({ memSections });
+
+  // ── Fase 1B: memorias múltiples (project.memories[].sections[].items[]) ──
+  const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+  // Structural changes (add/remove/reorder/duplicate/toggle) compute the next
+  // array synchronously from the current `memories` closure and persist it
+  // right away — never chained after a functional setState, which would read stale data.
+  const commitMemories = (next) => { setMemories(next); saveProjectInfo({ memories: next }); };
+  const updateMemorySave = (memId, fn) => commitMemories(memories.map(m => m.id === memId ? fn(m) : m));
+  const updateSectionSave = (memId, secId, fn) => updateMemorySave(memId, m => ({ ...m, sections: m.sections.map(s => s.id === secId ? fn(s) : s) }));
+  // Text-field changes update local state on every keystroke and persist on
+  // blur (same two-phase pattern the old exTitle/subtitle/memSections inputs used).
+  const updateMemoryLocal = (memId, fn) => setMemories(mems => mems.map(m => m.id === memId ? fn(m) : m));
+  const updateSectionLocal = (memId, secId, fn) => updateMemoryLocal(memId, m => ({ ...m, sections: m.sections.map(s => s.id === secId ? fn(s) : s) }));
+  const persistMemories = () => saveProjectInfo({ memories });
+
+  const addMemory = () => {
+    const m = { id: genId(), name: '', description: '', created: new Date().toISOString(), sections: [] };
+    commitMemories([...memories, m]);
+    setActiveMemId(m.id);
   };
-  const removeMemSection = (secId) => {
-    const memSections = memDraft.memSections.filter(s => s.id !== secId);
-    setMemDraft(d => ({ ...d, memSections }));
-    saveProjectInfo({ memSections });
+  const duplicateMemory = (memId) => {
+    const src = memories.find(m => m.id === memId);
+    if (!src) return;
+    const clone = {
+      ...src, id: genId(), name: src.name + (lang === 'es' ? ' (copia)' : ' (copy)'), created: new Date().toISOString(),
+      sections: src.sections.map(s => ({ ...s, id: genId(), items: s.items.map(i => ({ ...i, id: genId() })) })),
+    };
+    const idx = memories.findIndex(m => m.id === memId);
+    const next = [...memories];
+    next.splice(idx + 1, 0, clone);
+    commitMemories(next);
+    setActiveMemId(clone.id);
   };
-  const updateMemSection = (secId, field, value) => {
-    setMemDraft(d => ({ ...d, memSections: d.memSections.map(s => s.id === secId ? { ...s, [field]: value } : s) }));
+  const deleteMemory = (memId) => {
+    showConfirm(t('memConfirmDeleteMemory'), () => {
+      const next = memories.filter(m => m.id !== memId);
+      commitMemories(next);
+      if (activeMemId === memId) setActiveMemId(next[0]?.id || null);
+    });
   };
-  const toggleBoardInMemory = (boardId, current) => {
-    const inMemory = current === false ? true : false;
-    api.patch(`/api/projects/${pidRef.current}/boards/${boardId}`, { inMemory });
-    setBoards(bs => bs.map(b => b.id === boardId ? { ...b, inMemory } : b));
+  const setMemoryField = (memId, field, value) => updateMemoryLocal(memId, m => ({ ...m, [field]: value }));
+
+  const addMemSection = (memId) => updateMemorySave(memId, m => ({ ...m, sections: [...m.sections, { id: genId(), title: '', body: '', items: [] }] }));
+  const removeSection = (memId, secId) => updateMemorySave(memId, m => ({ ...m, sections: m.sections.filter(s => s.id !== secId) }));
+  const setSectionField = (memId, secId, field, value) => updateSectionLocal(memId, secId, s => ({ ...s, [field]: value }));
+  const reorderSections = (memId, fromId, toId) => {
+    if (fromId === toId) return;
+    updateMemorySave(memId, m => {
+      const arr = [...m.sections];
+      const fi = arr.findIndex(s => s.id === fromId), ti = arr.findIndex(s => s.id === toId);
+      const [moved] = arr.splice(fi, 1);
+      arr.splice(ti, 0, moved);
+      return { ...m, sections: arr };
+    });
+  };
+
+  const addItemToSection = (memId, secId, item) => updateSectionSave(memId, secId, s => ({ ...s, items: [...s.items, { id: genId(), ...item }] }));
+  const removeItem = (memId, secId, itemId) => updateSectionSave(memId, secId, s => ({ ...s, items: s.items.filter(i => i.id !== itemId) }));
+  const reorderItems = (memId, secId, fromId, toId) => {
+    if (fromId === toId) return;
+    updateSectionSave(memId, secId, s => {
+      const arr = [...s.items];
+      const fi = arr.findIndex(i => i.id === fromId), ti = arr.findIndex(i => i.id === toId);
+      const [moved] = arr.splice(fi, 1);
+      arr.splice(ti, 0, moved);
+      return { ...s, items: arr };
+    });
+  };
+  const toggleItemExcludedBoard = (memId, secId, itemId, boardId) => {
+    updateSectionSave(memId, secId, s => ({
+      ...s,
+      items: s.items.map(i => {
+        if (i.id !== itemId) return i;
+        const ex = new Set(i.excludedBoardIds || []);
+        ex.has(boardId) ? ex.delete(boardId) : ex.add(boardId);
+        return { ...i, excludedBoardIds: [...ex] };
+      }),
+    }));
+  };
+  const roomBoardIds = (room) => {
+    const ids = new Set();
+    (room.walls || []).forEach(w => {
+      (w.boardsA || []).forEach(e => { if (e.boardId) ids.add(e.boardId); });
+      (w.boardsB || []).forEach(e => { if (e.boardId) ids.add(e.boardId); });
+    });
+    (room.blocks || []).forEach(bl => {
+      if (!bl.faces) return;
+      Object.values(bl.faces).forEach(f => { if (f?.boardId) ids.add(f.boardId); });
+    });
+    return [...ids];
+  };
+  const memItemIcon = { room: '🏠', board: '▭', 'room-plan': '📐', 'room-capture': '📷', photo: '🖼' };
+  const memItemLabel = (item) => {
+    switch (item.type) {
+      case 'room': return rooms.find(r => r.id === item.roomId)?.name || item.roomId;
+      case 'room-plan': { const rn = rooms.find(r => r.id === item.roomId)?.name || item.roomId; return `${rn} — ${t('memPickerPlansHd')}`; }
+      case 'board': return boards.find(b => b.id === item.boardId)?.name || item.boardId;
+      case 'room-capture':
+      case 'photo': return photos.find(p => p.id === item.photoId)?.name || item.photoId;
+      default: return '?';
+    }
+  };
+  // Inline expandable spatial preview for board tree items (modal only, not persisted).
+  // Restored from the pre-Fase-1B board list (git HEAD, .mem-preview-wrap), rescaled
+  // to fit the compact tree row (~200×150) instead of the old full-width board list (560×200).
+  const toggleBoardStrip = (key) => setExpandedBoardKeys(m => ({ ...m, [key]: !m[key] }));
+  const renderBoardStrip = (boardId) => {
+    const board = boards.find(b => b.id === boardId);
+    if (!board) return null;
+    const boardIt = allBoardItemsRef.current[boardId] || [];
+    const dpi = board.dpi || null;
+    const units = board.units || 'px';
+    if (!boardIt.length) return <div className="mem-board-strip-empty">{t('emptyBoardMem')}</div>;
+    const bPx = getBoardPx(board);
+    const textItems = boardIt.filter(i => i.type === 'text');
+    const expandedM = [];
+    boardIt.forEach(item => {
+      if (item.type === 'note' || item.type === 'text' || item.type === 'zone') return;
+      if (item.type === 'grid') {
+        const layout = calcGridLayout(item, photos, dpi || 150, units);
+        let rowY = item.y;
+        layout.rows.forEach(row => {
+          row.ids.forEach((photoId, ci) => {
+            if (photoId) expandedM.push({ ...item, id: item.id + '_' + photoId, photoId, x: item.x + ci * (layout.cellW + layout.gapColPx), y: rowY, w: layout.cellW, rot: 0, freeRot: 0 });
+          });
+          rowY += row.h + layout.gapRowPx;
+        });
+      } else {
+        expandedM.push(item);
+      }
+    });
+    const photoItems = expandedM.map(item => {
+      const photo = photos.find(p => p.id === item.photoId);
+      const rot = item.rot || 0; const freeRot = item.freeRot || 0;
+      const isSwapped = rot % 180 !== 0;
+      const naturalW = isSwapped ? (photo ? Math.round(item.w * photo.w / photo.h) : item.w) : item.w;
+      const naturalH = isSwapped ? item.w : (photo ? Math.round(item.w * photo.h / photo.w) : item.w);
+      const displayH = isSwapped ? naturalW : naturalH;
+      const offX = Math.round((item.w - naturalW) / 2);
+      const offY = Math.round((displayH - naturalH) / 2);
+      const ar = freeRot * Math.PI / 180;
+      const cos = Math.abs(Math.cos(ar)); const sin = Math.abs(Math.sin(ar));
+      const bbW = cos * item.w + sin * displayH; const bbH = sin * item.w + cos * displayH;
+      const cx = item.x + item.w / 2; const cy = item.y + displayH / 2;
+      return { ...item, naturalW, naturalH, displayH, offX, offY, vL: cx - bbW/2, vT: cy - bbH/2, vW: bbW, vH: bbH };
+    });
+    const allBoundsM = [...photoItems, ...textItems.map(i => ({ vL: i.x, vT: i.y, vW: i.w, vH: i.h || 130 }))];
+    const minX = bPx ? 0 : (allBoundsM.length ? Math.min(...allBoundsM.map(i => i.vL)) : 0);
+    const minY = bPx ? 0 : (allBoundsM.length ? Math.min(...allBoundsM.map(i => i.vT)) : 0);
+    const bW = bPx?.w ?? (allBoundsM.length ? Math.max(...allBoundsM.map(i => i.vL + i.vW)) - minX : 0);
+    const bH = bPx?.h ?? (allBoundsM.length ? Math.max(...allBoundsM.map(i => i.vT + i.vH)) - minY : 0);
+    const sc = bW && bH ? Math.min(200 / bW, 150 / bH, 1) : 1;
+    const pW = Math.round(bW * sc);
+    const pH = Math.round(bH * sc);
+    if (!(bW > 0 && bH > 0)) return null;
+    return (
+      <div className="mem-board-strip">
+        <div className="mem-preview" style={{
+          width: pW, height: pH,
+          background: bPx ? '#f5f5f5' : 'var(--deep)',
+          border: bPx ? '1px solid var(--border2)' : '1px dashed var(--border2)',
+        }}>
+          {photoItems.map(item => {
+            const rot = item.rot || 0; const freeRot = item.freeRot || 0;
+            const matSzM = item.matSize ?? item.frame ?? 0; const moldSzM = item.frameSize ?? 0;
+            const matPxM = matSzM > 0 ? Math.max(1, Math.round(physToPx(matSzM, dpi, units) * sc)) : 0;
+            const moldPxM = moldSzM > 0 ? Math.max(1, Math.round(physToPx(moldSzM, dpi, units) * sc)) : 0;
+            const frameStyle = (matPxM || moldPxM) ? { boxShadow: `0 0 0 ${matPxM}px ${item.matColor||'#ffffff'}, 0 0 0 ${matPxM+moldPxM}px ${item.frameColor||'#5a3e1b'}` } : {};
+            const iL = Math.round((item.x - minX) * sc); const iT = Math.round((item.y - minY) * sc);
+            const iW = Math.round(item.w * sc); const iH = Math.round(item.displayH * sc);
+            return (
+              <div key={item.id} style={{ position:'absolute', left:iL, top:iT, width:iW, height:iH, overflow:'hidden', ...(freeRot?{transform:`rotate(${freeRot}deg)`,transformOrigin:'center'}:{}), ...frameStyle }}>
+                <img src={`/photos/${pid}/${item.photoId}/thumb`} alt="" style={{ position:'absolute', left:Math.round(item.offX*sc), top:Math.round(item.offY*sc), width:Math.round(item.naturalW*sc), height:Math.round(item.naturalH*sc), objectFit:'cover', ...((rot||item.flipH||item.flipV)?{transform:`rotate(${rot}deg) scaleX(${item.flipH?-1:1}) scaleY(${item.flipV?-1:1})`,transformOrigin:'center'}:{}) }} />
+              </div>
+            );
+          })}
+          {textItems.map(item => {
+            const fontMap = { serif:'Georgia,serif', sans:'Arial,sans-serif', display:'Impact,sans-serif', mono:'Courier New,monospace' };
+            const alignMap = { left:'flex-start', center:'center', right:'flex-end' };
+            const rot = item.freeRot || 0;
+            return (
+              <div key={item.id} style={{ position:'absolute', left:Math.round((item.x-minX)*sc), top:Math.round((item.y-minY)*sc), width:Math.round(item.w*sc), height:Math.round((item.h||130)*sc), fontSize:Math.max(6,Math.round((item.fontSize||26)*sc)), fontFamily:fontMap[item.fontFamily||'serif']||'Georgia,serif', textAlign:item.textAlign||'center', color:item.textColor||'var(--text)', display:'flex', alignItems:'center', justifyContent:alignMap[item.textAlign||'center']||'center', padding:Math.round(4*sc), overflow:'hidden', boxSizing:'border-box', ...(rot?{transform:`rotate(${rot}deg)`,transformOrigin:'center'}:{}) }}>
+                {item.text || ''}
+              </div>
+            );
+          })}
+        </div>
+        <div className="mem-preview-dim">{dimLabel(bW, bH, dpi, units)}</div>
+      </div>
+    );
+  };
+
+  // Fase 2: plano SVG estático de una sala para el informe de memoria
+  // (misma lógica de bbox/paredes/bloques que el plano interactivo, sin eventos).
+  const renderRoomPlanSvg = (room, includedIds) => {
+    const pts = [...(room.vertices||[]),
+      ...(room.blocks||[]).flatMap(b => [{x:b.x,y:b.y},{x:b.x+b.w,y:b.y+b.d}]),
+      ...(room.columns||[]).flatMap(c => [{x:c.x,y:c.y},{x:c.x+c.w,y:c.y+c.d}])];
+    if (!pts.length) return '';
+    const xs = pts.map(p=>p.x), ys = pts.map(p=>p.y);
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+    const minY = Math.min(...ys), maxY = Math.max(...ys);
+    const pw = Math.max(50, maxX-minX), ph = Math.max(50, maxY-minY);
+    const pad = Math.max(pw, ph) * 0.12 + 30;
+    const vbX = minX-pad, vbY = minY-pad, vbW = pw+pad*2, vbH = ph+pad*2;
+    const svgW = 600;
+    const svgH = Math.max(120, Math.round(svgW * (vbH/vbW)));
+    const svgFontSz = Math.max(10, Math.round(vbW * 0.016));
+    const escSvg = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
+    const polySvg = room.closed !== false && (room.vertices||[]).length
+      ? `<polygon points="${room.vertices.map(v=>`${v.x},${v.y}`).join(' ')}" fill="rgba(100,140,190,.08)" stroke="none"/>`
+      : '';
+    let wallsSvg = '';
+    (room.walls||[]).forEach(wall => {
+      const v1 = room.vertices.find(v=>v.id===wall.v1), v2 = room.vertices.find(v=>v.id===wall.v2);
+      if (!v1||!v2) return;
+      const mx = (v1.x+v2.x)/2, my = (v1.y+v2.y)/2;
+      const len = roomWallLen(wall, room.vertices);
+      const wt = wall.thickness ?? (room.wallThickness ?? 15);
+      const sw = Math.max(wt, 3);
+      const isTabique = wall.height && wall.height < (room.ceilingHeight||280);
+      const hasIncluded = wallBoardIds(wall).some(id => includedIds.has(id));
+      const strokeColor = (wall.color && wall.color !== '#d0c8bc') ? wall.color : '#8a8a8a';
+      if (hasIncluded) {
+        wallsSvg += `<line x1="${v1.x}" y1="${v1.y}" x2="${v2.x}" y2="${v2.y}" stroke="#c4894a" stroke-width="${sw+5}" stroke-linecap="round"/>`;
+      }
+      wallsSvg += `<line x1="${v1.x}" y1="${v1.y}" x2="${v2.x}" y2="${v2.y}" stroke="${strokeColor}" stroke-width="${sw}"${isTabique?` stroke-dasharray="${sw*2.5} ${sw*.8}"`:''}/>`;
+      wallsSvg += `<text x="${mx}" y="${my+svgFontSz*0.4}" text-anchor="middle" font-size="${svgFontSz}" fill="#333" stroke="#fff" stroke-width="3" paint-order="stroke">${cmLabel(len)}</text>`;
+    });
+    let blocksSvg = '';
+    (room.blocks||[]).forEach(block => {
+      const bcx = block.x + block.w/2, bcy = block.y + block.d/2;
+      const rotAttr = block.rot ? ` transform="rotate(${block.rot},${bcx},${bcy})"` : '';
+      blocksSvg += `<g${rotAttr}><rect x="${block.x}" y="${block.y}" width="${block.w}" height="${block.d}" fill="${block.color||'#b8b0a4'}" stroke="#8a7a68" stroke-width="1"/>`;
+      if (block.label) blocksSvg += `<text x="${bcx}" y="${bcy}" text-anchor="middle" dominant-baseline="middle" font-size="9" fill="#555">${escSvg(block.label)}</text>`;
+      blocksSvg += `</g>`;
+    });
+    let colsSvg = '';
+    (room.columns||[]).forEach(col => {
+      colsSvg += `<rect x="${col.x}" y="${col.y}" width="${col.w}" height="${col.d}" fill="#555" opacity="0.65" rx="1"/>`;
+    });
+    const svgMarkup = `<svg width="${svgW}" height="${svgH}" viewBox="${vbX} ${vbY} ${vbW} ${vbH}" xmlns="http://www.w3.org/2000/svg">${polySvg}${wallsSvg}${blocksSvg}${colsSvg}</svg>`;
+    return `<div class="mem-room-plan">${svgMarkup}</div>`;
   };
 
   // ── print memoria ─────────────────────────────────────────────────────────
-  const printMemoria = async () => {
+  const printMemoria = async (mem) => {
     const proj = projects.find(p => p.id === pid);
+    mem = mem || proj?.memories?.[0];
     const includeHeader = memIncludeHeader;
     // Fetch comments flagged inMemory (owner only, best-effort)
     let memComments = {};
@@ -4868,18 +5160,39 @@ function App() {
     const date = new Date().toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });
     const hdr = t('colHdr');
     let rows = '';
-    boardsRef.current.filter(b => b.inMemory !== false).forEach(board => {
-      const boardIt = allBoardItemsRef.current[board.id] || [];
-      const dpi = board.dpi || null;
-      const units = board.units || 'px';
+    const escRoom = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
+    const computeBoardCtx = (board) => {
+      let boardCtx = null;
+      for (const r of rooms) {
+        for (const w of (r.walls || [])) {
+          if ((w.boardsA||[]).some(e=>e.boardId===board.id)) { boardCtx = {type:'wall', roomName:r.name||'', wallName:w.name||'', side:'A'}; break; }
+          if ((w.boardsB||[]).some(e=>e.boardId===board.id)) { boardCtx = {type:'wall', roomName:r.name||'', wallName:w.name||'', side:'B'}; break; }
+        }
+        if (boardCtx) break;
+        for (const bl of (r.blocks || [])) {
+          if (!bl.faces) continue;
+          for (const [dir, f] of Object.entries(bl.faces)) {
+            if (f?.boardId === board.id) { boardCtx = {type:'block', roomName:r.name||'', blockLabel:bl.label||'?', face:dir}; break; }
+          }
+          if (boardCtx) break;
+        }
+        if (boardCtx) break;
+      }
+      if (!boardCtx) return null;
+      const memFaceLabelMap = t('infoBoardCtxFaceLabel') || {};
+      return boardCtx.type === 'wall'
+        ? t('memCtxWall', boardCtx.roomName, boardCtx.wallName, boardCtx.side)
+        : t('memCtxBlock', boardCtx.roomName, boardCtx.blockLabel, memFaceLabelMap[boardCtx.face] || boardCtx.face);
+    };
+    const appendBoardSection = (board, boardItems, photos, dpi, units, ctx) => {
       const hasPhys = dpi && units !== 'px';
       const bPx = getBoardPx(board);
       // Expand grids into individual photo pseudo-items for the preview header
       const expandedForPreview = [];
-      boardIt.forEach(item => {
+      boardItems.forEach(item => {
         if (item.type === 'note' || item.type === 'text' || item.type === 'zone') return;
         if (item.type === 'grid') {
-          const layout = calcGridLayout(item, photosRef.current, dpi || 150, units);
+          const layout = calcGridLayout(item, photos, dpi || 150, units);
           let rowY = item.y;
           layout.rows.forEach(row => {
             row.ids.forEach((photoId, ci) => {
@@ -4892,7 +5205,7 @@ function App() {
         }
       });
       const photoItemsPr = expandedForPreview.map(item => {
-        const photo = photosRef.current.find(p => p.id === item.photoId);
+        const photo = photos.find(p => p.id === item.photoId);
         const rot = item.rot || 0; const freeRot = item.freeRot || 0;
         const isSwapped = rot % 180 !== 0;
         const naturalW = isSwapped ? (photo ? Math.round(item.w * photo.w / photo.h) : item.w) : item.w;
@@ -4906,7 +5219,7 @@ function App() {
         const cx = item.x + item.w / 2; const cy = item.y + displayH / 2;
         return { ...item, naturalW, naturalH, displayH, offX, offY, vL: cx - bbW/2, vT: cy - bbH/2, vW: bbW, vH: bbH };
       });
-      const textItemsPr = boardIt.filter(i => i.type === 'text');
+      const textItemsPr = boardItems.filter(i => i.type === 'text');
       const allBoundsPr = [...photoItemsPr, ...textItemsPr.map(i => ({ vL: i.x, vT: i.y, vW: i.w, vH: i.h || 130 }))];
       const minXpr = bPx ? 0 : (allBoundsPr.length ? Math.min(...allBoundsPr.map(i => i.vL)) : 0);
       const minYpr = bPx ? 0 : (allBoundsPr.length ? Math.min(...allBoundsPr.map(i => i.vT)) : 0);
@@ -4951,12 +5264,19 @@ function App() {
         previewHtml = `<div class="preview-wrap"><div class="preview-box" style="width:${pW}px;height:${pH}px;background:${bg};border:${border}">${imgs}${textEls}</div><div class="preview-dim">${dimLabel(bW, bH, dpi, units)}</div></div>`;
       }
       rows += `<section><h2>${board.name}<span class="bcfg">${hasPhys ? ` · ${dpi} dpi · ${units}` : ` · ${t('noScaleConfigured')}`}</span></h2>`;
-      if (!boardIt.length) { rows += `<p class="empty">${t('emptyBoardMem')}</p></section>`; return; }
+      if (ctx) rows += `<div class="mem-ctx">${ctx}</div>`;
+      if (!boardItems.length) { rows += `<p class="empty">${t('emptyBoardMem')}</p></section>`; return; }
       rows += previewHtml;
       rows += `<table><thead><tr><th>${hdr[0]}</th><th></th><th>${hdr[1]}</th><th>${hdr[2]}</th><th>${hdr[4]}</th></tr></thead><tbody>`;
+      const dpiEff = dpi || 150;
+      const toCmNum = px => { const s = pxToPhys(px, dpiEff, 'cm'); return s ? parseFloat(s) : 0; };
+      const cmStr = n => n.toFixed(1).replace('.', ',');
+      const dimCm = (wPx, hPx, framePhys = 0) => {
+        const frPx = framePhys ? physToPx(framePhys, dpiEff, units) : 0;
+        return `${cmStr(toCmNum(wPx + 2*frPx))} × ${cmStr(toCmNum(hPx + 2*frPx))} cm`;
+      };
       let rowNum = 0;
-      boardIt.forEach(item => {
-        if (item.type === 'note' || item.type === 'zone' || item.type === 'text') return;
+      const renderItemRow = item => {
         const mat = item.matSize ?? item.frame ?? 0; const mold = item.frameSize ?? 0;
         const totalFrame = mat + mold;
         const u = hasPhys ? units : 'px';
@@ -4965,32 +5285,56 @@ function App() {
         if (mold) frameParts.push(`${mold}${u} ${lang==='es'?'moldura':'molding'}${item.frameColor&&item.frameColor!=='#5a3e1b'?' ('+item.frameColor+')':''}`);
         const frameNote = frameParts.length ? `<small>${frameParts.join(' + ')}</small>` : '';
         if (item.type === 'grid') {
-          const layout = calcGridLayout(item, photosRef.current, dpi || 150, units);
+          const layout = calcGridLayout(item, photos, dpi || 150, units);
           const gLabel = item.label ? ` "${item.label}"` : '';
           rows += `<tr class="grid-hdr"><td colspan="5">${lang==='es'?'Grid':'Grid'} ${layout.cols}×${layout.rows.length}${gLabel} · ${dimLabel(item.w, layout.totalH, dpi, units)}</td></tr>`;
           layout.rows.forEach(row => {
             row.ids.forEach(photoId => {
               if (!photoId) return;
               rowNum++;
-              const photo = photosRef.current.find(p => p.id === photoId);
-              rows += `<tr><td class="n">${rowNum}</td><td class="thumb"><img src="/photos/${pid}/${photoId}/thumb" alt="" /></td><td>${photo?.name || photoId}</td><td class="dim">${dimLabel(layout.cellW, row.h, dpi, units)}</td><td class="lbl"></td></tr>`;
+              const photo = photos.find(p => p.id === photoId);
+              rows += `<tr><td class="n">${rowNum}</td><td class="thumb"><img src="/photos/${pid}/${photoId}/thumb" alt="" /></td><td>${photo?.name || photoId}</td><td class="dim">${dimCm(layout.cellW, row.h)}</td><td class="lbl"></td></tr>`;
             });
           });
           return;
         }
         rowNum++;
-        const photo = photosRef.current.find(p => p.id === item.photoId);
+        const photo = photos.find(p => p.id === item.photoId);
         const h = photo ? ((item.rot||0)%180!==0 ? Math.round(item.w*photo.w/photo.h) : Math.round(item.w*photo.h/photo.w)) : item.w;
         rows += `<tr>
           <td class="n">${rowNum}</td>
           <td class="thumb"><img src="/photos/${pid}/${item.photoId}/thumb" alt="" /></td>
           <td>${photo?.name || item.photoId}</td>
-          <td class="dim">${dimLabel(item.w, h, dpi, units, totalFrame)}${frameNote}</td>
+          <td class="dim">${dimCm(item.w, h, totalFrame)}${frameNote}</td>
           <td class="lbl">${item.label || ''}</td>
         </tr>`;
+      };
+      const printableItems = boardItems.filter(i => !i.type || i.type === 'photo' || i.type === 'grid');
+      const zoneGroups = [];
+      const noZoneItems = [];
+      printableItems.forEach(item => {
+        if (item.zoneId) {
+          let grp = zoneGroups.find(g => g.zoneId === item.zoneId);
+          if (!grp) {
+            const zoneItem = boardItems.find(i => i.id === item.zoneId);
+            grp = { zoneId: item.zoneId, label: zoneItem?.label || null, items: [] };
+            zoneGroups.push(grp);
+          }
+          grp.items.push(item);
+        } else {
+          noZoneItems.push(item);
+        }
       });
+      zoneGroups.forEach(grp => {
+        rows += `<tr class="zone-hdr"><td colspan="5">${t('memZoneLabel', grp.label || t('memZoneNoName'))}</td></tr>`;
+        grp.items.forEach(renderItemRow);
+      });
+      if (zoneGroups.length && noZoneItems.length) {
+        rows += `<tr class="zone-hdr"><td colspan="5">${t('memNoZone')}</td></tr>`;
+      }
+      noZoneItems.forEach(renderItemRow);
       rows += `</tbody></table>`;
-      const memNotes = boardIt.filter(i => i.type === 'note' && i.inMemory);
+      const memNotes = boardItems.filter(i => i.type === 'note' && i.inMemory);
       if (memNotes.length) {
         rows += `<div class="notes-section"><div class="notes-hd">${t('notesSectionTitle')}</div>`;
         memNotes.forEach(n => {
@@ -5007,17 +5351,55 @@ function App() {
         bCmts.forEach(c => { rows += `<div class="obs-item">${c.guestName?`<span class="obs-author">${esc2(c.guestName)}</span> `:''}<span class="obs-text">${esc2(c.text).replace(/\n/g,'<br>')}</span></div>`; });
         rows += `</div>`;
       }
-      boardIt.forEach(item => {
+      boardItems.forEach(item => {
         if (!item.photoId) return;
         const pCmts = memComments[`photo:${item.photoId}`];
         if (!pCmts || !pCmts.length) return;
-        const photo2 = photosRef.current.find(p => p.id === item.photoId);
+        const photo2 = photos.find(p => p.id === item.photoId);
         rows += `<div class="obs-section"><div class="obs-hd">${esc2(photo2?.name || item.photoId)}</div>`;
         pCmts.forEach(c => { rows += `<div class="obs-item">${c.guestName?`<span class="obs-author">${esc2(c.guestName)}</span> `:''}<span class="obs-text">${esc2(c.text).replace(/\n/g,'<br>')}</span></div>`; });
         rows += `</div>`;
       });
       rows += `</section>`;
+    };
+
+    // Fase 1C: el orden y contenido del informe lo determinan exclusivamente
+    // mem.sections[].items[] — ya no hay filtro global por board.inMemory.
+    (mem?.sections || []).forEach(sec => {
+      if (sec.title) rows += `<h2>${escRoom(sec.title)}</h2>`;
+      if (sec.body) rows += `<p style="font-size:11px;line-height:1.7;white-space:pre-wrap;color:#333;margin:8px 2px 16px">${escRoom(sec.body).replace(/\n/g,'<br>')}</p>`;
+      (sec.items || []).forEach(item => {
+        if (item.type === 'room') {
+          const room = rooms.find(r => r.id === item.roomId);
+          if (!room) return;
+          const excluded = new Set(item.excludedBoardIds || []);
+          const includedBoardIds = roomBoardIds(room).filter(id => !excluded.has(id));
+          rows += renderRoomPlanSvg(room, new Set(includedBoardIds));
+          includedBoardIds.forEach(bid => {
+            const board = boardsRef.current.find(b => b.id === bid);
+            if (!board) return;
+            appendBoardSection(board, allBoardItemsRef.current[bid] || [], photosRef.current, board.dpi || null, board.units || 'px', computeBoardCtx(board));
+          });
+        } else if (item.type === 'board') {
+          const board = boardsRef.current.find(b => b.id === item.boardId);
+          if (!board) return;
+          appendBoardSection(board, allBoardItemsRef.current[board.id] || [], photosRef.current, board.dpi || null, board.units || 'px', computeBoardCtx(board));
+        } else if (item.type === 'room-plan') {
+          const room = rooms.find(r => r.id === item.roomId);
+          if (!room) return;
+          rows += renderRoomPlanSvg(room, new Set());
+        } else if (item.type === 'room-capture') {
+          const photo = photosRef.current.find(p => p.id === item.photoId);
+          if (!photo) return;
+          rows += `<div class="mem-room-3d"><img src="/photos/${pid}/${photo.id}" alt=""/>${photo.name ? `<div class="mem-capture-cap">${escRoom(photo.name)}</div>` : ''}</div>`;
+        } else if (item.type === 'photo') {
+          const photo = photosRef.current.find(p => p.id === item.photoId);
+          if (!photo) return;
+          rows += `<div class="mem-photo-block"><img src="/photos/${pid}/${photo.id}/thumb" alt=""/><span>${escRoom(photo.name || photo.id)}</span></div>`;
+        }
+      });
     });
+
     // Project-level comments flagged for memory
     const escP = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
     const projCmts = memComments[`project:${pid}`];
@@ -5036,6 +5418,7 @@ function App() {
   section{margin-top:26px}
   h2{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;background:#f5f5f5;padding:7px 10px;border-left:3px solid #111}
   .bcfg{font-size:8px;color:#888;font-weight:400;text-transform:none;letter-spacing:.5px}
+  .mem-ctx{font-size:9px;color:#888;letter-spacing:.5px;text-transform:uppercase;margin:-4px 0 12px 2px}
   .empty{font-size:9px;color:#aaa;padding:8px 0 0 2px}
   table{width:100%;border-collapse:collapse;margin-top:8px}
   th{text-align:left;font-size:8px;text-transform:uppercase;letter-spacing:1px;color:#777;border-bottom:1px solid #ddd;padding:4px 6px}
@@ -5047,6 +5430,14 @@ function App() {
   td.dim small{display:block;font-size:8px;font-weight:400;color:#999;margin-top:1px}
   td.lbl{color:#777;font-style:italic}
   tr.grid-hdr td{font-size:8px;text-transform:uppercase;letter-spacing:.8px;color:#888;background:#fafafa;border-top:1px solid #e0e0e0;padding:4px 6px}
+  tr.zone-hdr td{font-size:8px;text-transform:uppercase;letter-spacing:.8px;color:#666;background:#f0f0f0;border-top:1px solid #ddd;padding:4px 6px;font-weight:700}
+  .mem-room-plan{margin:10px 0;display:flex;justify-content:center}
+  .mem-room-plan svg{max-width:100%;height:auto}
+  .mem-room-3d{margin:10px 0;display:flex;flex-direction:column;align-items:center;gap:4px}
+  .mem-room-3d img{max-width:320px;max-height:220px;object-fit:cover;border:1px solid #ddd}
+  .mem-capture-cap{font-size:9px;color:#888;letter-spacing:.3px}
+  .mem-photo-block{display:flex;align-items:center;gap:8px;margin:8px 2px;font-size:10px}
+  .mem-photo-block img{width:44px;height:44px;object-fit:cover;border-radius:2px}
   .preview-wrap{margin:10px 0 16px}
   .preview-box{position:relative;overflow:hidden}
   .preview-box > img{position:absolute;object-fit:cover}
@@ -5068,12 +5459,11 @@ function App() {
 </style></head><body>
 ${includeHeader ? `<section style="margin-bottom:0">
   <header>
-    <h1>${proj?.exTitle || proj?.name || ''}</h1>
-    ${proj?.exTitle && proj?.name !== proj?.exTitle ? `<p style="font-size:11px;color:#888;margin:0 0 6px">${proj.name}</p>` : ''}
+    <h1>${escRoom(proj?.name || '')}</h1>
+    ${mem?.name ? `<p style="font-size:11px;color:#888;margin:0 0 6px">${escRoom(mem.name)}</p>` : ''}
     <p>${t('reportHeading')} · ${date}</p>
-    ${proj?.subtitle ? `<p style="font-size:11px;color:#555;margin:4px 0 0">${proj.subtitle}</p>` : ''}
+    ${mem?.description ? `<p style="font-size:11px;color:#555;margin:4px 0 0;white-space:pre-wrap">${escRoom(mem.description)}</p>` : ''}
   </header>
-  ${(proj?.memSections||[]).filter(s=>s.body||s.title).map(s=>`<div style="margin-top:18px">${s.title?`<h3 style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#888;margin:0 0 6px">${s.title}</h3>`:''}<p style="font-size:11px;line-height:1.7;white-space:pre-wrap;color:#333;margin:0">${s.body}</p></div>`).join('')}
 </section>` : ''}
 ${rows}
 </body></html>`;
@@ -15063,230 +15453,130 @@ ${rows}
         </div>
       )}
 
-      {modal === 'memoria' && (
+      {modal === 'memoria' && (() => {
+        const activeMem = memories.find(m => m.id === activeMemId) || null;
+        return (
         <div className="overlay" onClick={() => setModal(null)}>
           <div className="modal mem-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-h">{t('reportTitle')}</div>
             <div className="modal-sub">{activeProject?.name}</div>
-            <div className="mem-scroll">
-              {/* ── Información del proyecto ── */}
-              <div className="mem-info-block">
-                <div className="mem-info-hd">{t('exInfoHd')}</div>
-                <input className="mem-info-input" placeholder={t('exTitlePh')}
-                  value={memDraft.exTitle}
-                  onChange={e => setMemDraft(d => ({ ...d, exTitle: e.target.value }))}
-                  onBlur={e => saveProjectInfo({ exTitle: e.target.value })}/>
-                <input className="mem-info-input" placeholder={t('exSubtitlePh')}
-                  value={memDraft.subtitle}
-                  onChange={e => setMemDraft(d => ({ ...d, subtitle: e.target.value }))}
-                  onBlur={e => saveProjectInfo({ subtitle: e.target.value })}/>
-              </div>
 
-              {/* ── Secciones libres ── */}
-              <div className="mem-info-hd" style={{marginBottom:8}}>{t('customSectionsHd')}</div>
-              {memDraft.memSections.map(sec => (
-                <div key={sec.id} className="mem-free-section">
-                  <div className="mem-free-hd">
-                    <input className="mem-free-title" placeholder={t('sectionTitlePh')}
-                      value={sec.title}
-                      onChange={e => updateMemSection(sec.id, 'title', e.target.value)}
-                      onBlur={() => saveProjectInfo({ memSections: memDraft.memSections })}/>
-                    <button className="mem-free-del" onClick={() => removeMemSection(sec.id)}>×</button>
-                  </div>
-                  <textarea className="mem-free-body" placeholder={t('sectionBodyPh')}
-                    value={sec.body}
-                    onChange={e => updateMemSection(sec.id, 'body', e.target.value)}
-                    onBlur={() => saveProjectInfo({ memSections: memDraft.memSections })}/>
+            <div className="mem-tabs">
+              {memories.map(m => (
+                <div key={m.id} className={`mem-tab${m.id === activeMemId ? ' active' : ''}`}
+                  onClick={() => setActiveMemId(m.id)}>
+                  <span className="mem-tab-name">{m.name || t('memDefaultName')}</span>
+                  <span className="mem-tab-actions">
+                    <button className="mem-tab-act" data-tooltip={t('memDuplicateTip')}
+                      onClick={e => { e.stopPropagation(); duplicateMemory(m.id); }}>⧉</button>
+                    <button className="mem-tab-act danger" data-tooltip={t('memDeleteTip')}
+                      onClick={e => { e.stopPropagation(); deleteMemory(m.id); }}>×</button>
+                  </span>
                 </div>
               ))}
-              <button className="mem-add-section-btn" onClick={addMemSection}>{t('addSection')}</button>
+              <button className="mem-tab-new" onClick={addMemory}>{t('memNewBtn')}</button>
+            </div>
 
-              {/* ── Tableros y piezas ── */}
-              <div className="mem-boards-sep">{t('boardsSectionHd')}</div>
-              {boards.length === 0 ? (
-                <div style={{color:'var(--muted)',fontSize:10,padding:'8px 0'}}>{t('noBoardsInProject')}</div>
-              ) : boards.map(board => {
-                const boardIt = allBoardItems[board.id] || [];
-                const dpi = board.dpi || null;
-                const units = board.units || 'px';
-                const hasPhys = dpi && units !== 'px';
-                return (
-                  <div key={board.id} className="mem-board" style={board.inMemory === false ? {opacity:.4} : undefined}>
-                    <div className="mem-board-hd">
-                      <span className="mem-board-name">{board.name}</span>
-                      <span className="mem-board-cfg" style={hasPhys ? {} : {color:'var(--muted)'}}>
-                        {hasPhys ? `${dpi} dpi · ${units}` : t('noPhysScale')}
-                      </span>
-                      <span style={{marginLeft:'auto'}}>
-                        <button className="btn" style={{fontSize:8,padding:'2px 7px',color: board.inMemory===false?'var(--muted)':'var(--acc)',borderColor: board.inMemory===false?'var(--border)':'var(--acc-dim)'}}
-                          onClick={() => toggleBoardInMemory(board.id, board.inMemory)}>
-                          {board.inMemory === false ? t('boardExMemory') : t('boardInMemory')}
-                        </button>
-                      </span>
+            {activeMem && (
+              <div className="mem-scroll">
+                <div className="mem-info-block">
+                  <input className="mem-info-input" placeholder={t('memNamePh')}
+                    value={activeMem.name}
+                    onChange={e => setMemoryField(activeMem.id, 'name', e.target.value)}
+                    onBlur={persistMemories}/>
+                  <textarea className="mem-info-ta" placeholder={t('memDescPh')}
+                    value={activeMem.description}
+                    onChange={e => setMemoryField(activeMem.id, 'description', e.target.value)}
+                    onBlur={persistMemories}/>
+                </div>
+
+                <div className="mem-info-hd" style={{marginBottom:8}}>{t('customSectionsHd')}</div>
+                {activeMem.sections.length === 0 && (
+                  <div style={{color:'var(--muted)',fontSize:10,padding:'8px 0'}}>{t('memNoSections')}</div>
+                )}
+                {activeMem.sections.map(sec => (
+                  <div key={sec.id} className="mem-free-section"
+                    draggable
+                    onDragStart={() => setMemSecDragId(sec.id)}
+                    onDragOver={e => e.preventDefault()}
+                    onDrop={e => { e.preventDefault(); if (memSecDragId) reorderSections(activeMem.id, memSecDragId, sec.id); setMemSecDragId(null); }}>
+                    <div className="mem-free-hd">
+                      <span className="mem-drag-handle">⠿</span>
+                      <input className="mem-free-title" placeholder={t('sectionTitlePh')}
+                        value={sec.title}
+                        onChange={e => setSectionField(activeMem.id, sec.id, 'title', e.target.value)}
+                        onBlur={persistMemories}/>
+                      <button className="mem-free-del"
+                        onClick={() => showConfirm(t('memConfirmDeleteSection', sec.items.length), () => removeSection(activeMem.id, sec.id))}>×</button>
                     </div>
-                    {boardIt.length === 0 ? (
-                      <div className="mem-board-empty">{t('emptyBoardMem')}</div>
-                    ) : (() => {
-                      const bPx = getBoardPx(board);
-                      const textItems = boardIt.filter(i => i.type === 'text');
-                      const expandedM = [];
-                      boardIt.forEach(item => {
-                        if (item.type === 'note' || item.type === 'text' || item.type === 'zone') return;
-                        if (item.type === 'grid') {
-                          const layout = calcGridLayout(item, photos, dpi || 150, units);
-                          let rowY = item.y;
-                          layout.rows.forEach(row => {
-                            row.ids.forEach((photoId, ci) => {
-                              if (photoId) expandedM.push({ ...item, id: item.id + '_' + photoId, photoId, x: item.x + ci * (layout.cellW + layout.gapColPx), y: rowY, w: layout.cellW, rot: 0, freeRot: 0 });
-                            });
-                            rowY += row.h + layout.gapRowPx;
-                          });
-                        } else {
-                          expandedM.push(item);
-                        }
-                      });
-                      const photoItems = expandedM.map(item => {
-                        const photo = photos.find(p => p.id === item.photoId);
-                        const rot = item.rot || 0; const freeRot = item.freeRot || 0;
-                        const isSwapped = rot % 180 !== 0;
-                        const naturalW = isSwapped ? (photo ? Math.round(item.w * photo.w / photo.h) : item.w) : item.w;
-                        const naturalH = isSwapped ? item.w : (photo ? Math.round(item.w * photo.h / photo.w) : item.w);
-                        const displayH = isSwapped ? naturalW : naturalH;
-                        const offX = Math.round((item.w - naturalW) / 2);
-                        const offY = Math.round((displayH - naturalH) / 2);
-                        const ar = freeRot * Math.PI / 180;
-                        const cos = Math.abs(Math.cos(ar)); const sin = Math.abs(Math.sin(ar));
-                        const bbW = cos * item.w + sin * displayH; const bbH = sin * item.w + cos * displayH;
-                        const cx = item.x + item.w / 2; const cy = item.y + displayH / 2;
-                        return { ...item, naturalW, naturalH, displayH, offX, offY, vL: cx - bbW/2, vT: cy - bbH/2, vW: bbW, vH: bbH };
-                      });
-                      const allBoundsM = [...photoItems, ...textItems.map(i => ({ vL: i.x, vT: i.y, vW: i.w, vH: i.h || 130 }))];
-                      const minX = bPx ? 0 : (allBoundsM.length ? Math.min(...allBoundsM.map(i => i.vL)) : 0);
-                      const minY = bPx ? 0 : (allBoundsM.length ? Math.min(...allBoundsM.map(i => i.vT)) : 0);
-                      const bW = bPx?.w ?? (allBoundsM.length ? Math.max(...allBoundsM.map(i => i.vL + i.vW)) - minX : 0);
-                      const bH = bPx?.h ?? (allBoundsM.length ? Math.max(...allBoundsM.map(i => i.vT + i.vH)) - minY : 0);
-                      const sc = bW && bH ? Math.min(560 / bW, 200 / bH, 1) : 1;
-                      const pW = Math.round(bW * sc);
-                      const pH = Math.round(bH * sc);
-                      return (
-                        <React.Fragment>
-                          {bW > 0 && bH > 0 && (
-                            <div className="mem-preview-wrap">
-                              <div className="mem-preview" style={{
-                                width: pW, height: pH,
-                                background: bPx ? '#f5f5f5' : 'var(--deep)',
-                                border: bPx ? '1px solid var(--border2)' : '1px dashed var(--border2)',
-                              }}>
-                                {photoItems.map(item => {
-                                  const rot = item.rot || 0; const freeRot = item.freeRot || 0;
-                                  const matSzM = item.matSize ?? item.frame ?? 0; const moldSzM = item.frameSize ?? 0;
-                                  const matPxM = matSzM > 0 ? Math.max(1, Math.round(physToPx(matSzM, dpi, units) * sc)) : 0;
-                                  const moldPxM = moldSzM > 0 ? Math.max(1, Math.round(physToPx(moldSzM, dpi, units) * sc)) : 0;
-                                  const frameStyle = (matPxM || moldPxM) ? { boxShadow: `0 0 0 ${matPxM}px ${item.matColor||'#ffffff'}, 0 0 0 ${matPxM+moldPxM}px ${item.frameColor||'#5a3e1b'}` } : {};
-                                  const iL = Math.round((item.x - minX) * sc); const iT = Math.round((item.y - minY) * sc);
-                                  const iW = Math.round(item.w * sc); const iH = Math.round(item.displayH * sc);
+                    <textarea className="mem-free-body" placeholder={t('sectionBodyPh')}
+                      value={sec.body}
+                      onChange={e => setSectionField(activeMem.id, sec.id, 'body', e.target.value)}
+                      onBlur={persistMemories}/>
+
+                    <div className="mem-section-items">
+                      {sec.items.map(item => {
+                        const room = item.type === 'room' ? rooms.find(r => r.id === item.roomId) : null;
+                        return (
+                          <React.Fragment key={item.id}>
+                            <div className="mem-item-row"
+                              draggable
+                              onDragStart={() => setMemItemDragId(item.id)}
+                              onDragOver={e => e.preventDefault()}
+                              onDrop={e => { e.preventDefault(); if (memItemDragId) reorderItems(activeMem.id, sec.id, memItemDragId, item.id); setMemItemDragId(null); }}>
+                              <span className="mem-drag-handle">⠿</span>
+                              <span className="mem-item-icon">{memItemIcon[item.type] || '•'}</span>
+                              <span className="mem-item-label">{memItemLabel(item)}</span>
+                              {item.type === 'room' && (
+                                <button className="mem-item-expand"
+                                  onClick={() => setExpandedRoomItem(x => x === item.id ? null : item.id)}>
+                                  {expandedRoomItem === item.id ? '▾' : '▸'}
+                                </button>
+                              )}
+                              {item.type === 'board' && (
+                                <button className="mem-item-expand"
+                                  onClick={() => toggleBoardStrip(item.id)}>
+                                  {expandedBoardKeys[item.id] ? '▾' : '▸'}
+                                </button>
+                              )}
+                              <button className="mem-free-del" onClick={() => removeItem(activeMem.id, sec.id, item.id)}>×</button>
+                            </div>
+                            {item.type === 'room' && expandedRoomItem === item.id && room && (
+                              <div className="mem-room-sub">
+                                {roomBoardIds(room).map(bid => {
+                                  const b = boards.find(x => x.id === bid);
+                                  if (!b) return null;
+                                  const excluded = (item.excludedBoardIds || []).includes(bid);
+                                  const stripKey = `${item.id}:${bid}`;
                                   return (
-                                    <div key={item.id} style={{ position:'absolute', left:iL, top:iT, width:iW, height:iH, overflow:'hidden', ...(freeRot?{transform:`rotate(${freeRot}deg)`,transformOrigin:'center'}:{}), ...frameStyle }}>
-                                      <img src={`/photos/${pid}/${item.photoId}/thumb`} alt="" style={{ position:'absolute', left:Math.round(item.offX*sc), top:Math.round(item.offY*sc), width:Math.round(item.naturalW*sc), height:Math.round(item.naturalH*sc), objectFit:'cover', ...((rot||item.flipH||item.flipV)?{transform:`rotate(${rot}deg) scaleX(${item.flipH?-1:1}) scaleY(${item.flipV?-1:1})`,transformOrigin:'center'}:{}) }} />
-                                    </div>
-                                  );
-                                })}
-                                {textItems.map(item => {
-                                  const fontMap = { serif:'Georgia,serif', sans:'Arial,sans-serif', display:'Impact,sans-serif', mono:'Courier New,monospace' };
-                                  const alignMap = { left:'flex-start', center:'center', right:'flex-end' };
-                                  const rot = item.freeRot || 0;
-                                  return (
-                                    <div key={item.id} style={{ position:'absolute', left:Math.round((item.x-minX)*sc), top:Math.round((item.y-minY)*sc), width:Math.round(item.w*sc), height:Math.round((item.h||130)*sc), fontSize:Math.max(6,Math.round((item.fontSize||26)*sc)), fontFamily:fontMap[item.fontFamily||'serif']||'Georgia,serif', textAlign:item.textAlign||'center', color:item.textColor||'var(--text)', display:'flex', alignItems:'center', justifyContent:alignMap[item.textAlign||'center']||'center', padding:Math.round(4*sc), overflow:'hidden', boxSizing:'border-box', ...(rot?{transform:`rotate(${rot}deg)`,transformOrigin:'center'}:{}) }}>
-                                      {item.text || ''}
-                                    </div>
+                                    <React.Fragment key={bid}>
+                                      <label className="mem-room-sub-row">
+                                        <input type="checkbox" checked={!excluded}
+                                          onChange={() => toggleItemExcludedBoard(activeMem.id, sec.id, item.id, bid)}
+                                          style={{accentColor:'var(--acc)',cursor:'pointer'}}/>
+                                        {b.name}
+                                        <button className="mem-item-expand" onClick={e => { e.preventDefault(); toggleBoardStrip(stripKey); }}>
+                                          {expandedBoardKeys[stripKey] ? '▾' : '▸'}
+                                        </button>
+                                      </label>
+                                      {expandedBoardKeys[stripKey] && renderBoardStrip(bid)}
+                                    </React.Fragment>
                                   );
                                 })}
                               </div>
-                              <div className="mem-preview-dim">{dimLabel(bW, bH, dpi, units)}</div>
-                            </div>
-                          )}
-                          {(() => {
-                            let mIdx = 0;
-                            return boardIt.filter(i => i.type !== 'note' && i.type !== 'text' && i.type !== 'zone').flatMap(item => {
-                              const u = hasPhys ? units : 'px';
-                              if (item.type === 'grid') {
-                                const layout = calcGridLayout(item, photos, dpi || 150, units);
-                                const gLabel = item.label ? ` "${item.label}"` : '';
-                                const gHeader = (
-                                  <div key={item.id + '_hdr'} style={{fontSize:8,textTransform:'uppercase',letterSpacing:'.8px',color:'var(--muted)',borderTop:'1px solid var(--border)',padding:'6px 4px 3px',marginTop:4}}>
-                                    {lang==='es'?'Grid':'Grid'} {layout.cols}×{layout.rows.length}{gLabel} · {dimLabel(item.w, layout.totalH, dpi, units)}
-                                  </div>
-                                );
-                                const gRows = layout.rows.flatMap(row =>
-                                  row.ids.map(photoId => {
-                                    if (!photoId) return null;
-                                    mIdx++;
-                                    const photo = photos.find(p => p.id === photoId);
-                                    return (
-                                      <div key={item.id + '_' + photoId} className="mem-item">
-                                        <div className="mem-idx">{mIdx}.</div>
-                                        <img className="mem-thumb" src={`/photos/${pid}/${photoId}/thumb`} alt="" />
-                                        <div className="mem-info">
-                                          <div className="mem-iname">{photo?.name || photoId}</div>
-                                          <div className="mem-dims">{dimLabel(layout.cellW, row.h, dpi, units)}</div>
-                                        </div>
-                                      </div>
-                                    );
-                                  }).filter(Boolean)
-                                );
-                                return [gHeader, ...gRows];
-                              }
-                              mIdx++;
-                              const photo = photos.find(p => p.id === item.photoId);
-                              const h = photo ? ((item.rot||0)%180!==0 ? Math.round(item.w*photo.w/photo.h) : Math.round(item.w*photo.h/photo.w)) : item.w;
-                              const mat = item.matSize ?? item.frame ?? 0; const mold = item.frameSize ?? 0;
-                              const totalFrame = mat + mold;
-                              const frameParts = [];
-                              if (mat) frameParts.push(`${mat}${u} ${lang==='es'?'paspartú':'mat'}`);
-                              if (mold) frameParts.push(`${mold}${u} ${lang==='es'?'moldura':'molding'}`);
-                              return [(
-                                <div key={item.id} className="mem-item">
-                                  <div className="mem-idx">{mIdx}.</div>
-                                  <img className="mem-thumb" src={`/photos/${pid}/${item.photoId}/thumb`} alt="" />
-                                  <div className="mem-info">
-                                    <div className="mem-iname">{photo?.name || item.photoId}</div>
-                                    <div className="mem-dims">
-                                      {dimLabel(item.w, h, dpi, units, totalFrame)}
-                                      {frameParts.length > 0 && <span style={{color:'var(--muted)',marginLeft:6,fontSize:9}}>{frameParts.join(' + ')}</span>}
-                                    </div>
-                                    {item.label && <div className="mem-lbl">"{item.label}"</div>}
-                                  </div>
-                                </div>
-                              )];
-                            });
-                          })()}
-                          {boardIt.filter(i => i.type === 'note' && i.inMemory).length > 0 && (
-                            <>
-                              <div className="mem-notes-hd">{t('notesSectionTitle')}</div>
-                              {boardIt.filter(i => i.type === 'note' && i.inMemory).map(item => (
-                                <div key={item.id} className="mem-note-item">
-                                  {item.title && <div className="mem-note-title">{item.title}</div>}
-                                  <div className="mem-note-text">{item.text || ''}</div>
-                                  {item.link && (
-                                    <div style={{marginTop:5}}>
-                                      <a className="mem-note-link" href={item.link.url} target="_blank" rel="noreferrer"
-                                        onClick={e => e.stopPropagation()}>
-                                        {item.link.title || item.link.domain}
-                                      </a>
-                                      {item.link.title && <span className="mem-note-link-domain">{item.link.domain}</span>}
-                                    </div>
-                                  )}
-                                </div>
-                              ))}
-                            </>
-                          )}
-                        </React.Fragment>
-                      );
-                    })()}
+                            )}
+                            {item.type === 'board' && expandedBoardKeys[item.id] && renderBoardStrip(item.boardId)}
+                          </React.Fragment>
+                        );
+                      })}
+                    </div>
+                    <button className="mem-add-item-btn" onClick={() => setMemPicker(sec.id)}>{t('memAddContentBtn')}</button>
                   </div>
-                );
-              })}
-            </div>
+                ))}
+                <button className="mem-add-section-btn" onClick={() => addMemSection(activeMem.id)}>{t('memAddSectionBtn')}</button>
+              </div>
+            )}
+
             <div style={{fontSize:9,color:'var(--muted)',lineHeight:1.8}}>
               {t('reportConfigNote')}
             </div>
@@ -15298,11 +15588,134 @@ ${rows}
             </div>
             <div className="modal-row">
               <button className="btn" onClick={() => setModal(null)}>{t('close')}</button>
-              <button className="btn acc" onClick={printMemoria}>{t('printPdf')}</button>
+              <button className="btn acc" onClick={() => printMemoria(activeMem)}>{t('printPdf')}</button>
             </div>
           </div>
+
+          {memPicker && activeMem && (() => {
+            const targetSec = activeMem.sections.find(s => s.id === memPicker);
+            if (!targetSec) return null;
+            const hasItem = (type, key) => targetSec.items.some(i => i.type === type && (i.roomId === key || i.boardId === key || i.photoId === key));
+            const addAndKeepOpen = (item) => addItemToSection(activeMem.id, memPicker, item);
+            const memFaceLabelMap = t('infoBoardCtxFaceLabel') || {};
+            const assignedIds = new Set();
+            const roomTree = rooms.map(r => {
+              const groups = [];
+              (r.walls||[]).forEach(w => {
+                const idsA = (w.boardsA||[]).map(e=>e.boardId).filter(Boolean);
+                const idsB = (w.boardsB||[]).map(e=>e.boardId).filter(Boolean);
+                if (idsA.length) groups.push({ key:`w:${w.id}:A`, label: t('memCtxWallShort', w.name||'', 'A'), boardIds: idsA });
+                if (idsB.length) groups.push({ key:`w:${w.id}:B`, label: t('memCtxWallShort', w.name||'', 'B'), boardIds: idsB });
+              });
+              (r.blocks||[]).forEach(bl => {
+                if (!bl.faces) return;
+                Object.entries(bl.faces).forEach(([dir,f]) => {
+                  if (f?.boardId) groups.push({ key:`b:${bl.id}:${dir}`, label: t('memCtxBlockShort', bl.label||'?', memFaceLabelMap[dir]||dir), boardIds:[f.boardId] });
+                });
+              });
+              groups.forEach(g => g.boardIds.forEach(id => assignedIds.add(id)));
+              return { room: r, groups };
+            }).filter(rt => rt.groups.length > 0);
+            const freeBoards = boards.filter(b => !assignedIds.has(b.id));
+            const roomCaptures = rooms.filter(r => r.cameraHome).flatMap(r => {
+              const slug = slugifyRoomName(r.name);
+              if (!slug) return [];
+              return photos.filter(p => p.name && p.name.toLowerCase().startsWith(slug)).map(p => ({ room: r, photo: p }));
+            });
+
+            return (
+              <div className="overlay" onClick={e => { e.stopPropagation(); setMemPicker(null); }}>
+                <div className="modal mem-picker-box" onClick={e => e.stopPropagation()}>
+                  <div className="modal-h">{t('memAddContentBtn')}</div>
+                  <div className="mem-scroll">
+                    <div className="mem-picker-group-hd">{t('memPickerRoomsHd')}</div>
+                    {rooms.length === 0 && <div className="mem-picker-empty">{t('memNoRoomsForPicker')}</div>}
+                    {rooms.map(r => (
+                      <div key={r.id} className={`mem-picker-opt${hasItem('room', r.id) ? ' added' : ''}`}
+                        onClick={() => addAndKeepOpen({ type:'room', roomId:r.id, excludedBoardIds:[] })}>
+                        🏠 {r.name}
+                      </div>
+                    ))}
+
+                    <div className="mem-picker-group-hd">{t('boardsSectionHd')}</div>
+                    {roomTree.map(rt => (
+                      <div key={rt.room.id}>
+                        <div className="mem-picker-subhd">{rt.room.name}</div>
+                        {rt.groups.map(g => g.boardIds.map(bid => {
+                          const b = boards.find(x => x.id === bid);
+                          if (!b) return null;
+                          return (
+                            <React.Fragment key={bid}>
+                              <div className={`mem-picker-opt${hasItem('board', bid) ? ' added' : ''}`}
+                                onClick={() => addAndKeepOpen({ type:'board', boardId:bid })}>
+                                ▭ {b.name} <span className="mem-picker-ctx">{g.label}</span>
+                                <button className="mem-item-expand" onClick={e => { e.stopPropagation(); toggleBoardStrip(bid); }}>
+                                  {expandedBoardKeys[bid] ? '▾' : '▸'}
+                                </button>
+                              </div>
+                              {expandedBoardKeys[bid] && renderBoardStrip(bid)}
+                            </React.Fragment>
+                          );
+                        }))}
+                      </div>
+                    ))}
+                    {freeBoards.length > 0 && (
+                      <div>
+                        <div className="mem-picker-subhd">{t('freeBoardsHd')}</div>
+                        {freeBoards.map(b => (
+                          <React.Fragment key={b.id}>
+                            <div className={`mem-picker-opt${hasItem('board', b.id) ? ' added' : ''}`}
+                              onClick={() => addAndKeepOpen({ type:'board', boardId:b.id })}>
+                              ▭ {b.name}
+                              <button className="mem-item-expand" onClick={e => { e.stopPropagation(); toggleBoardStrip(b.id); }}>
+                                {expandedBoardKeys[b.id] ? '▾' : '▸'}
+                              </button>
+                            </div>
+                            {expandedBoardKeys[b.id] && renderBoardStrip(b.id)}
+                          </React.Fragment>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="mem-picker-group-hd">{t('memPickerPlansHd')}</div>
+                    {rooms.map(r => (
+                      <div key={r.id} className={`mem-picker-opt${hasItem('room-plan', r.id) ? ' added' : ''}`}
+                        onClick={() => addAndKeepOpen({ type:'room-plan', roomId:r.id })}>
+                        📐 {r.name}
+                      </div>
+                    ))}
+
+                    <div className="mem-picker-group-hd">{t('memPickerCapturesHd')}</div>
+                    {roomCaptures.length === 0 && <div className="mem-picker-empty">{t('memNoCapturesForPicker')}</div>}
+                    {roomCaptures.map(({room:r, photo:p}) => (
+                      <div key={p.id} className={`mem-picker-opt${hasItem('room-capture', p.id) ? ' added' : ''}`}
+                        onClick={() => addAndKeepOpen({ type:'room-capture', photoId:p.id, roomId:r.id })}>
+                        📷 {p.name} <span className="mem-picker-ctx">{r.name}</span>
+                      </div>
+                    ))}
+
+                    <div className="mem-picker-group-hd">{t('memPickerPhotosHd')}</div>
+                    {photos.length === 0 && <div className="mem-picker-empty">{t('memNoPhotosForPicker')}</div>}
+                    <div className="mem-picker-photo-grid">
+                      {photos.map(p => (
+                        <div key={p.id} className={`mem-picker-photo${hasItem('photo', p.id) ? ' added' : ''}`}
+                          onClick={() => addAndKeepOpen({ type:'photo', photoId:p.id })}
+                          data-tooltip={p.name}>
+                          <img src={`/photos/${pid}/${p.id}/thumb`} alt=""/>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="modal-row">
+                    <button className="btn" onClick={() => setMemPicker(null)}>{t('close')}</button>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
         </div>
-      )}
+        );
+      })()}
 
       {labelEditId && (() => {
         const editItem = items.find(i => i.id === labelEditId);

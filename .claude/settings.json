@@ -72,10 +72,14 @@
       "Bash(curl -s -X DELETE http://localhost:4123/api/trash/photos/d27ddd91c1/9b00b8055d6b)",
       "Bash(powershell -NoProfile -Command \"Get-NetTCPConnection -LocalPort 4123 -State Listen | Select-Object -ExpandProperty OwningProcess\")",
       "Bash(powershell -NoProfile -Command \"Stop-Process -Id 39252 -Force\")",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:4123/api/projects)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:4123/api/projects)",
+      "Bash(npm audit *)",
+      "Bash(awk 'NR==4850,NR==5086' \"d:/blasg/Pictures/Proyectos/tableau/public/index.html\")",
+      "Bash(cd \"d:\\\\blasg\\\\Pictures\\\\Proyectos\\\\tableau\" && sed -n '/^  linux:/,/^jobs:\\\\|^$/p' .github/workflows/release.yml | head -80)"
     ],
     "additionalDirectories": [
-      "d:\\blasg\\Pictures\\Proyectos\\tableau\\fonts"
+      "d:\\blasg\\Pictures\\Proyectos\\tableau\\fonts",
+      "d:\\blasg\\Pictures\\Proyectos\\tableau\\.github\\workflows"
     ]
   }
 }
